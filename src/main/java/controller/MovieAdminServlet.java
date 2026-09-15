@@ -99,7 +99,7 @@ public class MovieAdminServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/auth");
             return false;
         }
-        if (!"AD".equals(user.getRoleID())) {
+        if (!"MG".equals(user.getRoleID())) {
             response.sendRedirect(request.getContextPath() + "/movies");
             return false;
         }
@@ -307,7 +307,9 @@ public class MovieAdminServlet extends HttpServlet {
             Logger.getLogger(MovieAdminServlet.class.getName()).log(Level.SEVERE, null, ex);
             request.setAttribute("error", "Có lỗi xảy ra: " + ex.getMessage());
             try {
-                loadMovies(request, response);
+                if("/admin/rooms".equals(request.getServletPath()))loadRooms(request,response);
+                else if("/admin/showtimes".equals(request.getServletPath()))loadShowtimes(request,response);
+                else loadMovies(request, response);
             } catch (Exception e) {
                 Logger.getLogger(MovieAdminServlet.class.getName()).log(Level.SEVERE, null, e);
                 request.getRequestDispatcher(MOVIE_LIST_PAGE).forward(request, response);
@@ -403,7 +405,12 @@ public class MovieAdminServlet extends HttpServlet {
         showtime.setRoomID(request.getParameter("roomID"));
         showtime.setShowDate(request.getParameter("showDate"));
         showtime.setStartTime(request.getParameter("startTime"));
-        showtime.setEndTime(request.getParameter("endTime"));
+        Movie scheduledMovie=new MovieDAO().getMovieByID(showtime.getMovieID());
+        if(scheduledMovie==null||!scheduledMovie.isStatus())throw new IllegalArgumentException("Phim không hoạt động.");
+        java.time.LocalTime start=java.time.LocalTime.parse(showtime.getStartTime());
+        java.time.LocalTime end=start.plusMinutes(scheduledMovie.getDuration());
+        if(!end.isAfter(start))throw new IllegalArgumentException("Suất chiếu qua nửa đêm chưa được hỗ trợ. Chọn giờ sớm hơn.");
+        showtime.setEndTime(end.toString());
         showtime.setStatus(Boolean.parseBoolean(request.getParameter("status")));
 
         if (showtime.isStatus() && !isFutureShowtime(showtime.getShowDate(), showtime.getStartTime())) {

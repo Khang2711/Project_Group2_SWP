@@ -51,7 +51,7 @@
                     </td>
                     <td>
                         <a class="btn btn-blue" href="<%= ctx%>/admin/showtimes?action=edit&showtimeID=<%= st.getShowtimeID()%>">Sửa</a>
-                        <form action="<%= ctx%>/admin/showtimes" method="post" style="display:inline;">
+                        <form accept-charset="UTF-8" action="<%= ctx%>/admin/showtimes" method="post" style="display:inline;"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="showtimeID" value="<%= st.getShowtimeID()%>">
                             <button class="btn btn-danger" type="submit">Xóa</button>
@@ -63,7 +63,7 @@
                     } else {
                 %>
                 <tr>
-                    <td colspan="8" style="text-align:center;color:#64748b;">Chưa có suất chiếu.</td>
+                    <td colspan="8" style="text-align:center;color:var(--muted);">Chưa có suất chiếu.</td>
                 </tr>
                 <% } %>
             </tbody>

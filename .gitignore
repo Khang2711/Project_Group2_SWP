@@ -1,20 +1,4 @@
-# Build output
-/target/
-/build/
-/dist/
-*.class
-*.war
-*.log
-# Local credentials
+target/
 .env
-.env.*
-!.env.example
-/src/main/resources/db.local.properties
-# Personal IDE settings
-/nbproject/private/
-/nbactions-*.xml
-/.idea/
-/.vscode/
-*.iml
-.DS_Store
-Thumbs.db
+*.log
+nbproject/private/

@@ -103,6 +103,7 @@ public class MovieServlet extends HttpServlet {
             if ("/movie".equals(path) || "detail".equals(action)) {
                 String movieID = request.getParameter("movieID");
                 Movie movie = movieDAO.getMovieByID(movieID);
+                if(movie==null||!movie.isStatus()){response.sendError(404);return;}
                 List<Showtime> showtimes = showtimeDAO.getActiveShowtimesByMovie(movieID);
 
                 request.setAttribute("movie", movie);
@@ -116,7 +117,16 @@ public class MovieServlet extends HttpServlet {
 
             // DAO chỉ trả về suất chiếu còn ở tương lai, phim và phòng đều đang hoạt động.
             List<Showtime> upcomingShowtimes = showtimeDAO.getUpcomingShowtimes(keyword);
+            String date=request.getParameter("date"),cinema=request.getParameter("cinema");
+            request.setAttribute("cinemas",dao.Sql.rows("SELECT cinemaID,cinemaName FROM tblCinemas WHERE status=1 ORDER BY cinemaName"));
+            java.util.Set<String> allowedRooms=new java.util.HashSet<>();
+            if(cinema!=null&&!cinema.isBlank())for(Map<String,Object> room:dao.Sql.rows("SELECT roomID FROM tblRooms WHERE cinemaID=?",cinema))allowedRooms.add(room.get("roomID").toString());
+            upcomingShowtimes.removeIf(st->(date!=null&&!date.isBlank()&&!date.equals(st.getShowDate()))||(cinema!=null&&!cinema.isBlank()&&!allowedRooms.contains(st.getRoomID())));
             List<MovieSchedule> allSchedules = buildMovieSchedules(upcomingShowtimes, movieDAO);
+            if((date==null||date.isBlank())&&(cinema==null||cinema.isBlank())) {
+                java.util.Set<String> scheduled=new java.util.HashSet<>();for(MovieSchedule schedule:allSchedules)scheduled.add(schedule.getMovie().getMovieID());
+                for(Movie m:movieDAO.searchMovies(keyword,1,1000,true))if(!scheduled.contains(m.getMovieID()))allSchedules.add(new MovieSchedule(m,"Sắp chiếu · Chưa mở lịch"));
+            }
 
             int totalRecords = allSchedules.size();
             int totalPages = (int) Math.ceil(totalRecords * 1.0 / PAGE_SIZE);

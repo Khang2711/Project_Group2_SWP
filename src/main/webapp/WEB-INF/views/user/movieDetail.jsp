@@ -13,24 +13,24 @@
 <%@include file="/WEB-INF/include/header.jsp" %>
 
 <section class="panel">
-    <% if (movie != null) { %>
+    <% if (movie != null) { %><p class="badge">Phân loại: <%=movie.getAgeRating()==0?"P – Mọi độ tuổi":movie.getAgeRating()+"+"%></p>
     <div class="movie-detail">
         <div class="poster movie-detail-poster">
             <% if (movie.getImageURL() != null && !movie.getImageURL().trim().isEmpty()) { %>
-            <img src="<%= movie.getImageURL()%>" alt="<%= movie.getTitle()%>"
+            <img src="<%=Html.e(movie.getImageURL())%>" alt="<%=Html.e(movie.getTitle())%>"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
-            <span class="poster-fallback" style="display:none;"><%= movie.getMovieID()%></span>
+            <span class="poster-fallback" style="display:none;"><%=Html.e(movie.getMovieID())%></span>
             <% } else { %>
-            <span class="poster-fallback"><%= movie.getMovieID()%></span>
+            <span class="poster-fallback"><%=Html.e(movie.getMovieID())%></span>
             <% } %>
         </div>
         <div class="movie-detail-info">
-            <h1 class="page-title"><%= movie.getTitle()%></h1>
+            <h1 class="page-title"><%=Html.e(movie.getTitle())%></h1>
             <div class="movie-detail-meta">
                 <span><%= movie.getDuration()%> phút</span>
                 <strong><%= df.format(movie.getBasePrice())%> VNĐ</strong>
             </div>
-            <p class="movie-description"><%= movie.getDescription()%></p>
+            <p class="movie-description"><%=Html.e(movie.getDescription())%></p>
         </div>
     </div>
 
@@ -63,7 +63,7 @@
                     } else {
                 %>
                 <tr>
-                    <td colspan="5" style="text-align:center;color:#64748b;">Chưa có suất chiếu.</td>
+                    <td colspan="5" style="text-align:center;color:var(--muted);">Chưa có suất chiếu.</td>
                 </tr>
                 <% } %>
             </tbody>

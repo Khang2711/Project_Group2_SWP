@@ -1,6 +1,12 @@
 package model;
 
 public class Movie {
+    private int ageRating;
+    private String screeningStart,screeningEnd;
+    public int getAgeRating(){return ageRating;}public void setAgeRating(int a){ageRating=a;}
+    public String getScreeningStart(){return screeningStart;}public void setScreeningStart(String s){screeningStart=s;}
+    public String getScreeningEnd(){return screeningEnd;}public void setScreeningEnd(String s){screeningEnd=s;}
+
 
     private String movieID;
     private String title;

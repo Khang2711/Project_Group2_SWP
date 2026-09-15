@@ -11,7 +11,7 @@ import utils.DBUtils;
 public class MovieDAO {
 
     private Movie mapMovie(ResultSet rs) throws Exception {
-        return new Movie(
+        Movie m = new Movie(
                 rs.getString("movieID"),
                 rs.getString("title"),
                 rs.getString("description"),
@@ -20,6 +20,7 @@ public class MovieDAO {
                 rs.getBoolean("status"),
                 rs.getString("imageURL")
         );
+        m.setAgeRating(rs.getInt("ageRating"));m.setScreeningStart(rs.getString("screeningStart"));m.setScreeningEnd(rs.getString("screeningEnd"));return m;
     }
 
     private String normalizeKeyword(String keyword) {
@@ -52,7 +53,7 @@ public class MovieDAO {
         pageSize = normalizePageSize(pageSize);
         int offset = (page - 1) * pageSize;
 
-        String sql = "SELECT movieID, title, description, duration, basePrice, status, imageURL "
+        String sql = "SELECT movieID, title, description, duration, basePrice, status, imageURL, ageRating, screeningStart, screeningEnd "
                 + "FROM tblMovies "
                 + "WHERE (? = '' OR movieID LIKE ? OR title LIKE ? OR description LIKE ?) ";
 
@@ -108,7 +109,7 @@ public class MovieDAO {
     }
 
     public Movie getMovieByID(String movieID) throws Exception {
-        String sql = "SELECT movieID, title, description, duration, basePrice, status, imageURL "
+        String sql = "SELECT movieID, title, description, duration, basePrice, status, imageURL, ageRating, screeningStart, screeningEnd "
                 + "FROM tblMovies WHERE movieID = ?";
 
         try (Connection conn = DBUtils.getConnection();

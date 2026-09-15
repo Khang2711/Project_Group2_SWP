@@ -21,14 +21,14 @@
     </div>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
     <% if (showtime != null) { %>
     <div class="showtime-summary">
         <div>
-            <strong><%= showtime.getMovieTitle()%></strong>
-            <span><%= showtime.getRoomName()%></span>
+            <strong><%=Html.e(showtime.getMovieTitle())%></strong>
+            <span><%=Html.e(showtime.getRoomName())%></span>
         </div>
         <div>
             <span><%= showtime.getShowDate()%></span>
@@ -40,11 +40,11 @@
         </div>
     </div>
 
-    <form action="<%= ctx%>/cart" method="post" id="seatForm">
+    <form accept-charset="UTF-8" action="<%= ctx%>/cart" method="post" id="seatForm"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
         <input type="hidden" name="action" value="add">
-        <input type="hidden" name="showtimeID" value="<%= showtime.getShowtimeID()%>">
+        <input type="hidden" name="showtimeID" value="<%=Html.e(showtime.getShowtimeID())%>">
 
-        <div class="seat-tools">
+        <input type="hidden" name="fullTheater" id="fullTheater" value="false"><div class="seat-tools">
             <button class="btn btn-soft" type="button" id="selectAllSeatsButton" onclick="toggleAllAvailableSeats()">
                 Bao rạp / Chọn tất cả
             </button>
@@ -71,13 +71,23 @@
                         }
 
                         String seatID = String.valueOf(rowName) + number;
-                        boolean booked = bookedSeats != null && bookedSeats.contains(seatID);
+                        java.util.List<java.util.Map<String,Object>> physical=(java.util.List<java.util.Map<String,Object>>)request.getAttribute("physicalSeats");
+                        java.util.Map<String,Object> seatConfig=null;
+                        if (physical != null) {
+                            for (java.util.Map<String,Object> physicalSeat : physical) {
+                                if (seatID.equals(physicalSeat.get("seatID"))) {
+                                    seatConfig = physicalSeat;
+                                    break;
+                                }
+                            }
+                        }
+                        boolean booked = (bookedSeats != null && bookedSeats.contains(seatID)) || seatConfig==null || !Boolean.TRUE.equals(seatConfig.get("status"));
                 %>
                 <% if (booked) { %>
                 <label class="seat booked"><%= seatID%></label>
                 <% } else { %>
-                <label class="seat">
-                    <input type="checkbox" name="seatID" value="<%= seatID%>" onchange="updateSelectedSeatCount()">
+                <label class="seat" title="<%=seatConfig==null?"":seatConfig.get("seatType")%>">
+                    <input type="checkbox" name="seatID" value="<%= seatID%>" onchange="document.getElementById('fullTheater').value='false';updateSelectedSeatCount()">
                     <%= seatID%>
                 </label>
                 <% } %>
@@ -121,6 +131,7 @@
     }
 
     function toggleAllAvailableSeats() {
+        document.getElementById("fullTheater").value="true";
         const seats = getAvailableSeatCheckboxes();
         const shouldSelectAll = seats.some(seat => !seat.checked);
         seats.forEach(seat => {

@@ -103,78 +103,7 @@ public class BookingDAO {
     }
 
     public boolean createBookingFromCart(String userID, List<CartItem> cart, List<ComboItem> combos) throws Exception {
-        boolean hasTickets = cart != null && !cart.isEmpty();
-        boolean hasCombos = combos != null && !combos.isEmpty();
-        if (!hasTickets && !hasCombos) {
-            return false;
-        }
-
-        String orderID = "OD" + System.currentTimeMillis();
-        float total = 0;
-        if (cart != null) {
-            for (CartItem item : cart) {
-                total += item.getPrice();
-            }
-        }
-        if (combos != null) {
-            for (ComboItem combo : combos) {
-                total += combo.getTotal();
-            }
-        }
-
-        String orderSql = "INSERT INTO tblOrders(orderID, userID, orderDate, totalAmount, status) VALUES(?, ?, GETDATE(), ?, 1)";
-        String ticketSql = "INSERT INTO tblTickets(ticketID, orderID, showtimeID, seatID, price, status) VALUES(?, ?, ?, ?, ?, 1)";
-        String comboSql = "INSERT INTO tblOrderCombos(orderComboID, orderID, comboID, quantity, price) VALUES(?, ?, ?, ?, ?)";
-
-        try (Connection conn = DBUtils.getConnection()) {
-            conn.setAutoCommit(false);
-
-            try (PreparedStatement orderStm = conn.prepareStatement(orderSql);
-                    PreparedStatement ticketStm = conn.prepareStatement(ticketSql);
-                    PreparedStatement comboStm = conn.prepareStatement(comboSql)) {
-
-                orderStm.setString(1, orderID);
-                orderStm.setString(2, userID);
-                orderStm.setFloat(3, total);
-                orderStm.executeUpdate();
-
-                if (cart != null) {
-                    for (int i = 0; i < cart.size(); i++) {
-                        CartItem item = cart.get(i);
-                        String ticketID = orderID + "T" + (i + 1);
-                        ticketStm.setString(1, ticketID);
-                        ticketStm.setString(2, orderID);
-                        ticketStm.setString(3, item.getShowtimeID());
-                        ticketStm.setString(4, item.getSeatID());
-                        ticketStm.setFloat(5, item.getPrice());
-                        ticketStm.addBatch();
-                    }
-                    ticketStm.executeBatch();
-                }
-
-                if (combos != null) {
-                    for (int i = 0; i < combos.size(); i++) {
-                        ComboItem combo = combos.get(i);
-                        ensureComboExists(conn, combo);
-                        String orderComboID = orderID + "C" + (i + 1);
-                        comboStm.setString(1, orderComboID);
-                        comboStm.setString(2, orderID);
-                        comboStm.setString(3, combo.getComboID());
-                        comboStm.setInt(4, combo.getQuantity());
-                        comboStm.setFloat(5, combo.getPrice());
-                        comboStm.addBatch();
-                    }
-                    comboStm.executeBatch();
-                }
-                conn.commit();
-                return true;
-            } catch (Exception e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
-        }
+        throw new UnsupportedOperationException("Dùng BookingService.reserve và thông báo thanh toán có chữ ký để phát hành vé.");
     }
 
     public List<Ticket> getHistoryByUser(String userID) throws Exception {

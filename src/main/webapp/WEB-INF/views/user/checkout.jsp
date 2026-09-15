@@ -33,13 +33,14 @@
 <%@include file="/WEB-INF/include/header.jsp" %>
 
 <section class="panel">
-    <h1 class="page-title">Thanh toán</h1>
+    <h1 class="page-title">Kiểm tra đơn đặt vé</h1>
+    <%if(Boolean.FALSE.equals(request.getAttribute("paymentConfigured"))){%><p class="alert alert-error">Rạp chưa kết nối thanh toán trực tuyến. Bạn vẫn có thể tạo đơn giữ ghế; đơn chưa thanh toán sẽ hết hạn sau 10 phút và chưa có vé vào rạp.</p><%}%>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
-    <% if ((cart != null && !cart.isEmpty()) || (comboCart != null && !comboCart.isEmpty())) { %>
+    <% if (cart != null && !cart.isEmpty()) { %>
     <div class="table-wrap">
         <table>
             <thead>
@@ -64,10 +65,10 @@
         </table>
     </div>
 
-    <h2 style="color:#ea580c;margin-top:18px;">Tổng tiền: <%= df.format(total)%> VNĐ</h2>
+    <h2 style="color:#ff4450;margin-top:18px;">Tổng tiền: <%= df.format(total)%> VNĐ</h2>
 
-    <form action="<%= ctx%>/checkout" method="post">
-        <button class="btn btn-primary" type="submit">Xác nhận thanh toán</button>
+    <form accept-charset="UTF-8" action="<%= ctx%>/checkout" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
+        <label>Mã ưu đãi<input name="promoCode" value="<%=Html.e(request.getParameter("promoCode"))%>" maxlength="30" placeholder="Nhập mã giảm giá"></label><p class="muted">Ghế được giữ 10 phút kể từ bước tiếp theo. Giá và ưu đãi được kiểm tra lại khi tạo đơn.</p><button class="btn btn-primary" type="submit">Giữ ghế & xem thanh toán</button>
         <a class="btn btn-blue" href="<%= ctx%>/cart">Quay lại giỏ hàng</a>
     </form>
     <% } else { %>

@@ -15,10 +15,10 @@
     <h1 class="page-title"><%= isUpdate ? "Cập nhật phim" : "Thêm phim"%></h1>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
-    <form class="form-grid" action="<%= ctx%>/admin/movies" method="post">
+    <form accept-charset="UTF-8" class="form-grid" action="<%= ctx%>/admin/movies" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
         <input type="hidden" name="action" value="<%= isUpdate ? "update" : "create"%>">
 
         <div class="field">

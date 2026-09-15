@@ -10,10 +10,10 @@
 
 <section class="panel">
     <div class="toolbar">
-        <h1 class="page-title">Phòng chiếu</h1>
+        <a class="btn btn-soft" href="<%=ctx%>/admin/room-branch">Gán phòng vào chi nhánh</a><h1 class="page-title">Phòng chiếu</h1>
     </div>
 
-    <form class="form-grid" action="<%= ctx%>/admin/rooms" method="post">
+    <form accept-charset="UTF-8" class="form-grid" action="<%= ctx%>/admin/rooms" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
         <input type="hidden" name="action" value="create">
         <div class="field">
             <label>Mã phòng</label>
@@ -58,11 +58,11 @@
                 %>
                 <tr>
                     <td>
-                        <form id="<%= formID%>" action="<%= ctx%>/admin/rooms" method="post"></form>
+                        <form accept-charset="UTF-8" id="<%= formID%>" action="<%= ctx%>/admin/rooms" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>"></form>
                         <input form="<%= formID%>" type="hidden" name="action" value="update">
-                        <input form="<%= formID%>" name="roomID" value="<%= room.getRoomID()%>" readonly>
+                        <input form="<%= formID%>" name="roomID" value="<%=Html.e(room.getRoomID())%>" readonly>
                     </td>
-                    <td><input form="<%= formID%>" name="roomName" value="<%= room.getRoomName()%>" required></td>
+                    <td><input form="<%= formID%>" name="roomName" value="<%=Html.e(room.getRoomName())%>" required></td>
                     <td><input form="<%= formID%>" type="number" name="totalSeats" min="1" value="<%= room.getTotalSeats()%>" required></td>
                     <td>
                         <select form="<%= formID%>" name="status">
@@ -77,7 +77,7 @@
                     } else {
                 %>
                 <tr>
-                    <td colspan="5" style="text-align:center;color:#64748b;">Chưa có phòng chiếu.</td>
+                    <td colspan="5" style="text-align:center;color:var(--muted);">Chưa có phòng chiếu.</td>
                 </tr>
                 <% } %>
             </tbody>

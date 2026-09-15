@@ -25,7 +25,7 @@
     int currentPage = currentPageObj == null ? 1 : currentPageObj;
     int totalPages = totalPagesObj == null ? 1 : totalPagesObj;
     int totalRecords = totalRecordsObj == null ? 0 : totalRecordsObj;
-    String encodedKeyword = URLEncoder.encode(keyword, "UTF-8");
+    String encodedKeyword = URLEncoder.encode(keyword, "UTF-8")+"&date="+URLEncoder.encode(request.getParameter("date")==null?"":request.getParameter("date"),"UTF-8")+"&cinema="+URLEncoder.encode(request.getParameter("cinema")==null?"":request.getParameter("cinema"),"UTF-8");
 
     DecimalFormat df = new DecimalFormat("#,###");
     DateTimeFormatter inputDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -36,13 +36,15 @@
 <section class="panel schedule-page">
     <div class="toolbar schedule-toolbar">
         <div>
-            <h1 class="page-title">Chọn phim và suất chiếu</h1>
-            <p class="muted">Chỉ hiển thị các phim còn lịch chiếu trong tương lai.</p>
+            <h1 class="page-title">Hôm nay, xem gì?</h1>
+            <p class="muted">Khám phá phim, chọn rạp và tìm suất chiếu dành cho bạn.</p>
         </div>
     </div>
 
-    <form class="search-form" action="<%= ctx%>/movies" method="get">
-        <input type="text" name="q" value="<%= keyword%>" placeholder="Tìm tên phim">
+    <form accept-charset="UTF-8" class="search-form" action="<%= ctx%>/movies" method="get">
+        <input aria-label="Tìm tên phim" type="text" name="q" value="<%=Html.e(keyword)%>" placeholder="Tìm tên phim">
+        <input aria-label="Ngày chiếu" type="date" name="date" value="<%=Html.e(request.getParameter("date"))%>">
+        <select aria-label="Chi nhánh" name="cinema"><option value="">Tất cả rạp</option><%java.util.List<java.util.Map<String,Object>> cinemaOptions=(java.util.List<java.util.Map<String,Object>>)request.getAttribute("cinemas");if(cinemaOptions!=null)for(java.util.Map<String,Object>ci:cinemaOptions){%><option value="<%=Html.e(ci.get("cinemaID"))%>" <%=String.valueOf(ci.get("cinemaID")).equals(request.getParameter("cinema"))?"selected":""%>><%=Html.e(ci.get("cinemaName"))%></option><%}%></select>
         <button class="btn btn-primary" type="submit">Tìm kiếm</button>
         <% if (!keyword.isEmpty()) { %>
         <a class="btn btn-soft" href="<%= ctx%>/movies">Xóa tìm kiếm</a>
@@ -50,10 +52,10 @@
     </form>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
-    <p class="muted schedule-result-count">Có <strong><%= totalRecords%></strong> vị trí phim theo ngày chiếu.</p>
+    <p class="muted schedule-result-count">Có <strong><%= totalRecords%></strong> kết quả phim và lịch chiếu.</p>
 
     <%
         if (scheduleByDate != null && !scheduleByDate.isEmpty()) {
@@ -85,24 +87,24 @@
             <article class="schedule-movie-card">
                 <div class="poster schedule-poster">
                     <% if (movie.getImageURL() != null && !movie.getImageURL().trim().isEmpty()) { %>
-                    <img src="<%= movie.getImageURL()%>" alt="<%= movie.getTitle()%>"
+                    <img src="<%=Html.e(movie.getImageURL())%>" alt="<%=Html.e(movie.getTitle())%>"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
-                    <span class="poster-fallback" style="display:none;"><%= movie.getMovieID()%></span>
+                    <span class="poster-fallback" style="display:none;"><%=Html.e(movie.getTitle())%></span>
                     <% } else { %>
-                    <span class="poster-fallback"><%= movie.getMovieID()%></span>
+                    <span class="poster-fallback"><%=Html.e(movie.getTitle())%></span>
                     <% } %>
                 </div>
 
                 <div class="schedule-card-content">
                     <div>
-                        <h3 class="schedule-movie-title"><%= movie.getTitle()%></h3>
+                        <h3 class="schedule-movie-title"><a href="<%=ctx%>/movie?movieID=<%=Html.e(movie.getMovieID())%>"><%= Html.e(movie.getTitle())%></a></h3><span class="badge"><%=movie.getAgeRating()==0?"P":movie.getAgeRating()+"+"%></span>
                         <div class="schedule-movie-meta">
                             <span><%= movie.getDuration()%> phút</span>
                             <strong><%= df.format(movie.getBasePrice())%> VNĐ</strong>
                         </div>
                     </div>
 
-                    <p class="schedule-description"><%= movie.getDescription()%></p>
+                    <p class="schedule-description"><%=Html.e(movie.getDescription())%></p>
 
                     <div class="showtime-area">
                         <span class="showtime-label">Chọn giờ chiếu:</span>
@@ -112,10 +114,10 @@
                                     for (Showtime showtime : showtimes) {
                             %>
                             <a class="showtime-button"
-                               href="<%= ctx%>/booking/seats?showtimeID=<%= showtime.getShowtimeID()%>"
-                               title="Đặt vé lúc <%= showtime.getStartTime()%> tại <%= showtime.getRoomName()%>">
+                               href="<%= ctx%>/booking/seats?showtimeID=<%=Html.e(showtime.getShowtimeID())%>"
+                               title="Đặt vé lúc <%= showtime.getStartTime()%> tại <%=Html.e(showtime.getRoomName())%>">
                                 <strong><%= showtime.getStartTime()%></strong>
-                                <small><%= showtime.getRoomName()%></small>
+                                <small><%=Html.e(showtime.getRoomName())%></small>
                             </a>
                             <%
                                     }
@@ -124,6 +126,7 @@
                         </div>
                     </div>
 
+                    <% if(firstShowtime==null){%><p class="muted">Chưa có suất chiếu mở bán.</p><%}%>
                     <% if (firstShowtime != null) { %>
                     <a class="btn btn-primary schedule-book-button"
                        href="<%= ctx%>/booking/seats?showtimeID=<%= firstShowtime.getShowtimeID()%>">

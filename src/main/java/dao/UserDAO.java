@@ -18,17 +18,20 @@ public class UserDAO {
     }
 
     public User checkLogin(String userID, String password) throws Exception {
-        String sql = "SELECT userID, fullName, password, roleID FROM tblUsers WHERE userID = ? AND password = ?";
+        String sql = "SELECT userID, fullName, password, roleID FROM tblUsers WHERE userID = ? AND status = 1";
 
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement stm = conn.prepareStatement(sql)) {
 
             stm.setString(1, userID);
-            stm.setString(2, password);
+
 
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
-                    return mapUser(rs);
+                    User u=mapUser(rs);
+                    if (!utils.PasswordUtils.verify(password,u.getPassword())) return null;
+                    if (!u.getPassword().startsWith("pbkdf2$")) {String hash=utils.PasswordUtils.hash(password);updatePassword(userID,hash);u.setPassword(hash);}
+                    return u;
                 }
             }
         }
@@ -36,7 +39,7 @@ public class UserDAO {
     }
 
     public User getUserByID(String userID) throws Exception {
-        String sql = "SELECT userID, fullName, password, roleID FROM tblUsers WHERE userID = ?";
+        String sql = "SELECT userID, fullName, password, roleID FROM tblUsers WHERE userID = ? AND status = 1";
 
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement stm = conn.prepareStatement(sql)) {
@@ -52,7 +55,7 @@ public class UserDAO {
     }
 
     public boolean isUserIDExists(String userID) throws Exception {
-        String sql = "SELECT userID FROM tblUsers WHERE userID = ?";
+        String sql = "SELECT userID FROM tblUsers WHERE userID = ? AND status = 1";
 
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement stm = conn.prepareStatement(sql)) {
@@ -64,8 +67,9 @@ public class UserDAO {
         }
     }
 
-    public boolean createUser(User user) throws Exception {
-        String sql = "INSERT INTO tblUsers(userID, fullName, password, roleID) VALUES(?, ?, ?, ?)";
+    public boolean createUser(User user) throws Exception {return createUser(user,null);}
+    public boolean createUser(User user,String email) throws Exception {
+        String sql = "INSERT INTO tblUsers(userID, fullName, password, roleID,email) VALUES(?, ?, ?, ?, ?)";
 
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement stm = conn.prepareStatement(sql)) {
@@ -74,6 +78,7 @@ public class UserDAO {
             stm.setString(2, user.getFullName());
             stm.setString(3, user.getPassword());
             stm.setString(4, user.getRoleID());
+            stm.setString(5,email);
 
             return stm.executeUpdate() > 0;
         }

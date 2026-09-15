@@ -99,23 +99,6 @@ public class BookingServlet extends HttpServlet {
             }
 
             if ("/cart".equals(path)) {
-                String action = request.getParameter("action");
-                if ("remove".equals(action)) {
-                    removeCartItem(getCart(request), request.getParameter("key"));
-                    response.sendRedirect(request.getContextPath() + "/cart");
-                    return;
-                }
-                if ("removeCombo".equals(action)) {
-                    removeComboItem(getComboCart(request), request.getParameter("comboID"));
-                    response.sendRedirect(request.getContextPath() + "/cart");
-                    return;
-                }
-                if ("clear".equals(action)) {
-                    getCart(request).clear();
-                    getComboCart(request).clear();
-                    response.sendRedirect(request.getContextPath() + "/cart");
-                    return;
-                }
                 loadCartPage(request, response, null);
                 return;
             }
@@ -126,10 +109,14 @@ public class BookingServlet extends HttpServlet {
             }
 
             loadSeatPage(request, response, null);
+        } catch (ServletException | IOException ex) {
+            // Preserve rendering failures; forwarding to the same broken JSP hides the cause.
+            throw ex;
         } catch (Exception ex) {
             Logger.getLogger(BookingServlet.class.getName()).log(Level.SEVERE, null, ex);
-            request.setAttribute("error", "Không thể tải dữ liệu đặt vé.");
-            request.getRequestDispatcher(SEAT_PAGE).forward(request, response);
+            request.setAttribute("error", bookingError(ex));
+            String page="/cart".equals(path)?CART_PAGE:"/checkout".equals(path)?CHECKOUT_PAGE:"/booking/history".equals(path)?HISTORY_PAGE:SEAT_PAGE;
+            request.getRequestDispatcher(page).forward(request,response);
         }
     }
 
@@ -162,9 +149,10 @@ public class BookingServlet extends HttpServlet {
             Logger.getLogger(BookingServlet.class.getName()).log(Level.SEVERE, null, ex);
             try {
                 if ("/checkout".equals(path)) {
-                    loadCheckoutPage(request, response, ex.getMessage());
+                    loadCheckoutPage(request, response, bookingError(ex));
                 } else {
-                    loadCartPage(request, response, ex.getMessage());
+                    if("add".equals(action)) loadSeatPage(request,response,bookingError(ex));
+                    else loadCartPage(request, response, bookingError(ex));
                 }
             } catch (Exception e) {
                 Logger.getLogger(BookingServlet.class.getName()).log(Level.SEVERE, null, e);
@@ -185,7 +173,11 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
+        service.BookingService.expire();
         List<String> bookedSeats = new BookingDAO().getBookedSeats(showtimeID);
+        for(java.util.Map<String,Object> row:dao.Sql.rows("SELECT seatID FROM tblReservations WHERE showtimeID=?",showtimeID))bookedSeats.add(row.get("seatID").toString());
+        request.setAttribute("physicalSeats",dao.Sql.rows("SELECT se.seatID,se.seatType,se.status FROM tblSeats se WHERE se.roomID=? ORDER BY LEFT(se.seatID,1),TRY_CAST(SUBSTRING(se.seatID,2,9) AS int)",showtime.getRoomID()));
+
         request.setAttribute("showtime", showtime);
         request.setAttribute("bookedSeats", bookedSeats);
         if (error != null) {
@@ -216,6 +208,7 @@ public class BookingServlet extends HttpServlet {
         List<ComboItem> comboCart = getComboCart(request);
         request.setAttribute("cart", cart);
         request.setAttribute("comboCart", comboCart);
+        request.setAttribute("paymentConfigured", service.VNPay.isConfigured());
         request.setAttribute("total", getCartTotal(cart, comboCart));
         if (error != null) {
             request.setAttribute("error", error);
@@ -232,12 +225,14 @@ public class BookingServlet extends HttpServlet {
         if ("clear".equals(action)) {
             cart.clear();
             comboCart.clear();
+            request.getSession().removeAttribute("FULL_THEATER");
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
 
         if ("remove".equals(action)) {
             removeCartItem(cart, request.getParameter("key"));
+            request.getSession().removeAttribute("FULL_THEATER");
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
@@ -260,7 +255,8 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
-        addSeatsToCart(request, response, cart);
+        if(!"add".equals(action)) throw new IllegalArgumentException("Thao tác giỏ vé không hợp lệ. Vui lòng tải lại trang.");
+        synchronized(request.getSession()) {addSeatsToCart(request, response, cart);}
     }
 
     private void addSeatsToCart(HttpServletRequest request, HttpServletResponse response, List<CartItem> cart)
@@ -280,36 +276,33 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
-        BookingDAO bookingDAO = new BookingDAO();
-        for (String seatID : seats) {
-            if (bookingDAO.isSeatBooked(showtimeID, seatID)) {
-                loadSeatPage(request, response, "Ghế " + seatID + " đã được đặt.");
-                return;
-            }
-            if (!cartContains(cart, showtimeID, seatID)) {
-                cart.add(new CartItem(
-                        showtime.getShowtimeID(),
-                        showtime.getMovieTitle(),
-                        showtime.getRoomName(),
-                        showtime.getShowDate(),
-                        showtime.getStartTime(),
-                        showtime.getEndTime(),
-                        seatID,
-                        showtime.getBasePrice()
-                ));
+        if (!cart.isEmpty() && !cart.get(0).getShowtimeID().equals(showtimeID)) {
+            loadSeatPage(request,response,"Mỗi đơn chỉ đặt một suất chiếu. Vui lòng hoàn tất hoặc xóa giỏ vé trước.");return;
+        }
+        if(seats.length>260)throw new IllegalArgumentException("Số ghế không hợp lệ.");
+        java.util.Set<String> selected=new java.util.LinkedHashSet<>(java.util.Arrays.asList(seats));
+        List<CartItem> additions=new ArrayList<>();
+        service.BookingService.expire();
+        java.util.Set<String> unavailable=new java.util.HashSet<>(new BookingDAO().getBookedSeats(showtimeID));
+        for(java.util.Map<String,Object> hold:dao.Sql.rows("SELECT seatID FROM tblReservations WHERE showtimeID=?",showtimeID))unavailable.add(hold.get("seatID").toString());
+        // Validate all seats first; a rejected selection must not partly change the cart.
+        try(java.sql.Connection c=utils.DBUtils.getConnection()) {
+            for(String seat:selected) {
+                if(unavailable.contains(seat))throw new IllegalArgumentException("Ghế "+seat+" đã được đặt hoặc đang được giữ. Vui lòng chọn ghế khác.");
+                float price=service.BookingService.money(service.BookingService.quoteSeat(c,showtimeID,seat).get("price")).floatValue();
+                if(!cartContains(cart,showtimeID,seat))additions.add(new CartItem(showtimeID,showtime.getMovieTitle(),showtime.getRoomName(),showtime.getShowDate(),showtime.getStartTime(),showtime.getEndTime(),seat,price));
             }
         }
+        cart.addAll(additions);
+        request.getSession().setAttribute("FULL_THEATER","true".equals(request.getParameter("fullTheater")));
 
         response.sendRedirect(request.getContextPath() + "/cart");
     }
 
     private int parseQuantity(String value) {
-        try {
-            int quantity = Integer.parseInt(value);
-            return quantity < 0 ? 0 : quantity;
-        } catch (Exception e) {
-            return 0;
-        }
+        if(value==null||value.isBlank())return 0;
+        try {int quantity=Integer.parseInt(value);if(quantity<0||quantity>20)throw new NumberFormatException();return quantity;}
+        catch(NumberFormatException ex){throw new IllegalArgumentException("Số lượng mỗi combo phải từ 0 đến 20.");}
     }
 
     private void addComboToCart(List<ComboItem> comboCart, HttpServletRequest request)
@@ -328,6 +321,7 @@ public class BookingServlet extends HttpServlet {
 
         for (ComboItem item : comboCart) {
             if (item.getComboID().equals(comboID)) {
+                if(item.getQuantity()+quantity>20)throw new IllegalArgumentException("Mỗi combo tối đa 20 phần.");
                 item.setQuantity(item.getQuantity() + quantity);
                 return;
             }
@@ -342,7 +336,7 @@ public class BookingServlet extends HttpServlet {
 
         BookingDAO bookingDAO = new BookingDAO();
         List<ComboItem> combos = bookingDAO.getAllCombos();
-        comboCart.clear();
+        List<ComboItem> updatedCombos=new ArrayList<>();
 
         for (ComboItem combo : combos) {
             String value = request.getParameter("comboQuantity_" + combo.getComboID());
@@ -354,43 +348,28 @@ public class BookingServlet extends HttpServlet {
                 ComboItem item = bookingDAO.getComboByID(combo.getComboID());
                 if (item != null) {
                     item.setQuantity(quantity);
-                    comboCart.add(item);
+                    updatedCombos.add(item);
                 }
             }
         }
+        comboCart.clear();comboCart.addAll(updatedCombos);
     }
 
     private void processCheckout(HttpServletRequest request, HttpServletResponse response)
             throws Exception {
 
-        User user = getLoginUser(request);
-        List<CartItem> cart = getCart(request);
-        List<ComboItem> comboCart = getComboCart(request);
-
-        if (cart.isEmpty() && comboCart.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/cart");
-            return;
-        }
-
-        ShowtimeDAO showtimeDAO = new ShowtimeDAO();
-        BookingDAO bookingDAO = new BookingDAO();
-
-        for (CartItem item : cart) {
-            Showtime showtime = showtimeDAO.getBookableShowtimeByID(item.getShowtimeID());
-            if (showtime == null) {
-                throw new Exception("Có suất chiếu không còn mở bán hoặc phòng đang bảo trì.");
+        synchronized(request.getSession()) {
+            Object previous=request.getSession().getAttribute("PENDING_ORDER");
+            if(previous!=null && getCart(request).isEmpty()) {
+                java.util.List<java.util.Map<String,Object>> existing=dao.Sql.rows("SELECT orderID FROM tblOrders WHERE orderID=? AND userID=? AND paymentState='PENDING' AND expiresAt>SYSDATETIME()",previous,getLoginUser(request).getUserID());
+                if(!existing.isEmpty()){response.sendRedirect(request.getContextPath()+"/booking/orders?orderID="+previous);return;}
             }
-            if (bookingDAO.isSeatBooked(item.getShowtimeID(), item.getSeatID())) {
-                throw new Exception("Ghế " + item.getSeatID() + " đã được đặt.");
-            }
+            java.util.Map<String,Object> order=new service.BookingService().reserve(getLoginUser(request).getUserID(),getCart(request),getComboCart(request),request.getParameter("promoCode"),Boolean.TRUE.equals(request.getSession().getAttribute("FULL_THEATER")));
+            request.getSession().setAttribute("PENDING_ORDER",order.get("orderID"));
+            getCart(request).clear();getComboCart(request).clear();
+            request.getSession().removeAttribute("FULL_THEATER");
+            response.sendRedirect(request.getContextPath()+"/booking/orders?orderID="+order.get("orderID"));
         }
-
-        float total = getCartTotal(cart, comboCart);
-        bookingDAO.createBookingFromCart(user.getUserID(), cart, comboCart);
-        request.setAttribute("total", total);
-        cart.clear();
-        comboCart.clear();
-        request.getRequestDispatcher(SUCCESS_PAGE).forward(request, response);
     }
 
     private void loadHistory(HttpServletRequest request, HttpServletResponse response)
@@ -400,6 +379,16 @@ public class BookingServlet extends HttpServlet {
         List<Ticket> tickets = new BookingDAO().getHistoryByUser(user.getUserID());
         request.setAttribute("tickets", tickets);
         request.getRequestDispatcher(HISTORY_PAGE).forward(request, response);
+    }
+
+    private String bookingError(Exception error) {
+        if(error instanceof IllegalArgumentException)return error.getMessage();
+        if(error instanceof java.sql.SQLException){int code=((java.sql.SQLException)error).getErrorCode();
+            if(code==2601||code==2627)return "Ghế vừa được người khác đặt hoặc giữ. Vui lòng chọn lại ghế.";
+            if(code==207||code==208)return "Hệ thống đặt vé chưa được cập nhật dữ liệu. Vui lòng báo quản lý rạp.";
+            if(code==1205)return "Có yêu cầu đặt vé đồng thời. Vui lòng thử lại; đơn chưa được tạo.";
+        }
+        return "Không thể xử lý đặt vé lúc này. Vui lòng thử lại hoặc liên hệ rạp.";
     }
 
     private boolean cartContains(List<CartItem> cart, String showtimeID, String seatID) {

@@ -43,7 +43,7 @@ public class ShowtimeDAO {
                 + "s.status, m.basePrice, r.status AS roomStatus "
                 + "FROM tblShowtimes s "
                 + "JOIN tblMovies m ON s.movieID = m.movieID "
-                + "JOIN tblRooms r ON s.roomID = r.roomID ";
+                + "JOIN tblRooms r ON s.roomID = r.roomID JOIN tblCinemas ci ON ci.cinemaID=r.cinemaID ";
     }
 
     /**
@@ -52,28 +52,8 @@ public class ShowtimeDAO {
      * suất đang mở bán và phòng không bảo trì.
      */
     public void refreshExpiredStatuses() throws Exception {
-        String showtimeDateTime = startDateTimeSql("s");
-
-        String closeExpiredSql = "UPDATE s SET s.status = 0 "
-                + "FROM tblShowtimes s "
-                + "WHERE s.status = 1 AND " + showtimeDateTime + " <= GETDATE()";
-
-        String refreshMovieSql = "UPDATE m SET m.status = CASE WHEN EXISTS ("
-                + "SELECT 1 FROM tblShowtimes s "
-                + "JOIN tblRooms r ON s.roomID = r.roomID "
-                + "WHERE s.movieID = m.movieID "
-                + "AND s.status = 1 AND r.status = 1 "
-                + "AND " + showtimeDateTime + " > GETDATE()"
-                + ") THEN 1 ELSE 0 END "
-                + "FROM tblMovies m";
-
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement closeStm = conn.prepareStatement(closeExpiredSql);
-                PreparedStatement movieStm = conn.prepareStatement(refreshMovieSql)) {
-
-            closeStm.executeUpdate();
-            movieStm.executeUpdate();
-        }
+        // Do not overwrite manager-controlled movie/showtime status during browsing.
+        // Bookable queries already filter past start times.
     }
 
     public List<Showtime> getAllShowtimes() throws Exception {
@@ -101,7 +81,7 @@ public class ShowtimeDAO {
         keyword = keyword == null ? "" : keyword.trim();
 
         String sql = baseSql()
-                + "WHERE s.status = 1 AND m.status = 1 AND r.status = 1 "
+                + "WHERE s.status = 1 AND m.status = 1 AND r.status = 1 AND ci.status = 1 "
                 + "AND " + startDateTimeSql("s") + " > GETDATE() "
                 + "AND (? = '' OR m.movieID LIKE ? OR m.title LIKE ? OR m.description LIKE ?) "
                 + "ORDER BY s.showDate, m.title, s.startTime";
@@ -128,7 +108,7 @@ public class ShowtimeDAO {
         refreshExpiredStatuses();
         List<Showtime> list = new ArrayList<>();
         String sql = baseSql()
-                + "WHERE s.movieID = ? AND s.status = 1 AND m.status = 1 AND r.status = 1 "
+                + "WHERE s.movieID = ? AND s.status = 1 AND m.status = 1 AND r.status = 1 AND ci.status = 1 "
                 + "AND " + startDateTimeSql("s") + " > GETDATE() "
                 + "ORDER BY s.showDate, s.startTime";
 
@@ -169,7 +149,7 @@ public class ShowtimeDAO {
     public Showtime getBookableShowtimeByID(String showtimeID) throws Exception {
         refreshExpiredStatuses();
         String sql = baseSql()
-                + "WHERE s.showtimeID = ? AND s.status = 1 AND m.status = 1 AND r.status = 1 "
+                + "WHERE s.showtimeID = ? AND s.status = 1 AND m.status = 1 AND r.status = 1 AND ci.status = 1 "
                 + "AND " + startDateTimeSql("s") + " > GETDATE()";
 
         try (Connection conn = DBUtils.getConnection();

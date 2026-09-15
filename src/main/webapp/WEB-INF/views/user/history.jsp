@@ -11,6 +11,7 @@
 
 <section class="panel">
     <h1 class="page-title">Vé của tôi</h1>
+    <%if(request.getAttribute("error")!=null){%><p class="alert alert-error"><%=Html.e(request.getAttribute("error"))%></p><%}%>
 
     <div class="table-wrap">
         <table>
@@ -32,12 +33,12 @@
                         for (Ticket ticket : tickets) {
                 %>
                 <tr>
-                    <td><strong><%= ticket.getTicketID()%></strong></td>
-                    <td><%= ticket.getMovieTitle()%></td>
-                    <td><%= ticket.getRoomName()%></td>
+                    <td><img class="ticket-qr" src="<%=headerCtx%>/tickets/qr?ticketID=<%=Html.e(ticket.getTicketID())%>" alt="QR vé"><br><strong class="ticket-code"><%=Html.e(ticket.getTicketID())%></strong></td>
+                    <td><%=Html.e(ticket.getMovieTitle())%></td>
+                    <td><%=Html.e(ticket.getRoomName())%></td>
                     <td><%= ticket.getShowDate()%></td>
                     <td><%= ticket.getStartTime()%></td>
-                    <td><%= ticket.getSeatID()%></td>
+                    <td><%=Html.e(ticket.getSeatID())%></td>
                     <td><%= df.format(ticket.getPrice())%> VNĐ</td>
                     <td><%= ticket.getOrderDate()%></td>
                 </tr>
@@ -46,7 +47,7 @@
                     } else {
                 %>
                 <tr>
-                    <td colspan="8" style="text-align:center;color:#64748b;">Chưa có vé nào.</td>
+                    <td colspan="8" style="text-align:center;color:var(--muted);">Chưa có vé nào.</td>
                 </tr>
                 <% } %>
             </tbody>

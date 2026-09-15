@@ -26,12 +26,12 @@
 
 <section class="panel">
     <div class="toolbar">
-        <h1 class="page-title">Quản lý phim</h1>
+        <a class="btn btn-soft" href="<%=ctx%>/admin/movie-policy">Độ tuổi & thời gian công chiếu</a><h1 class="page-title">Quản lý phim</h1>
         <a class="btn btn-primary" href="<%= ctx%>/admin/movies?action=create">Thêm phim</a>
     </div>
 
-    <form class="search-form" action="<%= ctx%>/admin/movies" method="get">
-        <input type="text" name="q" value="<%= keyword%>" placeholder="Tìm kiếm phim">
+    <form accept-charset="UTF-8" class="search-form" action="<%= ctx%>/admin/movies" method="get">
+        <input type="text" name="q" value="<%=Html.e(keyword)%>" placeholder="Tìm kiếm phim">
         <button class="btn btn-primary" type="submit">Tìm kiếm</button>
         <% if (!keyword.isEmpty()) { %>
         <a class="btn btn-soft" href="<%= ctx%>/admin/movies">Xóa tìm kiếm</a>
@@ -39,7 +39,7 @@
     </form>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
     <p class="muted" style="margin-bottom:14px;">Tìm thấy <%= totalRecords%> phim.</p>
@@ -77,26 +77,26 @@
                     <td>
                         <div class="movie-thumb">
                             <% if (movie.getImageURL() != null && !movie.getImageURL().trim().isEmpty()) { %>
-                            <img src="<%= movie.getImageURL()%>" alt="<%= movie.getTitle()%>"
+                            <img src="<%=Html.e(movie.getImageURL())%>" alt="<%=Html.e(movie.getTitle())%>"
                                  width="48" height="72"
                                  style="width:48px;height:72px;max-width:48px;max-height:72px;object-fit:cover;object-position:center;"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
-                            <span class="poster-fallback" style="display:none;"><%= movie.getMovieID()%></span>
+                            <span class="poster-fallback" style="display:none;"><%=Html.e(movie.getMovieID())%></span>
                             <% } else { %>
-                            <span class="poster-fallback"><%= movie.getMovieID()%></span>
+                            <span class="poster-fallback"><%=Html.e(movie.getMovieID())%></span>
                             <% } %>
                         </div>
                     </td>
-                    <td><strong><%= movie.getMovieID()%></strong></td>
-                    <td><div class="admin-movie-title"><%= movie.getTitle()%></div></td>
-                    <td><div class="admin-movie-description"><%= movie.getDescription()%></div></td>
+                    <td><strong><%=Html.e(movie.getMovieID())%></strong></td>
+                    <td><div class="admin-movie-title"><%=Html.e(movie.getTitle())%></div></td>
+                    <td><div class="admin-movie-description"><%=Html.e(movie.getDescription())%></div></td>
                     <td><%= movie.getDuration()%> phút</td>
                     <td><%= df.format(movie.getBasePrice())%> VNĐ</td>
                     <td><span class="status <%= movie.isStatus() ? "status-on" : "status-off"%>"><%= movie.isStatus() ? "Đang chiếu" : "Ngừng chiếu"%></span></td>
                     <td>
                         <div class="admin-movie-actions">
-                            <a class="btn btn-blue" href="<%= ctx%>/admin/movies?action=edit&movieID=<%= movie.getMovieID()%>">Sửa</a>
-                            <a class="btn btn-danger" href="<%= ctx%>/admin/movies?action=delete&movieID=<%= movie.getMovieID()%>">Xóa</a>
+                            <a class="btn btn-blue" href="<%= ctx%>/admin/movies?action=edit&movieID=<%=Html.e(movie.getMovieID())%>">Sửa</a>
+                            <a class="btn btn-danger" href="<%= ctx%>/admin/movies?action=delete&movieID=<%=Html.e(movie.getMovieID())%>">Xóa</a>
                         </div>
                     </td>
                 </tr>
@@ -105,7 +105,7 @@
                     } else {
                 %>
                 <tr>
-                    <td colspan="8" style="text-align:center;color:#64748b;">Không tìm thấy phim phù hợp.</td>
+                    <td colspan="8" style="text-align:center;color:var(--muted);">Không tìm thấy phim phù hợp.</td>
                 </tr>
                 <% } %>
             </tbody>

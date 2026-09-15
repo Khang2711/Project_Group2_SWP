@@ -21,10 +21,10 @@
     <h1 class="page-title"><%= isUpdate ? "Cập nhật suất chiếu" : "Thêm suất chiếu"%></h1>
 
     <% if (error != null) { %>
-    <div class="alert alert-error"><%= error%></div>
+    <div class="alert alert-error"><%=Html.e(error)%></div>
     <% } %>
 
-    <form class="form-grid" action="<%= ctx%>/admin/showtimes" method="post">
+    <form accept-charset="UTF-8" class="form-grid" action="<%= ctx%>/admin/showtimes" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
         <input type="hidden" name="action" value="<%= isUpdate ? "update" : "add"%>">
 
         <div class="field">
@@ -40,7 +40,7 @@
                         for (Movie movie : movies) {
                             String selected = showtime != null && movie.getMovieID().equals(showtime.getMovieID()) ? "selected" : "";
                 %>
-                <option value="<%= movie.getMovieID()%>" <%= selected%>><%= movie.getTitle()%><%= movie.isStatus() ? "" : " (Chưa có lịch chiếu)"%></option>
+                <option value="<%=Html.e(movie.getMovieID())%>" <%= selected%>><%=Html.e(movie.getTitle())%><%= movie.isStatus() ? "" : " (Chưa có lịch chiếu)"%></option>
                 <%
                         }
                     }
@@ -56,7 +56,7 @@
                         for (Room room : rooms) {
                             String selected = showtime != null && room.getRoomID().equals(showtime.getRoomID()) ? "selected" : "";
                 %>
-                <option value="<%= room.getRoomID()%>" <%= selected%>><%= room.getRoomName()%><%= room.isStatus() ? "" : " (Bảo trì)"%></option>
+                <option value="<%=Html.e(room.getRoomID())%>" <%= selected%>><%=Html.e(room.getRoomName())%><%= room.isStatus() ? "" : " (Bảo trì)"%></option>
                 <%
                         }
                     }
@@ -75,7 +75,7 @@
         </div>
 
         <div class="field">
-            <label>Giờ kết thúc</label>
+            <label>Giờ kết thúc dự kiến (máy chủ tính lại theo phim)</label>
             <input type="time" name="endTime" value="<%= showtime != null ? showtime.getEndTime() : ""%>" required>
         </div>
 

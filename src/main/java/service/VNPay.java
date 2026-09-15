@@ -1,0 +1,14 @@
+package service;
+import utils.DBUtils;import java.util.*;import java.net.URLEncoder;import java.nio.charset.StandardCharsets;import java.time.*;import java.time.format.DateTimeFormatter;import javax.crypto.Mac;import javax.crypto.spec.SecretKeySpec;import java.security.MessageDigest;
+public final class VNPay {
+ public static boolean isConfigured(){return utils.DBUtils.config("VNPAY_TMN_CODE",null)!=null && utils.DBUtils.config("VNPAY_HASH_SECRET",null)!=null && utils.DBUtils.config("FCINEMA_PUBLIC_URL",null)!=null;}
+ public static String required(String key){String v=DBUtils.config(key,null);if(v==null)throw new IllegalArgumentException("Thanh toán chưa được cấu hình. Vui lòng liên hệ rạp.");return v;}
+ public static String query(Map<String,String> params){List<String>parts=new ArrayList<>();new TreeMap<>(params).forEach((k,v)->{if(v!=null&&!v.isEmpty())parts.add(URLEncoder.encode(k,StandardCharsets.US_ASCII)+"="+URLEncoder.encode(v,StandardCharsets.US_ASCII));});return String.join("&",parts);}
+ public static String sign(String data)throws Exception{Mac m=Mac.getInstance("HmacSHA512");m.init(new SecretKeySpec(required("VNPAY_HASH_SECRET").getBytes(StandardCharsets.UTF_8),"HmacSHA512"));StringBuilder h=new StringBuilder();for(byte b:m.doFinal(data.getBytes(StandardCharsets.UTF_8)))h.append(String.format("%02x",b));return h.toString();}
+ public static boolean verify(Map<String,String> params)throws Exception{Map<String,String>p=new TreeMap<>(params);String supplied=p.remove("vnp_SecureHash");p.remove("vnp_SecureHashType");return required("VNPAY_TMN_CODE").equals(p.get("vnp_TmnCode"))&&supplied!=null&&MessageDigest.isEqual(sign(query(p)).getBytes(StandardCharsets.US_ASCII),supplied.toLowerCase(Locale.ROOT).getBytes(StandardCharsets.US_ASCII));}
+ public static String url(Map<String,Object>o,String ip)throws Exception{
+  Map<String,String>p=new TreeMap<>();DateTimeFormatter f=DateTimeFormatter.ofPattern("yyyyMMddHHmmss");ZonedDateTime now=ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+  p.put("vnp_Version","2.1.0");p.put("vnp_Command","pay");p.put("vnp_TmnCode",required("VNPAY_TMN_CODE"));p.put("vnp_Amount",BookingService.money(o.get("totalAmount")).multiply(new java.math.BigDecimal(100)).toPlainString());p.put("vnp_CurrCode","VND");p.put("vnp_TxnRef",o.get("orderID").toString());p.put("vnp_OrderInfo","Thanh toan ve F Cinema "+o.get("orderID"));p.put("vnp_OrderType","other");p.put("vnp_Locale","vn");p.put("vnp_ReturnUrl",required("FCINEMA_PUBLIC_URL")+"/payment/return");p.put("vnp_IpAddr",ip);p.put("vnp_CreateDate",f.format(now));
+  java.time.LocalDateTime expiry=((java.sql.Timestamp)o.get("expiresAt")).toLocalDateTime();p.put("vnp_ExpireDate",f.format(expiry));String data=query(p);return DBUtils.config("VNPAY_URL","https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")+"?"+data+"&vnp_SecureHash="+sign(data);
+ }
+}

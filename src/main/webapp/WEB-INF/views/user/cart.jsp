@@ -45,7 +45,7 @@
         </div>
 
         <% if (error != null) { %>
-        <div class="alert alert-error"><%= error%></div>
+        <div class="alert alert-error"><%=Html.e(error)%></div>
         <% } %>
 
         <div class="table-wrap">
@@ -65,12 +65,12 @@
                             for (CartItem item : cart) {
                     %>
                     <tr>
-                        <td><%= item.getMovieTitle()%></td>
+                        <td><%=Html.e(item.getMovieTitle())%></td>
                         <td><%= item.getShowDate()%> <%= item.getStartTime()%></td>
-                        <td><strong><%= item.getSeatID()%></strong></td>
+                        <td><strong><%=Html.e(item.getSeatID())%></strong></td>
                         <td><%= df.format(item.getPrice())%> VNĐ</td>
                         <td>
-                            <a class="btn btn-danger" href="<%= ctx%>/cart?action=remove&key=<%= item.getKey()%>">Xóa</a>
+                            <form accept-charset="UTF-8" action="<%=ctx%>/cart" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>"><input type="hidden" name="action" value="remove"><input type="hidden" name="key" value="<%=Html.e(item.getKey())%>"><button class="btn btn-danger">Xóa</button></form>
                         </td>
                     </tr>
                     <%
@@ -78,7 +78,7 @@
                         } else {
                     %>
                     <tr>
-                        <td colspan="5" style="text-align:center;color:#64748b;">Chưa có vé trong giỏ.</td>
+                        <td colspan="5" style="text-align:center;color:var(--muted);">Chưa có vé trong giỏ.</td>
                     </tr>
                     <% } %>
                 </tbody>
@@ -90,7 +90,7 @@
         <h2 class="page-title" style="font-size:26px;">Combo bắp nước</h2>
         <p class="muted" style="margin-bottom:14px;">Mỗi combo đều ghi rõ số lượng bắp và nước nhận được.</p>
 
-        <form action="<%= ctx%>/cart" method="post" class="grid">
+        <form accept-charset="UTF-8" action="<%= ctx%>/cart" method="post" class="grid"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
             <input type="hidden" name="action" value="add-combo">
             <%
                 if (combos != null && !combos.isEmpty()) {
@@ -101,9 +101,9 @@
                         }
             %>
             <div class="field combo-field clear-combo-field">
-                <label><%= combo.getComboName()%></label>
+                <label><%=Html.e(combo.getComboName())%></label>
                 <span class="combo-price"><%= df.format(combo.getPrice())%> VNĐ</span>
-                <input type="number" name="<%= combo.getComboID()%>" min="0" value="<%= quantity%>">
+                <input type="number" name="<%=Html.e(combo.getComboID())%>" min="0" max="20" value="<%= quantity%>">
             </div>
             <%
                     }
@@ -116,16 +116,14 @@
         <h2 style="margin:0 0 10px;">Tổng tiền</h2>
         <p class="muted">Vé: <strong><%= df.format(ticketTotal)%> VNĐ</strong></p>
         <p class="muted">Combo: <strong><%= df.format(comboTotal)%> VNĐ</strong></p>
-        <h2 style="color:#ea580c;"><%= df.format(total)%> VNĐ</h2>
+        <h2 style="color:#ff4450;"><%= df.format(total)%> VNĐ</h2>
 
         <div class="checkout-actions">
-            <form action="<%= ctx%>/cart" method="post" style="display:inline;">
+            <form accept-charset="UTF-8" action="<%= ctx%>/cart" method="post" style="display:inline;"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
                 <input type="hidden" name="action" value="clear">
                 <button class="btn btn-soft" type="submit">Xóa giỏ hàng</button>
             </form>
-            <form action="<%= ctx%>/checkout" method="post" style="display:inline;">
-                <button class="btn btn-primary" type="submit">Thanh toán</button>
-            </form>
+            <%if(cart!=null&&!cart.isEmpty()){%><a class="btn btn-primary" href="<%=ctx%>/checkout">Tiếp tục thanh toán</a><%}else{%><span class="muted">Chọn ít nhất một ghế để tiếp tục.</span><%}%>
         </div>
     </div>
 </section>

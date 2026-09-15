@@ -53,10 +53,10 @@
     </div>
 
     <% if (request.getAttribute("error") != null) { %>
-    <div class="alert alert-error"><%= request.getAttribute("error")%></div>
+    <div class="alert alert-error"><%=Html.e(request.getAttribute("error"))%></div>
     <% } %>
 
-    <form class="report-filter" method="get"
+    <form accept-charset="UTF-8" class="report-filter" method="get"
           action="<%= request.getContextPath()%>/admin/reports">
         <div class="field report-month-field">
             <label for="month">Chọn tháng báo cáo</label>
@@ -122,8 +122,8 @@
                     for (MovieRevenue item : movieRevenueList) { %>
                 <tr>
                     <td><%= index++%></td>
-                    <td><strong><%= item.getMovieID()%></strong></td>
-                    <td><%= item.getMovieTitle()%></td>
+                    <td><strong><%=Html.e(item.getMovieID())%></strong></td>
+                    <td><%=Html.e(item.getMovieTitle())%></td>
                     <td><%= item.getOrderCount()%></td>
                     <td><%= item.getTicketCount()%></td>
                     <td><strong><%= df.format(item.getRevenue())%> VNĐ</strong></td>
