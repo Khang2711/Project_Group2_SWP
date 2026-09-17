@@ -1,146 +1,84 @@
 package model;
 
+import java.sql.Date;
+import java.sql.Time;
+
+/** Model cho bảng Showtime. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Showtime {
-    private String showtimeID;
-    private String movieID;
-    private String movieTitle;
-    private String roomID;
-    private String roomName;
-    private int totalSeats;
-    private String showDate;
-    private String startTime;
-    private String endTime;
-    private boolean status;
-    private float basePrice;
-    private boolean roomStatus;
+    private int showtimeId; // showtime_id
+    private int roomId; // room_id
+    private int movieId; // movie_id
+    private Date showDate; // show_date
+    private Time startTime; // start_time
+    private Time endTime; // end_time
+    private String status; // status
 
     public Showtime() {
     }
 
-    public Showtime(String showtimeID, String movieID, String movieTitle, String roomID, String roomName,
-            int totalSeats, String showDate, String startTime, String endTime, boolean status, float basePrice) {
-        this.showtimeID = showtimeID;
-        this.movieID = movieID;
-        this.movieTitle = movieTitle;
-        this.roomID = roomID;
-        this.roomName = roomName;
-        this.totalSeats = totalSeats;
+    public Showtime(int showtimeId, int roomId, int movieId, Date showDate, Time startTime, Time endTime, String status) {
+        this.showtimeId = showtimeId;
+        this.roomId = roomId;
+        this.movieId = movieId;
         this.showDate = showDate;
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
-        this.basePrice = basePrice;
-        this.roomStatus = true;
     }
 
-
-    public Showtime(String showtimeID, String movieID, String movieTitle, String roomID, String roomName,
-            int totalSeats, String showDate, String startTime, String endTime, boolean status, float basePrice, boolean roomStatus) {
-        this(showtimeID, movieID, movieTitle, roomID, roomName, totalSeats, showDate, startTime, endTime, status, basePrice);
-        this.roomStatus = roomStatus;
+    public int getShowtimeId() {
+        return showtimeId;
     }
 
-    public String getShowtimeID() {
-        return showtimeID;
+    public void setShowtimeId(int showtimeId) {
+        this.showtimeId = showtimeId;
     }
 
-    public void setShowtimeID(String showtimeID) {
-        this.showtimeID = showtimeID;
+    public int getRoomId() {
+        return roomId;
     }
 
-    public String getMovieID() {
-        return movieID;
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 
-    public void setMovieID(String movieID) {
-        this.movieID = movieID;
+    public int getMovieId() {
+        return movieId;
     }
 
-    public String getMovieTitle() {
-        return movieTitle;
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 
-    public void setMovieTitle(String movieTitle) {
-        this.movieTitle = movieTitle;
-    }
-
-    public String getRoomID() {
-        return roomID;
-    }
-
-    public void setRoomID(String roomID) {
-        this.roomID = roomID;
-    }
-
-    public String getRoomName() {
-        return roomName;
-    }
-
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
-    }
-
-    public int getTotalSeats() {
-        return totalSeats;
-    }
-
-    public void setTotalSeats(int totalSeats) {
-        this.totalSeats = totalSeats;
-    }
-
-    public String getShowDate() {
+    public Date getShowDate() {
         return showDate;
     }
 
-    public void setShowDate(String showDate) {
+    public void setShowDate(Date showDate) {
         this.showDate = showDate;
     }
 
-    public String getStartTime() {
+    public Time getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(Time startTime) {
         this.startTime = startTime;
     }
 
-    public String getEndTime() {
+    public Time getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(Time endTime) {
         this.endTime = endTime;
     }
 
-    public boolean isStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
+    public void setStatus(String status) {
         this.status = status;
-    }
-
-    public float getBasePrice() {
-        return basePrice;
-    }
-
-    public void setBasePrice(float basePrice) {
-        this.basePrice = basePrice;
-    }
-
-    public boolean isRoomStatus() {
-        return roomStatus;
-    }
-
-    public boolean getRoomStatus() {
-        return roomStatus;
-    }
-
-    public void setRoomStatus(boolean roomStatus) {
-        this.roomStatus = roomStatus;
     }
 }

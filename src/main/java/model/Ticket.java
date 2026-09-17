@@ -1,101 +1,84 @@
 package model;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+/** Model cho bảng Ticket. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Ticket {
-    private String ticketID;
-    private String orderID;
-    private String movieTitle;
-    private String roomName;
-    private String showDate;
-    private String startTime;
-    private String seatID;
-    private float price;
-    private String orderDate;
+    private int ticketId; // ticket_id
+    private int bookingId; // booking_id
+    private int seatId; // seat_id
+    private String ticketCode; // ticket_code
+    private BigDecimal ticketPrice; // ticket_price
+    private String status; // status
+    private Timestamp checkedInAt; // checked_in_at
 
     public Ticket() {
     }
 
-    public Ticket(String ticketID, String orderID, String movieTitle, String roomName, String showDate,
-            String startTime, String seatID, float price, String orderDate) {
-        this.ticketID = ticketID;
-        this.orderID = orderID;
-        this.movieTitle = movieTitle;
-        this.roomName = roomName;
-        this.showDate = showDate;
-        this.startTime = startTime;
-        this.seatID = seatID;
-        this.price = price;
-        this.orderDate = orderDate;
+    public Ticket(int ticketId, int bookingId, int seatId, String ticketCode, BigDecimal ticketPrice, String status, Timestamp checkedInAt) {
+        this.ticketId = ticketId;
+        this.bookingId = bookingId;
+        this.seatId = seatId;
+        this.ticketCode = ticketCode;
+        this.ticketPrice = ticketPrice;
+        this.status = status;
+        this.checkedInAt = checkedInAt;
     }
 
-    public String getTicketID() {
-        return ticketID;
+    public int getTicketId() {
+        return ticketId;
     }
 
-    public void setTicketID(String ticketID) {
-        this.ticketID = ticketID;
+    public void setTicketId(int ticketId) {
+        this.ticketId = ticketId;
     }
 
-    public String getOrderID() {
-        return orderID;
+    public int getBookingId() {
+        return bookingId;
     }
 
-    public void setOrderID(String orderID) {
-        this.orderID = orderID;
+    public void setBookingId(int bookingId) {
+        this.bookingId = bookingId;
     }
 
-    public String getMovieTitle() {
-        return movieTitle;
+    public int getSeatId() {
+        return seatId;
     }
 
-    public void setMovieTitle(String movieTitle) {
-        this.movieTitle = movieTitle;
+    public void setSeatId(int seatId) {
+        this.seatId = seatId;
     }
 
-    public String getRoomName() {
-        return roomName;
+    public String getTicketCode() {
+        return ticketCode;
     }
 
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
+    public void setTicketCode(String ticketCode) {
+        this.ticketCode = ticketCode;
     }
 
-    public String getShowDate() {
-        return showDate;
+    public BigDecimal getTicketPrice() {
+        return ticketPrice;
     }
 
-    public void setShowDate(String showDate) {
-        this.showDate = showDate;
+    public void setTicketPrice(BigDecimal ticketPrice) {
+        this.ticketPrice = ticketPrice;
     }
 
-    public String getStartTime() {
-        return startTime;
+    public String getStatus() {
+        return status;
     }
 
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public String getSeatID() {
-        return seatID;
+    public Timestamp getCheckedInAt() {
+        return checkedInAt;
     }
 
-    public void setSeatID(String seatID) {
-        this.seatID = seatID;
-    }
-
-    public float getPrice() {
-        return price;
-    }
-
-    public void setPrice(float price) {
-        this.price = price;
-    }
-
-    public String getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(String orderDate) {
-        this.orderDate = orderDate;
+    public void setCheckedInAt(Timestamp checkedInAt) {
+        this.checkedInAt = checkedInAt;
     }
 }

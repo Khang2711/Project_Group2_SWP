@@ -1,2 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@include file="/WEB-INF/include/header.jsp"%><section class="panel"><span class="eyebrow">F-CINEMA</span><h1 class="page-title">Không thể mở trang này</h1><p class="muted">Trang không tồn tại, phiên đã hết hạn hoặc tài khoản không có quyền truy cập.</p><a class="btn btn-primary" href="<%=headerCtx%><%=headerLoginUser==null?"/auth":Access.home(hr)%>">Về trang của bạn</a></section><%@include file="/WEB-INF/include/footer.jsp"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ include file="/WEB-INF/include/header.jsp" %>
+<h1>Không thể mở trang</h1><p>Đường dẫn không tồn tại hoặc đã xảy ra lỗi xử lý.</p>
+<%@ include file="/WEB-INF/include/footer.jsp" %>

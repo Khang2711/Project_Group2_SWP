@@ -1,28 +1,60 @@
 package model;
 
-public class User {
+import java.sql.Timestamp;
 
-    private String userID;
-    private String fullName;
-    private String password;
-    private String roleID;
+/** Model cho bảng User. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+public class User {
+    private int userId; // user_id
+    private int roleId; // role_id
+    private Integer cinemaId; // cinema_id
+    private String fullName; // full_name
+    private String email; // email
+    private String phone; // phone
+    private String passwordHash; // password_hash
+    private String avatarUrl; // avatar_url
+    private String status; // status
+    private Timestamp createdAt; // created_at
+    private Timestamp updatedAt; // updated_at
 
     public User() {
     }
 
-    public User(String userID, String fullName, String password, String roleID) {
-        this.userID = userID;
+    public User(int userId, int roleId, Integer cinemaId, String fullName, String email, String phone, String passwordHash, String avatarUrl, String status, Timestamp createdAt, Timestamp updatedAt) {
+        this.userId = userId;
+        this.roleId = roleId;
+        this.cinemaId = cinemaId;
         this.fullName = fullName;
-        this.password = password;
-        this.roleID = roleID;
+        this.email = email;
+        this.phone = phone;
+        this.passwordHash = passwordHash;
+        this.avatarUrl = avatarUrl;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public String getUserID() {
-        return userID;
+    public int getUserId() {
+        return userId;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
+    }
+
+    public Integer getCinemaId() {
+        return cinemaId;
+    }
+
+    public void setCinemaId(Integer cinemaId) {
+        this.cinemaId = cinemaId;
     }
 
     public String getFullName() {
@@ -33,19 +65,59 @@ public class User {
         this.fullName = fullName;
     }
 
-    public String getPassword() {
-        return password;
+    public String getEmail() {
+        return email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public String getRoleID() {
-        return roleID;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setRoleID(String roleID) {
-        this.roleID = roleID;
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

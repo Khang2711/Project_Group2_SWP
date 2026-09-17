@@ -1,41 +1,45 @@
 package model;
 
+import java.sql.Date;
+import java.sql.Timestamp;
+
+/** Model cho bảng Movie. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Movie {
-    private int ageRating;
-    private String screeningStart,screeningEnd;
-    public int getAgeRating(){return ageRating;}public void setAgeRating(int a){ageRating=a;}
-    public String getScreeningStart(){return screeningStart;}public void setScreeningStart(String s){screeningStart=s;}
-    public String getScreeningEnd(){return screeningEnd;}public void setScreeningEnd(String s){screeningEnd=s;}
-
-
-    private String movieID;
-    private String title;
-    private String description;
-    private int duration;
-    private float basePrice;
-    private boolean status;
-    private String imageURL;
+    private int movieId; // movie_id
+    private String title; // title
+    private String description; // description
+    private int durationMinutes; // duration_minutes
+    private String ageRating; // age_rating
+    private Date releaseDate; // release_date
+    private Date endDate; // end_date
+    private String posterUrl; // poster_url
+    private String status; // status
+    private Timestamp createdAt; // created_at
+    private Timestamp updatedAt; // updated_at
 
     public Movie() {
     }
 
-    public Movie(String movieID, String title, String description, int duration,
-            float basePrice, boolean status, String imageURL) {
-        this.movieID = movieID;
+    public Movie(int movieId, String title, String description, int durationMinutes, String ageRating, Date releaseDate, Date endDate, String posterUrl, String status, Timestamp createdAt, Timestamp updatedAt) {
+        this.movieId = movieId;
         this.title = title;
         this.description = description;
-        this.duration = duration;
-        this.basePrice = basePrice;
+        this.durationMinutes = durationMinutes;
+        this.ageRating = ageRating;
+        this.releaseDate = releaseDate;
+        this.endDate = endDate;
+        this.posterUrl = posterUrl;
         this.status = status;
-        this.imageURL = imageURL;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public String getMovieID() {
-        return movieID;
+    public int getMovieId() {
+        return movieId;
     }
 
-    public void setMovieID(String movieID) {
-        this.movieID = movieID;
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 
     public String getTitle() {
@@ -54,39 +58,67 @@ public class Movie {
         this.description = description;
     }
 
-    public int getDuration() {
-        return duration;
+    public int getDurationMinutes() {
+        return durationMinutes;
     }
 
-    public void setDuration(int duration) {
-        this.duration = duration;
+    public void setDurationMinutes(int durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 
-    public float getBasePrice() {
-        return basePrice;
+    public String getAgeRating() {
+        return ageRating;
     }
 
-    public void setBasePrice(float basePrice) {
-        this.basePrice = basePrice;
+    public void setAgeRating(String ageRating) {
+        this.ageRating = ageRating;
     }
 
-    public boolean isStatus() {
+    public Date getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(Date releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+
+    public String getStatus() {
         return status;
     }
 
-    public boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
-    public String getImageURL() {
-        return imageURL;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setImageURL(String imageURL) {
-        this.imageURL = imageURL;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

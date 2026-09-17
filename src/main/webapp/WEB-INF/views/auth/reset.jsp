@@ -1,5 +1,0 @@
-<%@page pageEncoding="UTF-8"%>
-<%@include file="/WEB-INF/include/header.jsp"%><section class="panel" style="max-width:540px;margin:50px auto"><span class="eyebrow">ACCOUNT RECOVERY</span><h1 class="page-title">Đặt lại mật khẩu</h1>
-<%if(request.getAttribute("error")!=null){%><p class="alert alert-error"><%=Html.e(request.getAttribute("error"))%></p><%}%><%if(request.getAttribute("success")!=null){%><p class="alert alert-success"><%=Html.e(request.getAttribute("success"))%></p><%}%>
-<form accept-charset="UTF-8" method="post"><input type="hidden" name="csrf" value="<%=session.getAttribute("CSRF")%>">
-<%if(request.getParameter("token")!=null){%><input type="hidden" name="token" value="<%=Html.e(request.getParameter("token"))%>"><label>Mật khẩu mới<input type="password" name="password" minlength="8" required autocomplete="new-password"></label><%}else{%><label>Email đã đăng ký<input type="email" name="email" required autocomplete="email"></label><%}%><p><button class="btn btn-primary">Tiếp tục</button> <a class="btn btn-soft" href="<%=headerCtx%>/auth">Đăng nhập</a></p></form></section><%@include file="/WEB-INF/include/footer.jsp"%>

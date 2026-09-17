@@ -1,27 +1,39 @@
 package model;
 
+
+/** Model cho bảng Room. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Room {
-    private String roomID;
-    private String roomName;
-    private int totalSeats;
-    private boolean status;
+    private int roomId; // room_id
+    private int cinemaId; // cinema_id
+    private String roomName; // room_name
+    private int capacity; // capacity
+    private String status; // status
 
     public Room() {
     }
 
-    public Room(String roomID, String roomName, int totalSeats, boolean status) {
-        this.roomID = roomID;
+    public Room(int roomId, int cinemaId, String roomName, int capacity, String status) {
+        this.roomId = roomId;
+        this.cinemaId = cinemaId;
         this.roomName = roomName;
-        this.totalSeats = totalSeats;
+        this.capacity = capacity;
         this.status = status;
     }
 
-    public String getRoomID() {
-        return roomID;
+    public int getRoomId() {
+        return roomId;
     }
 
-    public void setRoomID(String roomID) {
-        this.roomID = roomID;
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
+    }
+
+    public int getCinemaId() {
+        return cinemaId;
+    }
+
+    public void setCinemaId(int cinemaId) {
+        this.cinemaId = cinemaId;
     }
 
     public String getRoomName() {
@@ -32,23 +44,19 @@ public class Room {
         this.roomName = roomName;
     }
 
-    public int getTotalSeats() {
-        return totalSeats;
+    public int getCapacity() {
+        return capacity;
     }
 
-    public void setTotalSeats(int totalSeats) {
-        this.totalSeats = totalSeats;
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
-    public boolean isStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 }
