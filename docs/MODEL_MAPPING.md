@@ -159,3 +159,77 @@ Tên cột theo Database Schema đã thống nhất sau khi bỏ cơ chế giữ
 | amount | amount | BigDecimal |
 | payment_time | paymentTime | Timestamp |
 | status | status | String |
+
+## Genre → Genre.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| genre_id | genreId | int |
+| genre_name | genreName | String |
+| description | description | String |
+| status | status | String |
+
+## Movie_Genre → MovieGenre.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| movie_id | movieId | int |
+| genre_id | genreId | int |
+
+## Food_Item → FoodItem.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| food_item_id | foodItemId | int |
+| cinema_id | cinemaId | int |
+| item_name | itemName | String |
+| description | description | String |
+| price | price | BigDecimal |
+| image_url | imageUrl | String |
+| status | status | String |
+
+## Combo → Combo.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| combo_id | comboId | int |
+| cinema_id | cinemaId | int |
+| combo_name | comboName | String |
+| description | description | String |
+| combo_price | comboPrice | BigDecimal |
+| image_url | imageUrl | String |
+| status | status | String |
+
+## Combo_Item → ComboItem.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| combo_id | comboId | int |
+| food_item_id | foodItemId | int |
+| quantity | quantity | int |
+
+## Food_Order → FoodOrder.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| food_order_id | foodOrderId | int |
+| booking_id | bookingId | Integer |
+| customer_id | customerId | int |
+| cinema_id | cinemaId | int |
+| order_time | orderTime | Timestamp |
+| total_amount | totalAmount | BigDecimal |
+| status | status | String |
+
+## Food_Order_Item → FoodOrderItem.java
+
+| Cột SQL | Thuộc tính Java | Kiểu Java |
+|---|---|---|
+| food_order_item_id | foodOrderItemId | int |
+| food_order_id | foodOrderId | int |
+| food_item_id | foodItemId | Integer |
+| combo_id | comboId | Integer |
+| quantity | quantity | int |
+| unit_price | unitPrice | BigDecimal |
+| subtotal | subtotal | BigDecimal |
+
+> Quy ước cho Food_Order_Item: mỗi dòng chỉ dùng một trong hai khóa `food_item_id` hoặc `combo_id`; repository/service phải validate điều này khi triển khai nghiệp vụ.
