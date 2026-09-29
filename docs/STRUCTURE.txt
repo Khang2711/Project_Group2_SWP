@@ -27,7 +27,6 @@ src/main/java/dto/package-info.java
 src/main/java/exception/package-info.java
 src/main/java/integration/package-info.java
 src/main/java/model/Booking.java
-src/main/java/model/BookingSeat.java
 src/main/java/model/Cinema.java
 src/main/java/model/CinemaMovie.java
 src/main/java/model/Movie.java
@@ -41,7 +40,6 @@ src/main/java/model/Showtime.java
 src/main/java/model/Ticket.java
 src/main/java/model/User.java
 src/main/java/repository/BookingRepository.java
-src/main/java/repository/BookingSeatRepository.java
 src/main/java/repository/CinemaMovieRepository.java
 src/main/java/repository/CinemaRepository.java
 src/main/java/repository/MovieRepository.java

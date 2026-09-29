@@ -14,12 +14,13 @@ public class Booking {
     private BigDecimal discountAmount; // discount_amount
     private BigDecimal totalAmount; // total_amount
     private String status; // status
-    private Timestamp reservationExpiredAt; // reservation_expired_at
 
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int showtimeId, Integer promotionId, Timestamp bookingTime, BigDecimal subtotal, BigDecimal discountAmount, BigDecimal totalAmount, String status, Timestamp reservationExpiredAt) {
+    public Booking(int bookingId, int customerId, int showtimeId, Integer promotionId,
+            Timestamp bookingTime, BigDecimal subtotal, BigDecimal discountAmount,
+            BigDecimal totalAmount, String status) {
         this.bookingId = bookingId;
         this.customerId = customerId;
         this.showtimeId = showtimeId;
@@ -29,7 +30,6 @@ public class Booking {
         this.discountAmount = discountAmount;
         this.totalAmount = totalAmount;
         this.status = status;
-        this.reservationExpiredAt = reservationExpiredAt;
     }
 
     public int getBookingId() {
@@ -102,13 +102,5 @@ public class Booking {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Timestamp getReservationExpiredAt() {
-        return reservationExpiredAt;
-    }
-
-    public void setReservationExpiredAt(Timestamp reservationExpiredAt) {
-        this.reservationExpiredAt = reservationExpiredAt;
     }
 }

@@ -1,6 +1,6 @@
 # Đối chiếu model với Database Schema trong RDS
 
-Tên cột theo hình ở mục I.3.1.a. Khóa ngoại lưu bằng ID để dễ học; không dùng ORM, Lombok hay kế thừa model.
+Tên cột theo Database Schema đã thống nhất sau khi bỏ cơ chế giữ ghế 10 phút. Khóa ngoại lưu bằng ID để dễ học; không dùng ORM, Lombok hay kế thừa model.
 
 ## Role → Role.java
 
@@ -133,17 +133,8 @@ Tên cột theo hình ở mục I.3.1.a. Khóa ngoại lưu bằng ID để dễ
 | discount_amount | discountAmount | BigDecimal |
 | total_amount | totalAmount | BigDecimal |
 | status | status | String |
-| reservation_expired_at | reservationExpiredAt | Timestamp |
 
-## Booking_Seat → BookingSeat.java
-
-| Cột SQL | Thuộc tính Java | Kiểu Java |
-|---|---|---|
-| booking_id | bookingId | int |
-| seat_id | seatId | int |
-| price | price | BigDecimal |
-| status | status | String |
-| reserved_at | reservedAt | Timestamp |
+> `reservation_expired_at` và bảng `Booking_Seat` không còn được dùng sau khi nhóm bỏ cơ chế giữ ghế 10 phút.
 
 ## Ticket → Ticket.java
 
@@ -168,4 +159,3 @@ Tên cột theo hình ở mục I.3.1.a. Khóa ngoại lưu bằng ID để dễ
 | amount | amount | BigDecimal |
 | payment_time | paymentTime | Timestamp |
 | status | status | String |
-

@@ -49,7 +49,7 @@ Các file hiện là khung, chưa hoàn thành use case. Một controller có th
 | Thịnh | UC-01,02,18,19,20,23; Auth/Profile; User/Role repository | Thống nhất session và mã vai trò với Vy |
 | Hoàng | UC-04–09; quản lý phim/rạp/phòng/ghế/giá/lịch chiếu | Dùng chung Movie/Showtime với Kiệt |
 | Kiệt | UC-10,11,24; danh sách phim, chi tiết, lịch chiếu khách hàng | Hoàng phụ trách ghi dữ liệu; Kiệt phụ trách đọc |
-| Hào | UC-12–15,22; đặt chỗ, VNPay, booking, vé | Vy cung cấp kiểm tra promotion; ticket chia sẻ với check-in |
+| Hào | UC-12–15,22; đặt vé, VNPay, booking, vé | Vy cung cấp kiểm tra promotion; ticket chia sẻ với check-in |
 | Vy | UC-03,16,17,21; tài khoản, check-in, dashboard, promotion | Phối hợp Thịnh về quyền và Hào về trạng thái vé |
 | Khang | Tích hợp, security filters, kiểm thử luồng, tài liệu và rà soát RDS | Đây là phân công gợi ý, không phải phân công có sẵn trong RDS |
 
@@ -62,10 +62,11 @@ Không đồng thời sửa một file mà chưa thống nhất nhánh và phầ
 1. Thống nhất SQL thật và model; kiểm tra kết nối.
 2. Đăng nhập, session, phân quyền; danh mục rạp/phim/phòng/ghế.
 3. Giá vé, lịch chiếu, khuyến mãi và trang khách hàng.
-4. Đặt chỗ có transaction, giữ ghế 10 phút, không bán trùng ghế cùng suất.
-5. VNPay: xác thực callback, xử lý lặp an toàn, phát hành vé khi thanh toán thành công.
+4. Đặt vé bằng transaction; không giữ ghế theo timer. Trước khi xác nhận thanh toán phải kiểm tra lại ghế để tránh bán trùng cùng suất.
+5. VNPay: xác thực callback, xử lý lặp an toàn; khi thanh toán thành công mới xác nhận booking/ticket theo business rule hiện hành.
 6. Check-in, lịch sử, thống kê và kiểm thử toàn luồng.
 
-Đặt toàn phòng dùng Booking + BookingSeat cho toàn bộ ghế hợp lệ; không tự thêm bảng mới.
-BookingSeat giữ lịch sử RESERVED/SOLD/RELEASED. Ticket lấy suất chiếu qua Booking.
+Không dùng `BookingSeat` hoặc `reservation_expired_at` cho cơ chế giữ ghế 10 phút nữa.
+Ghế của vé được xác định qua `Ticket.seat_id`; suất chiếu lấy qua `Booking.showtime_id`.
+Khi xử lý thanh toán, phải kiểm tra xung đột ghế tại thời điểm xác nhận và dùng transaction/constraint phù hợp trong SQL để tránh bán trùng.
 Payment có thể có nhiều giao dịch cho một Booking. Dashboard chỉ tính doanh thu hợp lệ.
