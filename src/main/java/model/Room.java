@@ -1,22 +1,28 @@
 package model;
 
-
-/** Model cho bảng Room. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Represents a screening room in a cinema.
+ *
+ * @author Kiet
+ */
 public class Room {
-    private int roomId; // room_id
-    private int cinemaId; // cinema_id
-    private String roomName; // room_name
-    private int capacity; // capacity
-    private String status; // status
+
+    private int roomId;
+    private int cinemaId;
+    private String roomName;
+    private int capacity;
+    private String roomType;
+    private String status;
 
     public Room() {
     }
 
-    public Room(int roomId, int cinemaId, String roomName, int capacity, String status) {
+    public Room(int roomId, int cinemaId, String roomName, int capacity, String roomType, String status) {
         this.roomId = roomId;
         this.cinemaId = cinemaId;
         this.roomName = roomName;
         this.capacity = capacity;
+        this.roomType = roomType;
         this.status = status;
     }
 
@@ -50,6 +56,14 @@ public class Room {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
     }
 
     public String getStatus() {
