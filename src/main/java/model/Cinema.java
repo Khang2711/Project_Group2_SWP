@@ -1,13 +1,17 @@
 package model;
 
-
-/** Model cho bảng Cinema. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Represents a cinema branch.
+ *
+ * @author Kiet
+ */
 public class Cinema {
-    private int cinemaId; // cinema_id
-    private String cinemaName; // cinema_name
-    private String address; // address
-    private String phone; // phone
-    private String status; // status
+
+    private int cinemaId;
+    private String cinemaName;
+    private String address;
+    private String phone;
+    private String status;
 
     public Cinema() {
     }
