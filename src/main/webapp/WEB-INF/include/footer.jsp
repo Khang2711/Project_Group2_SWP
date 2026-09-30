@@ -1,3 +1,35 @@
-</main><footer>FCinema ‚Ä¢ MVC Servlet / JSP ‚Ä¢ D·ª± √°n h·ªçc t·∫≠p</footer>
+<footer class="site-footer">
+
+    <div class="footer-container">
+
+        <div class="footer-brand">
+            <div class="footer-logo"> F-CINEMA </div>
+            <p> ??t vÈ xem phim nhanh chÛng v‡ ti?n l?i. </p>
+        </div>
+
+
+        <div class="footer-navigation">
+            <a href="${pageContext.request.contextPath}/user/movies"> Kh·m ph· phim </a>
+
+            <a href="${pageContext.request.contextPath}/user/showtimes"> Gi? vÈ </a>
+
+            <a href="${pageContext.request.contextPath}/user/tickets"> VÈ c?a tÙi </a>
+
+            <a href="${pageContext.request.contextPath}/user/profile"> T‡i kho?n </a>
+        </div>
+
+    </div>
+
+
+        <div class="footer-bottom">
+            © 2026 F-CINEMA. All rights reserved.
+        </div>
+
+</footer>
+
+
 <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
-</body></html>
+
+</body>
+
+</html>
