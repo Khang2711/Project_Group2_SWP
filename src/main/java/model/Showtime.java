@@ -1,26 +1,28 @@
 package model;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.sql.Timestamp;
 
-/** Model cho bảng Showtime. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Represents a movie showtime.
+ *
+ * @author Kiet
+ */
 public class Showtime {
-    private int showtimeId; // showtime_id
-    private int roomId; // room_id
-    private int movieId; // movie_id
-    private Date showDate; // show_date
-    private Time startTime; // start_time
-    private Time endTime; // end_time
-    private String status; // status
+
+    private int showtimeId;
+    private int movieId;
+    private int roomId;
+    private Timestamp startTime;
+    private Timestamp endTime;
+    private String status;
 
     public Showtime() {
     }
 
-    public Showtime(int showtimeId, int roomId, int movieId, Date showDate, Time startTime, Time endTime, String status) {
+    public Showtime(int showtimeId, int movieId, int roomId, Timestamp startTime, Timestamp endTime, String status) {
         this.showtimeId = showtimeId;
-        this.roomId = roomId;
         this.movieId = movieId;
-        this.showDate = showDate;
+        this.roomId = roomId;
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
@@ -34,14 +36,6 @@ public class Showtime {
         this.showtimeId = showtimeId;
     }
 
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
     public int getMovieId() {
         return movieId;
     }
@@ -50,27 +44,27 @@ public class Showtime {
         this.movieId = movieId;
     }
 
-    public Date getShowDate() {
-        return showDate;
+    public int getRoomId() {
+        return roomId;
     }
 
-    public void setShowDate(Date showDate) {
-        this.showDate = showDate;
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 
-    public Time getStartTime() {
+    public Timestamp getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Time startTime) {
+    public void setStartTime(Timestamp startTime) {
         this.startTime = startTime;
     }
 
-    public Time getEndTime() {
+    public Timestamp getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Time endTime) {
+    public void setEndTime(Timestamp endTime) {
         this.endTime = endTime;
     }
 
