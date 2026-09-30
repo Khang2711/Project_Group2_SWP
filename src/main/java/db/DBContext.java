@@ -3,15 +3,39 @@ package db;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/** Kết nối SQL Server theo file mẫu. Dùng cho môi trường học local. */
+/**
+ * Provides database connection for the FCinema application.
+ *
+ * @author Kiet
+ */
 public class DBContext {
-    private final String DB_URL = "jdbc:sqlserver://127.0.0.1:1433;databaseName=FCinemaDB;encrypt=false";
-    private final String DB_USER = "sa";
-    private final String DB_PWD = "123456"; // Đổi theo SQL Server trên máy bạn.
 
-    public Connection getConnection() throws SQLException {
-        // Tạo kết nối khi DAO cần; không giữ kết nối dùng chung cho nhiều request.
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PWD);
+    protected Connection conn = null;
+
+    /**
+     * Creates a database connection.
+     */
+    public DBContext() {
+
+        try {
+
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+
+            String dbURL = "jdbc:sqlserver://localhost:1433;"
+                    + "databaseName=FCinemaDB;"
+                    + "user=sa;"
+                    + "password=123456;"
+                    + "encrypt=true;trustServerCertificate=true;";
+
+            conn = DriverManager.getConnection(dbURL);
+
+        } catch (SQLException ex) {
+            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
