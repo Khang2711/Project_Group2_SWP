@@ -1,26 +1,29 @@
 package model;
 
 import java.sql.Date;
-import java.sql.Timestamp;
 
-/** Model cho bảng Movie. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Represents a movie in the cinema system.
+ *
+ * @author Kiet
+ */
 public class Movie {
-    private int movieId; // movie_id
-    private String title; // title
-    private String description; // description
-    private int durationMinutes; // duration_minutes
-    private String ageRating; // age_rating
-    private Date releaseDate; // release_date
-    private Date endDate; // end_date
-    private String posterUrl; // poster_url
-    private String status; // status
-    private Timestamp createdAt; // created_at
-    private Timestamp updatedAt; // updated_at
+
+    private int movieId;
+    private String title;
+    private String description;
+    private int durationMinutes;
+    private String ageRating;
+    private Date releaseDate;
+    private Date endDate;
+    private String posterUrl;
+    private String trailerUrl;
+    private String status;
 
     public Movie() {
     }
 
-    public Movie(int movieId, String title, String description, int durationMinutes, String ageRating, Date releaseDate, Date endDate, String posterUrl, String status, Timestamp createdAt, Timestamp updatedAt) {
+    public Movie(int movieId, String title, String description, int durationMinutes, String ageRating, Date releaseDate, Date endDate, String posterUrl, String trailerUrl, String status) {
         this.movieId = movieId;
         this.title = title;
         this.description = description;
@@ -29,9 +32,8 @@ public class Movie {
         this.releaseDate = releaseDate;
         this.endDate = endDate;
         this.posterUrl = posterUrl;
+        this.trailerUrl = trailerUrl;
         this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public int getMovieId() {
@@ -98,27 +100,19 @@ public class Movie {
         this.posterUrl = posterUrl;
     }
 
+    public String getTrailerUrl() {
+        return trailerUrl;
+    }
+
+    public void setTrailerUrl(String trailerUrl) {
+        this.trailerUrl = trailerUrl;
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
