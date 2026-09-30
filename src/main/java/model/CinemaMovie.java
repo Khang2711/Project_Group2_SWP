@@ -1,11 +1,15 @@
 package model;
 
-
-/** Model cho bảng Cinema_Movie. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Represents the relationship between a cinema and a movie.
+ *
+ * @author Kiet
+ */
 public class CinemaMovie {
-    private int cinemaId; // cinema_id
-    private int movieId; // movie_id
-    private String status; // status
+
+    private int cinemaId;
+    private int movieId;
+    private String status;
 
     public CinemaMovie() {
     }
