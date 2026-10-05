@@ -18,6 +18,8 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE role_name = 'STAFF')
     INSERT INTO dbo.[Role](role_name, description, status) VALUES ('STAFF', N'Cinema staff', 'ACTIVE');
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE role_name = 'CUSTOMER')
     INSERT INTO dbo.[Role](role_name, description, status) VALUES ('CUSTOMER', N'Cinema customer', 'ACTIVE');
+IF NOT EXISTS (SELECT 1 FROM dbo.[Role]WHERE role_name = 'CINEMA_MANAGER')
+    INSERT INTO dbo.[Role](role_name, description, status) VALUES ('CINEMA_MANAGER', N'Cinema Manager', 'ACTIVE');
 GO
 
 /* 02. CINEMA */
