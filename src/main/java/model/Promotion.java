@@ -1,31 +1,38 @@
 package model;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.sql.Timestamp;
 
-/** Model cho bảng Promotion. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Promotion {
-    private int promotionId; // promotion_id
-    private int cinemaId; // cinema_id
-    private String promoCode; // promo_code
-    private String promotionName; // promotion_name
-    private String discountType; // discount_type
-    private BigDecimal discountValue; // discount_value
-    private Date startDate; // start_date
-    private Date endDate; // end_date
-    private Integer usageLimit; // usage_limit
-    private String status; // status
+
+    private int promotionId;
+    private String promoCode;
+    private String description;
+    private String discountType;
+    private BigDecimal discountValue;
+    private BigDecimal minOrderAmount;
+    private BigDecimal maxDiscountAmount;
+    private Timestamp startDate;
+    private Timestamp endDate;
+    private Integer usageLimit;
+    private String status;
 
     public Promotion() {
     }
 
-    public Promotion(int promotionId, int cinemaId, String promoCode, String promotionName, String discountType, BigDecimal discountValue, Date startDate, Date endDate, Integer usageLimit, String status) {
+    public Promotion(int promotionId, String promoCode, String description,
+            String discountType, BigDecimal discountValue,
+            BigDecimal minOrderAmount, BigDecimal maxDiscountAmount,
+            Timestamp startDate, Timestamp endDate,
+            Integer usageLimit, String status) {
+
         this.promotionId = promotionId;
-        this.cinemaId = cinemaId;
         this.promoCode = promoCode;
-        this.promotionName = promotionName;
+        this.description = description;
         this.discountType = discountType;
         this.discountValue = discountValue;
+        this.minOrderAmount = minOrderAmount;
+        this.maxDiscountAmount = maxDiscountAmount;
         this.startDate = startDate;
         this.endDate = endDate;
         this.usageLimit = usageLimit;
@@ -40,14 +47,6 @@ public class Promotion {
         this.promotionId = promotionId;
     }
 
-    public int getCinemaId() {
-        return cinemaId;
-    }
-
-    public void setCinemaId(int cinemaId) {
-        this.cinemaId = cinemaId;
-    }
-
     public String getPromoCode() {
         return promoCode;
     }
@@ -56,12 +55,12 @@ public class Promotion {
         this.promoCode = promoCode;
     }
 
-    public String getPromotionName() {
-        return promotionName;
+    public String getDescription() {
+        return description;
     }
 
-    public void setPromotionName(String promotionName) {
-        this.promotionName = promotionName;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getDiscountType() {
@@ -80,19 +79,35 @@ public class Promotion {
         this.discountValue = discountValue;
     }
 
-    public Date getStartDate() {
+    public BigDecimal getMinOrderAmount() {
+        return minOrderAmount;
+    }
+
+    public void setMinOrderAmount(BigDecimal minOrderAmount) {
+        this.minOrderAmount = minOrderAmount;
+    }
+
+    public BigDecimal getMaxDiscountAmount() {
+        return maxDiscountAmount;
+    }
+
+    public void setMaxDiscountAmount(BigDecimal maxDiscountAmount) {
+        this.maxDiscountAmount = maxDiscountAmount;
+    }
+
+    public Timestamp getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(Timestamp startDate) {
         this.startDate = startDate;
     }
 
-    public Date getEndDate() {
+    public Timestamp getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public void setEndDate(Timestamp endDate) {
         this.endDate = endDate;
     }
 
