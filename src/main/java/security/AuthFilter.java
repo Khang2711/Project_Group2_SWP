@@ -10,6 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.SQLException;
+import model.User;
+import model.Role;
+import repository.UserRepository;
+import repository.RoleRepository;
 
 @WebFilter(urlPatterns = {
     "/user/*",
@@ -18,6 +23,18 @@ import java.io.IOException;
     "/system/*"
 })
 public class AuthFilter implements Filter {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+
+    public AuthFilter() {
+        this(new UserRepository(), new RoleRepository());
+    }
+
+    // Cho phép kiểm tra filter bằng repository giả, không cần DB thật.
+    AuthFilter(UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
 
     @Override
     public void doFilter(ServletRequest servletRequest,
@@ -44,14 +61,36 @@ public class AuthFilter implements Filter {
 
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("user") == null) {
+        if (session == null || !(session.getAttribute("user") instanceof User)) {
             response.sendRedirect(
                     request.getContextPath() + "/auth/login"
             );
             return;
         }
 
-        String roleName = (String) session.getAttribute("roleName");
+        // Đọc lại trạng thái/quyền để thay đổi của admin có hiệu lực với session cũ.
+        String roleName;
+        try {
+            User loginUser = (User) session.getAttribute("user");
+            User currentUser = userRepository.findById(loginUser.getUserId());
+            Role role = currentUser == null ? null
+                    : roleRepository.findById(currentUser.getRoleId());
+            if (currentUser == null || !"ACTIVE".equals(currentUser.getStatus())
+                    || role == null || !"ACTIVE".equals(role.getStatus())) {
+                session.invalidate();
+                response.sendRedirect(request.getContextPath() + "/auth/login");
+                return;
+            }
+            roleName = role.getRoleName();
+            currentUser.setPasswordHash(null);
+            session.setAttribute("user", currentUser);
+            session.setAttribute("roleName", roleName);
+        } catch (SQLException ex) {
+            request.getServletContext().log("Cannot refresh account permissions.", ex);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Không thể kiểm tra tài khoản lúc này.");
+            return;
+        }
 
         if (!hasPermission(path, roleName)) {
             response.sendError(

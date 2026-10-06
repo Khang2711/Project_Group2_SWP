@@ -1,0 +1,29 @@
+.user-admin {color:#f4f4f5; padding:28px 0;}
+.user-admin h1 {font-size:28px; margin:0 0 10px;}
+.user-heading {display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:24px; flex-wrap:wrap;}
+.user-heading p,.ua-muted,.ua-help {color:#b9b9c4;}
+.ua-table-wrap {overflow-x:auto; border:1px solid #383840; border-radius:12px;}
+.ua-table {width:100%; border-collapse:collapse; background:#18181e; font-size:14px;}
+.ua-table th,.ua-table td {padding:16px; text-align:left; border-bottom:1px solid #383840; vertical-align:middle;}
+.ua-table th {background:#272730; color:#fff; white-space:nowrap;}
+.ua-table td {overflow-wrap:anywhere; min-width:90px;}
+.ua-table td:nth-child(2) {min-width:200px;}
+.ua-actions {display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+.ua-actions form {margin:0;}
+.user-admin .ua-button {display:inline-block; padding:10px 15px; border:1px solid #484852; border-radius:7px; background:#292932; color:#fff; text-decoration:none; cursor:pointer; font:inherit; white-space:nowrap;}
+.user-admin .ua-button.primary {background:#df1026; border-color:#df1026;}
+.user-admin .ua-button.danger {background:#421c25; border-color:#773343; color:#ffccd3;}
+.user-admin .ua-button:hover {filter:brightness(1.15);}
+.ua-badge {display:inline-block; background:#30303a; padding:6px 9px; border-radius:6px; white-space:nowrap;}
+.ua-success {padding:14px; border:1px solid #347356; background:#163d2b; border-radius:7px;}
+.ua-error {padding:14px; border:1px solid #98424d; background:#491e26; color:#ffdee3; border-radius:7px;}
+.ua-form-card {max-width:720px; margin:24px auto; background:#18181e; border:1px solid #383840; border-radius:12px; padding:28px;}
+.ua-form {display:flex; flex-direction:column; gap:10px; margin-top:24px;}
+.ua-form label {font-weight:600; margin-top:8px;}
+.user-admin .ua-form input,.user-admin .ua-form select {box-sizing:border-box; width:100%; padding:12px; border:1px solid #51515c; border-radius:7px; background:#101014; color:#fff; font:inherit;}
+.user-admin .ua-form input[type=hidden] {display:none;}
+.ua-form select:disabled {opacity:.5;}
+.ua-help {font-size:13px; margin:0; line-height:1.5;}
+.ua-form .ua-actions {margin-top:18px;}
+.user-admin :focus-visible {outline:2px solid #ff6275; outline-offset:3px;}
+@media(max-width:600px) {.ua-form-card {padding:18px;} .user-admin h1 {font-size:24px;}}

@@ -120,4 +120,11 @@ public class User {
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
+    // Tên hiển thị lấy từ JOIN; không phải cột mới trong bảng User.
+    private String roleName;
+    private String cinemaName;
+    public String getRoleName() { return roleName; }
+    public void setRoleName(String roleName) { this.roleName = roleName; }
+    public String getCinemaName() { return cinemaName; }
+    public void setCinemaName(String cinemaName) { this.cinemaName = cinemaName; }
 }
