@@ -18,6 +18,8 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE role_name = 'STAFF')
     INSERT INTO dbo.[Role](role_name, description, status) VALUES ('STAFF', N'Cinema staff', 'ACTIVE');
 IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE role_name = 'CUSTOMER')
     INSERT INTO dbo.[Role](role_name, description, status) VALUES ('CUSTOMER', N'Cinema customer', 'ACTIVE');
+IF NOT EXISTS (SELECT 1 FROM dbo.[Role]WHERE role_name = 'CINEMA_MANAGER')
+    INSERT INTO dbo.[Role](role_name, description, status) VALUES ('CINEMA_MANAGER', N'Cinema Manager', 'ACTIVE');
 GO
 
 /* 02. CINEMA */
@@ -31,6 +33,7 @@ GO
 
 /* 03. USERS + CUSTOMER/STAFF */
 DECLARE @AdminRoleId INT = (SELECT role_id FROM dbo.[Role] WHERE role_name='ADMIN');
+DECLARE @ManagerRoleId INT = (SELECT role_id FROM dbo.[Role] WHERE role_name='CINEMA_MANAGER');
 DECLARE @StaffRoleId INT = (SELECT role_id FROM dbo.[Role] WHERE role_name='STAFF');
 DECLARE @CustomerRoleId INT = (SELECT role_id FROM dbo.[Role] WHERE role_name='CUSTOMER');
 DECLARE @Cinema1Id INT = (SELECT cinema_id FROM dbo.Cinema WHERE cinema_name=N'F-Cinema Ninh Kiều');
@@ -40,6 +43,9 @@ DECLARE @PasswordMD5 VARCHAR(255) = 'e10adc3949ba59abbe56e057f20f883e';
 IF NOT EXISTS (SELECT 1 FROM dbo.[User] WHERE email='admin@fcinema.local')
     INSERT INTO dbo.[User](role_id,full_name,email,password_hash,phone,status)
     VALUES (@AdminRoleId,N'FCinema Admin','admin@fcinema.local',@PasswordMD5,'0900000001','ACTIVE');
+IF NOT EXISTS (SELECT 1 FROM dbo.[User] WHERE email='manager@fcinema.local')
+    INSERT INTO dbo.[User](role_id,full_name,email,password_hash,phone,status)
+    VALUES (@ManagerRoleId,N'FCinema Manager','manager@fcinema.local',@PasswordMD5,'0900000006','ACTIVE');
 IF NOT EXISTS (SELECT 1 FROM dbo.[User] WHERE email='staff1@fcinema.local')
     INSERT INTO dbo.[User](role_id,full_name,email,password_hash,phone,status)
     VALUES (@StaffRoleId,N'Nguyễn Minh Staff','staff1@fcinema.local',@PasswordMD5,'0900000002','ACTIVE');
