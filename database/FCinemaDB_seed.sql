@@ -427,6 +427,93 @@ WHERE NOT EXISTS (
 );
 GO
 
+/* 09B. DENSE SHOWTIMES - MANY TIME SLOTS FOR THE SAME MOVIE/DAY */
+DECLARE @DenseDate TABLE (show_date DATE PRIMARY KEY);
+
+INSERT INTO @DenseDate(show_date)
+VALUES
+('2026-10-16'),
+('2026-10-17'),
+('2026-10-18'),
+('2026-10-23'),
+('2026-10-24'),
+('2026-10-26');
+
+DECLARE @DenseSlot TABLE (
+    cinema_name NVARCHAR(100),
+    room_name NVARCHAR(100),
+    movie_title NVARCHAR(255),
+    start_minute INT
+);
+
+/*
+    5 time slots per room:
+    09:00, 12:00, 15:00, 18:00, 21:00.
+
+    Several movies repeat multiple times in the same cinema on the same day
+    so the booking UI can demonstrate realistic time-slot selection.
+*/
+INSERT INTO @DenseSlot(cinema_name,room_name,movie_title,start_minute)
+VALUES
+-- F-Cinema Ninh Kiều - Room 1
+(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',540),
+(N'F-Cinema Ninh Kiều',N'Room 1',N'Mekong Rush',720),
+(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',900),
+(N'F-Cinema Ninh Kiều',N'Room 1',N'Mekong Rush',1080),
+(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',1260),
+
+-- F-Cinema Ninh Kiều - Room 2
+(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',540),
+(N'F-Cinema Ninh Kiều',N'Room 2',N'Laughing at 8PM',720),
+(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',900),
+(N'F-Cinema Ninh Kiều',N'Room 2',N'Midnight Signal',1080),
+(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',1260),
+
+-- F-Cinema Cái Răng - Room 1
+(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',540),
+(N'F-Cinema Cái Răng',N'Room 1',N'The Last Horizon',720),
+(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',900),
+(N'F-Cinema Cái Răng',N'Room 1',N'The Lantern Keeper',1080),
+(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',1260),
+
+-- F-Cinema Cái Răng - Room 2
+(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',540),
+(N'F-Cinema Cái Răng',N'Room 2',N'Shadow Room',720),
+(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',900),
+(N'F-Cinema Cái Răng',N'Room 2',N'Mekong Rush',1080),
+(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',1260);
+
+INSERT INTO dbo.Showtime(movie_id,room_id,start_time,end_time,status)
+SELECT
+    m.movie_id,
+    r.room_id,
+    x.start_time,
+    DATEADD(MINUTE,m.duration_minutes,x.start_time),
+    'ACTIVE'
+FROM @DenseDate d
+CROSS JOIN @DenseSlot s
+JOIN dbo.Cinema c
+  ON c.cinema_name=s.cinema_name
+JOIN dbo.Room r
+  ON r.cinema_id=c.cinema_id
+ AND r.room_name=s.room_name
+JOIN dbo.Movie m
+  ON m.title=s.movie_title
+CROSS APPLY (
+    SELECT DATEADD(
+        MINUTE,
+        s.start_minute,
+        CAST(d.show_date AS DATETIME2)
+    ) AS start_time
+) x
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.Showtime st
+    WHERE st.room_id=r.room_id
+      AND st.start_time=x.start_time
+);
+GO
+
 /* 10. PROMOTION */
 IF NOT EXISTS (SELECT 1 FROM dbo.Promotion WHERE promo_code='WELCOME10')
     INSERT INTO dbo.Promotion(promo_code,description,discount_type,discount_value,min_order_amount,max_discount_amount,start_date,end_date,usage_limit,status)
@@ -557,4 +644,20 @@ SELECT CAST(start_time AS DATE) AS show_date,
 FROM dbo.Showtime
 GROUP BY CAST(start_time AS DATE)
 ORDER BY show_date;
+
+SELECT
+    CAST(st.start_time AS DATE) AS show_date,
+    c.cinema_name,
+    m.title,
+    COUNT(*) AS slots_same_movie_same_day
+FROM dbo.Showtime st
+JOIN dbo.Movie m ON m.movie_id=st.movie_id
+JOIN dbo.Room r ON r.room_id=st.room_id
+JOIN dbo.Cinema c ON c.cinema_id=r.cinema_id
+GROUP BY
+    CAST(st.start_time AS DATE),
+    c.cinema_name,
+    m.title
+HAVING COUNT(*) > 1
+ORDER BY show_date,c.cinema_name,m.title;
 GO
