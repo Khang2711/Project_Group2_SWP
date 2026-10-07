@@ -14,18 +14,32 @@ public class FoodOrderRepository {
 
     public int insert(FoodOrder foodOrder) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection()) {
+        String sql = "INSERT INTO Food_Order "
+                + "(staff_id, cinema_id, subtotal, total_amount, "
+                + "payment_method, payment_status, order_status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = new DBContext().getConnection()) {
 
             if (connection == null) {
                 return -1;
             }
 
-            return insert(
-                    connection,
-                    foodOrder
-            );
+            try (PreparedStatement statement = connection.prepareStatement(
+                    sql, Statement.RETURN_GENERATED_KEYS)) {
+
+                setOrderData(statement, foodOrder);
+
+                if (statement.executeUpdate() == 0) {
+                    return -1;
+                }
+
+                try (ResultSet resultSet = statement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        return resultSet.getInt(1);
+                    }
+                }
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -34,70 +48,24 @@ public class FoodOrderRepository {
         return -1;
     }
 
-    public int insert(
-            Connection connection,
-            FoodOrder foodOrder)
+    public int insert(Connection connection, FoodOrder foodOrder)
             throws SQLException {
 
-        String sql
-                = "INSERT INTO Food_Order "
+        String sql = "INSERT INTO Food_Order "
                 + "(staff_id, cinema_id, subtotal, total_amount, "
                 + "payment_method, payment_status, order_status) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (
-                PreparedStatement statement
-                = connection.prepareStatement(
-                        sql,
-                        Statement.RETURN_GENERATED_KEYS
-                )) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            statement.setInt(
-                    1,
-                    foodOrder.getStaffId()
-            );
+            setOrderData(statement, foodOrder);
 
-            statement.setInt(
-                    2,
-                    foodOrder.getCinemaId()
-            );
-
-            statement.setBigDecimal(
-                    3,
-                    foodOrder.getSubtotal()
-            );
-
-            statement.setBigDecimal(
-                    4,
-                    foodOrder.getTotalAmount()
-            );
-
-            statement.setString(
-                    5,
-                    foodOrder.getPaymentMethod()
-            );
-
-            statement.setString(
-                    6,
-                    foodOrder.getPaymentStatus()
-            );
-
-            statement.setString(
-                    7,
-                    foodOrder.getOrderStatus()
-            );
-
-            int affectedRows
-                    = statement.executeUpdate();
-
-            if (affectedRows == 0) {
+            if (statement.executeUpdate() == 0) {
                 return -1;
             }
 
-            try (
-                    ResultSet resultSet
-                    = statement.getGeneratedKeys()) {
-
+            try (ResultSet resultSet = statement.getGeneratedKeys()) {
                 if (resultSet.next()) {
                     return resultSet.getInt(1);
                 }
@@ -114,59 +82,45 @@ public class FoodOrderRepository {
         if (foodOrder == null
                 || items == null
                 || items.isEmpty()) {
-
             return -1;
         }
 
-        try (
-                Connection connection
-                = new DBContext().getConnection()) {
+        try (Connection connection = new DBContext().getConnection()) {
 
             if (connection == null) {
                 return -1;
             }
 
-            boolean originalAutoCommit
-                    = connection.getAutoCommit();
+            boolean originalAutoCommit = connection.getAutoCommit();
 
             try {
+                connection.setAutoCommit(false);
 
-                connection.setAutoCommit(
-                        false
+                int foodOrderId = insert(
+                        connection,
+                        foodOrder
                 );
 
-                int foodOrderId
-                        = insert(
-                                connection,
-                                foodOrder
-                        );
-
                 if (foodOrderId <= 0) {
-
                     connection.rollback();
-
                     return -1;
                 }
 
                 FoodOrderItemRepository itemRepository
                         = new FoodOrderItemRepository();
 
+                // Save order and items in one transaction
                 for (FoodOrderItem item : items) {
 
-                    item.setFoodOrderId(
-                            foodOrderId
+                    item.setFoodOrderId(foodOrderId);
+
+                    int itemId = itemRepository.insert(
+                            connection,
+                            item
                     );
 
-                    int foodOrderItemId
-                            = itemRepository.insert(
-                                    connection,
-                                    item
-                            );
-
-                    if (foodOrderItemId <= 0) {
-
+                    if (itemId <= 0) {
                         connection.rollback();
-
                         return -1;
                     }
                 }
@@ -175,79 +129,55 @@ public class FoodOrderRepository {
 
                 return foodOrderId;
 
-            } catch (SQLException
-                    | RuntimeException e) {
+            } catch (SQLException | RuntimeException e) {
 
                 try {
-
                     connection.rollback();
-
                 } catch (SQLException rollbackException) {
-
                     rollbackException.printStackTrace();
                 }
 
                 e.printStackTrace();
-
                 return -1;
 
             } finally {
 
                 try {
-
-                    connection.setAutoCommit(
-                            originalAutoCommit
-                    );
-
+                    connection.setAutoCommit(originalAutoCommit);
                 } catch (SQLException e) {
-
                     e.printStackTrace();
                 }
             }
 
         } catch (SQLException e) {
-
             e.printStackTrace();
-
-            return -1;
         }
+
+        return -1;
     }
 
-    public FoodOrder getById(
-            int foodOrderId) {
+    public FoodOrder getById(int foodOrderId) {
 
-        String sql
-                = "SELECT food_order_id, staff_id, cinema_id, "
+        String sql = "SELECT food_order_id, staff_id, cinema_id, "
                 + "subtotal, total_amount, payment_method, "
                 + "payment_status, order_status, created_at "
                 + "FROM Food_Order "
                 + "WHERE food_order_id = ?";
 
-        try (
-                Connection connection
-                = new DBContext().getConnection()) {
+        try (Connection connection = new DBContext().getConnection()) {
 
             if (connection == null) {
                 return null;
             }
 
-            try (
-                    PreparedStatement statement
-                    = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
 
-                statement.setInt(
-                        1,
-                        foodOrderId
-                );
+                statement.setInt(1, foodOrderId);
 
-                try (
-                        ResultSet resultSet
-                        = statement.executeQuery()) {
+                try (ResultSet resultSet = statement.executeQuery()) {
 
                     if (resultSet.next()) {
-                        return mapFoodOrder(
-                                resultSet
-                        );
+                        return mapFoodOrder(resultSet);
                     }
                 }
             }
@@ -259,65 +189,58 @@ public class FoodOrderRepository {
         return null;
     }
 
-    private FoodOrder mapFoodOrder(
-            ResultSet resultSet)
+    private void setOrderData(
+            PreparedStatement statement,
+            FoodOrder foodOrder) throws SQLException {
+
+        statement.setInt(1, foodOrder.getStaffId());
+        statement.setInt(2, foodOrder.getCinemaId());
+        statement.setBigDecimal(3, foodOrder.getSubtotal());
+        statement.setBigDecimal(4, foodOrder.getTotalAmount());
+        statement.setString(5, foodOrder.getPaymentMethod());
+        statement.setString(6, foodOrder.getPaymentStatus());
+        statement.setString(7, foodOrder.getOrderStatus());
+    }
+
+    private FoodOrder mapFoodOrder(ResultSet resultSet)
             throws SQLException {
 
-        FoodOrder foodOrder
-                = new FoodOrder();
+        FoodOrder foodOrder = new FoodOrder();
 
         foodOrder.setFoodOrderId(
-                resultSet.getInt(
-                        "food_order_id"
-                )
+                resultSet.getInt("food_order_id")
         );
 
         foodOrder.setStaffId(
-                resultSet.getInt(
-                        "staff_id"
-                )
+                resultSet.getInt("staff_id")
         );
 
         foodOrder.setCinemaId(
-                resultSet.getInt(
-                        "cinema_id"
-                )
+                resultSet.getInt("cinema_id")
         );
 
         foodOrder.setSubtotal(
-                resultSet.getBigDecimal(
-                        "subtotal"
-                )
+                resultSet.getBigDecimal("subtotal")
         );
 
         foodOrder.setTotalAmount(
-                resultSet.getBigDecimal(
-                        "total_amount"
-                )
+                resultSet.getBigDecimal("total_amount")
         );
 
         foodOrder.setPaymentMethod(
-                resultSet.getString(
-                        "payment_method"
-                )
+                resultSet.getString("payment_method")
         );
 
         foodOrder.setPaymentStatus(
-                resultSet.getString(
-                        "payment_status"
-                )
+                resultSet.getString("payment_status")
         );
 
         foodOrder.setOrderStatus(
-                resultSet.getString(
-                        "order_status"
-                )
+                resultSet.getString("order_status")
         );
 
         foodOrder.setCreatedAt(
-                resultSet.getTimestamp(
-                        "created_at"
-                )
+                resultSet.getTimestamp("created_at")
         );
 
         return foodOrder;
