@@ -244,13 +244,7 @@
                         <td>
                             <div class="account-actions">
 
-                                <c:if test="${roleName eq 'STAFF'
-                                              or roleName eq 'CINEMA_MANAGER'}">
-                                    <a class="account-button account-button-secondary"
-                                       href="${pageContext.request.contextPath}/system/user-form?id=${account.userId}">
-                                        Sửa
-                                    </a>
-                                </c:if>
+                                
 
                                 <c:choose>
                                     <c:when test="${account.status eq 'ACTIVE'
@@ -289,11 +283,18 @@
 
                                             <button type="submit"
                                                     class="account-button account-button-activate">
-                                                Kích hoạt
+                                                Kích hoạt lại
                                             </button>
                                         </form>
                                     </c:when>
                                 </c:choose>
+                                <c:if test="${roleName eq 'STAFF'
+                                              or roleName eq 'CINEMA_MANAGER'}">
+                                    <a class="account-button account-button-secondary"
+                                       href="${pageContext.request.contextPath}/system/user-form?id=${account.userId}">
+                                        Sửa
+                                    </a>
+                                </c:if>
                             </div>
                         </td>
                     </tr>
