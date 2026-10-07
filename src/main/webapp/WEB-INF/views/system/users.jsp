@@ -39,6 +39,14 @@
         background-color: #a3131d;
     }
 
+    .account-button-activate {
+        background-color: #2f6f44;
+    }
+
+    .account-button-activate:hover {
+        background-color: #245936;
+    }
+
     .account-message {
         margin-bottom: 20px;
         padding: 12px 15px;
@@ -161,6 +169,12 @@
         </div>
     </c:if>
 
+    <c:if test="${param.activated eq '1'}">
+        <div class="account-message account-success">
+            Đã kích hoạt lại tài khoản.
+        </div>
+    </c:if>
+
     <div class="account-table-wrapper">
         <table class="account-table">
             <thead>
@@ -238,26 +252,48 @@
                                     </a>
                                 </c:if>
 
-                                <c:if test="${account.status eq 'ACTIVE'
-                                              and account.userId ne sessionScope.user.userId}">
-                                    <form method="post"
-                                          action="${pageContext.request.contextPath}/system/users"
-                                          onsubmit="return confirm('Vô hiệu hóa tài khoản này?');">
+                                <c:choose>
+                                    <c:when test="${account.status eq 'ACTIVE'
+                                                    and account.userId ne sessionScope.user.userId}">
+                                        <form method="post"
+                                              action="${pageContext.request.contextPath}/system/users"
+                                              onsubmit="return confirm('Vô hiệu hóa tài khoản này?');">
 
-                                        <input type="hidden"
-                                               name="action"
-                                               value="deactivate">
+                                            <input type="hidden"
+                                                   name="action"
+                                                   value="deactivate">
 
-                                        <input type="hidden"
-                                               name="userId"
-                                               value="${account.userId}">
+                                            <input type="hidden"
+                                                   name="userId"
+                                                   value="${account.userId}">
 
-                                        <button type="submit"
-                                                class="account-button account-button-danger">
-                                            Vô hiệu hóa
-                                        </button>
-                                    </form>
-                                </c:if>
+                                            <button type="submit"
+                                                    class="account-button account-button-danger">
+                                                Vô hiệu hóa
+                                            </button>
+                                        </form>
+                                    </c:when>
+
+                                    <c:when test="${account.status eq 'INACTIVE'}">
+                                        <form method="post"
+                                              action="${pageContext.request.contextPath}/system/users"
+                                              onsubmit="return confirm('Kích hoạt lại tài khoản này?');">
+
+                                            <input type="hidden"
+                                                   name="action"
+                                                   value="activate">
+
+                                            <input type="hidden"
+                                                   name="userId"
+                                                   value="${account.userId}">
+
+                                            <button type="submit"
+                                                    class="account-button account-button-activate">
+                                                Kích hoạt
+                                            </button>
+                                        </form>
+                                    </c:when>
+                                </c:choose>
                             </div>
                         </td>
                     </tr>
