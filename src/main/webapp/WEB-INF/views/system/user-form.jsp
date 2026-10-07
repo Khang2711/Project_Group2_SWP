@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
@@ -137,7 +138,7 @@
                    id="fullName"
                    name="fullName"
                    maxlength="100"
-                   value="<c:out value='${user.fullName}' />"
+                   value="${fn:escapeXml(user.fullName)}"
                    required>
         </div>
 
@@ -147,7 +148,7 @@
                    id="email"
                    name="email"
                    maxlength="100"
-                   value="<c:out value='${user.email}' />"
+                   value="${fn:escapeXml(user.email)}"
                    required>
         </div>
 
@@ -157,7 +158,7 @@
                    id="phone"
                    name="phone"
                    maxlength="20"
-                   value="<c:out value='${user.phone}' />">
+                   value="${fn:escapeXml(user.phone)}">
         </div>
 
         <div class="user-form-group">
@@ -197,13 +198,20 @@
                 <option value="">-- Chọn vai trò --</option>
 
                 <c:forEach var="role" items="${roles}">
-                    <option value="${role.roleId}"
-                            <c:if test="${not empty user
-                                         and user.roleId == role.roleId}">
-                                selected
-                            </c:if>>
-                        <c:out value="${role.roleName}" />
-                    </option>
+                    <c:choose>
+                        <c:when test="${not empty user
+                                        and user.roleId == role.roleId}">
+                            <option value="${role.roleId}" selected>
+                                <c:out value="${role.roleName}" />
+                            </option>
+                        </c:when>
+
+                        <c:otherwise>
+                            <option value="${role.roleId}">
+                                <c:out value="${role.roleName}" />
+                            </option>
+                        </c:otherwise>
+                    </c:choose>
                 </c:forEach>
             </select>
         </div>
@@ -217,13 +225,20 @@
                 <option value="">-- Không áp dụng --</option>
 
                 <c:forEach var="cinema" items="${cinemas}">
-                    <option value="${cinema.cinemaId}"
-                            <c:if test="${not empty user.cinemaId
-                                         and user.cinemaId == cinema.cinemaId}">
-                                selected
-                            </c:if>>
-                        <c:out value="${cinema.cinemaName}" />
-                    </option>
+                    <c:choose>
+                        <c:when test="${not empty user.cinemaId
+                                        and user.cinemaId == cinema.cinemaId}">
+                            <option value="${cinema.cinemaId}" selected>
+                                <c:out value="${cinema.cinemaName}" />
+                            </option>
+                        </c:when>
+
+                        <c:otherwise>
+                            <option value="${cinema.cinemaId}">
+                                <c:out value="${cinema.cinemaName}" />
+                            </option>
+                        </c:otherwise>
+                    </c:choose>
                 </c:forEach>
             </select>
 
