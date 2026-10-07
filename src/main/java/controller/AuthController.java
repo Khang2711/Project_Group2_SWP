@@ -32,14 +32,18 @@ public class AuthController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setHeader("Cache-Control", "no-store");
+        preventCache(response);
 
         String path = request.getServletPath();
 
         switch (path) {
             case "/auth/login":
-                if (redirectLoggedInUser(request, response)) {
-                    return;
+                HttpSession currentSession = request.getSession(false);
+
+                // Opening the login page ends the current login.
+                if (currentSession != null
+                        && currentSession.getAttribute("user") != null) {
+                    currentSession.invalidate();
                 }
 
                 showLogin(request, response);
@@ -50,9 +54,11 @@ public class AuthController extends HttpServlet {
                 break;
 
             case "/auth/register":
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/auth/register.jsp"
-                ).forward(request, response);
+                if (redirectLoggedInUser(request, response)) {
+                    return;
+                }
+
+                showRegister(request, response);
                 break;
 
             case "/auth/forgot-password":
@@ -78,21 +84,25 @@ public class AuthController extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        response.setHeader("Cache-Control", "no-store");
+        preventCache(response);
 
         String path = request.getServletPath();
 
         switch (path) {
             case "/auth/login":
-                if (redirectLoggedInUser(request, response)) {
-                    return;
-                }
-
                 login(request, response);
                 break;
 
             case "/auth/logout":
                 logout(request, response);
+                break;
+
+            case "/auth/register":
+                if (redirectLoggedInUser(request, response)) {
+                    return;
+                }
+
+                register(request, response);
                 break;
 
             default:
@@ -109,66 +119,95 @@ public class AuthController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        request.setAttribute("email", email == null ? "" : email.trim());
+        String error;
 
         try {
             User user = authService.login(email, password);
 
             String roleName = authService.getRoleName(user.getRoleId());
-            String homePath = authService.getHomePath(roleName);
+            String homePath = getHomePath(roleName);
 
-            HttpSession oldSession = request.getSession(false);
+            if (homePath != null) {
+                startSession(request, user, roleName);
 
-            if (oldSession != null) {
-                oldSession.invalidate();
+                response.sendRedirect(
+                        request.getContextPath() + homePath
+                );
+                return;
             }
 
-            HttpSession session = request.getSession(true);
-
-            session.setAttribute("user", user);
-            session.setAttribute("roleName", roleName);
-            session.setMaxInactiveInterval(30 * 60);
-
-            response.sendRedirect(
-                    request.getContextPath() + homePath
-            );
+            error = "Vai trò của tài khoản chưa được hỗ trợ.";
 
         } catch (IllegalArgumentException e) {
-            request.setAttribute("error", e.getMessage());
-            showLogin(request, response);
+            error = e.getMessage();
 
         } catch (SQLException e) {
             log("Cannot process login.", e);
 
-            request.setAttribute(
-                    "error",
-                    "Không thể đăng nhập lúc này. "
-                    + "Vui lòng kiểm tra kết nối database."
-            );
-
-            showLogin(request, response);
+            error = "Không thể đăng nhập lúc này. "
+                    + "Vui lòng kiểm tra kết nối database.";
         }
+
+        request.getSession().setAttribute("loginError", error);
+
+        response.sendRedirect(
+                request.getContextPath() + "/auth/login"
+        );
     }
 
-    private boolean redirectLoggedInUser(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+    private void register(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
 
-        if (session == null || session.getAttribute("user") == null) {
-            return false;
+        // Keep typed values so the form can show them again after an error.
+        request.setAttribute(
+                "fullName", fullName == null ? "" : fullName.trim()
+        );
+        request.setAttribute(
+                "email", email == null ? "" : email.trim()
+        );
+        request.setAttribute(
+                "phone", phone == null ? "" : phone.trim()
+        );
+
+        try {
+            authService.register(
+                    fullName, email, phone, password, confirmPassword
+            );
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showRegister(request, response);
+            return;
+
+        } catch (SQLException e) {
+            log("Cannot register customer.", e);
+
+            request.setAttribute(
+                    "error",
+                    "Không thể đăng ký lúc này. Vui lòng thử lại sau."
+            );
+            showRegister(request, response);
+            return;
         }
 
-        String roleName = (String) session.getAttribute("roleName");
-        String homePath = authService.getHomePath(roleName);
+        HttpSession session = request.getSession();
 
-        if (homePath == null) {
-            session.invalidate();
-            return false;
-        }
+        session.removeAttribute("loginError");
+        session.setAttribute(
+                "registrationMessage",
+                "Đăng ký thành công. Bạn có thể đăng nhập."
+        );
 
-        response.sendRedirect(request.getContextPath() + homePath);
-        return true;
+        response.sendRedirect(
+                request.getContextPath() + "/auth/login"
+        );
     }
 
     private void logout(HttpServletRequest request,
@@ -181,16 +220,111 @@ public class AuthController extends HttpServlet {
         }
 
         response.sendRedirect(
-                request.getContextPath() + "/auth/login?logout=1"
+                request.getContextPath() + "/auth/login"
         );
+    }
+
+    private void startSession(HttpServletRequest request,
+            User user, String roleName) {
+
+        HttpSession oldSession = request.getSession(false);
+
+        if (oldSession != null) {
+            oldSession.invalidate();
+        }
+
+        HttpSession session = request.getSession(true);
+
+        session.setAttribute("user", user);
+        session.setAttribute("roleName", roleName);
+        session.setMaxInactiveInterval(30 * 60);
+    }
+
+    // Home page of each role after login.
+    private String getHomePath(String roleName) {
+        if (roleName == null) {
+            return null;
+        }
+
+        switch (roleName) {
+            case "CUSTOMER":
+                return "/user/movies";
+
+            case "STAFF":
+                return "/staff/check-in";
+
+            case "CINEMA_MANAGER":
+                return "/admin/dashboard";
+
+            case "ADMIN":
+                return "/system/users";
+
+            default:
+                return null;
+        }
+    }
+
+    // A logged-in user does not need the register page.
+    private boolean redirectLoggedInUser(HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("user") == null) {
+            return false;
+        }
+
+        String homePath = getHomePath(
+                (String) session.getAttribute("roleName")
+        );
+
+        if (homePath == null) {
+            session.invalidate();
+            return false;
+        }
+
+        response.sendRedirect(request.getContextPath() + homePath);
+        return true;
     }
 
     private void showLogin(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            request.setAttribute(
+                    "error", session.getAttribute("loginError")
+            );
+            request.setAttribute(
+                    "success", session.getAttribute("registrationMessage")
+            );
+
+            session.removeAttribute("loginError");
+            session.removeAttribute("registrationMessage");
+        }
+
         request.getRequestDispatcher(
                 "/WEB-INF/views/auth/login.jsp"
         ).forward(request, response);
+    }
+
+    private void showRegister(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/auth/register.jsp"
+        ).forward(request, response);
+    }
+
+    private void preventCache(HttpServletResponse response) {
+        response.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+        );
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
     }
 }
