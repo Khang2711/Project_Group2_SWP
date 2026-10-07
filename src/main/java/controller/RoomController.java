@@ -5,21 +5,227 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import model.Room;
+import model.User;
+import service.RoomService;
 
-/** Chỉ mở trang khung. TODO: xử lý nghiệp vụ và kiểm tra quyền trước khi triển khai. */
-@WebServlet(urlPatterns = {"/admin/rooms", "/admin/room-form"})
+@WebServlet(urlPatterns = {
+    "/admin/rooms",
+    "/admin/room-form"
+})
 public class RoomController extends HttpServlet {
+
+    private final RoomService roomService = new RoomService();
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
-        String view;
-        switch (request.getServletPath()) {
-            case "/admin/rooms": view = "/WEB-INF/views/admin/rooms.jsp"; break;
-            case "/admin/room-form": view = "/WEB-INF/views/admin/room-form.jsp"; break;
-            default: response.sendError(404); return;
+
+        User user = getManager(request, response);
+
+        if (user == null) {
+            return;
         }
-        request.getRequestDispatcher(view).forward(request, response);
+
+        String path = request.getServletPath();
+
+        if ("/admin/rooms".equals(path)) {
+
+            request.setAttribute(
+                    "rooms",
+                    roomService.getRoomsByCinema(user.getCinemaId())
+            );
+
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/admin/rooms.jsp"
+            ).forward(request, response);
+
+            return;
+        }
+
+        if ("/admin/room-form".equals(path)) {
+
+            String id = request.getParameter("id");
+
+            if (id != null && !id.trim().isEmpty()) {
+
+                try {
+                    int roomId = Integer.parseInt(id);
+
+                    Room room = roomService.getRoom(
+                            roomId,
+                            user.getCinemaId()
+                    );
+
+                    if (room == null) {
+                        response.sendError(
+                                HttpServletResponse.SC_NOT_FOUND
+                        );
+                        return;
+                    }
+
+                    request.setAttribute("room", room);
+
+                } catch (NumberFormatException e) {
+                    response.sendError(
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+                    return;
+                }
+            }
+
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/admin/room-form.jsp"
+            ).forward(request, response);
+
+            return;
+        }
+
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
-    // TODO: doPost nhận dữ liệu form, validate rồi gọi service. Chưa xử lý thêm/sửa/xóa.
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        User user = getManager(request, response);
+
+        if (user == null) {
+            return;
+        }
+
+        String id = request.getParameter("id");
+        String roomName = request.getParameter("roomName");
+        String capacityText = request.getParameter("capacity");
+        String roomType = request.getParameter("roomType");
+        String status = request.getParameter("status");
+
+        try {
+            int capacity = Integer.parseInt(capacityText);
+
+            if (id == null || id.trim().isEmpty()) {
+
+                roomService.createRoom(
+                        user.getCinemaId(),
+                        roomName,
+                        capacity,
+                        roomType,
+                        status
+                );
+
+            } else {
+
+                int roomId = Integer.parseInt(id);
+
+                roomService.updateRoom(
+                        roomId,
+                        user.getCinemaId(),
+                        roomName,
+                        capacity,
+                        roomType,
+                        status
+                );
+            }
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/rooms?saved=1"
+            );
+
+        } catch (NumberFormatException e) {
+
+            request.setAttribute(
+                    "error",
+                    "Sức chứa hoặc mã phòng không hợp lệ."
+            );
+
+            forwardForm(request, response, user);
+
+        } catch (IllegalArgumentException e) {
+
+            request.setAttribute("error", e.getMessage());
+
+            forwardForm(request, response, user);
+        }
+    }
+
+    private void forwardForm(HttpServletRequest request,
+            HttpServletResponse response,
+            User user)
+            throws ServletException, IOException {
+
+        String id = request.getParameter("id");
+
+        Room room = new Room();
+
+        if (id != null && !id.trim().isEmpty()) {
+            try {
+                room.setRoomId(Integer.parseInt(id));
+            } catch (NumberFormatException e) {
+                // Keep default id.
+            }
+        }
+
+        room.setCinemaId(user.getCinemaId());
+        room.setRoomName(request.getParameter("roomName"));
+        room.setRoomType(request.getParameter("roomType"));
+        room.setStatus(request.getParameter("status"));
+
+        try {
+            room.setCapacity(
+                    Integer.parseInt(request.getParameter("capacity"))
+            );
+        } catch (NumberFormatException e) {
+            room.setCapacity(0);
+        }
+
+        request.setAttribute("room", room);
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/admin/room-form.jsp"
+        ).forward(request, response);
+    }
+
+    private User getManager(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null
+                || session.getAttribute("user") == null) {
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login"
+            );
+
+            return null;
+        }
+
+        String roleName =
+                (String) session.getAttribute("roleName");
+
+        if (!"CINEMA_MANAGER".equals(roleName)) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN
+            );
+            return null;
+        }
+
+        User user = (User) session.getAttribute("user");
+
+        if (user.getCinemaId() == null) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản Manager chưa được phân công rạp."
+            );
+            return null;
+        }
+
+        return user;
+    }
 }
