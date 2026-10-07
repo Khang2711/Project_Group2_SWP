@@ -74,7 +74,7 @@ public class MovieController extends HttpServlet {
                 Map<Integer, Room> roomById = movieService.getRoomById();
 
                 request.setAttribute("scheduleByDate", scheduleByDate);
-                request.setAttribute("priceByMovie", movieService.getMinPriceByMovie(scheduleByDate, roomById));
+                request.setAttribute("priceByMovie", movieService.getMinPriceByMovie(scheduleByDate));
                 request.setAttribute("roomById", roomById);
                 request.setAttribute("cinemaById", cinemaService.getCinemaById());
                 request.setAttribute("resultCount", resultCount);

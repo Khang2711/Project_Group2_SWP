@@ -102,8 +102,8 @@
                                     <c:choose>
                                         <c:when test="${not empty movie.posterUrl}">
                                             <img src="<c:out value='${movie.posterUrl}'/>"
-                                                 alt="<c:out value='${movie.title}'/>"
-                                                 onerror="this.style.display = 'none'; this.nextElementSibling.style.display = 'flex';">
+                                                 alt="<c:out value='${movie.title}'/>">
+                                            
                                             <span class="poster-fallback" style="display:none;">
                                                 <small>F / CINEMA</small>
                                                 <strong><c:out value="${movie.title}" /></strong>

@@ -20,7 +20,7 @@
         <header class="site-header">
             <div class="header-container">
 
-                <a href="${pageContext.request.contextPath}/user/movies"
+                <a href="${pageContext.request.contextPath}/home"
                    class="logo">
                     <span class="logo-box">F</span>
                     <span class="logo-text">F-CINEMA</span>
@@ -32,7 +32,7 @@
                                         or sessionScope.roleName eq 'CUSTOMER'}">
 
                                 <a href="${pageContext.request.contextPath}/user/movies">
-                                    Khám phá
+                                    Phim
                                 </a>
 
                                 <a href="${pageContext.request.contextPath}/user/showtimes">

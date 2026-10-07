@@ -54,6 +54,7 @@ public class MovieService {
         roomRepository = new RoomRepository();
         cinemaRepository = new CinemaRepository();
         pricingRepository = new PricingRepository();
+        genreRepository = new GenreRepository();
     }
 
     /**
@@ -90,10 +91,7 @@ public class MovieService {
 
     /**
      * Builds the movie list page data: for each show date, the movies that have
-     * showtimes on that date and their showtimes. Each filter is optional (null
-     * or empty means no filter). When no date or cinema filter is applied,
-     * active movies without any upcoming showtime are added in a last group
-     * with an empty showtime list.
+     * showtimes on that date and their showtime.
      *
      * @param keyword the movie title keyword, empty string for all movies
      * @param date the show date filter, null for all dates
@@ -178,38 +176,101 @@ public class MovieService {
     }
 
     /**
-     * Gets the lowest current ticket price of each movie, taken from the
-     * cinemas that show it.
+     * Gets the lowest ticket price for each movie.
      *
-     * @param scheduleByDate the result of getSchedulesByDate
-     * @param rooms the active rooms by room ID
-     * @return a map of movie ID and its lowest price; movies without pricing
-     * are absent
+     * @param scheduleByDate movie schedules grouped by date
+     * @return movie ID and lowest ticket price
      */
-    public Map<Integer, BigDecimal> getMinPriceByMovie(Map<String, Map<Movie, List<Showtime>>> scheduleByDate, Map<Integer, Room> rooms) {
+    public Map<Integer, BigDecimal> getMinPriceByMovie(Map<String, Map<Movie, List<Showtime>>> scheduleByDate) {
 
-        Map<Integer, BigDecimal> priceByCinema = pricingRepository.getMinPriceByCinema();
-        Map<Integer, BigDecimal> priceByMovie = new HashMap<>();
+        Map<Integer, Room> rooms = getRoomById();
+        Map<Integer, BigDecimal> priceByCinema
+                = pricingRepository.getMinPriceByCinema();
 
-        for (Map<Movie, List<Showtime>> dayMovies : scheduleByDate.values()) {
-            for (Map.Entry<Movie, List<Showtime>> entry : dayMovies.entrySet()) {
-                int movieId = entry.getKey().getMovieId();
+        Map<Integer, BigDecimal> priceByMovie
+                = new HashMap<>();
 
-                for (Showtime showtime : entry.getValue()) {
+        for (Map<Movie, List<Showtime>> movies : scheduleByDate.values()) {
+
+            for (Movie movie : movies.keySet()) {
+
+                for (Showtime showtime : movies.get(movie)) {
+
                     Room room = rooms.get(showtime.getRoomId());
+
                     if (room == null) {
                         continue;
                     }
 
-                    BigDecimal price = priceByCinema.get(room.getCinemaId());
-                    BigDecimal current = priceByMovie.get(movieId);
-                    if (price != null && (current == null || price.compareTo(current) < 0)) {
-                        priceByMovie.put(movieId, price);
+                    BigDecimal price
+                            = priceByCinema.get(room.getCinemaId());
+
+                    if (price == null) {
+                        continue;
+                    }
+
+                    BigDecimal minPrice
+                            = priceByMovie.get(movie.getMovieId());
+
+                    if (minPrice == null
+                            || price.compareTo(minPrice) < 0) {
+
+                        priceByMovie.put(
+                                movie.getMovieId(),
+                                price
+                        );
                     }
                 }
             }
         }
+
         return priceByMovie;
+    }
+
+    /**
+     * Gets movies that are currently showing.
+     *
+     * @return a list of currently showing movies
+     */
+    public List<Movie> getNowShowingMovies() {
+        return movieRepository.getNowShowing();
+    }
+
+    /**
+     * Gets movies that will be released in the future.
+     *
+     * @return a list of upcoming movies
+     */
+    public List<Movie> getComingSoonMovies() {
+        return movieRepository.getComingSoon();
+    }
+
+    /**
+     * Gets movies to display in the Home page carousel.
+     *
+     * @return a list of featured movies for the carousel
+     */
+    public List<Movie> getFeaturedMovies() {
+
+        List<Movie> featuredMovies = new ArrayList<>();
+
+        List<Movie> nowShowingMovies
+                = movieRepository.getNowShowing();
+
+        for (Movie movie : nowShowingMovies) {
+
+            if (movie.getPosterUrl() != null
+                    && !movie.getPosterUrl().trim().isEmpty()) {
+
+                featuredMovies.add(movie);
+            }
+
+            if (featuredMovies.size() == 3) {
+                break;
+            }
+        }
+
+        return featuredMovies;
     }
 
     public List<Movie> getMoviesByCinema(int cinemaId) {

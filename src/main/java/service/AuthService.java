@@ -82,7 +82,7 @@ public class AuthService {
 
         switch (roleName) {
             case "CUSTOMER":
-                return "/user/movies";
+                return "/home";
 
             case "STAFF":
                 return "/staff/check-in";
