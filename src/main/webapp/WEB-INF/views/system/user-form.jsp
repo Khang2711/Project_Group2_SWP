@@ -145,34 +145,67 @@
 
         <div class="user-form-group">
             <label for="fullName">Họ tên *</label>
-            <input type="text"
-                   id="fullName"
-                   name="fullName"
-                   maxlength="100"
-                   value="${fn:escapeXml(requestScope.managedUser.fullName)}"
-                   <c:if test="${isEdit}">readonly</c:if>
-                   required>
+
+            <c:choose>
+                <c:when test="${isEdit}">
+                    <input type="text"
+                           id="fullName"
+                           value="${fn:escapeXml(requestScope.managedUser.fullName)}"
+                           readonly>
+                </c:when>
+
+                <c:otherwise>
+                    <input type="text"
+                           id="fullName"
+                           name="fullName"
+                           maxlength="100"
+                           value="${fn:escapeXml(requestScope.managedUser.fullName)}"
+                           required>
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <div class="user-form-group">
             <label for="email">Email *</label>
-            <input type="email"
-                   id="email"
-                   name="email"
-                   maxlength="100"
-                   value="${fn:escapeXml(requestScope.managedUser.email)}"
-                   <c:if test="${isEdit}">readonly</c:if>
-                   required>
+
+            <c:choose>
+                <c:when test="${isEdit}">
+                    <input type="email"
+                           id="email"
+                           value="${fn:escapeXml(requestScope.managedUser.email)}"
+                           readonly>
+                </c:when>
+
+                <c:otherwise>
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           maxlength="100"
+                           value="${fn:escapeXml(requestScope.managedUser.email)}"
+                           required>
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <div class="user-form-group">
             <label for="phone">Số điện thoại</label>
-            <input type="text"
-                   id="phone"
-                   name="phone"
-                   maxlength="20"
-                   value="${fn:escapeXml(requestScope.managedUser.phone)}"
-                   <c:if test="${isEdit}">readonly</c:if>>
+
+            <c:choose>
+                <c:when test="${isEdit}">
+                    <input type="text"
+                           id="phone"
+                           value="${fn:escapeXml(requestScope.managedUser.phone)}"
+                           readonly>
+                </c:when>
+
+                <c:otherwise>
+                    <input type="text"
+                           id="phone"
+                           name="phone"
+                           maxlength="20"
+                           value="${fn:escapeXml(requestScope.managedUser.phone)}">
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <div class="user-form-group">
