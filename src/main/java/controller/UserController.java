@@ -179,6 +179,7 @@ public class UserController extends HttpServlet {
             Integer cinemaId = parseCinemaId(
                     request.getParameter("cinemaId")
             );
+            user.setCinemaId(cinemaId);
 
             String password = request.getParameter("password");
 
