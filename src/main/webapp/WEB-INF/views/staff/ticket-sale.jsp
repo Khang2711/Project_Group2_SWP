@@ -59,7 +59,7 @@
                         <input type="checkbox"
                                name="seatIds"
                                value="${seat.seatId}">
-                        Ghế <c:out value="${seat.seatRow}" />-<c:out value="${seat.seatNumber}" />
+                        Ghế <c:out value="${seat.seatNumber}" />
                     </label>
                 </c:forEach>
             </div>
