@@ -74,7 +74,7 @@ public class UserController extends HttpServlet {
             }
 
             if ("/system/users".equals(path)) {
-                deactivateUser(request, response);
+                updateAccountStatus(request, response);
                 return;
             }
 
@@ -312,35 +312,45 @@ public class UserController extends HttpServlet {
         ).forward(request, response);
     }
 
-    private void deactivateUser(HttpServletRequest request,
+    private void updateAccountStatus(HttpServletRequest request,
             HttpServletResponse response)
             throws SQLException, ServletException, IOException {
 
         String action = request.getParameter("action");
-
-        if (!"deactivate".equals(action)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
 
         try {
             int userId = Integer.parseInt(
                     request.getParameter("userId")
             );
 
-            HttpSession session = request.getSession(false);
-            User currentUser =
-                    (User) session.getAttribute("user");
+            if ("deactivate".equals(action)) {
+                HttpSession session = request.getSession(false);
+                User currentUser =
+                        (User) session.getAttribute("user");
 
-            userService.deactivateUser(
-                    userId,
-                    currentUser.getUserId()
-            );
+                userService.deactivateUser(
+                        userId,
+                        currentUser.getUserId()
+                );
 
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/system/users?deactivated=1"
-            );
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/system/users?deactivated=1"
+                );
+                return;
+            }
+
+            if ("activate".equals(action)) {
+                userService.activateUser(userId);
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/system/users?activated=1"
+                );
+                return;
+            }
+
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
         } catch (NumberFormatException e) {
             request.setAttribute(
