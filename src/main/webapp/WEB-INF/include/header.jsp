@@ -62,8 +62,17 @@
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+
                             <a href="${pageContext.request.contextPath}/admin/dashboard">
                                 Dashboard
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/cinemas">
+                                Thông tin rạp
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/rooms">
+                                Phòng chiếu
                             </a>
 
                             <a href="${pageContext.request.contextPath}/admin/movies">
@@ -73,6 +82,7 @@
                             <a href="${pageContext.request.contextPath}/admin/showtimes">
                                 Quản lý lịch chiếu
                             </a>
+
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'ADMIN'}">
