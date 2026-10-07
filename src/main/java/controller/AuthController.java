@@ -1,5 +1,6 @@
 package controller;
 
+import jakarta.mail.MessagingException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,21 +11,27 @@ import java.io.IOException;
 import java.sql.SQLException;
 import model.User;
 import service.AuthService;
+import service.PasswordResetService;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
     "/auth/logout",
     "/auth/register",
     "/auth/forgot-password",
+    "/auth/verify-otp",
     "/auth/reset-password"
 })
 public class AuthController extends HttpServlet {
 
+    private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
+
     private AuthService authService;
+    private PasswordResetService passwordResetService;
 
     @Override
     public void init() {
         authService = new AuthService();
+        passwordResetService = new PasswordResetService();
     }
 
     @Override
@@ -62,15 +69,15 @@ public class AuthController extends HttpServlet {
                 break;
 
             case "/auth/forgot-password":
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/auth/forgot-password.jsp"
-                ).forward(request, response);
+                showForgotPassword(request, response);
+                break;
+
+            case "/auth/verify-otp":
+                showVerifyOtp(request, response);
                 break;
 
             case "/auth/reset-password":
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/auth/reset-password.jsp"
-                ).forward(request, response);
+                showResetPassword(request, response);
                 break;
 
             default:
@@ -103,6 +110,16 @@ public class AuthController extends HttpServlet {
                 }
 
                 register(request, response);
+            case "/auth/forgot-password":
+                sendOtp(request, response);
+                break;
+
+            case "/auth/verify-otp":
+                verifyOtp(request, response);
+                break;
+
+            case "/auth/reset-password":
+                resetPassword(request, response);
                 break;
 
             default:
@@ -264,7 +281,7 @@ public class AuthController extends HttpServlet {
         }
     }
 
-    // A logged-in user does not need the register page.
+
     private boolean redirectLoggedInUser(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
@@ -317,14 +334,5 @@ public class AuthController extends HttpServlet {
         request.getRequestDispatcher(
                 "/WEB-INF/views/auth/register.jsp"
         ).forward(request, response);
-    }
-
-    private void preventCache(HttpServletResponse response) {
-        response.setHeader(
-                "Cache-Control",
-                "no-store, no-cache, must-revalidate"
-        );
-        response.setHeader("Pragma", "no-cache");
-        response.setDateHeader("Expires", 0);
     }
 }

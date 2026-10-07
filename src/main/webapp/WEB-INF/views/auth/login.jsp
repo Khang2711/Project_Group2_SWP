@@ -16,6 +16,12 @@
         </p>
     </c:if>
 
+    <c:if test="${param.reset eq '1'}">
+        <p class="auth-success">
+            Đổi mật khẩu thành công. Bạn có thể đăng nhập lại.
+        </p>
+    </c:if>
+
     <form action="${pageContext.request.contextPath}/auth/login"
           method="post">
 
