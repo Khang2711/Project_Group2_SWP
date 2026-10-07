@@ -1,7 +1,6 @@
 package util;
 
 import jakarta.mail.Authenticator;
-import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
@@ -54,7 +53,7 @@ public class EmailUtil {
                 }
         );
 
-        Message message = new MimeMessage(mailSession);
+        MimeMessage message = new MimeMessage(mailSession);
 
         message.setFrom(new InternetAddress(fromEmail));
         message.setRecipients(
