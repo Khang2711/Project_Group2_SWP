@@ -158,6 +158,23 @@ public class UserRepository {
         }
     }
 
+    public boolean updatePassword(int userId, String passwordHash)
+            throws SQLException {
+
+        String sql = "UPDATE dbo.[User] "
+                + "SET password_hash = ?, updated_at = SYSDATETIME() "
+                + "WHERE user_id = ?";
+
+        try (Connection connection = new DBContext().getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, passwordHash);
+            statement.setInt(2, userId);
+
+            return statement.executeUpdate() > 0;
+        }
+    }
+
     public boolean updateStatus(int userId, String status)
             throws SQLException {
 
