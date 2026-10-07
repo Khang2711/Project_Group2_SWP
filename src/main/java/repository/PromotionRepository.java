@@ -149,6 +149,50 @@ public class PromotionRepository {
         return null;
     }
 
+    public Promotion getByCode(String promoCode) {
+        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
+                + "discount_value, min_order_amount, max_discount_amount, "
+                + "start_date, end_date, usage_limit, status "
+                + "FROM Promotion WHERE promo_code = ?";
+
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, promoCode);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapPromotion(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public int countUsageByPromotionId(int promotionId) {
+        String sql = "SELECT COUNT(*) FROM Booking "
+                + "WHERE promotion_id = ? AND status = 'CONFIRMED'";
+
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, promotionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     public boolean existsByCode(String promoCode) {
         String sql = "SELECT 1 FROM Promotion WHERE promo_code = ?";
 
