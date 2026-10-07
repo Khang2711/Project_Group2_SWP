@@ -112,15 +112,26 @@ public class UserService {
     public void deactivateUser(int userId, int currentUserId)
             throws SQLException {
 
-        if (userId <= 0) {
-            throw new IllegalArgumentException(
-                    "Tài khoản không hợp lệ."
-            );
-        }
+        User user = getExistingUser(userId);
 
         if (userId == currentUserId) {
             throw new IllegalArgumentException(
                     "Không thể vô hiệu hóa tài khoản đang đăng nhập."
+            );
+        }
+
+        userRepository.updateStatus(userId, "INACTIVE");
+    }
+
+    public void activateUser(int userId) throws SQLException {
+        getExistingUser(userId);
+        userRepository.updateStatus(userId, "ACTIVE");
+    }
+
+    private User getExistingUser(int userId) throws SQLException {
+        if (userId <= 0) {
+            throw new IllegalArgumentException(
+                    "Tài khoản không hợp lệ."
             );
         }
 
@@ -132,7 +143,7 @@ public class UserService {
             );
         }
 
-        userRepository.updateStatus(userId, "INACTIVE");
+        return user;
     }
 
     private void validateCreateUser(User user,
