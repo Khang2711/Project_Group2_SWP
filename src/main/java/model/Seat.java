@@ -1,20 +1,26 @@
 package model;
 
-
-/** Model cho bảng Seat. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Model for Seat table.
+ */
 public class Seat {
-    private int seatId; // seat_id
-    private int roomId; // room_id
-    private String seatNumber; // seat_number
-    private String seatType; // seat_type
-    private String status; // status
+
+    private int seatId;
+    private int roomId;
+    private int seatRow;
+    private int seatNumber;
+    private String seatType;
+    private String status;
 
     public Seat() {
     }
 
-    public Seat(int seatId, int roomId, String seatNumber, String seatType, String status) {
+    public Seat(int seatId, int roomId, int seatRow,
+            int seatNumber, String seatType, String status) {
+
         this.seatId = seatId;
         this.roomId = roomId;
+        this.seatRow = seatRow;
         this.seatNumber = seatNumber;
         this.seatType = seatType;
         this.status = status;
@@ -36,11 +42,19 @@ public class Seat {
         this.roomId = roomId;
     }
 
-    public String getSeatNumber() {
+    public int getSeatRow() {
+        return seatRow;
+    }
+
+    public void setSeatRow(int seatRow) {
+        this.seatRow = seatRow;
+    }
+
+    public int getSeatNumber() {
         return seatNumber;
     }
 
-    public void setSeatNumber(String seatNumber) {
+    public void setSeatNumber(int seatNumber) {
         this.seatNumber = seatNumber;
     }
 
