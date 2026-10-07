@@ -128,7 +128,7 @@
     <div class="account-page-title">
         <div>
             <h1>Quản lý tài khoản</h1>
-            <p>Xem, tạo, cập nhật và vô hiệu hóa tài khoản trong hệ thống.</p>
+            <p>Xem, tạo, phân quyền, phân rạp và vô hiệu hóa tài khoản.</p>
         </div>
 
         <a class="account-button"
@@ -151,7 +151,7 @@
 
     <c:if test="${param.updated eq '1'}">
         <div class="account-message account-success">
-            Cập nhật tài khoản thành công.
+            Cập nhật vai trò và rạp thành công.
         </div>
     </c:if>
 
@@ -229,10 +229,14 @@
 
                         <td>
                             <div class="account-actions">
-                                <a class="account-button account-button-secondary"
-                                   href="${pageContext.request.contextPath}/system/user-form?id=${account.userId}">
-                                    Sửa
-                                </a>
+
+                                <c:if test="${roleName eq 'STAFF'
+                                              or roleName eq 'CINEMA_MANAGER'}">
+                                    <a class="account-button account-button-secondary"
+                                       href="${pageContext.request.contextPath}/system/user-form?id=${account.userId}">
+                                        Sửa
+                                    </a>
+                                </c:if>
 
                                 <c:if test="${account.status eq 'ACTIVE'
                                               and account.userId ne sessionScope.user.userId}">
