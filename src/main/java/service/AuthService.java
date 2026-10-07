@@ -33,7 +33,6 @@ public class AuthService {
         }
 
         User user = userRepository.findByEmail(email);
-
         String passwordHash = PasswordUtil.md5(password);
 
         if (user == null
@@ -49,12 +48,48 @@ public class AuthService {
             );
         }
 
-        // Do not keep the password hash in the login session.
         user.setPasswordHash(null);
 
         return user;
     }
 
+    public void register(String fullName, String email, String phone,
+            String password, String confirmPassword) throws SQLException {
+
+        fullName = fullName == null ? "" : fullName.trim();
+        email = email == null ? "" : email.trim();
+        phone = phone == null ? "" : phone.trim();
+
+        checkRegisterInput(fullName, email, phone, password, confirmPassword);
+
+        if (userRepository.findByEmail(email) != null) {
+            throw new IllegalArgumentException(
+                    "Email này đã được sử dụng."
+            );
+        }
+
+        Role customerRole = roleRepository.findByName("CUSTOMER");
+
+        if (customerRole == null
+                || !"ACTIVE".equals(customerRole.getStatus())) {
+            throw new SQLException(
+                    "The CUSTOMER role is missing or inactive."
+            );
+        }
+
+        User user = new User();
+
+        user.setRoleId(customerRole.getRoleId());
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setPasswordHash(PasswordUtil.md5(password));
+        user.setStatus("ACTIVE");
+
+        userRepository.insertCustomer(user);
+    }
+
+    // Return the role name of an active role.
     public String getRoleName(int roleId) throws SQLException {
         Role role = roleRepository.findById(roleId);
 
@@ -64,37 +99,51 @@ public class AuthService {
             );
         }
 
-        String roleName = role.getRoleName();
+        return role.getRoleName();
+    }
 
-        if (getHomePath(roleName) == null) {
+    private void checkRegisterInput(String fullName, String email,
+            String phone, String password, String confirmPassword) {
+
+        if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty()
+                || password == null || password.isEmpty()
+                || confirmPassword == null || confirmPassword.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Vai trò của tài khoản chưa được hỗ trợ."
+                    "Vui lòng nhập đầy đủ thông tin."
             );
         }
 
-        return roleName;
-    }
-
-    public String getHomePath(String roleName) {
-        if (roleName == null) {
-            return null;
+        if (fullName.length() > 100) {
+            throw new IllegalArgumentException(
+                    "Họ tên không được vượt quá 100 ký tự."
+            );
         }
 
-        switch (roleName) {
-            case "CUSTOMER":
-                return "/user/movies";
+        String emailPattern =
+                "(?i)^[a-z0-9]+(?:[._+][a-z0-9]+)*@gmail\\.com$";
 
-            case "STAFF":
-                return "/staff/check-in";
+        if (email.length() > 100 || !email.matches(emailPattern)) {
+            throw new IllegalArgumentException(
+                    "Email phải có dạng ten@gmail.com"
+            );
+        }
 
-            case "CINEMA_MANAGER":
-                return "/admin/dashboard";
+        if (!phone.matches("[0-9]{10}")) {
+            throw new IllegalArgumentException(
+                    "Số điện thoại phải gồm đúng 10 chữ số."
+            );
+        }
 
-            case "ADMIN":
-                return "/system/users";
+        if (password.length() < 6) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu phải có ít nhất 6 ký tự."
+            );
+        }
 
-            default:
-                return null;
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu xác nhận không khớp."
+            );
         }
     }
 }

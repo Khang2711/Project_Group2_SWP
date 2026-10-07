@@ -5,19 +5,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import model.Role;
 
 public class RoleRepository {
 
     public Role findById(int roleId) throws SQLException {
         String sql = "SELECT role_id, role_name, description, status "
-                + "FROM dbo.[Role] "
-                + "WHERE role_id = ?";
+                + "FROM dbo.[Role] WHERE role_id = ?";
 
         try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, roleId);
 
@@ -31,27 +28,23 @@ public class RoleRepository {
         }
     }
 
-    public List<Role> getAllActive() throws SQLException {
-        List<Role> roles = new ArrayList<>();
-
+    public Role findByName(String roleName) throws SQLException {
         String sql = "SELECT role_id, role_name, description, status "
-                + "FROM dbo.[Role] "
-                + "WHERE status = ? "
-                + "ORDER BY role_name";
+                + "FROM dbo.[Role] WHERE role_name = ?";
 
         try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, "ACTIVE");
+            statement.setString(1, roleName);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    roles.add(mapRole(resultSet));
+                if (!resultSet.next()) {
+                    return null;
                 }
+
+                return mapRole(resultSet);
             }
         }
-
-        return roles;
     }
 
     private Role mapRole(ResultSet resultSet) throws SQLException {
