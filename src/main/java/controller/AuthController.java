@@ -47,7 +47,6 @@ public class AuthController extends HttpServlet {
             case "/auth/login":
                 HttpSession currentSession = request.getSession(false);
 
-                // Opening the login page ends the current login.
                 if (currentSession != null
                         && currentSession.getAttribute("user") != null) {
                     currentSession.invalidate();
@@ -110,6 +109,8 @@ public class AuthController extends HttpServlet {
                 }
 
                 register(request, response);
+                break;
+
             case "/auth/forgot-password":
                 sendOtp(request, response);
                 break;
@@ -182,7 +183,6 @@ public class AuthController extends HttpServlet {
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
 
-        // Keep typed values so the form can show them again after an error.
         request.setAttribute(
                 "fullName", fullName == null ? "" : fullName.trim()
         );
@@ -227,6 +227,181 @@ public class AuthController extends HttpServlet {
         );
     }
 
+    private void sendOtp(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String email = request.getParameter("email");
+
+        request.setAttribute(
+                "email",
+                email == null ? "" : email.trim()
+        );
+
+        try {
+            String otp = passwordResetService.sendOtp(email);
+
+            String resetEmail = email.trim().toLowerCase();
+
+            HttpSession session = request.getSession(true);
+            clearResetData(session);
+
+            session.setAttribute("resetEmail", resetEmail);
+            session.setAttribute("resetOtp", otp);
+            session.setAttribute(
+                    "resetOtpExpiresAt",
+                    System.currentTimeMillis() + OTP_VALID_MILLIS
+            );
+            session.setAttribute("resetOtpVerified", false);
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/verify-otp?sent=1"
+            );
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showForgotPassword(request, response);
+
+        } catch (SQLException e) {
+            log("Cannot find account for password reset.", e);
+
+            request.setAttribute(
+                    "error",
+                    "Không thể kiểm tra tài khoản lúc này."
+            );
+
+            showForgotPassword(request, response);
+
+        } catch (MessagingException e) {
+            log("Cannot send password reset OTP.", e);
+
+            request.setAttribute(
+                    "error",
+                    "Không thể gửi OTP. "
+                    + "Vui lòng kiểm tra cấu hình email."
+            );
+
+            showForgotPassword(request, response);
+        }
+    }
+
+    private void verifyOtp(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (!hasResetRequest(session)) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/forgot-password"
+            );
+            return;
+        }
+
+        String enteredOtp = request.getParameter("otp");
+        String expectedOtp =
+                (String) session.getAttribute("resetOtp");
+        Long expiresAt =
+                (Long) session.getAttribute("resetOtpExpiresAt");
+
+        if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
+            request.setAttribute(
+                    "error",
+                    "Vui lòng nhập mã OTP."
+            );
+            showVerifyOtp(request, response);
+            return;
+        }
+
+        if (expectedOtp == null || expiresAt == null
+                || System.currentTimeMillis() > expiresAt) {
+
+            session.removeAttribute("resetOtp");
+            session.removeAttribute("resetOtpExpiresAt");
+
+            request.setAttribute(
+                    "error",
+                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
+            );
+
+            showVerifyOtp(request, response);
+            return;
+        }
+
+        if (!expectedOtp.equals(enteredOtp.trim())) {
+            request.setAttribute(
+                    "error",
+                    "Mã OTP không đúng."
+            );
+            showVerifyOtp(request, response);
+            return;
+        }
+
+        session.setAttribute("resetOtpVerified", true);
+        session.removeAttribute("resetOtp");
+        session.removeAttribute("resetOtpExpiresAt");
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/auth/reset-password"
+        );
+    }
+
+    private void resetPassword(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (!isOtpVerified(session)) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/forgot-password"
+            );
+            return;
+        }
+
+        String email =
+                (String) session.getAttribute("resetEmail");
+
+        String newPassword =
+                request.getParameter("newPassword");
+
+        String confirmPassword =
+                request.getParameter("confirmPassword");
+
+        try {
+            passwordResetService.resetPassword(
+                    email,
+                    newPassword,
+                    confirmPassword
+            );
+
+            clearResetData(session);
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/login?reset=1"
+            );
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showResetPassword(request, response);
+
+        } catch (SQLException e) {
+            log("Cannot update password.", e);
+
+            request.setAttribute(
+                    "error",
+                    "Không thể cập nhật mật khẩu lúc này."
+            );
+
+            showResetPassword(request, response);
+        }
+    }
+
     private void logout(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
@@ -257,7 +432,6 @@ public class AuthController extends HttpServlet {
         session.setMaxInactiveInterval(30 * 60);
     }
 
-    // Home page of each role after login.
     private String getHomePath(String roleName) {
         if (roleName == null) {
             return null;
@@ -280,7 +454,6 @@ public class AuthController extends HttpServlet {
                 return null;
         }
     }
-
 
     private boolean redirectLoggedInUser(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -334,5 +507,89 @@ public class AuthController extends HttpServlet {
         request.getRequestDispatcher(
                 "/WEB-INF/views/auth/register.jsp"
         ).forward(request, response);
+    }
+
+    private void showForgotPassword(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/auth/forgot-password.jsp"
+        ).forward(request, response);
+    }
+
+    private void showVerifyOtp(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (!hasResetRequest(session)) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/forgot-password"
+            );
+            return;
+        }
+
+        request.setAttribute(
+                "resetEmail",
+                session.getAttribute("resetEmail")
+        );
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/auth/verify-otp.jsp"
+        ).forward(request, response);
+    }
+
+    private void showResetPassword(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (!isOtpVerified(session)) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/forgot-password"
+            );
+            return;
+        }
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/auth/reset-password.jsp"
+        ).forward(request, response);
+    }
+
+    private boolean hasResetRequest(HttpSession session) {
+        return session != null
+                && session.getAttribute("resetEmail") != null;
+    }
+
+    private boolean isOtpVerified(HttpSession session) {
+        return hasResetRequest(session)
+                && Boolean.TRUE.equals(
+                        session.getAttribute("resetOtpVerified")
+                );
+    }
+
+    private void clearResetData(HttpSession session) {
+        if (session == null) {
+            return;
+        }
+
+        session.removeAttribute("resetEmail");
+        session.removeAttribute("resetOtp");
+        session.removeAttribute("resetOtpExpiresAt");
+        session.removeAttribute("resetOtpVerified");
+    }
+
+    private void preventCache(HttpServletResponse response) {
+        response.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+        );
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
     }
 }
