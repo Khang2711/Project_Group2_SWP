@@ -38,40 +38,75 @@ public class UserService {
         return cinemaRepository.getAllActive();
     }
 
-    public void saveUser(User user, String password, Integer cinemaId)
+    public String getRoleName(int roleId) throws SQLException {
+        Role role = roleRepository.findById(roleId);
+
+        if (role == null) {
+            return null;
+        }
+
+        return role.getRoleName();
+    }
+
+    public boolean canEditAccount(User user) throws SQLException {
+        if (user == null) {
+            return false;
+        }
+
+        String roleName = getRoleName(user.getRoleId());
+
+        return "STAFF".equals(roleName)
+                || "CINEMA_MANAGER".equals(roleName);
+    }
+
+    public void createUser(User user, String password, Integer cinemaId)
             throws SQLException {
 
-        validateUser(user, password, cinemaId);
-
-        Role role = roleRepository.findById(user.getRoleId());
-        String roleName = role.getRoleName();
+        validateCreateUser(user, password, cinemaId);
 
         User sameEmail = userRepository.findByEmail(user.getEmail());
 
-        if (sameEmail != null
-                && sameEmail.getUserId() != user.getUserId()) {
+        if (sameEmail != null) {
             throw new IllegalArgumentException(
                     "Email đã được sử dụng bởi tài khoản khác."
             );
         }
 
-        if (user.getUserId() == 0) {
-            createUser(user, password);
-        } else {
-            updateUser(user, password);
-        }
+        user.setPasswordHash(PasswordUtil.md5(password));
+        user.setStatus("ACTIVE");
 
-        if ("CUSTOMER".equals(roleName)) {
-            userRepository.ensureCustomer(user.getUserId());
-        }
+        int userId = userRepository.insert(user);
+        user.setUserId(userId);
 
-        if ("STAFF".equals(roleName)
-                || "CINEMA_MANAGER".equals(roleName)) {
-            userRepository.saveStaffCinema(
-                    user.getUserId(),
-                    cinemaId
+        saveProfileByRole(userId, user.getRoleId(), cinemaId);
+    }
+
+    public void updateRoleAndCinema(int userId,
+            int roleId,
+            Integer cinemaId) throws SQLException {
+
+        User currentUser = userRepository.findById(userId);
+
+        if (currentUser == null) {
+            throw new IllegalArgumentException(
+                    "Không tìm thấy tài khoản."
             );
         }
+
+        if (!canEditAccount(currentUser)) {
+            throw new IllegalArgumentException(
+                    "Chỉ được chỉnh sửa tài khoản STAFF hoặc CINEMA_MANAGER."
+            );
+        }
+
+        validateRoleAndCinema(roleId, cinemaId);
+
+        currentUser.setRoleId(roleId);
+        currentUser.setPasswordHash(null);
+
+        userRepository.update(currentUser);
+
+        saveProfileByRole(userId, roleId, cinemaId);
     }
 
     public void deactivateUser(int userId, int currentUserId)
@@ -100,41 +135,9 @@ public class UserService {
         userRepository.updateStatus(userId, "INACTIVE");
     }
 
-    private void createUser(User user, String password)
-            throws SQLException {
-
-        user.setPasswordHash(PasswordUtil.md5(password));
-        user.setStatus("ACTIVE");
-
-        int userId = userRepository.insert(user);
-        user.setUserId(userId);
-    }
-
-    private void updateUser(User user, String password)
-            throws SQLException {
-
-        User currentUser = userRepository.findById(user.getUserId());
-
-        if (currentUser == null) {
-            throw new IllegalArgumentException(
-                    "Không tìm thấy tài khoản."
-            );
-        }
-
-        user.setStatus(currentUser.getStatus());
-        user.setAvatarUrl(currentUser.getAvatarUrl());
-
-        if (password == null || password.isEmpty()) {
-            user.setPasswordHash(null);
-        } else {
-            user.setPasswordHash(PasswordUtil.md5(password));
-        }
-
-        userRepository.update(user);
-    }
-
-    private void validateUser(User user, String password, Integer cinemaId)
-            throws SQLException {
+    private void validateCreateUser(User user,
+            String password,
+            Integer cinemaId) throws SQLException {
 
         if (user.getFullName() == null
                 || user.getFullName().trim().isEmpty()) {
@@ -179,7 +182,19 @@ public class UserService {
             }
         }
 
-        Role role = roleRepository.findById(user.getRoleId());
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Vui lòng nhập mật khẩu."
+            );
+        }
+
+        validateRoleAndCinema(user.getRoleId(), cinemaId);
+    }
+
+    private void validateRoleAndCinema(int roleId, Integer cinemaId)
+            throws SQLException {
+
+        Role role = roleRepository.findById(roleId);
 
         if (role == null || !"ACTIVE".equals(role.getStatus())) {
             throw new IllegalArgumentException(
@@ -189,12 +204,12 @@ public class UserService {
 
         String roleName = role.getRoleName();
 
-        if (("STAFF".equals(roleName)
-                || "CINEMA_MANAGER".equals(roleName))) {
+        if ("STAFF".equals(roleName)
+                || "CINEMA_MANAGER".equals(roleName)) {
 
             if (cinemaId == null || cinemaId <= 0) {
                 throw new IllegalArgumentException(
-                        "Vui lòng chọn rạp cho nhân viên hoặc quản lý rạp."
+                        "Vui lòng chọn rạp cho STAFF hoặc CINEMA_MANAGER."
                 );
             }
 
@@ -206,12 +221,22 @@ public class UserService {
                 );
             }
         }
+    }
 
-        if (user.getUserId() == 0
-                && (password == null || password.isEmpty())) {
-            throw new IllegalArgumentException(
-                    "Vui lòng nhập mật khẩu."
-            );
+    private void saveProfileByRole(int userId,
+            int roleId,
+            Integer cinemaId) throws SQLException {
+
+        String roleName = getRoleName(roleId);
+
+        if ("CUSTOMER".equals(roleName)) {
+            userRepository.ensureCustomer(userId);
+            return;
+        }
+
+        if ("STAFF".equals(roleName)
+                || "CINEMA_MANAGER".equals(roleName)) {
+            userRepository.saveStaffCinema(userId, cinemaId);
         }
     }
 }
