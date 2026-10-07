@@ -1243,3 +1243,140 @@ a {
         font-size: 28px;
     }
 }
+
+
+
+/*
+CSS ADMIN 
+*/
+.account-page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .account-page-title p {
+        color: #aaaaaa;
+        margin-top: 8px;
+    }
+
+    .account-button {
+        display: inline-block;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        background-color: #ff1f2d;
+        color: #ffffff;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .account-button:hover {
+        background-color: #d91622;
+    }
+
+    .account-button-secondary {
+        background-color: #303038;
+    }
+
+    .account-button-danger {
+        background-color: #a3131d;
+    }
+
+    .account-button-activate {
+        background-color: #2f6f44;
+    }
+
+    .account-button-activate:hover {
+        background-color: #245936;
+    }
+
+    .account-message {
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        border: 1px solid #3a3a42;
+        border-radius: 6px;
+        background-color: #18181c;
+    }
+
+    .account-error {
+        border-color: #a3131d;
+        color: #ff8088;
+    }
+
+    .account-success {
+        border-color: #2f6f44;
+        color: #8ee0a9;
+    }
+
+    .account-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #303038;
+        border-radius: 8px;
+        background-color: #18181c;
+    }
+
+    .account-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .account-table th,
+    .account-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #303038;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .account-table th {
+        color: #dddddd;
+        background-color: #202026;
+    }
+
+    .account-table td {
+        color: #eeeeee;
+    }
+
+    .account-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .account-status-active {
+        color: #8ee0a9;
+        font-weight: bold;
+    }
+
+    .account-status-inactive {
+        color: #ff8088;
+        font-weight: bold;
+    }
+
+    .account-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .account-actions form {
+        margin: 0;
+    }
+
+    .account-empty {
+        padding: 30px;
+        color: #aaaaaa;
+        text-align: center;
+    }
+
+    @media (max-width: 700px) {
+        .account-page-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+    
+    /*
+    END CSS ADMIN
+    */
