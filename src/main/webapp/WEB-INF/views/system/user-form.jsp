@@ -3,6 +3,10 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
+<c:set var="isEdit"
+       value="${not empty requestScope.managedUser
+                and requestScope.managedUser.userId > 0}" />
+
 <style>
     .user-form-page {
         max-width: 720px;
@@ -53,6 +57,13 @@
         border-color: #ff1f2d;
     }
 
+    .user-form-group input[readonly],
+    .user-form-group input:disabled {
+        background-color: #24242a;
+        color: #aaaaaa;
+        cursor: not-allowed;
+    }
+
     .user-form-help {
         display: block;
         margin-top: 6px;
@@ -101,10 +112,10 @@
 <section class="user-form-page">
 
     <c:choose>
-        <c:when test="${not empty user and user.userId > 0}">
-            <h1>Cập nhật tài khoản</h1>
+        <c:when test="${isEdit}">
+            <h1>Phân quyền tài khoản</h1>
             <p class="user-form-note">
-                Chỉnh sửa thông tin, vai trò và rạp được phân công.
+                Admin chỉ được thay đổi vai trò và rạp áp dụng.
             </p>
         </c:when>
 
@@ -126,10 +137,10 @@
           method="post"
           action="${pageContext.request.contextPath}/system/user-form">
 
-        <c:if test="${not empty user and user.userId > 0}">
+        <c:if test="${isEdit}">
             <input type="hidden"
                    name="userId"
-                   value="${user.userId}">
+                   value="${requestScope.managedUser.userId}">
         </c:if>
 
         <div class="user-form-group">
@@ -138,7 +149,8 @@
                    id="fullName"
                    name="fullName"
                    maxlength="100"
-                   value="${fn:escapeXml(user.fullName)}"
+                   value="${fn:escapeXml(requestScope.managedUser.fullName)}"
+                   <c:if test="${isEdit}">readonly</c:if>
                    required>
         </div>
 
@@ -148,7 +160,8 @@
                    id="email"
                    name="email"
                    maxlength="100"
-                   value="${fn:escapeXml(user.email)}"
+                   value="${fn:escapeXml(requestScope.managedUser.email)}"
+                   <c:if test="${isEdit}">readonly</c:if>
                    required>
         </div>
 
@@ -158,29 +171,31 @@
                    id="phone"
                    name="phone"
                    maxlength="20"
-                   value="${fn:escapeXml(user.phone)}">
+                   value="${fn:escapeXml(requestScope.managedUser.phone)}"
+                   <c:if test="${isEdit}">readonly</c:if>>
         </div>
 
         <div class="user-form-group">
-            <label for="password">
-                Mật khẩu
-                <c:if test="${empty user or user.userId == 0}">
-                    *
-                </c:if>
-            </label>
-
-            <input type="password"
-                   id="password"
-                   name="password">
+            <label for="password">Mật khẩu</label>
 
             <c:choose>
-                <c:when test="${not empty user and user.userId > 0}">
+                <c:when test="${isEdit}">
+                    <input type="password"
+                           id="password"
+                           value="********"
+                           disabled>
+
                     <span class="user-form-help">
-                        Để trống nếu không muốn đổi mật khẩu.
+                        Admin không được thay đổi mật khẩu của tài khoản này.
                     </span>
                 </c:when>
 
                 <c:otherwise>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           required>
+
                     <span class="user-form-help">
                         Mật khẩu sẽ được mã hóa MD5 trước khi lưu.
                     </span>
@@ -199,8 +214,8 @@
 
                 <c:forEach var="role" items="${roles}">
                     <c:choose>
-                        <c:when test="${not empty user
-                                        and user.roleId == role.roleId}">
+                        <c:when test="${not empty requestScope.managedUser
+                                        and requestScope.managedUser.roleId == role.roleId}">
                             <option value="${role.roleId}" selected>
                                 <c:out value="${role.roleName}" />
                             </option>
@@ -226,8 +241,8 @@
 
                 <c:forEach var="cinema" items="${cinemas}">
                     <c:choose>
-                        <c:when test="${not empty user.cinemaId
-                                        and user.cinemaId == cinema.cinemaId}">
+                        <c:when test="${not empty requestScope.managedUser.cinemaId
+                                        and requestScope.managedUser.cinemaId == cinema.cinemaId}">
                             <option value="${cinema.cinemaId}" selected>
                                 <c:out value="${cinema.cinemaName}" />
                             </option>
@@ -247,11 +262,11 @@
             </span>
         </div>
 
-        <c:if test="${not empty user and user.userId > 0}">
+        <c:if test="${isEdit}">
             <div class="user-form-group">
                 <label>Trạng thái hiện tại</label>
                 <span>
-                    <c:out value="${user.status}" />
+                    <c:out value="${requestScope.managedUser.status}" />
                 </span>
             </div>
         </c:if>
@@ -260,9 +275,10 @@
             <button type="submit"
                     class="user-form-button">
                 <c:choose>
-                    <c:when test="${not empty user and user.userId > 0}">
-                        Lưu thay đổi
+                    <c:when test="${isEdit}">
+                        Lưu vai trò / rạp
                     </c:when>
+
                     <c:otherwise>
                         Tạo tài khoản
                     </c:otherwise>
