@@ -52,6 +52,10 @@
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'STAFF'}">
+                            <a href="${pageContext.request.contextPath}/staff/counter">
+                                Bán tại quầy
+                            </a>
+
                             <a href="${pageContext.request.contextPath}/staff/check-in">
                                 Check-in vé
                             </a>
