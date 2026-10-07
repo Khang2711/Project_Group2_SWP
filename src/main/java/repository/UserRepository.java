@@ -92,8 +92,7 @@ public class UserRepository {
         try (Connection connection = new DBContext().getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         sql,
-                        Statement.RETURN_GENERATED_KEYS
-                )) {
+                        Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, user.getRoleId());
             statement.setString(2, user.getFullName());
@@ -184,8 +183,8 @@ public class UserRepository {
                     + "WHERE staff_id = ?";
 
             try (Connection connection = new DBContext().getConnection();
-                    PreparedStatement statement =
-                    connection.prepareStatement(sql)) {
+                    PreparedStatement statement
+                    = connection.prepareStatement(sql)) {
 
                 statement.setInt(1, cinemaId);
                 statement.setInt(2, userId);
@@ -275,5 +274,75 @@ public class UserRepository {
         }
 
         return user;
+    }
+
+    public void insertCustomer(User user) throws SQLException {
+        String userSql = "INSERT INTO dbo.[User] "
+                + "(role_id, full_name, email, password_hash, phone, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        String customerSql =
+                "INSERT INTO dbo.Customer (customer_id) VALUES (?)";
+
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+
+            connection.setAutoCommit(false);
+
+            try {
+                int userId;
+
+                try (PreparedStatement statement =
+                        connection.prepareStatement(
+                                userSql, Statement.RETURN_GENERATED_KEYS)) {
+
+                    statement.setInt(1, user.getRoleId());
+                    statement.setString(2, user.getFullName());
+                    statement.setString(3, user.getEmail());
+                    statement.setString(4, user.getPasswordHash());
+                    statement.setString(5, user.getPhone());
+                    statement.setString(6, user.getStatus());
+
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException("Cannot insert user.");
+                    }
+
+                    try (ResultSet generatedKeys =
+                            statement.getGeneratedKeys()) {
+
+                        if (!generatedKeys.next()) {
+                            throw new SQLException(
+                                    "Cannot get the new user ID."
+                            );
+                        }
+
+                        userId = generatedKeys.getInt(1);
+                    }
+                }
+
+                try (PreparedStatement statement =
+                        connection.prepareStatement(customerSql)) {
+
+                    statement.setInt(1, userId);
+
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException("Cannot insert customer.");
+                    }
+                }
+
+                connection.commit();
+
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+
+                throw e;
+            }
+        }
     }
 }
