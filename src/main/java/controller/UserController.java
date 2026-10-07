@@ -128,16 +128,24 @@ public class UserController extends HttpServlet {
         if (idText != null && !idText.trim().isEmpty()) {
             try {
                 int userId = Integer.parseInt(idText);
-                User user = userService.getUserById(userId);
+                User managedUser = userService.getUserById(userId);
 
-                if (user == null) {
+                if (managedUser == null) {
                     response.sendError(
                             HttpServletResponse.SC_NOT_FOUND
                     );
                     return;
                 }
 
-                request.setAttribute("user", user);
+                if (!userService.canEditAccount(managedUser)) {
+                    response.sendError(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Chỉ được chỉnh sửa tài khoản STAFF hoặc CINEMA_MANAGER."
+                    );
+                    return;
+                }
+
+                request.setAttribute("managedUser", managedUser);
 
             } catch (NumberFormatException e) {
                 response.sendError(
@@ -158,64 +166,150 @@ public class UserController extends HttpServlet {
             HttpServletResponse response)
             throws SQLException, ServletException, IOException {
 
-        User user = new User();
+        String idText = request.getParameter("userId");
 
         try {
-            String idText = request.getParameter("userId");
-
-            if (idText != null && !idText.trim().isEmpty()) {
-                user.setUserId(Integer.parseInt(idText));
-            }
-
-            user.setFullName(request.getParameter("fullName"));
-            user.setEmail(request.getParameter("email"));
-            user.setPhone(request.getParameter("phone"));
-
             int roleId = Integer.parseInt(
                     request.getParameter("roleId")
             );
-            user.setRoleId(roleId);
 
             Integer cinemaId = parseCinemaId(
                     request.getParameter("cinemaId")
             );
-            user.setCinemaId(cinemaId);
 
-            String password = request.getParameter("password");
+            if (idText == null || idText.trim().isEmpty()) {
+                createUser(request, response, roleId, cinemaId);
+                return;
+            }
 
-            boolean creating = user.getUserId() == 0;
+            int userId = Integer.parseInt(idText);
 
-            userService.saveUser(user, password, cinemaId);
-
-            String result = creating ? "created=1" : "updated=1";
+            userService.updateRoleAndCinema(
+                    userId,
+                    roleId,
+                    cinemaId
+            );
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/system/users?"
-                    + result
+                    + "/system/users?updated=1"
             );
 
         } catch (NumberFormatException e) {
-            request.setAttribute(
-                    "error",
-                    "Mã vai trò hoặc mã rạp không hợp lệ."
+            forwardFormError(
+                    request,
+                    response,
+                    "Mã tài khoản, vai trò hoặc rạp không hợp lệ."
             );
-            request.setAttribute("user", user);
-            loadFormData(request);
-
-            request.getRequestDispatcher(
-                    "/WEB-INF/views/system/user-form.jsp"
-            ).forward(request, response);
 
         } catch (IllegalArgumentException e) {
-            request.setAttribute("error", e.getMessage());
-            request.setAttribute("user", user);
-            loadFormData(request);
-
-            request.getRequestDispatcher(
-                    "/WEB-INF/views/system/user-form.jsp"
-            ).forward(request, response);
+            forwardFormError(
+                    request,
+                    response,
+                    e.getMessage()
+            );
         }
+    }
+
+    private void createUser(HttpServletRequest request,
+            HttpServletResponse response,
+            int roleId,
+            Integer cinemaId)
+            throws SQLException, IOException,
+            ServletException {
+
+        User managedUser = new User();
+
+        managedUser.setFullName(
+                request.getParameter("fullName")
+        );
+        managedUser.setEmail(
+                request.getParameter("email")
+        );
+        managedUser.setPhone(
+                request.getParameter("phone")
+        );
+        managedUser.setRoleId(roleId);
+        managedUser.setCinemaId(cinemaId);
+
+        String password =
+                request.getParameter("password");
+
+        userService.createUser(
+                managedUser,
+                password,
+                cinemaId
+        );
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/system/users?created=1"
+        );
+    }
+
+    private void forwardFormError(HttpServletRequest request,
+            HttpServletResponse response,
+            String message)
+            throws SQLException, ServletException, IOException {
+
+        request.setAttribute("error", message);
+
+        String idText = request.getParameter("userId");
+
+        if (idText != null && !idText.trim().isEmpty()) {
+            try {
+                int userId = Integer.parseInt(idText);
+                User managedUser =
+                        userService.getUserById(userId);
+
+                request.setAttribute(
+                        "managedUser",
+                        managedUser
+                );
+
+            } catch (NumberFormatException e) {
+                // Invalid id is already shown by the error message.
+            }
+        } else {
+            User managedUser = new User();
+
+            managedUser.setFullName(
+                    request.getParameter("fullName")
+            );
+            managedUser.setEmail(
+                    request.getParameter("email")
+            );
+            managedUser.setPhone(
+                    request.getParameter("phone")
+            );
+
+            try {
+                managedUser.setRoleId(
+                        Integer.parseInt(
+                                request.getParameter("roleId")
+                        )
+                );
+            } catch (NumberFormatException e) {
+                // Keep default role id.
+            }
+
+            managedUser.setCinemaId(
+                    parseCinemaIdSafe(
+                            request.getParameter("cinemaId")
+                    )
+            );
+
+            request.setAttribute(
+                    "managedUser",
+                    managedUser
+            );
+        }
+
+        loadFormData(request);
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/system/user-form.jsp"
+        ).forward(request, response);
     }
 
     private void deactivateUser(HttpServletRequest request,
@@ -268,6 +362,14 @@ public class UserController extends HttpServlet {
         }
 
         return Integer.valueOf(cinemaIdText);
+    }
+
+    private Integer parseCinemaIdSafe(String cinemaIdText) {
+        try {
+            return parseCinemaId(cinemaIdText);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private void loadFormData(HttpServletRequest request)
