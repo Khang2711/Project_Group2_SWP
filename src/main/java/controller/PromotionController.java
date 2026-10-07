@@ -11,6 +11,9 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import model.Promotion;
 import service.PromotionService;
 
@@ -21,6 +24,7 @@ import service.PromotionService;
 public class PromotionController extends HttpServlet {
 
     private PromotionService promotionService;
+    private static final int PAGE_SIZE = 10;
 
     @Override
     public void init() {
@@ -28,264 +32,192 @@ public class PromotionController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
 
-        switch (path) {
-
-            case "/admin/promotions":
-                showPromotionList(
-                        request,
-                        response
-                );
-                break;
-
-            case "/admin/promotion-form":
-                showPromotionForm(
-                        request,
-                        response
-                );
-                break;
-
-            default:
-                response.sendError(
-                        HttpServletResponse.SC_NOT_FOUND
-                );
+        if ("/admin/promotions".equals(path)) {
+            showPromotionList(request, response);
+        } else if ("/admin/promotion-form".equals(path)) {
+            showPromotionForm(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
     @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.setCharacterEncoding(
-                "UTF-8"
-        );
+        request.setCharacterEncoding("UTF-8");
 
-        String path
-                = request.getServletPath();
+        String path = request.getServletPath();
 
-        switch (path) {
-
-            case "/admin/promotion-form":
-                savePromotion(
-                        request,
-                        response
-                );
-                break;
-
-            case "/admin/promotions":
-                changePromotionStatus(
-                        request,
-                        response
-                );
-                break;
-
-            default:
-                response.sendError(
-                        HttpServletResponse.SC_NOT_FOUND
-                );
+        if ("/admin/promotion-form".equals(path)) {
+            savePromotion(request, response);
+        } else if ("/admin/promotions".equals(path)) {
+            changePromotionStatus(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
-    private void showPromotionList(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void showPromotionList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.setAttribute(
-                "promotions",
-                promotionService
-                        .getAllPromotions()
+        String keyword = request.getParameter("keyword");
+        String filter = request.getParameter("filter");
+
+        if (keyword == null) {
+            keyword = "";
+        }
+
+        if (filter == null || filter.trim().isEmpty()) {
+            filter = "ALL";
+        }
+
+        keyword = keyword.trim();
+        filter = filter.trim().toUpperCase();
+
+        int page = 1;
+
+        try {
+            String pageParam = request.getParameter("page");
+
+            if (pageParam != null) {
+                page = Integer.parseInt(pageParam);
+            }
+        } catch (NumberFormatException e) {
+            page = 1;
+        }
+
+        if (page < 1) {
+            page = 1;
+        }
+
+        int totalRecords = promotionService.countPromotions(keyword, filter);
+        int totalPages = promotionService.getTotalPages(keyword, filter, PAGE_SIZE);
+
+        if (totalPages > 0 && page > totalPages) {
+            page = totalPages;
+        }
+
+        List<Promotion> promotions = promotionService.getPagedPromotions(
+                keyword,
+                filter,
+                page,
+                PAGE_SIZE
         );
+
+        // Store the real display status for each promotion
+        Map<Integer, String> displayStatuses = new HashMap<>();
+
+        for (Promotion promotion : promotions) {
+            String displayStatus = promotionService.getDisplayStatus(promotion);
+
+            displayStatuses.put(
+                    promotion.getPromotionId(),
+                    displayStatus
+            );
+        }
+
+        request.setAttribute("promotions", promotions);
+        request.setAttribute("displayStatuses", displayStatuses);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("filter", filter);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/promotions.jsp"
-        ).forward(
-                request,
-                response
-        );
+        ).forward(request, response);
     }
 
-    private void showPromotionForm(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void showPromotionForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String idParam
-                = request.getParameter(
-                        "id"
-                );
+        String idParam = request.getParameter("id");
 
-        if (idParam != null
-                && !idParam.trim().isEmpty()) {
-
+        if (idParam != null && !idParam.trim().isEmpty()) {
             try {
+                int promotionId = Integer.parseInt(idParam);
 
-                int promotionId
-                        = Integer.parseInt(
-                                idParam
-                        );
-
-                Promotion promotion
-                        = promotionService
-                                .getPromotionById(
-                                        promotionId
-                                );
+                Promotion promotion = promotionService.getPromotionById(promotionId);
 
                 if (promotion == null) {
-
                     response.sendRedirect(
-                            request.getContextPath()
-                            + "/admin/promotions"
+                            request.getContextPath() + "/admin/promotions"
                     );
-
                     return;
                 }
 
-                request.setAttribute(
-                        "promotion",
-                        promotion
-                );
+                request.setAttribute("promotion", promotion);
 
             } catch (NumberFormatException e) {
-
                 response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/promotions"
+                        request.getContextPath() + "/admin/promotions"
                 );
-
                 return;
             }
         }
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/promotion-form.jsp"
-        ).forward(
-                request,
-                response
-        );
+        ).forward(request, response);
     }
 
-    private void savePromotion(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void savePromotion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         try {
-
-            Promotion promotion
-                    = buildPromotionFromRequest(
-                            request
-                    );
-
-            String idParam
-                    = request.getParameter(
-                            "promotionId"
-                    );
-
+            Promotion promotion = buildPromotionFromRequest(request);
+            String idParam = request.getParameter("promotionId");
             String error;
 
-            if (idParam == null
-                    || idParam.trim().isEmpty()) {
-
-                error
-                        = promotionService
-                                .createPromotion(
-                                        promotion
-                                );
-
+            if (idParam == null || idParam.trim().isEmpty()) {
+                error = promotionService.createPromotion(promotion);
             } else {
+                int promotionId = Integer.parseInt(idParam);
 
-                int promotionId
-                        = Integer.parseInt(
-                                idParam
-                        );
-
-                promotion.setPromotionId(
-                        promotionId
-                );
-
-                error
-                        = promotionService
-                                .updatePromotion(
-                                        promotion
-                                );
+                promotion.setPromotionId(promotionId);
+                error = promotionService.updatePromotion(promotion);
             }
 
             if (error != null) {
-
-                request.setAttribute(
-                        "error",
-                        error
-                );
-
-                request.setAttribute(
-                        "promotion",
-                        promotion
-                );
+                request.setAttribute("error", error);
+                request.setAttribute("promotion", promotion);
 
                 request.getRequestDispatcher(
                         "/WEB-INF/views/admin/promotion-form.jsp"
-                ).forward(
-                        request,
-                        response
-                );
+                ).forward(request, response);
 
                 return;
             }
 
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/promotions"
+                    request.getContextPath() + "/admin/promotions"
             );
 
         } catch (IllegalArgumentException e) {
-
-            request.setAttribute(
-                    "error",
-                    e.getMessage()
-            );
+            request.setAttribute("error", e.getMessage());
 
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/promotion-form.jsp"
-            ).forward(
-                    request,
-                    response
-            );
+            ).forward(request, response);
         }
     }
 
-    private void changePromotionStatus(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void changePromotionStatus(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        String idParam
-                = request.getParameter(
-                        "promotionId"
-                );
+        String idParam = request.getParameter("promotionId");
+        String status = request.getParameter("status");
 
-        String status
-                = request.getParameter(
-                        "status"
-                );
-
-        if (idParam != null
-                && status != null) {
-
+        if (idParam != null && status != null) {
             try {
-
-                int promotionId
-                        = Integer.parseInt(
-                                idParam
-                        );
+                int promotionId = Integer.parseInt(idParam);
 
                 promotionService.updateStatus(
                         promotionId,
@@ -293,71 +225,46 @@ public class PromotionController extends HttpServlet {
                 );
 
             } catch (NumberFormatException e) {
-
                 response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/promotions"
+                        request.getContextPath() + "/admin/promotions"
                 );
-
                 return;
             }
         }
 
         response.sendRedirect(
-                request.getContextPath()
-                + "/admin/promotions"
+                request.getContextPath() + "/admin/promotions"
         );
     }
 
-    private Promotion buildPromotionFromRequest(
-            HttpServletRequest request) {
+    private Promotion buildPromotionFromRequest(HttpServletRequest request) {
 
-        Promotion promotion
-                = new Promotion();
+        Promotion promotion = new Promotion();
 
         promotion.setPromoCode(
-                request.getParameter(
-                        "promoCode"
-                )
+                request.getParameter("promoCode")
         );
 
         promotion.setDescription(
-                request.getParameter(
-                        "description"
-                )
+                request.getParameter("description")
         );
 
         promotion.setDiscountType(
-                request.getParameter(
-                        "discountType"
-                )
+                request.getParameter("discountType")
         );
 
         promotion.setDiscountValue(
                 parseBigDecimal(
-                        request.getParameter(
-                                "discountValue"
-                        ),
+                        request.getParameter("discountValue"),
                         "Giá trị giảm không hợp lệ."
                 )
         );
 
-        String minOrderAmount
-                = request.getParameter(
-                        "minOrderAmount"
-                );
+        String minOrderAmount = request.getParameter("minOrderAmount");
 
-        if (minOrderAmount == null
-                || minOrderAmount
-                        .trim()
-                        .isEmpty()) {
-
-            promotion.setMinOrderAmount(
-                    BigDecimal.ZERO
-            );
-
+        if (minOrderAmount == null || minOrderAmount.trim().isEmpty()) {
+            promotion.setMinOrderAmount(BigDecimal.ZERO);
         } else {
-
             promotion.setMinOrderAmount(
                     parseBigDecimal(
                             minOrderAmount,
@@ -366,16 +273,9 @@ public class PromotionController extends HttpServlet {
             );
         }
 
-        String maxDiscountAmount
-                = request.getParameter(
-                        "maxDiscountAmount"
-                );
+        String maxDiscountAmount = request.getParameter("maxDiscountAmount");
 
-        if (maxDiscountAmount != null
-                && !maxDiscountAmount
-                        .trim()
-                        .isEmpty()) {
-
+        if (maxDiscountAmount != null && !maxDiscountAmount.trim().isEmpty()) {
             promotion.setMaxDiscountAmount(
                     parseBigDecimal(
                             maxDiscountAmount,
@@ -386,42 +286,26 @@ public class PromotionController extends HttpServlet {
 
         promotion.setStartDate(
                 parseStartDate(
-                        request.getParameter(
-                                "startDate"
-                        ),
+                        request.getParameter("startDate"),
                         "Ngày bắt đầu không hợp lệ."
                 )
         );
 
         promotion.setEndDate(
                 parseEndDate(
-                        request.getParameter(
-                                "endDate"
-                        ),
+                        request.getParameter("endDate"),
                         "Ngày kết thúc không hợp lệ."
                 )
         );
 
-        String usageLimit
-                = request.getParameter(
-                        "usageLimit"
-                );
+        String usageLimit = request.getParameter("usageLimit");
 
-        if (usageLimit != null
-                && !usageLimit
-                        .trim()
-                        .isEmpty()) {
-
+        if (usageLimit != null && !usageLimit.trim().isEmpty()) {
             try {
-
                 promotion.setUsageLimit(
-                        Integer.valueOf(
-                                usageLimit.trim()
-                        )
+                        Integer.valueOf(usageLimit.trim())
                 );
-
             } catch (NumberFormatException e) {
-
                 throw new IllegalArgumentException(
                         "Giới hạn sử dụng không hợp lệ."
                 );
@@ -429,115 +313,60 @@ public class PromotionController extends HttpServlet {
         }
 
         promotion.setStatus(
-                request.getParameter(
-                        "status"
-                )
+                request.getParameter("status")
         );
 
         return promotion;
     }
 
-    private BigDecimal parseBigDecimal(
-            String value,
-            String errorMessage) {
+    private BigDecimal parseBigDecimal(String value, String errorMessage) {
 
-        if (value == null
-                || value.trim().isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    errorMessage
-            );
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(errorMessage);
         }
 
         try {
-
-            return new BigDecimal(
-                    value.trim()
-            );
-
+            return new BigDecimal(value.trim());
         } catch (NumberFormatException e) {
-
-            throw new IllegalArgumentException(
-                    errorMessage
-            );
+            throw new IllegalArgumentException(errorMessage);
         }
     }
 
-    private Timestamp parseStartDate(
-            String value,
-            String errorMessage) {
-
-        LocalDate date
-                = parseDate(
-                        value,
-                        errorMessage
-                );
+    private Timestamp parseStartDate(String value, String errorMessage) {
+        LocalDate date = parseDate(value, errorMessage);
 
         return Timestamp.valueOf(
                 date.atStartOfDay()
         );
     }
 
-    private Timestamp parseEndDate(
-            String value,
-            String errorMessage) {
-
-        LocalDate date
-                = parseDate(
-                        value,
-                        errorMessage
-                );
+    private Timestamp parseEndDate(String value, String errorMessage) {
+        LocalDate date = parseDate(value, errorMessage);
 
         return Timestamp.valueOf(
-                date.atTime(
-                        23,
-                        59,
-                        59
-                )
+                date.atTime(23, 59, 59)
         );
     }
 
-    private LocalDate parseDate(
-            String value,
-            String errorMessage) {
+    private LocalDate parseDate(String value, String errorMessage) {
 
-        if (value == null
-                || value.trim().isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    errorMessage
-            );
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(errorMessage);
         }
 
-        String input
-                = value.trim();
+        String input = value.trim();
 
         try {
-
-            return LocalDate.parse(
-                    input
-            );
-
+            return LocalDate.parse(input);
         } catch (DateTimeParseException e) {
-
             try {
-
                 DateTimeFormatter formatter
-                        = DateTimeFormatter
-                                .ofPattern(
-                                        "d/M/yyyy"
-                                );
+                        = DateTimeFormatter.ofPattern("d/M/yyyy");
 
-                return LocalDate.parse(
-                        input,
-                        formatter
-                );
+                return LocalDate.parse(input, formatter);
 
             } catch (DateTimeParseException ex) {
-
-                throw new IllegalArgumentException(
-                        errorMessage
-                );
+                throw new IllegalArgumentException(errorMessage);
             }
         }
     }

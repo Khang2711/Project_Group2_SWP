@@ -8,38 +8,114 @@ import repository.PromotionRepository;
 
 public class PromotionService {
 
-    private final PromotionRepository promotionRepository;
-
-    public PromotionService() {
-        promotionRepository = new PromotionRepository();
-    }
+    private final PromotionRepository promotionRepository = new PromotionRepository();
 
     public List<Promotion> getAllPromotions() {
         return promotionRepository.getAll();
     }
 
-    public Promotion getPromotionById(int promotionId) {
+    public List<Promotion> getPagedPromotions(
+            String keyword,
+            String filter,
+            int page,
+            int pageSize) {
 
-        if (promotionId <= 0) {
-            return null;
+        if (keyword == null) {
+            keyword = "";
         }
 
+        keyword = keyword.trim();
+
+        if (filter == null || filter.trim().isEmpty()) {
+            filter = "ALL";
+        }
+
+        filter = filter.trim().toUpperCase();
+
+        if (page < 1) {
+            page = 1;
+        }
+
+        return promotionRepository.getPaged(
+                keyword,
+                filter,
+                page,
+                pageSize
+        );
+    }
+
+    public int countPromotions(String keyword, String filter) {
+
+        if (keyword == null) {
+            keyword = "";
+        }
+
+        keyword = keyword.trim();
+
+        if (filter == null || filter.trim().isEmpty()) {
+            filter = "ALL";
+        }
+
+        filter = filter.trim().toUpperCase();
+
+        return promotionRepository.countFiltered(
+                keyword,
+                filter
+        );
+    }
+
+    public int getTotalPages(
+            String keyword,
+            String filter,
+            int pageSize) {
+
+        int totalRecords = countPromotions(
+                keyword,
+                filter
+        );
+
+        // Add pageSize - 1 before division to round up the last page
+        return (totalRecords + pageSize - 1) / pageSize;
+    }
+
+    public String getDisplayStatus(Promotion promotion) {
+
+        if ("INACTIVE".equalsIgnoreCase(
+                promotion.getStatus())) {
+            return "INACTIVE";
+        }
+
+        Timestamp now = new Timestamp(
+                System.currentTimeMillis()
+        );
+
+        // ACTIVE in database can still be expired or not started yet
+        if (promotion.getStartDate() != null
+                && now.before(promotion.getStartDate())) {
+            return "UPCOMING";
+        }
+
+        if (promotion.getEndDate() != null
+                && now.after(promotion.getEndDate())) {
+            return "EXPIRED";
+        }
+
+        return "AVAILABLE";
+    }
+
+    public Promotion getPromotionById(int promotionId) {
         return promotionRepository.getById(
                 promotionId
         );
     }
 
-    public String createPromotion(
-            Promotion promotion) {
+    public String createPromotion(Promotion promotion) {
 
-        normalizePromotion(
+        preparePromotion(promotion);
+
+        String error = validatePromotion(
                 promotion
         );
-
-        String error
-                = validatePromotion(
-                        promotion
-                );
 
         if (error != null) {
             return error;
@@ -47,67 +123,46 @@ public class PromotionService {
 
         if (promotionRepository.existsByCode(
                 promotion.getPromoCode())) {
-
             return "Mã khuyến mãi đã tồn tại.";
         }
 
-        boolean inserted
-                = promotionRepository.insert(
-                        promotion
-                );
-
-        if (!inserted) {
+        if (!promotionRepository.insert(
+                promotion)) {
             return "Không thể tạo khuyến mãi.";
         }
 
         return null;
     }
 
-    public String updatePromotion(
-            Promotion promotion) {
+    public String updatePromotion(Promotion promotion) {
 
-        if (promotion == null
-                || promotion.getPromotionId() <= 0) {
+        preparePromotion(promotion);
 
-            return "Khuyến mãi không hợp lệ.";
-        }
-
-        normalizePromotion(
+        String error = validatePromotion(
                 promotion
         );
-
-        String error
-                = validatePromotion(
-                        promotion
-                );
 
         if (error != null) {
             return error;
         }
 
-        Promotion existingPromotion
+        Promotion oldPromotion
                 = promotionRepository.getById(
                         promotion.getPromotionId()
                 );
 
-        if (existingPromotion == null) {
+        if (oldPromotion == null) {
             return "Không tìm thấy khuyến mãi.";
         }
 
-        if (promotionRepository
-                .existsByCodeExceptId(
-                        promotion.getPromoCode(),
-                        promotion.getPromotionId())) {
-
+        if (promotionRepository.existsByCodeExceptId(
+                promotion.getPromoCode(),
+                promotion.getPromotionId())) {
             return "Mã khuyến mãi đã tồn tại.";
         }
 
-        boolean updated
-                = promotionRepository.update(
-                        promotion
-                );
-
-        if (!updated) {
+        if (!promotionRepository.update(
+                promotion)) {
             return "Không thể cập nhật khuyến mãi.";
         }
 
@@ -118,25 +173,6 @@ public class PromotionService {
             int promotionId,
             String status) {
 
-        if (promotionId <= 0) {
-            return "Khuyến mãi không hợp lệ.";
-        }
-
-        if (status == null) {
-            return "Trạng thái không hợp lệ.";
-        }
-
-        String normalizedStatus
-                = status.trim().toUpperCase();
-
-        if (!"ACTIVE".equals(
-                normalizedStatus)
-                && !"INACTIVE".equals(
-                        normalizedStatus)) {
-
-            return "Trạng thái không hợp lệ.";
-        }
-
         Promotion promotion
                 = promotionRepository.getById(
                         promotionId
@@ -146,127 +182,27 @@ public class PromotionService {
             return "Không tìm thấy khuyến mãi.";
         }
 
-        boolean updated
-                = promotionRepository.updateStatus(
-                        promotionId,
-                        normalizedStatus
-                );
+        if (!"ACTIVE".equals(status)
+                && !"INACTIVE".equals(status)) {
+            return "Trạng thái không hợp lệ.";
+        }
 
-        if (!updated) {
+        if (!promotionRepository.updateStatus(
+                promotionId,
+                status)) {
             return "Không thể cập nhật trạng thái.";
         }
 
         return null;
     }
 
-    private String validatePromotion(
-            Promotion promotion) {
-
-        if (promotion == null) {
-            return "Dữ liệu khuyến mãi không hợp lệ.";
-        }
-
-        if (promotion.getPromoCode() == null
-                || promotion.getPromoCode()
-                        .trim()
-                        .isEmpty()) {
-
-            return "Vui lòng nhập mã khuyến mãi.";
-        }
-
-        if (promotion.getPromoCode()
-                .length() > 50) {
-
-            return "Mã khuyến mãi không được vượt quá 50 ký tự.";
-        }
-
-        if (promotion.getDiscountType() == null
-                || (!"PERCENT".equals(
-                        promotion.getDiscountType())
-                && !"FIXED".equals(
-                        promotion.getDiscountType()))) {
-
-            return "Loại giảm giá không hợp lệ.";
-        }
-
-        BigDecimal discountValue
-                = promotion.getDiscountValue();
-
-        if (discountValue == null
-                || discountValue.compareTo(
-                        BigDecimal.ZERO) < 0) {
-
-            return "Giá trị giảm giá không hợp lệ.";
-        }
-
-        BigDecimal minOrderAmount
-                = promotion.getMinOrderAmount();
-
-        if (minOrderAmount == null
-                || minOrderAmount.compareTo(
-                        BigDecimal.ZERO) < 0) {
-
-            return "Giá trị đơn hàng tối thiểu không hợp lệ.";
-        }
-
-        BigDecimal maxDiscountAmount
-                = promotion.getMaxDiscountAmount();
-
-        if (maxDiscountAmount != null
-                && maxDiscountAmount.compareTo(
-                        BigDecimal.ZERO) < 0) {
-
-            return "Giá trị giảm tối đa không hợp lệ.";
-        }
-
-        Timestamp startDate
-                = promotion.getStartDate();
-
-        Timestamp endDate
-                = promotion.getEndDate();
-
-        if (startDate == null
-                || endDate == null) {
-
-            return "Vui lòng chọn ngày bắt đầu và ngày kết thúc.";
-        }
-
-        if (endDate.before(
-                startDate)) {
-
-            return "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.";
-        }
-
-        Integer usageLimit
-                = promotion.getUsageLimit();
-
-        if (usageLimit != null
-                && usageLimit < 0) {
-
-            return "Giới hạn sử dụng không hợp lệ.";
-        }
-
-        if (promotion.getStatus() == null
-                || (!"ACTIVE".equals(
-                        promotion.getStatus())
-                && !"INACTIVE".equals(
-                        promotion.getStatus()))) {
-
-            return "Trạng thái không hợp lệ.";
-        }
-
-        return null;
-    }
-
-    private void normalizePromotion(
-            Promotion promotion) {
+    private void preparePromotion(Promotion promotion) {
 
         if (promotion == null) {
             return;
         }
 
         if (promotion.getPromoCode() != null) {
-
             promotion.setPromoCode(
                     promotion.getPromoCode()
                             .trim()
@@ -275,27 +211,12 @@ public class PromotionService {
         }
 
         if (promotion.getDescription() != null) {
-
-            String description
-                    = promotion.getDescription()
-                            .trim();
-
-            if (description.isEmpty()) {
-
-                promotion.setDescription(
-                        null
-                );
-
-            } else {
-
-                promotion.setDescription(
-                        description
-                );
-            }
+            promotion.setDescription(
+                    promotion.getDescription().trim()
+            );
         }
 
         if (promotion.getDiscountType() != null) {
-
             promotion.setDiscountType(
                     promotion.getDiscountType()
                             .trim()
@@ -303,29 +224,86 @@ public class PromotionService {
             );
         }
 
-        if (promotion.getMinOrderAmount() == null) {
-
-            promotion.setMinOrderAmount(
-                    BigDecimal.ZERO
-            );
-        }
-
-        if (promotion.getStatus() == null
-                || promotion.getStatus()
-                        .trim()
-                        .isEmpty()) {
-
-            promotion.setStatus(
-                    "ACTIVE"
-            );
-
-        } else {
-
+        if (promotion.getStatus() != null) {
             promotion.setStatus(
                     promotion.getStatus()
                             .trim()
                             .toUpperCase()
             );
         }
+
+        if (promotion.getMinOrderAmount() == null) {
+            promotion.setMinOrderAmount(
+                    BigDecimal.ZERO
+            );
+        }
+    }
+
+    private String validatePromotion(Promotion promotion) {
+
+        if (promotion == null) {
+            return "Dữ liệu khuyến mãi không hợp lệ.";
+        }
+
+        if (promotion.getPromoCode() == null
+                || promotion.getPromoCode().isEmpty()) {
+            return "Vui lòng nhập mã khuyến mãi.";
+        }
+
+        if (promotion.getPromoCode().length() > 50) {
+            return "Mã khuyến mãi không được vượt quá 50 ký tự.";
+        }
+
+        if (!"PERCENT".equals(
+                promotion.getDiscountType())
+                && !"FIXED".equals(
+                        promotion.getDiscountType())) {
+            return "Loại giảm giá không hợp lệ.";
+        }
+
+        if (promotion.getDiscountValue() == null
+                || promotion.getDiscountValue()
+                        .compareTo(BigDecimal.ZERO) < 0) {
+            return "Giá trị giảm không hợp lệ.";
+        }
+        if ("PERCENT".equals(promotion.getDiscountType())
+                && promotion.getDiscountValue()
+                        .compareTo(new BigDecimal("100")) > 0) {
+            return "Phần trăm giảm giá không được vượt quá 100%.";
+        }
+
+        if (promotion.getMinOrderAmount() == null
+                || promotion.getMinOrderAmount()
+                        .compareTo(BigDecimal.ZERO) < 0) {
+            return "Đơn hàng tối thiểu không hợp lệ.";
+        }
+
+        if (promotion.getMaxDiscountAmount() != null
+                && promotion.getMaxDiscountAmount()
+                        .compareTo(BigDecimal.ZERO) < 0) {
+            return "Giảm tối đa không hợp lệ.";
+        }
+
+        if (promotion.getStartDate() == null
+                || promotion.getEndDate() == null) {
+            return "Vui lòng chọn ngày bắt đầu và ngày kết thúc.";
+        }
+
+        if (promotion.getEndDate()
+                .before(promotion.getStartDate())) {
+            return "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.";
+        }
+
+        if (promotion.getUsageLimit() != null
+                && promotion.getUsageLimit() < 0) {
+            return "Giới hạn sử dụng không hợp lệ.";
+        }
+
+        if (!"ACTIVE".equals(promotion.getStatus())
+                && !"INACTIVE".equals(promotion.getStatus())) {
+            return "Trạng thái không hợp lệ.";
+        }
+
+        return null;
     }
 }

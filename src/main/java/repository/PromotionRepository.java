@@ -13,67 +13,132 @@ import model.Promotion;
 public class PromotionRepository {
 
     public List<Promotion> getAll() {
+        List<Promotion> list = new ArrayList<>();
 
-        List<Promotion> promotions = new ArrayList<>();
+        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
+                + "discount_value, min_order_amount, max_discount_amount, "
+                + "start_date, end_date, usage_limit, status "
+                + "FROM Promotion ORDER BY promotion_id DESC";
 
-        String sql
-                = "SELECT promotion_id, promo_code, description, "
-                + "discount_type, discount_value, min_order_amount, "
-                + "max_discount_amount, start_date, end_date, "
-                + "usage_limit, status "
-                + "FROM Promotion "
-                + "ORDER BY promotion_id DESC";
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql);
-                ResultSet resultSet
-                = statement.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapPromotion(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-            while (resultSet.next()) {
-                promotions.add(
-                        mapPromotion(resultSet)
-                );
+        return list;
+    }
+
+    public List<Promotion> getPaged(String keyword, String filter, int page, int pageSize) {
+        List<Promotion> list = new ArrayList<>();
+
+        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
+                + "discount_value, min_order_amount, max_discount_amount, "
+                + "start_date, end_date, usage_limit, status "
+                + "FROM Promotion WHERE 1 = 1 ";
+
+        if (keyword != null && !keyword.isEmpty()) {
+            sql += "AND promo_code LIKE ? ";
+        }
+
+        sql += getFilterCondition(filter);
+        sql += "ORDER BY promotion_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        // Calculate how many rows are skipped before the current page
+        int offset = (page - 1) * pageSize;
+
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            int index = 1;
+
+            if (keyword != null && !keyword.isEmpty()) {
+                ps.setString(index++, "%" + keyword + "%");
+            }
+
+            ps.setInt(index++, offset);
+            ps.setInt(index, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapPromotion(rs));
+                }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return promotions;
+        return list;
+    }
+
+    public int countFiltered(String keyword, String filter) {
+        String sql = "SELECT COUNT(*) FROM Promotion WHERE 1 = 1 ";
+
+        if (keyword != null && !keyword.isEmpty()) {
+            sql += "AND promo_code LIKE ? ";
+        }
+
+        sql += getFilterCondition(filter);
+
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (keyword != null && !keyword.isEmpty()) {
+                ps.setString(1, "%" + keyword + "%");
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    private String getFilterCondition(String filter) {
+        if ("AVAILABLE".equals(filter)) {
+            return "AND status = 'ACTIVE' "
+                    + "AND start_date <= SYSDATETIME() "
+                    + "AND end_date >= SYSDATETIME() ";
+        }
+
+        if ("UPCOMING".equals(filter)) {
+            return "AND status = 'ACTIVE' "
+                    + "AND start_date > SYSDATETIME() ";
+        }
+
+        if ("EXPIRED".equals(filter)) {
+            return "AND status = 'ACTIVE' "
+                    + "AND end_date < SYSDATETIME() ";
+        }
+
+        if ("INACTIVE".equals(filter)) {
+            return "AND status = 'INACTIVE' ";
+        }
+
+        return "";
     }
 
     public Promotion getById(int promotionId) {
+        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
+                + "discount_value, min_order_amount, max_discount_amount, "
+                + "start_date, end_date, usage_limit, status "
+                + "FROM Promotion WHERE promotion_id = ?";
 
-        String sql
-                = "SELECT promotion_id, promo_code, description, "
-                + "discount_type, discount_value, min_order_amount, "
-                + "max_discount_amount, start_date, end_date, "
-                + "usage_limit, status "
-                + "FROM Promotion "
-                + "WHERE promotion_id = ?";
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+            ps.setInt(1, promotionId);
 
-            statement.setInt(
-                    1,
-                    promotionId
-            );
-
-            try (
-                    ResultSet resultSet
-                    = statement.executeQuery()) {
-
-                if (resultSet.next()) {
-                    return mapPromotion(
-                            resultSet
-                    );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapPromotion(rs);
                 }
             }
 
@@ -85,28 +150,14 @@ public class PromotionRepository {
     }
 
     public boolean existsByCode(String promoCode) {
+        String sql = "SELECT 1 FROM Promotion WHERE promo_code = ?";
 
-        String sql
-                = "SELECT 1 "
-                + "FROM Promotion "
-                + "WHERE promo_code = ?";
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+            ps.setString(1, promoCode);
 
-            statement.setString(
-                    1,
-                    promoCode
-            );
-
-            try (
-                    ResultSet resultSet
-                    = statement.executeQuery()) {
-
-                return resultSet.next();
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
 
         } catch (SQLException e) {
@@ -116,37 +167,17 @@ public class PromotionRepository {
         return false;
     }
 
-    public boolean existsByCodeExceptId(
-            String promoCode,
-            int promotionId) {
+    public boolean existsByCodeExceptId(String promoCode, int promotionId) {
+        String sql = "SELECT 1 FROM Promotion "
+                + "WHERE promo_code = ? AND promotion_id <> ?";
 
-        String sql
-                = "SELECT 1 "
-                + "FROM Promotion "
-                + "WHERE promo_code = ? "
-                + "AND promotion_id <> ?";
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+            ps.setString(1, promoCode);
+            ps.setInt(2, promotionId);
 
-            statement.setString(
-                    1,
-                    promoCode
-            );
-
-            statement.setInt(
-                    2,
-                    promotionId
-            );
-
-            try (
-                    ResultSet resultSet
-                    = statement.executeQuery()) {
-
-                return resultSet.next();
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
 
         } catch (SQLException e) {
@@ -157,92 +188,17 @@ public class PromotionRepository {
     }
 
     public boolean insert(Promotion promotion) {
-
-        String sql
-                = "INSERT INTO Promotion "
-                + "(promo_code, description, discount_type, "
-                + "discount_value, min_order_amount, "
-                + "max_discount_amount, start_date, end_date, "
+        String sql = "INSERT INTO Promotion "
+                + "(promo_code, description, discount_type, discount_value, "
+                + "min_order_amount, max_discount_amount, start_date, end_date, "
                 + "usage_limit, status) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            statement.setString(
-                    1,
-                    promotion.getPromoCode()
-            );
+            setPromotionData(ps, promotion);
 
-            statement.setString(
-                    2,
-                    promotion.getDescription()
-            );
-
-            statement.setString(
-                    3,
-                    promotion.getDiscountType()
-            );
-
-            statement.setBigDecimal(
-                    4,
-                    promotion.getDiscountValue()
-            );
-
-            statement.setBigDecimal(
-                    5,
-                    promotion.getMinOrderAmount()
-            );
-
-            if (promotion.getMaxDiscountAmount() == null) {
-
-                statement.setNull(
-                        6,
-                        Types.DECIMAL
-                );
-
-            } else {
-
-                statement.setBigDecimal(
-                        6,
-                        promotion.getMaxDiscountAmount()
-                );
-            }
-
-            statement.setTimestamp(
-                    7,
-                    promotion.getStartDate()
-            );
-
-            statement.setTimestamp(
-                    8,
-                    promotion.getEndDate()
-            );
-
-            if (promotion.getUsageLimit() == null) {
-
-                statement.setNull(
-                        9,
-                        Types.INTEGER
-                );
-
-            } else {
-
-                statement.setInt(
-                        9,
-                        promotion.getUsageLimit()
-                );
-            }
-
-            statement.setString(
-                    10,
-                    promotion.getStatus()
-            );
-
-            return statement.executeUpdate() > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -252,103 +208,19 @@ public class PromotionRepository {
     }
 
     public boolean update(Promotion promotion) {
-
-        String sql
-                = "UPDATE Promotion SET "
-                + "promo_code = ?, "
-                + "description = ?, "
-                + "discount_type = ?, "
-                + "discount_value = ?, "
-                + "min_order_amount = ?, "
-                + "max_discount_amount = ?, "
-                + "start_date = ?, "
-                + "end_date = ?, "
-                + "usage_limit = ?, "
-                + "status = ? "
+        String sql = "UPDATE Promotion SET "
+                + "promo_code = ?, description = ?, discount_type = ?, "
+                + "discount_value = ?, min_order_amount = ?, "
+                + "max_discount_amount = ?, start_date = ?, end_date = ?, "
+                + "usage_limit = ?, status = ? "
                 + "WHERE promotion_id = ?";
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            statement.setString(
-                    1,
-                    promotion.getPromoCode()
-            );
+            setPromotionData(ps, promotion);
+            ps.setInt(11, promotion.getPromotionId());
 
-            statement.setString(
-                    2,
-                    promotion.getDescription()
-            );
-
-            statement.setString(
-                    3,
-                    promotion.getDiscountType()
-            );
-
-            statement.setBigDecimal(
-                    4,
-                    promotion.getDiscountValue()
-            );
-
-            statement.setBigDecimal(
-                    5,
-                    promotion.getMinOrderAmount()
-            );
-
-            if (promotion.getMaxDiscountAmount() == null) {
-
-                statement.setNull(
-                        6,
-                        Types.DECIMAL
-                );
-
-            } else {
-
-                statement.setBigDecimal(
-                        6,
-                        promotion.getMaxDiscountAmount()
-                );
-            }
-
-            statement.setTimestamp(
-                    7,
-                    promotion.getStartDate()
-            );
-
-            statement.setTimestamp(
-                    8,
-                    promotion.getEndDate()
-            );
-
-            if (promotion.getUsageLimit() == null) {
-
-                statement.setNull(
-                        9,
-                        Types.INTEGER
-                );
-
-            } else {
-
-                statement.setInt(
-                        9,
-                        promotion.getUsageLimit()
-                );
-            }
-
-            statement.setString(
-                    10,
-                    promotion.getStatus()
-            );
-
-            statement.setInt(
-                    11,
-                    promotion.getPromotionId()
-            );
-
-            return statement.executeUpdate() > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -357,32 +229,15 @@ public class PromotionRepository {
         return false;
     }
 
-    public boolean updateStatus(
-            int promotionId,
-            String status) {
+    public boolean updateStatus(int promotionId, String status) {
+        String sql = "UPDATE Promotion SET status = ? WHERE promotion_id = ?";
 
-        String sql
-                = "UPDATE Promotion "
-                + "SET status = ? "
-                + "WHERE promotion_id = ?";
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-        try (
-                Connection connection
-                = new DBContext().getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, promotionId);
 
-            statement.setString(
-                    1,
-                    status
-            );
-
-            statement.setInt(
-                    2,
-                    promotionId
-            );
-
-            return statement.executeUpdate() > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -391,90 +246,55 @@ public class PromotionRepository {
         return false;
     }
 
-    private Promotion mapPromotion(
-            ResultSet resultSet)
+    private void setPromotionData(PreparedStatement ps, Promotion promotion)
             throws SQLException {
 
-        Promotion promotion
-                = new Promotion();
+        ps.setString(1, promotion.getPromoCode());
+        ps.setString(2, promotion.getDescription());
+        ps.setString(3, promotion.getDiscountType());
+        ps.setBigDecimal(4, promotion.getDiscountValue());
+        ps.setBigDecimal(5, promotion.getMinOrderAmount());
 
-        promotion.setPromotionId(
-                resultSet.getInt(
-                        "promotion_id"
-                )
-        );
-
-        promotion.setPromoCode(
-                resultSet.getString(
-                        "promo_code"
-                )
-        );
-
-        promotion.setDescription(
-                resultSet.getString(
-                        "description"
-                )
-        );
-
-        promotion.setDiscountType(
-                resultSet.getString(
-                        "discount_type"
-                )
-        );
-
-        promotion.setDiscountValue(
-                resultSet.getBigDecimal(
-                        "discount_value"
-                )
-        );
-
-        promotion.setMinOrderAmount(
-                resultSet.getBigDecimal(
-                        "min_order_amount"
-                )
-        );
-
-        promotion.setMaxDiscountAmount(
-                resultSet.getBigDecimal(
-                        "max_discount_amount"
-                )
-        );
-
-        promotion.setStartDate(
-                resultSet.getTimestamp(
-                        "start_date"
-                )
-        );
-
-        promotion.setEndDate(
-                resultSet.getTimestamp(
-                        "end_date"
-                )
-        );
-
-        int usageLimit
-                = resultSet.getInt(
-                        "usage_limit"
-                );
-
-        if (resultSet.wasNull()) {
-
-            promotion.setUsageLimit(
-                    null
-            );
-
+        if (promotion.getMaxDiscountAmount() == null) {
+            ps.setNull(6, Types.DECIMAL);
         } else {
-
-            promotion.setUsageLimit(
-                    usageLimit
-            );
+            ps.setBigDecimal(6, promotion.getMaxDiscountAmount());
         }
 
-        promotion.setStatus(
-                resultSet.getString(
-                        "status"
-                )
-        );
+        ps.setTimestamp(7, promotion.getStartDate());
+        ps.setTimestamp(8, promotion.getEndDate());
+
+        if (promotion.getUsageLimit() == null) {
+            ps.setNull(9, Types.INTEGER);
+        } else {
+            ps.setInt(9, promotion.getUsageLimit());
+        }
+
+        ps.setString(10, promotion.getStatus());
+    }
+
+    private Promotion mapPromotion(ResultSet rs) throws SQLException {
+        Promotion promotion = new Promotion();
+
+        promotion.setPromotionId(rs.getInt("promotion_id"));
+        promotion.setPromoCode(rs.getString("promo_code"));
+        promotion.setDescription(rs.getString("description"));
+        promotion.setDiscountType(rs.getString("discount_type"));
+        promotion.setDiscountValue(rs.getBigDecimal("discount_value"));
+        promotion.setMinOrderAmount(rs.getBigDecimal("min_order_amount"));
+        promotion.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
+        promotion.setStartDate(rs.getTimestamp("start_date"));
+        promotion.setEndDate(rs.getTimestamp("end_date"));
+
+        int usageLimit = rs.getInt("usage_limit");
+
+        if (rs.wasNull()) {
+            promotion.setUsageLimit(null);
+        } else {
+            promotion.setUsageLimit(usageLimit);
+        }
+
+        promotion.setStatus(rs.getString("status"));
 
         return promotion;
     }
