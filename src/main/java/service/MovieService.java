@@ -20,6 +20,9 @@ import repository.MovieRepository;
 import repository.PricingRepository;
 import repository.RoomRepository;
 import repository.ShowtimeRepository;
+import java.sql.Date;
+import model.Genre;
+import repository.GenreRepository;
 
 /**
  * Provides business logic for movies.
@@ -43,6 +46,7 @@ public class MovieService {
     private RoomRepository roomRepository;
     private CinemaRepository cinemaRepository;
     private PricingRepository pricingRepository;
+    private GenreRepository genreRepository;
 
     public MovieService() {
         movieRepository = new MovieRepository();
@@ -85,16 +89,17 @@ public class MovieService {
     }
 
     /**
-     * Builds the movie list page data: for each show date, the movies that
-     * have showtimes on that date and their showtimes. Each filter is optional
-     * (null or empty means no filter). When no date or cinema filter is
-     * applied, active movies without any upcoming showtime are added in a last
-     * group with an empty showtime list.
+     * Builds the movie list page data: for each show date, the movies that have
+     * showtimes on that date and their showtimes. Each filter is optional (null
+     * or empty means no filter). When no date or cinema filter is applied,
+     * active movies without any upcoming showtime are added in a last group
+     * with an empty showtime list.
      *
      * @param keyword the movie title keyword, empty string for all movies
      * @param date the show date filter, null for all dates
      * @param cinemaId the cinema filter, null for all cinemas
-     * @return movies and showtimes grouped by date (dd/MM/yyyy) in chronological order
+     * @return movies and showtimes grouped by date (dd/MM/yyyy) in
+     * chronological order
      */
     public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(String keyword, LocalDate date, Integer cinemaId) {
 
@@ -178,7 +183,8 @@ public class MovieService {
      *
      * @param scheduleByDate the result of getSchedulesByDate
      * @param rooms the active rooms by room ID
-     * @return a map of movie ID and its lowest price; movies without pricing are absent
+     * @return a map of movie ID and its lowest price; movies without pricing
+     * are absent
      */
     public Map<Integer, BigDecimal> getMinPriceByMovie(Map<String, Map<Movie, List<Showtime>>> scheduleByDate, Map<Integer, Room> rooms) {
 
@@ -204,5 +210,267 @@ public class MovieService {
             }
         }
         return priceByMovie;
+    }
+
+    public List<Movie> getMoviesByCinema(int cinemaId) {
+
+        if (cinemaId <= 0) {
+            throw new IllegalArgumentException(
+                    "Rạp không hợp lệ."
+            );
+        }
+
+        return movieRepository.getByCinemaId(cinemaId);
+    }
+
+    public List<Genre> getActiveGenres() {
+        return genreRepository.getAllActive();
+    }
+
+    public List<Integer> getGenreIds(int movieId) {
+        return movieRepository.getGenreIds(movieId);
+    }
+
+    public Movie getMovieForManager(
+            int movieId,
+            int cinemaId) {
+
+        if (!movieRepository.belongsToCinema(
+                movieId,
+                cinemaId)) {
+
+            return null;
+        }
+
+        return movieRepository.getByIdAnyStatus(movieId);
+    }
+
+    public void createMovie(int cinemaId,
+            String title,
+            String description,
+            String durationText,
+            String ageRating,
+            String releaseDateText,
+            String endDateText,
+            String posterUrl,
+            String trailerUrl,
+            String status,
+            String[] genreValues) {
+
+        Movie movie = buildMovie(
+                0,
+                title,
+                description,
+                durationText,
+                ageRating,
+                releaseDateText,
+                endDateText,
+                posterUrl,
+                trailerUrl,
+                status
+        );
+
+        List<Integer> genreIds
+                = parseGenreIds(genreValues);
+
+        if (genreIds.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phim phải có ít nhất một thể loại."
+            );
+        }
+
+        if (!movieRepository.insertForCinema(
+                movie,
+                genreIds,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể thêm phim."
+            );
+        }
+    }
+
+    public void updateMovie(int movieId,
+            int cinemaId,
+            String title,
+            String description,
+            String durationText,
+            String ageRating,
+            String releaseDateText,
+            String endDateText,
+            String posterUrl,
+            String trailerUrl,
+            String status,
+            String[] genreValues) {
+
+        if (!movieRepository.belongsToCinema(
+                movieId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Bạn không có quyền sửa phim này."
+            );
+        }
+
+        Movie movie = buildMovie(
+                movieId,
+                title,
+                description,
+                durationText,
+                ageRating,
+                releaseDateText,
+                endDateText,
+                posterUrl,
+                trailerUrl,
+                status
+        );
+
+        List<Integer> genreIds
+                = parseGenreIds(genreValues);
+
+        if (genreIds.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phim phải có ít nhất một thể loại."
+            );
+        }
+
+        if (!movieRepository.updateForCinema(
+                movie,
+                genreIds,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể cập nhật phim."
+            );
+        }
+    }
+
+    private Movie buildMovie(int movieId,
+            String title,
+            String description,
+            String durationText,
+            String ageRating,
+            String releaseDateText,
+            String endDateText,
+            String posterUrl,
+            String trailerUrl,
+            String status) {
+
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Tên phim không được để trống."
+            );
+        }
+
+        if (title.trim().length() > 255) {
+            throw new IllegalArgumentException(
+                    "Tên phim không được vượt quá 255 ký tự."
+            );
+        }
+
+        int duration;
+
+        try {
+            duration = Integer.parseInt(durationText);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Thời lượng phim không hợp lệ."
+            );
+        }
+
+        if (duration <= 0) {
+            throw new IllegalArgumentException(
+                    "Thời lượng phim phải lớn hơn 0."
+            );
+        }
+
+        Date releaseDate = parseSqlDate(
+                releaseDateText,
+                "Ngày phát hành không hợp lệ."
+        );
+
+        Date endDate = parseSqlDate(
+                endDateText,
+                "Ngày kết thúc không hợp lệ."
+        );
+
+        if (releaseDate != null
+                && endDate != null
+                && endDate.before(releaseDate)) {
+
+            throw new IllegalArgumentException(
+                    "Ngày kết thúc không được trước ngày phát hành."
+            );
+        }
+
+        if (!"ACTIVE".equals(status)
+                && !"INACTIVE".equals(status)) {
+
+            throw new IllegalArgumentException(
+                    "Trạng thái phim không hợp lệ."
+            );
+        }
+
+        Movie movie = new Movie();
+
+        movie.setMovieId(movieId);
+        movie.setTitle(title.trim());
+        movie.setDescription(emptyToNull(description));
+        movie.setDurationMinutes(duration);
+        movie.setAgeRating(emptyToNull(ageRating));
+        movie.setReleaseDate(releaseDate);
+        movie.setEndDate(endDate);
+        movie.setPosterUrl(emptyToNull(posterUrl));
+        movie.setTrailerUrl(emptyToNull(trailerUrl));
+        movie.setStatus(status);
+
+        return movie;
+    }
+
+    private Date parseSqlDate(
+            String value,
+            String errorMessage) {
+
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Date.valueOf(value.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    private String emptyToNull(String value) {
+
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    private List<Integer> parseGenreIds(
+            String[] genreValues) {
+
+        List<Integer> genreIds = new ArrayList<>();
+
+        if (genreValues == null) {
+            return genreIds;
+        }
+
+        for (String value : genreValues) {
+
+            try {
+                genreIds.add(Integer.parseInt(value));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Thể loại không hợp lệ."
+                );
+            }
+        }
+
+        return genreIds;
     }
 }

@@ -15,6 +15,8 @@ import model.Room;
 import model.Showtime;
 import service.CinemaService;
 import service.MovieService;
+import jakarta.servlet.http.HttpSession;
+import model.User;
 
 /**
  * Handles movie-related requests.
@@ -110,10 +112,79 @@ public class MovieController extends HttpServlet {
 
             case "/admin/movies":
 
+                User manager = getManager(request, response);
+
+                if (manager == null) {
+                    return;
+                }
+
+                request.setAttribute(
+                        "movies",
+                        movieService.getMoviesByCinema(
+                                manager.getCinemaId()
+                        )
+                );
+
                 view = "/WEB-INF/views/admin/movies.jsp";
                 break;
-
             case "/admin/movie-form":
+
+                User formManager
+                        = getManager(request, response);
+
+                if (formManager == null) {
+                    return;
+                }
+
+                request.setAttribute(
+                        "genres",
+                        movieService.getActiveGenres()
+                );
+
+                String movieIdText
+                        = request.getParameter("id");
+
+                if (movieIdText != null
+                        && !movieIdText.trim().isEmpty()) {
+
+                    try {
+                        int editMovieId
+                                = Integer.parseInt(movieIdText);
+
+                        Movie editMovie
+                                = movieService.getMovieForManager(
+                                        editMovieId,
+                                        formManager.getCinemaId()
+                                );
+
+                        if (editMovie == null) {
+                            response.sendError(
+                                    HttpServletResponse.SC_NOT_FOUND
+                            );
+                            return;
+                        }
+
+                        request.setAttribute(
+                                "movie",
+                                editMovie
+                        );
+
+                        request.setAttribute(
+                                "selectedGenreIds",
+                                movieService.getGenreIds(
+                                        editMovieId
+                                )
+                        );
+
+                    } catch (NumberFormatException e) {
+
+                        response.sendError(
+                                HttpServletResponse.SC_BAD_REQUEST
+                        );
+
+                        return;
+                    }
+                }
 
                 view = "/WEB-INF/views/admin/movie-form.jsp";
                 break;
@@ -125,6 +196,99 @@ public class MovieController extends HttpServlet {
         }
 
         request.getRequestDispatcher(view).forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        if (!"/admin/movie-form".equals(
+                request.getServletPath())) {
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+            return;
+        }
+
+        User manager = getManager(request, response);
+
+        if (manager == null) {
+            return;
+        }
+
+        String id = request.getParameter("id");
+
+        try {
+
+            if (id == null || id.trim().isEmpty()) {
+
+                movieService.createMovie(
+                        manager.getCinemaId(),
+                        request.getParameter("title"),
+                        request.getParameter("description"),
+                        request.getParameter("durationMinutes"),
+                        request.getParameter("ageRating"),
+                        request.getParameter("releaseDate"),
+                        request.getParameter("endDate"),
+                        request.getParameter("posterUrl"),
+                        request.getParameter("trailerUrl"),
+                        request.getParameter("status"),
+                        request.getParameterValues("genreId")
+                );
+
+            } else {
+
+                int movieId = Integer.parseInt(id);
+
+                movieService.updateMovie(
+                        movieId,
+                        manager.getCinemaId(),
+                        request.getParameter("title"),
+                        request.getParameter("description"),
+                        request.getParameter("durationMinutes"),
+                        request.getParameter("ageRating"),
+                        request.getParameter("releaseDate"),
+                        request.getParameter("endDate"),
+                        request.getParameter("posterUrl"),
+                        request.getParameter("trailerUrl"),
+                        request.getParameter("status"),
+                        request.getParameterValues("genreId")
+                );
+            }
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/movies?saved=1"
+            );
+
+        } catch (NumberFormatException e) {
+
+            request.setAttribute(
+                    "error",
+                    "Mã phim không hợp lệ."
+            );
+
+            forwardAdminForm(
+                    request,
+                    response,
+                    manager
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            forwardAdminForm(
+                    request,
+                    response,
+                    manager
+            );
+        }
     }
 
     /**
@@ -165,5 +329,169 @@ public class MovieController extends HttpServlet {
             // Invalid cinema ID: ignore the cinema filter.
             return null;
         }
+    }
+
+    private void forwardAdminForm(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            User manager)
+            throws ServletException, IOException {
+
+        Movie movie = new Movie();
+
+        String id = request.getParameter("id");
+
+        if (id != null && !id.trim().isEmpty()) {
+            try {
+                movie.setMovieId(Integer.parseInt(id));
+            } catch (NumberFormatException e) {
+                movie.setMovieId(0);
+            }
+        }
+
+        movie.setTitle(request.getParameter("title"));
+        movie.setDescription(
+                request.getParameter("description")
+        );
+
+        try {
+            movie.setDurationMinutes(
+                    Integer.parseInt(
+                            request.getParameter(
+                                    "durationMinutes"
+                            )
+                    )
+            );
+        } catch (NumberFormatException e) {
+            movie.setDurationMinutes(0);
+        }
+
+        movie.setAgeRating(
+                request.getParameter("ageRating")
+        );
+
+        try {
+            String release
+                    = request.getParameter("releaseDate");
+
+            if (release != null
+                    && !release.trim().isEmpty()) {
+
+                movie.setReleaseDate(
+                        java.sql.Date.valueOf(release)
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            movie.setReleaseDate(null);
+        }
+
+        try {
+            String end
+                    = request.getParameter("endDate");
+
+            if (end != null
+                    && !end.trim().isEmpty()) {
+
+                movie.setEndDate(
+                        java.sql.Date.valueOf(end)
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            movie.setEndDate(null);
+        }
+
+        movie.setPosterUrl(
+                request.getParameter("posterUrl")
+        );
+
+        movie.setTrailerUrl(
+                request.getParameter("trailerUrl")
+        );
+
+        movie.setStatus(
+                request.getParameter("status")
+        );
+
+        List<Integer> selectedGenreIds
+                = new java.util.ArrayList<>();
+
+        String[] genreValues
+                = request.getParameterValues("genreId");
+
+        if (genreValues != null) {
+
+            for (String value : genreValues) {
+                try {
+                    selectedGenreIds.add(
+                            Integer.parseInt(value)
+                    );
+                } catch (NumberFormatException e) {
+                    // Invalid value is handled by Service.
+                }
+            }
+        }
+
+        request.setAttribute("movie", movie);
+
+        request.setAttribute(
+                "genres",
+                movieService.getActiveGenres()
+        );
+
+        request.setAttribute(
+                "selectedGenreIds",
+                selectedGenreIds
+        );
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/admin/movie-form.jsp"
+        ).forward(request, response);
+    }
+
+    private User getManager(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session
+                = request.getSession(false);
+
+        if (session == null
+                || session.getAttribute("user") == null) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/auth/login"
+            );
+
+            return null;
+        }
+
+        String roleName
+                = (String) session.getAttribute("roleName");
+
+        if (!"CINEMA_MANAGER".equals(roleName)) {
+
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN
+            );
+
+            return null;
+        }
+
+        User user
+                = (User) session.getAttribute("user");
+
+        if (user.getCinemaId() == null) {
+
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản Manager chưa được phân công rạp."
+            );
+
+            return null;
+        }
+
+        return user;
     }
 }
