@@ -340,7 +340,7 @@
                 <th>Promo Code</th>
                 <th>Ưu đãi</th>
                 <th>Thời hạn</th>
-                <th>Tình trạng</th>
+                <th>Trạng thái</th>
                 <th class="menu-column"></th>
             </tr>
         </thead>
@@ -417,7 +417,7 @@
                             <c:when test="${displayStatus eq 'AVAILABLE'}">
 
                                 <span class="status-active">
-                                    Đang hiệu lực
+                                    ACTIVE
                                 </span>
 
                             </c:when>
@@ -425,7 +425,7 @@
                             <c:when test="${displayStatus eq 'UPCOMING'}">
 
                                 <span class="status-upcoming">
-                                    Sắp diễn ra
+                                    UPCOMING
                                 </span>
 
                             </c:when>
@@ -433,7 +433,7 @@
                             <c:when test="${displayStatus eq 'EXPIRED'}">
 
                                 <span class="status-expired">
-                                    Hết hạn
+                                    EXPIRED
                                 </span>
 
                             </c:when>
@@ -441,7 +441,7 @@
                             <c:otherwise>
 
                                 <span class="status-inactive">
-                                    Vô hiệu hóa
+                                    INACTIVE
                                 </span>
 
                             </c:otherwise>
