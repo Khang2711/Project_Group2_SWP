@@ -6,205 +6,221 @@
 
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
-<section class="schedule-page">
+<section class="movies-page">
 
-    <div class="schedule-title">
+    <div class="movies-page-header">
+        <h1>PHIM</h1>
+    </div>
 
-        <h1>Hôm nay, xem gì?</h1>
+    <!-- TABS -->
+    <div class="movies-tabs">
 
-        <p>Khám phá phim, chọn rạp và tìm suất chiếu dành cho bạn.</p>
+        <c:choose>
+            <c:when test="${type == 'now'}">
+                <a href="${ctx}/user/movies?type=now" class="movies-tab active">PHIM ĐANG CHIẾU</a>
+            </c:when>
+            <c:otherwise>
+                <a href="${ctx}/user/movies?type=now" class="movies-tab">PHIM ĐANG CHIẾU</a>
+            </c:otherwise>
+        </c:choose>
+
+        <c:choose>
+            <c:when test="${type == 'coming'}">
+                <a href="${ctx}/user/movies?type=coming" class="movies-tab active">PHIM SẮP CHIẾU</a>
+            </c:when>
+            <c:otherwise>
+                <a href="${ctx}/user/movies?type=coming" class="movies-tab">PHIM SẮP CHIẾU</a>
+            </c:otherwise>
+        </c:choose>
 
     </div>
 
+    <!-- SEARCH -->
+    <div class="movies-toolbar">
 
-    <form class="schedule-search"
-          action="${ctx}/user/movies"
-          method="get">
+        <form action="${ctx}/user/movies" method="get" class="movies-search-form">
 
-        <input type="text"
-               name="keyword"
-               class="schedule-keyword"
-               value="<c:out value='${keyword}'/>"
-               placeholder="Tìm tên phim"
-               aria-label="Tìm tên phim">
+            <input type="hidden" name="type" value="${type}">
 
-        <div class="date-picker-wrapper">
+            <input type="text" name="keyword" value="${keyword}" class="movies-search-input" placeholder="Tìm tên phim..." list="movieOptions" autocomplete="off">
+            
+            <datalist id="movieOptions">
 
-            <input type="text"
-                   id="dateDisplay"
-                   class="date-display"
-                   placeholder="dd/mm/yyyy"
-                   aria-label="Ngày chiếu"
-                   readonly>
+                <c:forEach var="movie" items="${nowShowingMovies}">
 
-            <input type="date"
-                   id="date"
-                   name="date"
-                   value="<c:out value='${date}'/>"
-                   class="real-date-input">
+                    <option value="${movie.title}"></option>
 
-            <span class="date-icon">📅</span>
+                </c:forEach>
 
-        </div>
+            </datalist>
 
-        <select name="cinemaId"
-                class="schedule-cinema"
-                aria-label="Rạp">
+            <button type="submit" class="movies-search-button">Tìm kiếm</button>
 
-            <option value="">Tất cả rạp</option>
+            <c:if test="${not empty keyword}">
+                <a href="${ctx}/user/movies?type=${type}" class="movies-clear-button">Xóa</a>
+            </c:if>
 
-            <c:forEach var="cinema" items="${cinemaById.values()}">
-                <option value="${cinema.cinemaId}"
-                        ${cinemaId == cinema.cinemaId ? 'selected' : ''}>
-                    <c:out value="${cinema.cinemaName}" />
-                </option>
-            </c:forEach>
+        </form>
 
-        </select>
+        <span class="movies-result">${totalMovies} phim</span>
 
-        <button type="submit" class="search-button">Tìm kiếm</button>
+    </div>
 
-        <c:if test="${not empty keyword or not empty date or cinemaId != null}">
-            <a class="schedule-clear" href="${ctx}/user/movies">Xóa bộ lọc</a>
-        </c:if>
-
-    </form>
-
-
-    <p class="schedule-result-count">
-        Có <strong>${resultCount}</strong> kết quả phim và lịch chiếu.
-    </p>
-
-
+    <!-- MOVIE LIST -->
     <c:choose>
 
-        <c:when test="${not empty scheduleByDate}">
+        <c:when test="${not empty movies}">
 
-            <c:forEach var="dayEntry" items="${scheduleByDate}">
+            <div class="movies-grid">
 
-                <section class="schedule-day-section">
+                <c:forEach var="movie" items="${movies}">
 
-                    <div class="schedule-date-heading">
-                        <span class="schedule-date-label">Ngày chiếu</span>
-                        <h2><c:out value="${dayEntry.key}" /></h2>
-                    </div>
+                    <article class="movies-card">
 
-                    <div class="schedule-movie-grid">
+                        <!-- POSTER -->
+                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-poster">
 
-                        <c:forEach var="movieEntry" items="${dayEntry.value}">
+                            <c:if test="${not empty movie.ageRating}">
+                                <span class="movies-age">${movie.ageRating}</span>
+                            </c:if>
 
-                            <c:set var="movie" value="${movieEntry.key}" />
-                            <c:set var="showtimes" value="${movieEntry.value}" />
+                            <c:choose>
 
-                            <article class="schedule-movie-card">
+                                <c:when test="${not empty movie.posterUrl}">
+                                    <img src="${movie.posterUrl}" alt="${movie.title}">
+                                </c:when>
 
-                                <div class="schedule-poster">
-                                    <c:choose>
-                                        <c:when test="${not empty movie.posterUrl}">
-                                            <img src="<c:out value='${movie.posterUrl}'/>"
-                                                 alt="<c:out value='${movie.title}'/>">
-                                            
-                                            <span class="poster-fallback" style="display:none;">
-                                                <small>F / CINEMA</small>
-                                                <strong><c:out value="${movie.title}" /></strong>
-                                            </span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="poster-fallback">
-                                                <small>F / CINEMA</small>
-                                                <strong><c:out value="${movie.title}" /></strong>
-                                            </span>
-                                        </c:otherwise>
-                                    </c:choose>
+                                <c:otherwise>
+                                    <div class="movies-poster-fallback">
+                                        <span>F / CINEMA</span>
+                                        <strong>${movie.title}</strong>
+                                    </div>
+                                </c:otherwise>
+
+                            </c:choose>
+
+                            <div class="movies-poster-overlay">
+                                <span>Xem chi tiết</span>
+                            </div>
+
+                        </a>
+
+                        <!-- CONTENT -->
+                        <div class="movies-card-content">
+
+                            <h2>
+                                <a href="${ctx}/user/movie-detail?id=${movie.movieId}">${movie.title}</a>
+                            </h2>
+
+                            <!-- GENRES -->
+                            <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                                <div class="movie-genres">
+
+                                    <c:forEach var="genre" items="${genresByMovie[movie.movieId]}">
+                                        <span>${genre.genreName}</span>
+                                    </c:forEach>
+
                                 </div>
 
-                                <div class="schedule-card-content">
+                            </c:if>
 
-                                    <h3 class="schedule-movie-title">
-                                        <a class="card-link"
-                                           href="${ctx}/user/movie-detail?id=${movie.movieId}">
-                                            <c:out value="${movie.title}" />
-                                        </a>
-                                    </h3>
+                            <!-- INFO -->
+                            <div class="movies-info">
 
-                                    <c:if test="${not empty movie.ageRating}">
-                                        <span class="schedule-badge"><c:out value="${movie.ageRating}" /></span>
-                                    </c:if>
+                                <p><strong>Thời lượng:</strong> ${movie.durationMinutes} phút</p>
 
-                                    <div class="schedule-movie-meta">
-                                        <span>Thời lượng: ${movie.durationMinutes} phút</span>
-                                        <c:if test="${priceByMovie[movie.movieId] != null}">
-                                            <strong>Từ <fmt:formatNumber value="${priceByMovie[movie.movieId]}" pattern="#,###" /> VNĐ</strong>
-                                        </c:if>
+                                <c:if test="${not empty movie.releaseDate}">
+                                    <p><strong>Khởi chiếu:</strong> <fmt:formatDate value="${movie.releaseDate}" pattern="dd/MM/yyyy" /></p>
+                                </c:if>
+
+                            </div>
+
+                            <!-- BUTTONS -->
+                            <c:choose>
+
+                                <c:when test="${type == 'now'}">
+
+                                    <div class="movies-card-buttons">
+                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-detail-button">Chi tiết</a>
+                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-book-button">Mua vé</a>
                                     </div>
 
-                                    <c:if test="${not empty movie.description}">
-                                        <p class="schedule-description">
-                                            <c:out value="${movie.description}" />
-                                        </p>
-                                    </c:if>
+                                </c:when>
 
-                                    <c:choose>
+                                <c:otherwise>
 
-                                        <c:when test="${not empty showtimes}">
+                                    <div class="movies-card-buttons coming-buttons">
+                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-detail-button">Chi tiết</a>
+                                    </div>
 
-                                            <div class="showtime-area">
+                                </c:otherwise>
 
-                                                <div class="showtime-heading">
-                                                    <span class="book-label">Đặt vé</span>
-                                                    <span class="showtime-label">Chọn giờ chiếu:</span>
-                                                </div>
+                            </c:choose>
 
-                                                <div class="showtime-buttons">
-                                                    <c:forEach var="showtime" items="${showtimes}">
-                                                        <c:set var="showtimeRoom" value="${roomById[showtime.roomId]}" />
-                                                        <c:set var="showtimeCinema" value="${cinemaById[showtimeRoom.cinemaId]}" />
-                                                        <a class="showtime-button"
-                                                           href="${ctx}/user/select-seats?showtimeId=${showtime.showtimeId}"
-                                                           title="<c:out value='${showtimeCinema.cinemaName}'/> - <c:out value='${showtimeRoom.roomName}'/>">
-                                                            <strong><fmt:formatDate value="${showtime.startTime}" pattern="HH:mm" /></strong>
-                                                            <small><c:out value="${showtimeRoom.roomName}" /></small>
-                                                        </a>
-                                                    </c:forEach>
-                                                </div>
+                        </div>
 
-                                            </div>
+                    </article>
 
-                                        </c:when>
+                </c:forEach>
 
-                                        <c:otherwise>
-                                            <p class="no-showtime">Chưa có suất chiếu mở bán.</p>
-                                        </c:otherwise>
-
-                                    </c:choose>
-
-                                </div>
-
-                            </article>
-
-                        </c:forEach>
-
-                    </div>
-
-                </section>
-
-            </c:forEach>
+            </div>
 
         </c:when>
 
         <c:otherwise>
 
-            <div class="empty-schedule">
+            <div class="movies-empty">
 
-                <strong>Không tìm thấy phim</strong>
+                <h2>Không tìm thấy phim</h2>
 
-                <p>Hiện chưa có phim hoặc suất chiếu phù hợp với điều kiện tìm kiếm.</p>
+                <c:choose>
+                    <c:when test="${type == 'coming'}">
+                        <p>Hiện chưa có phim sắp chiếu.</p>
+                    </c:when>
+                    <c:otherwise>
+                        <p>Hiện chưa có phim đang chiếu.</p>
+                    </c:otherwise>
+                </c:choose>
 
             </div>
 
         </c:otherwise>
 
     </c:choose>
+
+    <!-- PAGINATION -->
+    <c:if test="${totalPages > 1}">
+
+        <div class="movies-pagination">
+
+            <c:if test="${currentPage > 1}">
+                <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${currentPage - 1}" class="pagination-arrow">‹</a>
+            </c:if>
+
+            <c:forEach begin="1" end="${totalPages}" var="pageNumber">
+
+                <c:choose>
+
+                    <c:when test="${pageNumber == currentPage}">
+                        <span class="pagination-number active">${pageNumber}</span>
+                    </c:when>
+
+                    <c:otherwise>
+                        <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${pageNumber}" class="pagination-number">${pageNumber}</a>
+                    </c:otherwise>
+
+                </c:choose>
+
+            </c:forEach>
+
+            <c:if test="${currentPage < totalPages}">
+                <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${currentPage + 1}" class="pagination-arrow">›</a>
+            </c:if>
+
+        </div>
+
+    </c:if>
 
 </section>
 

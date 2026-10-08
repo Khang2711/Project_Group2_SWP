@@ -246,6 +246,28 @@ public class MovieService {
     }
 
     /**
+     * Gets movies for the customer movie list page.
+     *
+     * @param type now for currently showing movies, coming for upcoming movies
+     * @param keyword movie title keyword
+     * @return a filtered list of movies
+     */
+    public List<Movie> getMoviesForList(String type, String keyword) {
+
+        if (keyword == null) {
+            keyword = "";
+        }
+
+        keyword = keyword.trim();
+
+        if ("coming".equals(type)) {
+            return movieRepository.searchComingSoon(keyword);
+        }
+
+        return movieRepository.searchNowShowing(keyword);
+    }
+
+    /**
      * Gets movies to display in the Home page carousel.
      *
      * @return a list of featured movies for the carousel
@@ -271,6 +293,35 @@ public class MovieService {
         }
 
         return featuredMovies;
+    }
+
+    /**
+     * Gets genres for each movie.
+     *
+     * @param movies the movie list
+     * @return a map of movie ID and its genres
+     */
+    public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
+
+        Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
+        List<Genre> allGenres = genreRepository.getAllActive();
+
+        for (Movie movie : movies) {
+
+            List<Integer> genreIds = movieRepository.getGenreIds(movie.getMovieId());
+            List<Genre> movieGenres = new ArrayList<>();
+
+            for (Genre genre : allGenres) {
+
+                if (genreIds.contains(genre.getGenreId())) {
+                    movieGenres.add(genre);
+                }
+            }
+
+            genresByMovie.put(movie.getMovieId(), movieGenres);
+        }
+
+        return genresByMovie;
     }
 
     public List<Movie> getMoviesByCinema(int cinemaId) {

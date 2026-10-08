@@ -1,14 +1,22 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    /*
+     * =========================
+     * DATE PICKER MOVIE LIST
+     * =========================
+     */
+
     const dateDisplay = document.getElementById("dateDisplay");
     const dateInput = document.getElementById("date");
 
     if (dateDisplay && dateInput) {
+
         if (dateInput.value) {
             displayDate(dateInput.value, dateDisplay);
         }
 
         dateDisplay.addEventListener("click", function () {
+
             if (dateInput.showPicker) {
                 dateInput.showPicker();
             } else {
@@ -22,9 +30,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
+    /*
+     * =========================
+     * HOME CAROUSEL
+     * =========================
+     */
+
     const carousel = document.querySelector(".carousel-container");
 
     if (carousel) {
+
+        const track = document.getElementById("carouselTrack");
         const slides = carousel.querySelectorAll(".carousel-slide");
         const previousButton = document.getElementById("carouselPrev");
         const nextButton = document.getElementById("carouselNext");
@@ -33,8 +49,14 @@ document.addEventListener("DOMContentLoaded", function () {
         let currentIndex = 0;
         let dots = [];
 
+
+        /*
+         * Create dots
+         */
         for (let i = 0; i < slides.length; i++) {
+
             const dot = document.createElement("button");
+
             dot.type = "button";
             dot.className = "carousel-dot";
 
@@ -43,10 +65,16 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             dotsContainer.appendChild(dot);
+
             dots.push(dot);
         }
 
+
+        /*
+         * Show slide
+         */
         function showSlide(index) {
+
             if (slides.length === 0) {
                 return;
             }
@@ -59,49 +87,83 @@ document.addEventListener("DOMContentLoaded", function () {
                 index = slides.length - 1;
             }
 
-            for (let i = 0; i < slides.length; i++) {
-                slides[i].classList.remove("active");
+            track.style.transform =
+                    "translateX(-" + (index * 100) + "%)";
+
+            for (let i = 0; i < dots.length; i++) {
                 dots[i].classList.remove("active");
             }
 
-            slides[index].classList.add("active");
-            dots[index].classList.add("active");
+            if (dots[index]) {
+                dots[index].classList.add("active");
+            }
 
             currentIndex = index;
         }
 
+
+        /*
+         * First slide
+         */
         showSlide(0);
 
+
+        /*
+         * Next
+         */
         if (nextButton) {
+
             nextButton.addEventListener("click", function () {
+
                 showSlide(currentIndex + 1);
             });
         }
 
+
+        /*
+         * Previous
+         */
         if (previousButton) {
+
             previousButton.addEventListener("click", function () {
+
                 showSlide(currentIndex - 1);
             });
         }
 
+
+        /*
+         * Auto slide every 3 seconds
+         */
         if (slides.length > 1) {
+
             setInterval(function () {
+
                 showSlide(currentIndex + 1);
-            }, 5000);
+
+            }, 3000);
         }
     }
 });
 
 
+/*
+ * Convert yyyy-MM-dd
+ * to dd/MM/yyyy
+ */
 function displayDate(dateValue, dateDisplay) {
+
     if (!dateValue) {
+
         dateDisplay.value = "";
+
         return;
     }
 
     const parts = dateValue.split("-");
 
     if (parts.length === 3) {
+
         const year = parts[0];
         const month = parts[1];
         const day = parts[2];

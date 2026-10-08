@@ -14,104 +14,98 @@
 
         <div class="carousel-container">
 
-            <c:forEach var="movie" items="${featuredMovies}">
+            <div class="carousel-track" id="carouselTrack">
 
-                <div class="carousel-slide">
+                <c:forEach var="movie" items="${featuredMovies}">
 
-                    <!-- Thông tin phim -->
-                    <div class="hero-left">
+                    <div class="carousel-slide">
 
-                        <span class="hero-small-title">
-                            ĐANG ĐƯỢC QUAN TÂM
-                        </span>
-
-                        <h1>
-                            ${movie.title}
-                        </h1>
-
-                        <div class="hero-meta">
-
-                            <c:if test="${not empty movie.ageRating}">
-                                <span class="hero-age">
-                                    ${movie.ageRating}
-                                </span>
-                            </c:if>
-
-                            <span>
-                                ${movie.durationMinutes} phút
-                            </span>
-
-                            <c:if test="${not empty movie.releaseDate}">
-                                <span>
-                                    <fmt:formatDate
-                                        value="${movie.releaseDate}"
-                                        pattern="dd/MM/yyyy" />
-                                </span>
-                            </c:if>
-
-                        </div>
-
-                        <p class="hero-description">
-                            ${movie.description}
-                        </p>
-
-                        <div class="hero-buttons">
-
-                            <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
-                               class="hero-detail-button">
-                                Xem chi tiết
-                            </a>
-
-                            <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
-                               class="hero-book-button">
-                                Đặt vé ngay
-                            </a>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Poster -->
-                    <div class="hero-right">
-
+                        <!-- Ảnh phủ toàn bộ carousel -->
                         <c:if test="${not empty movie.posterUrl}">
-
                             <img src="${movie.posterUrl}"
                                  alt="${movie.title}"
-                                 class="hero-poster-image">
+                                 class="carousel-background-image">
+                        </c:if>
 
+                        <!-- Nếu chưa có poster -->
+                        <c:if test="${empty movie.posterUrl}">
+                            <div class="carousel-background-fallback"></div>
                         </c:if>
 
 
-                        <c:if test="${empty movie.posterUrl}">
+                        <!-- Lớp tối để chữ dễ nhìn -->
+                        <div class="carousel-overlay"></div>
 
-                            <div class="hero-poster-fallback">
 
-                                <span>
-                                    F / CINEMA
-                                </span>
+                        <!-- Nội dung phim -->
+                        <div class="carousel-content">
 
-                                <strong>
-                                    ${movie.title}
-                                </strong>
+                            <span class="hero-small-title">
+                                ĐANG ĐƯỢC QUAN TÂM
+                            </span>
 
-                                <small>
-                                    NOW SHOWING
-                                </small>
+                            <h1>
+                                ${movie.title}
+                            </h1>
+
+
+                            <div class="hero-meta">
+
+                                <c:if test="${not empty movie.ageRating}">
+                                    <span class="hero-age">${movie.ageRating}</span>
+                                </c:if>
+
+                                <span>${movie.durationMinutes} phút</span>
+
+                                <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                                    <span class="hero-genres">
+
+                                        <c:forEach var="genre" items="${genresByMovie[movie.movieId]}" varStatus="status">
+                                            ${genre.genreName}<c:if test="${not status.last}">, </c:if>
+                                        </c:forEach>
+
+                                    </span>
+
+                                </c:if>
+
+                                <c:if test="${not empty movie.releaseDate}">
+                                    <span>
+                                        <fmt:formatDate value="${movie.releaseDate}" pattern="dd/MM/yyyy" />
+                                    </span>
+                                </c:if>
 
                             </div>
 
-                        </c:if>
+
+                            <p class="hero-description">
+                                ${movie.description}
+                            </p>
+
+
+                            <div class="hero-buttons">
+
+                                <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                                   class="hero-detail-button">
+                                    Xem chi tiết
+                                </a>
+
+                                <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
+                                   class="hero-book-button">
+                                    Đặt vé ngay
+                                </a>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                </div>
+                </c:forEach>
 
-            </c:forEach>
+            </div>
 
 
-            <!-- Nút trái -->
             <button type="button"
                     class="carousel-button carousel-prev"
                     id="carouselPrev">
@@ -119,7 +113,6 @@
             </button>
 
 
-            <!-- Nút phải -->
             <button type="button"
                     class="carousel-button carousel-next"
                     id="carouselNext">
@@ -127,7 +120,6 @@
             </button>
 
 
-            <!-- Chấm carousel -->
             <div class="carousel-dots"
                  id="carouselDots">
             </div>
@@ -138,17 +130,10 @@
 
 
     <c:if test="${empty featuredMovies}">
-
-        <div class="home-empty hero-empty">
-
+        <div class="home-empty">
             <h2>F-CINEMA</h2>
-
-            <p>
-                Hiện chưa có phim đang chiếu.
-            </p>
-
+            <p>Hiện chưa có phim đang chiếu.</p>
         </div>
-
     </c:if>
 
 </section>
@@ -179,49 +164,65 @@
           class="quick-booking-form">
 
 
-        <!-- Chọn phim -->
+        <!-- Tên phim -->
         <div class="quick-field movie-field">
 
             <label for="quickMovie">
                 Tên phim
             </label>
 
-            <select name="keyword"
-                    id="quickMovie">
+            <input type="text"
+                   name="keyword"
+                   id="quickMovie"
+                   list="movieOptions"
+                   placeholder="Bạn muốn xem phim gì?"
+                   autocomplete="off">
 
-                <option value="">
-                    Bạn muốn xem phim gì?
-                </option>
 
-                <c:forEach var="movie"
-                           items="${nowShowingMovies}">
+            <!-- Danh sách phim lấy từ database -->
+            <datalist id="movieOptions">
 
-                    <option value="${movie.title}">
-                        ${movie.title}
-                    </option>
+                <c:forEach var="movie" items="${nowShowingMovies}">
+
+                    <option value="${movie.title}"></option>
 
                 </c:forEach>
 
-            </select>
+            </datalist>
 
         </div>
 
 
-        <!-- Chọn ngày -->
+        <!-- Ngày chiếu -->
         <div class="quick-field">
 
-            <label for="quickDate">
+            <label for="dateDisplay">
                 Ngày chiếu
             </label>
 
-            <input type="date"
-                   name="date"
-                   id="quickDate">
+            <div class="date-picker-wrapper">
+
+                <input type="text"
+                       id="dateDisplay"
+                       class="date-display"
+                       placeholder="dd/mm/yyyy"
+                       readonly>
+
+                <input type="date"
+                       id="date"
+                       name="date"
+                       class="real-date-input">
+
+                <span class="date-icon">
+                    📅
+                </span>
+
+            </div>
 
         </div>
 
 
-        <!-- Chọn rạp -->
+        <!-- Rạp -->
         <div class="quick-field cinema-field">
 
             <label for="quickCinema">
@@ -354,37 +355,21 @@
 
                         <div class="home-movie-meta">
 
-                            <span>
-                                ${movie.durationMinutes} phút
-                            </span>
-
-
-                            <!-- Giá từ database -->
-                            <c:if test="${not empty priceByMovie[movie.movieId]}">
-
-                                <strong>
-
-                                    <fmt:formatNumber
-                                        value="${priceByMovie[movie.movieId]}"
-                                        pattern="#,###" />
-
-                                    VNĐ
-
-                                </strong>
-
-                            </c:if>
-
-
-                            <!-- Không tìm thấy giá -->
-                            <c:if test="${empty priceByMovie[movie.movieId]}">
-
-                                <strong>
-                                    Chưa có giá
-                                </strong>
-
-                            </c:if>
+                            <span>${movie.durationMinutes} phút</span>
 
                         </div>
+
+                        <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                            <div class="movie-genres">
+
+                                <c:forEach var="genre" items="${genresByMovie[movie.movieId]}">
+                                    <span>${genre.genreName}</span>
+                                </c:forEach>
+
+                            </div>
+
+                        </c:if>
 
 
                         <div class="home-card-buttons">
@@ -514,6 +499,17 @@
                             ${movie.title}
                         </h3>
 
+                        <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                            <div class="movie-genres">
+
+                                <c:forEach var="genre" items="${genresByMovie[movie.movieId]}">
+                                    <span>${genre.genreName}</span>
+                                </c:forEach>
+
+                            </div>
+
+                        </c:if>
 
                         <p>
                             ${movie.description}
