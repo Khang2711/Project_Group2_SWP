@@ -12,7 +12,7 @@ import java.sql.Statement;
 /**
  * Provides data access operations for Movie.
  *
- * @author Kiet
+ * @author Hoang
  */
 public class MovieRepository extends DBContext {
 
@@ -435,5 +435,55 @@ public class MovieRepository extends DBContext {
         movie.setStatus(rs.getString("status"));
 
         return movie;
+    }
+
+    public boolean hasShowtimeAtCinema(
+            int movieId,
+            int cinemaId) {
+
+        String sql = "SELECT TOP 1 s.showtime_id "
+                + "FROM Showtime s "
+                + "JOIN Room r ON s.room_id = r.room_id "
+                + "WHERE s.movie_id = ? "
+                + "AND r.cinema_id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, movieId);
+            ps.setInt(2, cinemaId);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean deleteFromCinema(
+            int movieId,
+            int cinemaId) {
+
+        String sql = "DELETE FROM Cinema_Movie "
+                + "WHERE movie_id = ? "
+                + "AND cinema_id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, movieId);
+            ps.setInt(2, cinemaId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

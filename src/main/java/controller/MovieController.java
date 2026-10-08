@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -13,10 +14,9 @@ import java.util.Map;
 import model.Movie;
 import model.Room;
 import model.Showtime;
+import model.User;
 import service.CinemaService;
 import service.MovieService;
-import jakarta.servlet.http.HttpSession;
-import model.User;
 
 /**
  * Handles movie-related requests.
@@ -60,31 +60,79 @@ public class MovieController extends HttpServlet {
 
                 keyword = keyword.trim();
 
-                LocalDate date = parseDate(request.getParameter("date"));
-                Integer cinemaId = parseCinemaId(request.getParameter("cinemaId"));
+                LocalDate date = parseDate(
+                        request.getParameter("date")
+                );
 
-                Map<String, Map<Movie, List<Showtime>>> scheduleByDate = movieService.getSchedulesByDate(keyword, date, cinemaId);
+                Integer cinemaId = parseCinemaId(
+                        request.getParameter("cinemaId")
+                );
+
+                Map<String, Map<Movie, List<Showtime>>> scheduleByDate
+                        = movieService.getSchedulesByDate(
+                                keyword,
+                                date,
+                                cinemaId
+                        );
 
                 int resultCount = 0;
 
-                for (Map<Movie, List<Showtime>> dayMovies : scheduleByDate.values()) {
+                for (Map<Movie, List<Showtime>> dayMovies
+                        : scheduleByDate.values()) {
+
                     resultCount += dayMovies.size();
                 }
 
-                Map<Integer, Room> roomById = movieService.getRoomById();
+                Map<Integer, Room> roomById
+                        = movieService.getRoomById();
 
-                request.setAttribute("scheduleByDate", scheduleByDate);
-                request.setAttribute("priceByMovie", movieService.getMinPriceByMovie(scheduleByDate, roomById));
-                request.setAttribute("roomById", roomById);
-                request.setAttribute("cinemaById", cinemaService.getCinemaById());
-                request.setAttribute("resultCount", resultCount);
+                request.setAttribute(
+                        "scheduleByDate",
+                        scheduleByDate
+                );
 
-                // Send the filters back so the form keeps what the user typed.
-                request.setAttribute("keyword", keyword);
-                request.setAttribute("date", date == null ? "" : date.toString());
-                request.setAttribute("cinemaId", cinemaId);
+                request.setAttribute(
+                        "priceByMovie",
+                        movieService.getMinPriceByMovie(
+                                scheduleByDate,
+                                roomById
+                        )
+                );
+
+                request.setAttribute(
+                        "roomById",
+                        roomById
+                );
+
+                request.setAttribute(
+                        "cinemaById",
+                        cinemaService.getCinemaById()
+                );
+
+                request.setAttribute(
+                        "resultCount",
+                        resultCount
+                );
+
+                request.setAttribute(
+                        "keyword",
+                        keyword
+                );
+
+                request.setAttribute(
+                        "date",
+                        date == null
+                                ? ""
+                                : date.toString()
+                );
+
+                request.setAttribute(
+                        "cinemaId",
+                        cinemaId
+                );
 
                 view = "/WEB-INF/views/user/movies.jsp";
+
                 break;
 
             case "/user/movie-detail":
@@ -92,27 +140,57 @@ public class MovieController extends HttpServlet {
                 String id = request.getParameter("id");
 
                 if (id == null || id.isEmpty()) {
-                    response.sendError(400);
+
+                    response.sendError(
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+
                     return;
                 }
 
-                int movieId = Integer.parseInt(id);
+                int movieId;
 
-                Movie movie = movieService.getMovieById(movieId);
+                try {
+
+                    movieId = Integer.parseInt(id);
+
+                } catch (NumberFormatException e) {
+
+                    response.sendError(
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+
+                    return;
+                }
+
+                Movie movie
+                        = movieService.getMovieById(movieId);
 
                 if (movie == null) {
-                    response.sendError(400);
+
+                    response.sendError(
+                            HttpServletResponse.SC_BAD_REQUEST
+                    );
+
                     return;
                 }
 
-                request.setAttribute("movie", movie);
+                request.setAttribute(
+                        "movie",
+                        movie
+                );
 
                 view = "/WEB-INF/views/user/movie-detail.jsp";
+
                 break;
 
             case "/admin/movies":
 
-                User manager = getManager(request, response);
+                User manager
+                        = getManager(
+                                request,
+                                response
+                        );
 
                 if (manager == null) {
                     return;
@@ -126,11 +204,16 @@ public class MovieController extends HttpServlet {
                 );
 
                 view = "/WEB-INF/views/admin/movies.jsp";
+
                 break;
+
             case "/admin/movie-form":
 
                 User formManager
-                        = getManager(request, response);
+                        = getManager(
+                                request,
+                                response
+                        );
 
                 if (formManager == null) {
                     return;
@@ -148,8 +231,11 @@ public class MovieController extends HttpServlet {
                         && !movieIdText.trim().isEmpty()) {
 
                     try {
+
                         int editMovieId
-                                = Integer.parseInt(movieIdText);
+                                = Integer.parseInt(
+                                        movieIdText
+                                );
 
                         Movie editMovie
                                 = movieService.getMovieForManager(
@@ -158,9 +244,11 @@ public class MovieController extends HttpServlet {
                                 );
 
                         if (editMovie == null) {
+
                             response.sendError(
                                     HttpServletResponse.SC_NOT_FOUND
                             );
+
                             return;
                         }
 
@@ -187,15 +275,20 @@ public class MovieController extends HttpServlet {
                 }
 
                 view = "/WEB-INF/views/admin/movie-form.jsp";
+
                 break;
 
             default:
 
-                response.sendError(404);
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND
+                );
+
                 return;
         }
 
-        request.getRequestDispatcher(view).forward(request, response);
+        request.getRequestDispatcher(view)
+                .forward(request, response);
     }
 
     @Override
@@ -203,26 +296,101 @@ public class MovieController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (!"/admin/movie-form".equals(
-                request.getServletPath())) {
+        String path = request.getServletPath();
+
+        // ==========================
+        // XÓA PHIM KHỎI RẠP
+        // ==========================
+        if ("/admin/movies".equals(path)) {
+
+            User manager
+                    = getManager(
+                            request,
+                            response
+                    );
+
+            if (manager == null) {
+                return;
+            }
+
+            try {
+
+                int movieId
+                        = Integer.parseInt(
+                                request.getParameter("id")
+                        );
+
+                movieService.deleteMovieFromCinema(
+                        movieId,
+                        manager.getCinemaId()
+                );
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin/movies?deleted=1"
+                );
+
+            } catch (NumberFormatException e) {
+
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                request.setAttribute(
+                        "error",
+                        e.getMessage()
+                );
+
+                request.setAttribute(
+                        "movies",
+                        movieService.getMoviesByCinema(
+                                manager.getCinemaId()
+                        )
+                );
+
+                request.getRequestDispatcher(
+                        "/WEB-INF/views/admin/movies.jsp"
+                ).forward(
+                        request,
+                        response
+                );
+            }
+
+            return;
+        }
+
+        // ==========================
+        // THÊM / SỬA PHIM
+        // ==========================
+        if (!"/admin/movie-form".equals(path)) {
 
             response.sendError(
                     HttpServletResponse.SC_NOT_FOUND
             );
+
             return;
         }
 
-        User manager = getManager(request, response);
+        User manager
+                = getManager(
+                        request,
+                        response
+                );
 
         if (manager == null) {
             return;
         }
 
-        String id = request.getParameter("id");
+        String id
+                = request.getParameter("id");
 
         try {
 
-            if (id == null || id.trim().isEmpty()) {
+            // THÊM PHIM
+            if (id == null
+                    || id.trim().isEmpty()) {
 
                 movieService.createMovie(
                         manager.getCinemaId(),
@@ -240,7 +408,9 @@ public class MovieController extends HttpServlet {
 
             } else {
 
-                int movieId = Integer.parseInt(id);
+                // SỬA PHIM
+                int movieId
+                        = Integer.parseInt(id);
 
                 movieService.updateMovie(
                         movieId,
@@ -299,14 +469,20 @@ public class MovieController extends HttpServlet {
      */
     private LocalDate parseDate(String value) {
 
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null
+                || value.trim().isEmpty()) {
+
             return null;
         }
 
         try {
-            return LocalDate.parse(value.trim());
+
+            return LocalDate.parse(
+                    value.trim()
+            );
+
         } catch (DateTimeParseException e) {
-            // Invalid date: ignore the date filter.
+
             return null;
         }
     }
@@ -319,18 +495,27 @@ public class MovieController extends HttpServlet {
      */
     private Integer parseCinemaId(String value) {
 
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null
+                || value.trim().isEmpty()) {
+
             return null;
         }
 
         try {
-            return Integer.valueOf(value.trim());
+
+            return Integer.valueOf(
+                    value.trim()
+            );
+
         } catch (NumberFormatException e) {
-            // Invalid cinema ID: ignore the cinema filter.
+
             return null;
         }
     }
 
+    /**
+     * Forward lại form khi dữ liệu thêm/sửa bị lỗi.
+     */
     private void forwardAdminForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -339,22 +524,34 @@ public class MovieController extends HttpServlet {
 
         Movie movie = new Movie();
 
-        String id = request.getParameter("id");
+        String id
+                = request.getParameter("id");
 
-        if (id != null && !id.trim().isEmpty()) {
+        if (id != null
+                && !id.trim().isEmpty()) {
+
             try {
-                movie.setMovieId(Integer.parseInt(id));
+
+                movie.setMovieId(
+                        Integer.parseInt(id)
+                );
+
             } catch (NumberFormatException e) {
+
                 movie.setMovieId(0);
             }
         }
 
-        movie.setTitle(request.getParameter("title"));
+        movie.setTitle(
+                request.getParameter("title")
+        );
+
         movie.setDescription(
                 request.getParameter("description")
         );
 
         try {
+
             movie.setDurationMinutes(
                     Integer.parseInt(
                             request.getParameter(
@@ -362,76 +559,111 @@ public class MovieController extends HttpServlet {
                             )
                     )
             );
+
         } catch (NumberFormatException e) {
+
             movie.setDurationMinutes(0);
         }
 
         movie.setAgeRating(
-                request.getParameter("ageRating")
+                request.getParameter(
+                        "ageRating"
+                )
         );
 
         try {
+
             String release
-                    = request.getParameter("releaseDate");
+                    = request.getParameter(
+                            "releaseDate"
+                    );
 
             if (release != null
                     && !release.trim().isEmpty()) {
 
                 movie.setReleaseDate(
-                        java.sql.Date.valueOf(release)
+                        java.sql.Date.valueOf(
+                                release
+                        )
                 );
             }
+
         } catch (IllegalArgumentException e) {
+
             movie.setReleaseDate(null);
         }
 
         try {
+
             String end
-                    = request.getParameter("endDate");
+                    = request.getParameter(
+                            "endDate"
+                    );
 
             if (end != null
                     && !end.trim().isEmpty()) {
 
                 movie.setEndDate(
-                        java.sql.Date.valueOf(end)
+                        java.sql.Date.valueOf(
+                                end
+                        )
                 );
             }
+
         } catch (IllegalArgumentException e) {
+
             movie.setEndDate(null);
         }
 
         movie.setPosterUrl(
-                request.getParameter("posterUrl")
+                request.getParameter(
+                        "posterUrl"
+                )
         );
 
         movie.setTrailerUrl(
-                request.getParameter("trailerUrl")
+                request.getParameter(
+                        "trailerUrl"
+                )
         );
 
         movie.setStatus(
-                request.getParameter("status")
+                request.getParameter(
+                        "status"
+                )
         );
 
         List<Integer> selectedGenreIds
                 = new java.util.ArrayList<>();
 
         String[] genreValues
-                = request.getParameterValues("genreId");
+                = request.getParameterValues(
+                        "genreId"
+                );
 
         if (genreValues != null) {
 
             for (String value : genreValues) {
+
                 try {
+
                     selectedGenreIds.add(
-                            Integer.parseInt(value)
+                            Integer.parseInt(
+                                    value
+                            )
                     );
+
                 } catch (NumberFormatException e) {
-                    // Invalid value is handled by Service.
+
+                    // Service sẽ xử lý dữ liệu không hợp lệ.
                 }
             }
         }
 
-        request.setAttribute("movie", movie);
+        request.setAttribute(
+                "movie",
+                movie
+        );
 
         request.setAttribute(
                 "genres",
@@ -445,9 +677,15 @@ public class MovieController extends HttpServlet {
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/movie-form.jsp"
-        ).forward(request, response);
+        ).forward(
+                request,
+                response
+        );
     }
 
+    /**
+     * Kiểm tra tài khoản Cinema Manager.
+     */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -457,7 +695,8 @@ public class MovieController extends HttpServlet {
                 = request.getSession(false);
 
         if (session == null
-                || session.getAttribute("user") == null) {
+                || session.getAttribute("user")
+                == null) {
 
             response.sendRedirect(
                     request.getContextPath()
@@ -468,9 +707,12 @@ public class MovieController extends HttpServlet {
         }
 
         String roleName
-                = (String) session.getAttribute("roleName");
+                = (String) session.getAttribute(
+                        "roleName"
+                );
 
-        if (!"CINEMA_MANAGER".equals(roleName)) {
+        if (!"CINEMA_MANAGER".equals(
+                roleName)) {
 
             response.sendError(
                     HttpServletResponse.SC_FORBIDDEN
@@ -480,7 +722,9 @@ public class MovieController extends HttpServlet {
         }
 
         User user
-                = (User) session.getAttribute("user");
+                = (User) session.getAttribute(
+                        "user"
+                );
 
         if (user.getCinemaId() == null) {
 

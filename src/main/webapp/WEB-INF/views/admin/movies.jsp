@@ -57,6 +57,15 @@
         border-radius: 7px;
     }
 
+    .error-message {
+        padding: 13px 16px;
+        margin-bottom: 22px;
+        border: 1px solid #6b2935;
+        background: #32181d;
+        color: #ff8095;
+        border-radius: 7px;
+    }
+
     .movie-card {
         background: #151517;
         border: 1px solid #29292d;
@@ -138,19 +147,49 @@
         font-weight: 700;
     }
 
+    .action-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
     .btn-edit {
         display: inline-block;
         padding: 7px 13px;
         border: 1px solid #ff1744;
         color: #ff4265;
+        background: transparent;
         text-decoration: none;
         border-radius: 5px;
         font-size: 13px;
+        cursor: pointer;
         transition: 0.2s;
     }
 
     .btn-edit:hover {
         background: #ff1744;
+        color: white;
+    }
+
+    .delete-form {
+        margin: 0;
+        display: inline;
+    }
+
+    .btn-delete {
+        padding: 7px 13px;
+        border: 1px solid #5d3038;
+        background: transparent;
+        color: #ff6b81;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-delete:hover {
+        background: #ff1744;
+        border-color: #ff1744;
         color: white;
     }
 
@@ -161,12 +200,13 @@
     }
 
     @media (max-width: 900px) {
+
         .movie-card {
             overflow-x: auto;
         }
 
         .movie-table {
-            min-width: 850px;
+            min-width: 900px;
         }
 
         .movie-header {
@@ -182,7 +222,10 @@
 
         <div>
             <h1>Quản lý phim</h1>
-            <p>Quản lý danh sách phim đang được áp dụng tại rạp.</p>
+
+            <p>
+                Quản lý danh sách phim đang được áp dụng tại rạp.
+            </p>
         </div>
 
         <a class="btn-add"
@@ -192,10 +235,31 @@
 
     </div>
 
+    <!-- Thông báo thêm / sửa thành công -->
     <c:if test="${param.saved == '1'}">
+
         <div class="success-message">
             ✓ Lưu thông tin phim thành công.
         </div>
+
+    </c:if>
+
+    <!-- Thông báo xóa thành công -->
+    <c:if test="${param.deleted == '1'}">
+
+        <div class="success-message">
+            ✓ Xóa phim khỏi rạp thành công.
+        </div>
+
+    </c:if>
+
+    <!-- Thông báo lỗi -->
+    <c:if test="${not empty error}">
+
+        <div class="error-message">
+            ⚠ <c:out value="${error}" />
+        </div>
+
     </c:if>
 
     <div class="movie-card">
@@ -203,6 +267,7 @@
         <table class="movie-table">
 
             <thead>
+
                 <tr>
                     <th>ID</th>
                     <th>Tên phim</th>
@@ -213,79 +278,160 @@
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
                 </tr>
+
             </thead>
 
             <tbody>
 
-                <c:forEach var="movie" items="${movies}">
+                <c:forEach var="movie"
+                           items="${movies}">
 
                     <tr>
 
+                        <!-- ID -->
                         <td class="movie-id">
                             #<c:out value="${movie.movieId}" />
                         </td>
 
+                        <!-- Tên phim -->
                         <td class="movie-title">
                             <c:out value="${movie.title}" />
                         </td>
 
+                        <!-- Thời lượng -->
                         <td>
                             <c:out value="${movie.durationMinutes}" />
                             phút
                         </td>
 
-                        <td>
-                            <span class="age-badge">
-                                <c:out value="${movie.ageRating}" />
-                            </span>
-                        </td>
-
-                        <td>
-                            <c:out value="${movie.releaseDate}" />
-                        </td>
-
-                        <td>
-                            <c:out value="${movie.endDate}" />
-                        </td>
-
+                        <!-- Phân loại độ tuổi -->
                         <td>
 
                             <c:choose>
 
-                                <c:when test="${movie.status == 'ACTIVE'}">
-                                    <span class="badge badge-active">
-                                        ACTIVE
+                                <c:when test="${not empty movie.ageRating}">
+
+                                    <span class="age-badge">
+                                        <c:out value="${movie.ageRating}" />
                                     </span>
+
                                 </c:when>
 
                                 <c:otherwise>
-                                    <span class="badge badge-inactive">
-                                        <c:out value="${movie.status}" />
-                                    </span>
+                                    -
                                 </c:otherwise>
 
                             </c:choose>
 
                         </td>
 
+                        <!-- Ngày phát hành -->
                         <td>
-                            <a class="btn-edit"
-                               href="${pageContext.request.contextPath}/admin/movie-form?id=${movie.movieId}">
-                                Sửa
-                            </a>
+
+                            <c:choose>
+
+                                <c:when test="${not empty movie.releaseDate}">
+                                    <c:out value="${movie.releaseDate}" />
+                                </c:when>
+
+                                <c:otherwise>
+                                    -
+                                </c:otherwise>
+
+                            </c:choose>
+
+                        </td>
+
+                        <!-- Ngày kết thúc -->
+                        <td>
+
+                            <c:choose>
+
+                                <c:when test="${not empty movie.endDate}">
+                                    <c:out value="${movie.endDate}" />
+                                </c:when>
+
+                                <c:otherwise>
+                                    -
+                                </c:otherwise>
+
+                            </c:choose>
+
+                        </td>
+
+                        <!-- Trạng thái -->
+                        <td>
+
+                            <c:choose>
+
+                                <c:when test="${movie.status == 'ACTIVE'}">
+
+                                    <span class="badge badge-active">
+                                        ACTIVE
+                                    </span>
+
+                                </c:when>
+
+                                <c:otherwise>
+
+                                    <span class="badge badge-inactive">
+                                        <c:out value="${movie.status}" />
+                                    </span>
+
+                                </c:otherwise>
+
+                            </c:choose>
+
+                        </td>
+
+                        <!-- Thao tác -->
+                        <td>
+
+                            <div class="action-group">
+
+                                <!-- Sửa phim -->
+                                <a class="btn-edit"
+                                   href="${pageContext.request.contextPath}/admin/movie-form?id=${movie.movieId}">
+                                    Sửa
+                                </a>
+
+                                <!-- Xóa phim khỏi rạp -->
+                                <form class="delete-form"
+                                      method="post"
+                                      action="${pageContext.request.contextPath}/admin/movies">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="${movie.movieId}">
+
+                                    <button type="submit"
+                                            class="btn-delete"
+                                            onclick="return confirm('Bạn có chắc muốn xóa phim này khỏi rạp?');">
+                                        Xóa
+                                    </button>
+
+                                </form>
+
+                            </div>
+
                         </td>
 
                     </tr>
 
                 </c:forEach>
 
+                <!-- Không có dữ liệu -->
                 <c:if test="${empty movies}">
+
                     <tr>
+
                         <td colspan="8"
                             class="empty-row">
                             Chưa có phim nào tại rạp.
                         </td>
+
                     </tr>
+
                 </c:if>
 
             </tbody>

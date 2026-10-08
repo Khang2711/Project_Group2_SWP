@@ -54,6 +54,7 @@ public class MovieService {
         roomRepository = new RoomRepository();
         cinemaRepository = new CinemaRepository();
         pricingRepository = new PricingRepository();
+        genreRepository = new GenreRepository();
     }
 
     /**
@@ -472,5 +473,37 @@ public class MovieService {
         }
 
         return genreIds;
+    }
+
+    public void deleteMovieFromCinema(
+            int movieId,
+            int cinemaId) {
+
+        if (!movieRepository.belongsToCinema(
+                movieId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Phim không thuộc rạp của bạn."
+            );
+        }
+
+        if (movieRepository.hasShowtimeAtCinema(
+                movieId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể xóa phim vì phim đã có suất chiếu tại rạp."
+            );
+        }
+
+        if (!movieRepository.deleteFromCinema(
+                movieId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể xóa phim."
+            );
+        }
     }
 }
