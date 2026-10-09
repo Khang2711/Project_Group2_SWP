@@ -62,8 +62,8 @@ public class RoomService {
             String roomName, int capacity,
             String roomType, String status) {
 
-        Room currentRoom =
-                roomRepository.findByIdAndCinema(roomId, cinemaId);
+        Room currentRoom
+                = roomRepository.findByIdAndCinema(roomId, cinemaId);
 
         if (currentRoom == null) {
             throw new IllegalArgumentException(
@@ -111,6 +111,55 @@ public class RoomService {
         if (!roomRepository.update(room)) {
             throw new IllegalArgumentException(
                     "Không thể cập nhật phòng."
+            );
+        }
+    }
+
+    public void deleteRoom(
+            int roomId,
+            int cinemaId) {
+
+        if (roomId <= 0 || cinemaId <= 0) {
+            throw new IllegalArgumentException(
+                    "Phòng không hợp lệ."
+            );
+        }
+
+        Room room
+                = roomRepository.findByIdAndCinema(
+                        roomId,
+                        cinemaId
+                );
+
+        if (room == null) {
+            throw new IllegalArgumentException(
+                    "Không tìm thấy phòng thuộc rạp của bạn."
+            );
+        }
+
+        int seatCount
+                = roomRepository.countSeats(roomId);
+
+        if (seatCount > 0) {
+            throw new IllegalArgumentException(
+                    "Không thể xóa phòng vì vẫn còn "
+                    + seatCount
+                    + " ghế. Hãy xóa ghế trước."
+            );
+        }
+
+        if (roomRepository.hasAnyShowtime(roomId)) {
+            throw new IllegalArgumentException(
+                    "Không thể xóa phòng đã có lịch sử suất chiếu."
+            );
+        }
+
+        if (!roomRepository.delete(
+                roomId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể xóa phòng."
             );
         }
     }

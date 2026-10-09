@@ -33,14 +33,17 @@ public class AuthFilter implements Filter {
 
         String path = request.getServletPath();
 
+        response.setHeader(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate"
+        );
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
         if (isPublicPage(path)) {
             chain.doFilter(request, response);
             return;
         }
-
-        response.setHeader("Cache-Control", "no-store");
-        response.setHeader("Pragma", "no-cache");
-        response.setDateHeader("Expires", 0);
 
         HttpSession session = request.getSession(false);
 

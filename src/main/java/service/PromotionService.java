@@ -109,6 +109,110 @@ public class PromotionService {
         );
     }
 
+    public Promotion getPromotionByCode(String promoCode) {
+
+        if (promoCode == null || promoCode.trim().isEmpty()) {
+            return null;
+        }
+
+        return promotionRepository.getByCode(
+                promoCode.trim().toUpperCase()
+        );
+    }
+
+    public String validateApplyPromotion(
+            Promotion promotion,
+            BigDecimal orderAmount) {
+
+        if (promotion == null) {
+            return "Mã khuyến mãi không tồn tại.";
+        }
+
+        if (orderAmount == null
+                || orderAmount.compareTo(BigDecimal.ZERO) < 0) {
+            return "Giá trị đơn hàng không hợp lệ.";
+        }
+
+        if (!"ACTIVE".equalsIgnoreCase(
+                promotion.getStatus())) {
+            return "Mã khuyến mãi đang bị vô hiệu hóa.";
+        }
+
+        Timestamp now = new Timestamp(
+                System.currentTimeMillis()
+        );
+
+        if (promotion.getStartDate() != null
+                && now.before(promotion.getStartDate())) {
+            return "Mã khuyến mãi chưa bắt đầu.";
+        }
+
+        if (promotion.getEndDate() != null
+                && now.after(promotion.getEndDate())) {
+            return "Mã khuyến mãi đã hết hạn.";
+        }
+
+        if (promotion.getMinOrderAmount() != null
+                && orderAmount.compareTo(
+                        promotion.getMinOrderAmount()) < 0) {
+
+            return "Đơn hàng chưa đạt giá trị tối thiểu để áp dụng mã.";
+        }
+        if (promotion.getUsageLimit() != null) {
+
+            int usedCount
+                    = promotionRepository.countUsageByPromotionId(
+                            promotion.getPromotionId()
+                    );
+
+            if (usedCount >= promotion.getUsageLimit()) {
+                return "Mã khuyến mãi đã hết lượt sử dụng.";
+            }
+        }
+
+        return null;
+    }
+
+    public BigDecimal calculateDiscount(
+            Promotion promotion,
+            BigDecimal orderAmount) {
+
+        if (promotion == null || orderAmount == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discount;
+
+        if ("PERCENT".equalsIgnoreCase(
+                promotion.getDiscountType())) {
+
+            discount = orderAmount
+                    .multiply(promotion.getDiscountValue())
+                    .divide(new BigDecimal("100"));
+
+        } else if ("FIXED".equalsIgnoreCase(
+                promotion.getDiscountType())) {
+
+            discount = promotion.getDiscountValue();
+
+        } else {
+            return BigDecimal.ZERO;
+        }
+
+        if (promotion.getMaxDiscountAmount() != null
+                && discount.compareTo(
+                        promotion.getMaxDiscountAmount()) > 0) {
+
+            discount = promotion.getMaxDiscountAmount();
+        }
+
+        if (discount.compareTo(orderAmount) > 0) {
+            discount = orderAmount;
+        }
+
+        return discount;
+    }
+
     public String createPromotion(Promotion promotion) {
 
         preparePromotion(promotion);
