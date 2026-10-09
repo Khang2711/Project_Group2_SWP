@@ -15,7 +15,10 @@ import model.Movie;
 import service.CinemaService;
 import service.MovieService;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import model.Genre;
+import model.Room;
+import model.Showtime;
 import model.User;
 
 /**
@@ -111,6 +114,9 @@ public class MovieController extends HttpServlet {
                 request.setAttribute("totalPages", totalPages);
                 request.setAttribute("totalMovies", totalMovies);
                 request.setAttribute("nowShowingMovies", movieService.getNowShowingMovies());
+
+                int resultCount = 0;
+
                 for (Map<Movie, List<Showtime>> dayMovies
                         : scheduleByDate.values()) {
 
@@ -125,45 +131,13 @@ public class MovieController extends HttpServlet {
                         scheduleByDate
                 );
 
-                request.setAttribute(
-                        "priceByMovie",
-                        movieService.getMinPriceByMovie(
-                                scheduleByDate,
-                                roomById
-                        )
-                );
-
-                request.setAttribute(
-                        "roomById",
-                        roomById
-                );
-
-                request.setAttribute(
-                        "cinemaById",
-                        cinemaService.getCinemaById()
-                );
-
-                request.setAttribute(
-                        "resultCount",
-                        resultCount
-                );
-
-                request.setAttribute(
-                        "keyword",
-                        keyword
-                );
-
-                request.setAttribute(
-                        "date",
-                        date == null
-                                ? ""
-                                : date.toString()
-                );
-
-                request.setAttribute(
-                        "cinemaId",
-                        cinemaId
-                );
+                request.setAttribute("priceByMovie",movieService.getMinPriceByMovie(scheduleByDate));
+                request.setAttribute("roomById", roomById);
+                request.setAttribute("cinemaById", cinemaService.getCinemaById());
+                request.setAttribute("resultCount",resultCount);
+                request.setAttribute("keyword",keyword);
+                request.setAttribute("date",date == null ? "" : date.toString());
+                request.setAttribute( "cinemaId", cinemaId);
 
                 view = "/WEB-INF/views/user/movies.jsp";
 
@@ -172,47 +146,39 @@ public class MovieController extends HttpServlet {
             case "/user/movie-detail":
 
                 String id = request.getParameter("id");
-
-                if (id == null || id.isEmpty()) {
-
-                    response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-
-                    return;
-                }
-
                 int movieId;
 
                 try {
-
                     movieId = Integer.parseInt(id);
-
                 } catch (NumberFormatException e) {
-
-                    response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-
+                    response.sendError(400);
                     return;
                 }
 
-                Movie movie
-                        = movieService.getMovieById(movieId);
+                Movie movie = movieService.getMovieById(movieId);
 
                 if (movie == null) {
-
-                    response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST
-                    );
-
+                    response.sendError(404);
                     return;
                 }
 
-                request.setAttribute(
-                        "movie",
-                        movie
-                );
+                LocalDate today = LocalDate.now();
+
+                boolean comingSoon = movie.getReleaseDate() != null
+                        && movie.getReleaseDate().toLocalDate().isAfter(today);
+
+                boolean ended = movie.getEndDate() != null
+                        && movie.getEndDate().toLocalDate().isBefore(today);
+
+                List<Movie> detailMovies = new ArrayList<>();
+                detailMovies.add(movie);
+
+                Map<Integer, List<Genre>> detailGenres = movieService.getGenresByMovie(detailMovies);
+
+                request.setAttribute("movie", movie);
+                request.setAttribute("movieGenres", detailGenres.get(movieId));
+                request.setAttribute("comingSoon", comingSoon);
+                request.setAttribute("ended", ended);
 
                 view = "/WEB-INF/views/user/movie-detail.jsp";
 
@@ -568,7 +534,7 @@ public class MovieController extends HttpServlet {
         }
     }
 
-     * Forward lại form khi dữ liệu thêm/sửa bị lỗi.
+    /* Forward lại form khi dữ liệu thêm/sửa bị lỗi.
      */
     private void forwardAdminForm(
             HttpServletRequest request,

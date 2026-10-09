@@ -43,7 +43,7 @@
             <input type="hidden" name="type" value="${type}">
 
             <input type="text" name="keyword" value="${keyword}" class="movies-search-input" placeholder="Tìm tên phim..." list="movieOptions" autocomplete="off">
-            
+
             <datalist id="movieOptions">
 
                 <c:forEach var="movie" items="${nowShowingMovies}">
@@ -142,8 +142,17 @@
                                 <c:when test="${type == 'now'}">
 
                                     <div class="movies-card-buttons">
-                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-detail-button">Chi tiết</a>
-                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-book-button">Mua vé</a>
+
+                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}"
+                                           class="movies-detail-button">
+                                            Chi tiết
+                                        </a>
+
+                                        <a href="${ctx}/user/showtimes?movieId=${movie.movieId}"
+                                           class="movies-book-button">
+                                            Đặt vé
+                                        </a>
+
                                     </div>
 
                                 </c:when>
@@ -151,7 +160,12 @@
                                 <c:otherwise>
 
                                     <div class="movies-card-buttons coming-buttons">
-                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}" class="movies-detail-button">Chi tiết</a>
+
+                                        <a href="${ctx}/user/movie-detail?id=${movie.movieId}"
+                                           class="movies-detail-button">
+                                            Chi tiết
+                                        </a>
+
                                     </div>
 
                                 </c:otherwise>

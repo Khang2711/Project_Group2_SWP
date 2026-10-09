@@ -119,9 +119,7 @@ public class AuthService {
             );
         }
 
-        switch (roleName) {
-            case "CUSTOMER":
-                return "/home";
+
         String emailPattern =
                 "(?i)^[a-z0-9]+(?:[._+][a-z0-9]+)*@gmail\\.com$";
 

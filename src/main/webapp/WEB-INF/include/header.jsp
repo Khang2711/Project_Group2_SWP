@@ -35,21 +35,17 @@
                                     Phim
                                 </a>
 
-                            <a href="${pageContext.request.contextPath}/user/showtimes">
-                                Lịch chiếu
-                            </a>
+                                <c:if test="${not empty sessionScope.user
+                                              and sessionScope.roleName eq 'CUSTOMER'}">
 
-                            <c:if test="${not empty sessionScope.user
-                                          and sessionScope.roleName eq 'CUSTOMER'}">
+                                      <a href="${pageContext.request.contextPath}/user/tickets">
+                                          Vé của tôi
+                                      </a>
 
-                                <a href="${pageContext.request.contextPath}/user/tickets">
-                                    Vé của tôi
-                                </a>
-
-                                <a href="${pageContext.request.contextPath}/user/bookings">
-                                    Đơn đặt vé
-                                </a>
-                            </c:if>
+                                      <a href="${pageContext.request.contextPath}/user/bookings">
+                                          Đơn đặt vé
+                                      </a>
+                                </c:if>
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'STAFF'}">
