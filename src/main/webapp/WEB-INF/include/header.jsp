@@ -119,6 +119,11 @@
                                class="login-button">
                                 Đăng nhập
                             </a>
+
+                            <a href="${pageContext.request.contextPath}/auth/register"
+                               class="login-button">
+                                Đăng ký
+                            </a>
                         </c:otherwise>
                     </c:choose>
                 </div>
