@@ -12,11 +12,11 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import model.Movie;
-import model.Room;
-import model.Showtime;
-import model.User;
 import service.CinemaService;
 import service.MovieService;
+import jakarta.servlet.http.HttpSession;
+import model.Genre;
+import model.User;
 
 /**
  * Handles movie-related requests.
@@ -51,7 +51,12 @@ public class MovieController extends HttpServlet {
 
             case "/user/movies":
 
-                // Each filter is optional: use one, two or all three of them.
+                String type = request.getParameter("type");
+
+                if (!"coming".equals(type)) {
+                    type = "now";
+                }
+
                 String keyword = request.getParameter("keyword");
 
                 if (keyword == null) {
@@ -60,6 +65,12 @@ public class MovieController extends HttpServlet {
 
                 keyword = keyword.trim();
 
+                int page = parsePage(request.getParameter("page"));
+                int pageSize = 8;
+
+                List<Movie> filteredMovies = movieService.getMoviesForList(type, keyword);
+
+                int totalMovies = filteredMovies.size();
                 LocalDate date = parseDate(
                         request.getParameter("date")
                 );
@@ -75,8 +86,31 @@ public class MovieController extends HttpServlet {
                                 cinemaId
                         );
 
-                int resultCount = 0;
+                int totalPages = (int) Math.ceil((double) totalMovies / pageSize);
 
+                if (page > totalPages && totalPages > 0) {
+                    page = totalPages;
+                }
+
+                int start = (page - 1) * pageSize;
+                int end = Math.min(start + pageSize, totalMovies);
+
+                List<Movie> movies = new java.util.ArrayList<>();
+
+                if (start < totalMovies) {
+                    movies.addAll(filteredMovies.subList(start, end));
+                }
+
+                Map<Integer, List<Genre>> genresByMovie = movieService.getGenresByMovie(movies);
+
+                request.setAttribute("movies", movies);
+                request.setAttribute("genresByMovie", genresByMovie);
+                request.setAttribute("type", type);
+                request.setAttribute("keyword", keyword);
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", totalPages);
+                request.setAttribute("totalMovies", totalMovies);
+                request.setAttribute("nowShowingMovies", movieService.getNowShowingMovies());
                 for (Map<Movie, List<Showtime>> dayMovies
                         : scheduleByDate.values()) {
 
@@ -196,12 +230,7 @@ public class MovieController extends HttpServlet {
                     return;
                 }
 
-                request.setAttribute(
-                        "movies",
-                        movieService.getMoviesByCinema(
-                                manager.getCinemaId()
-                        )
-                );
+                request.setAttribute("movies", movieService.getMoviesByCinema(manager.getCinemaId()));
 
                 view = "/WEB-INF/views/admin/movies.jsp";
 
@@ -514,6 +543,31 @@ public class MovieController extends HttpServlet {
     }
 
     /**
+     * Parses the page number from the request.
+     *
+     * @param value the page parameter
+     * @return a valid page number starting from 1
+     */
+    private int parsePage(String value) {
+
+        if (value == null || value.trim().isEmpty()) {
+            return 1;
+        }
+
+        try {
+            int page = Integer.parseInt(value.trim());
+
+            if (page < 1) {
+                return 1;
+            }
+
+            return page;
+
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
      * Forward lại form khi dữ liệu thêm/sửa bị lỗi.
      */
     private void forwardAdminForm(

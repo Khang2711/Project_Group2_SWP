@@ -157,6 +157,196 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    /**
+     * Gets all active movies that are currently showing.
+     *
+     * @return a list of movies that are currently showing
+     */
+    public List<Movie> getNowShowing() {
+
+        List<Movie> movies = new ArrayList<>();
+
+        String sql = "SELECT * "
+                + "FROM Movie "
+                + "WHERE status = ? "
+                + "AND release_date <= GETDATE() "
+                + "AND (end_date IS NULL OR end_date >= GETDATE()) "
+                + "ORDER BY release_date DESC";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, "ACTIVE");
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Movie movie = new Movie();
+
+                movie.setMovieId(rs.getInt("movie_id"));
+                movie.setTitle(rs.getString("title"));
+                movie.setDescription(rs.getString("description"));
+                movie.setDurationMinutes(rs.getInt("duration_minutes"));
+                movie.setAgeRating(rs.getString("age_rating"));
+                movie.setReleaseDate(rs.getDate("release_date"));
+                movie.setEndDate(rs.getDate("end_date"));
+                movie.setPosterUrl(rs.getString("poster_url"));
+                movie.setTrailerUrl(rs.getString("trailer_url"));
+                movie.setStatus(rs.getString("status"));
+
+                movies.add(movie);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movies;
+    }
+
+    /**
+     * Gets all active movies that have not been released yet.
+     *
+     * @return a list of upcoming movies
+     */
+    public List<Movie> getComingSoon() {
+
+        List<Movie> movies = new ArrayList<>();
+
+        String sql = "SELECT * "
+                + "FROM Movie "
+                + "WHERE status = ? "
+                + "AND release_date > GETDATE() "
+                + "ORDER BY release_date ASC";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, "ACTIVE");
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Movie movie = new Movie();
+
+                movie.setMovieId(rs.getInt("movie_id"));
+                movie.setTitle(rs.getString("title"));
+                movie.setDescription(rs.getString("description"));
+                movie.setDurationMinutes(rs.getInt("duration_minutes"));
+                movie.setAgeRating(rs.getString("age_rating"));
+                movie.setReleaseDate(rs.getDate("release_date"));
+                movie.setEndDate(rs.getDate("end_date"));
+                movie.setPosterUrl(rs.getString("poster_url"));
+                movie.setTrailerUrl(rs.getString("trailer_url"));
+                movie.setStatus(rs.getString("status"));
+
+                movies.add(movie);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movies;
+    }
+
+    /**
+     * Searches currently showing movies by title.
+     *
+     * @param keyword movie title keyword
+     * @return matching currently showing movies
+     */
+    public List<Movie> searchNowShowing(String keyword) {
+
+        List<Movie> movies = new ArrayList<>();
+
+        String sql = "SELECT * "
+                + "FROM Movie "
+                + "WHERE status = ? "
+                + "AND release_date <= GETDATE() "
+                + "AND (end_date IS NULL OR end_date >= GETDATE()) "
+                + "AND title LIKE ? "
+                + "ORDER BY release_date DESC";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, "ACTIVE");
+            ps.setString(2, "%" + keyword + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Movie movie = new Movie();
+                movie.setMovieId(rs.getInt("movie_id"));
+                movie.setTitle(rs.getString("title"));
+                movie.setDescription(rs.getString("description"));
+                movie.setDurationMinutes(rs.getInt("duration_minutes"));
+                movie.setAgeRating(rs.getString("age_rating"));
+                movie.setReleaseDate(rs.getDate("release_date"));
+                movie.setEndDate(rs.getDate("end_date"));
+                movie.setPosterUrl(rs.getString("poster_url"));
+                movie.setTrailerUrl(rs.getString("trailer_url"));
+                movie.setStatus(rs.getString("status"));
+
+                movies.add(movie);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movies;
+    }
+
+    /**
+     * Searches upcoming movies by title.
+     *
+     * @param keyword movie title keyword
+     * @return matching upcoming movies
+     */
+    public List<Movie> searchComingSoon(String keyword) {
+
+        List<Movie> movies = new ArrayList<>();
+
+        String sql = "SELECT * "
+                + "FROM Movie "
+                + "WHERE status = ? "
+                + "AND release_date > GETDATE() "
+                + "AND title LIKE ? "
+                + "ORDER BY release_date ASC";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, "ACTIVE");
+            ps.setString(2, "%" + keyword + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Movie movie = new Movie();
+                movie.setMovieId(rs.getInt("movie_id"));
+                movie.setTitle(rs.getString("title"));
+                movie.setDescription(rs.getString("description"));
+                movie.setDurationMinutes(rs.getInt("duration_minutes"));
+                movie.setAgeRating(rs.getString("age_rating"));
+                movie.setReleaseDate(rs.getDate("release_date"));
+                movie.setEndDate(rs.getDate("end_date"));
+                movie.setPosterUrl(rs.getString("poster_url"));
+                movie.setTrailerUrl(rs.getString("trailer_url"));
+                movie.setStatus(rs.getString("status"));
+
+                movies.add(movie);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movies;
+    }
+
     public List<Movie> getByCinemaId(int cinemaId) {
 
         List<Movie> movies = new ArrayList<>();

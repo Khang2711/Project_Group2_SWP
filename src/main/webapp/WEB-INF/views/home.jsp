@@ -1,4 +1,554 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
 <%@ include file="/WEB-INF/include/header.jsp" %>
-<h1>Khung dự án FCinema</h1><p>Chọn trang để xem vị trí chức năng. Các trang quản lý hiện chỉ là bản mẫu công khai trên máy local.</p><section><h2>Tài khoản</h2><ul><li><a href="${pageContext.request.contextPath}/auth/login">UC-01 — Đăng nhập</a></li><li><a href="${pageContext.request.contextPath}/auth/logout">UC-02 — Đăng xuất</a></li><li><a href="${pageContext.request.contextPath}/auth/register">UC-18 — Đăng ký</a></li><li><a href="${pageContext.request.contextPath}/auth/forgot-password">UC-20 — Quên mật khẩu</a></li><li><a href="${pageContext.request.contextPath}/auth/reset-password">UC-20 — Đặt lại mật khẩu</a></li></ul></section><section><h2>Khách hàng</h2><ul><li><a href="${pageContext.request.contextPath}/user/profile">UC-19 — Thông tin cá nhân</a></li><li><a href="${pageContext.request.contextPath}/user/edit-profile">UC-23 — Sửa thông tin cá nhân</a></li><li><a href="${pageContext.request.contextPath}/user/movies">UC-10 — Danh sách phim</a></li><li><a href="${pageContext.request.contextPath}/user/movie-detail">UC-24 — Chi tiết phim</a></li><li><a href="${pageContext.request.contextPath}/user/showtimes">UC-11 — Lịch chiếu</a></li><li><a href="${pageContext.request.contextPath}/user/select-seats">UC-12 — Chọn ghế hoặc đặt toàn phòng</a></li><li><a href="${pageContext.request.contextPath}/user/checkout">UC-12 — Xác nhận đặt vé</a></li><li><a href="${pageContext.request.contextPath}/user/apply-promo">UC-22 — Áp dụng mã giảm giá</a></li><li><a href="${pageContext.request.contextPath}/user/payment">UC-13 — Thanh toán VNPay</a></li><li><a href="${pageContext.request.contextPath}/user/payment-result">UC-13 — Kết quả thanh toán</a></li><li><a href="${pageContext.request.contextPath}/user/bookings">UC-14 — Đơn đặt vé</a></li><li><a href="${pageContext.request.contextPath}/user/booking-detail">UC-14 — Chi tiết đơn đặt vé</a></li><li><a href="${pageContext.request.contextPath}/user/tickets">UC-15 — Vé của tôi</a></li><li><a href="${pageContext.request.contextPath}/user/ticket-detail">UC-15 — Chi tiết vé</a></li></ul></section><section><h2>Cinema Manager</h2><ul><li><a href="${pageContext.request.contextPath}/admin/movies">UC-04 — Quản lý phim</a></li><li><a href="${pageContext.request.contextPath}/admin/movie-form">UC-04 — Thêm hoặc sửa phim</a></li><li><a href="${pageContext.request.contextPath}/admin/cinemas">UC-05 — Quản lý rạp</a></li><li><a href="${pageContext.request.contextPath}/admin/cinema-form">UC-05 — Thêm hoặc sửa rạp</a></li><li><a href="${pageContext.request.contextPath}/admin/rooms">UC-06 — Quản lý phòng</a></li><li><a href="${pageContext.request.contextPath}/admin/room-form">UC-06 — Thêm hoặc sửa phòng</a></li><li><a href="${pageContext.request.contextPath}/admin/seats">UC-07 — Quản lý ghế</a></li><li><a href="${pageContext.request.contextPath}/admin/seat-form">UC-07 — Cấu hình ghế</a></li><li><a href="${pageContext.request.contextPath}/admin/pricing">UC-08 — Quản lý giá vé</a></li><li><a href="${pageContext.request.contextPath}/admin/pricing-form">UC-08 — Thêm hoặc sửa giá</a></li><li><a href="${pageContext.request.contextPath}/admin/showtimes">UC-09 — Quản lý lịch chiếu</a></li><li><a href="${pageContext.request.contextPath}/admin/showtime-form">UC-09 — Thêm hoặc sửa lịch chiếu</a></li><li><a href="${pageContext.request.contextPath}/admin/promotions">UC-21 — Quản lý khuyến mãi</a></li><li><a href="${pageContext.request.contextPath}/admin/promotion-form">UC-21 — Thêm hoặc sửa khuyến mãi</a></li><li><a href="${pageContext.request.contextPath}/admin/dashboard">UC-17 — Thống kê hoạt động</a></li></ul></section><section><h2>System Administrator</h2><ul><li><a href="${pageContext.request.contextPath}/system/users">UC-03 — Quản lý tài khoản</a></li><li><a href="${pageContext.request.contextPath}/system/user-form">UC-03 — Tạo hoặc sửa tài khoản</a></li></ul></section><section><h2>Nhân viên</h2><ul><li><a href="${pageContext.request.contextPath}/staff/check-in">UC-16 — Kiểm tra và check-in vé</a></li></ul></section>
+
+
+<!-- =========================
+     CAROUSEL
+     ========================= -->
+<section class="home-hero">
+
+    <c:if test="${not empty featuredMovies}">
+
+        <div class="carousel-container">
+
+            <div class="carousel-track" id="carouselTrack">
+
+                <c:forEach var="movie" items="${featuredMovies}">
+
+                    <div class="carousel-slide">
+
+                        <!-- Ảnh phủ toàn bộ carousel -->
+                        <c:if test="${not empty movie.posterUrl}">
+                            <img src="${movie.posterUrl}"
+                                 alt="${movie.title}"
+                                 class="carousel-background-image">
+                        </c:if>
+
+                        <!-- Nếu chưa có poster -->
+                        <c:if test="${empty movie.posterUrl}">
+                            <div class="carousel-background-fallback"></div>
+                        </c:if>
+
+
+                        <!-- Lớp tối để chữ dễ nhìn -->
+                        <div class="carousel-overlay"></div>
+
+
+                        <!-- Nội dung phim -->
+                        <div class="carousel-content">
+
+                            <span class="hero-small-title">
+                                ĐANG ĐƯỢC QUAN TÂM
+                            </span>
+
+                            <h1>
+                                ${movie.title}
+                            </h1>
+
+
+                            <div class="hero-meta">
+
+                                <c:if test="${not empty movie.ageRating}">
+                                    <span class="hero-age">${movie.ageRating}</span>
+                                </c:if>
+
+                                <span>${movie.durationMinutes} phút</span>
+
+                                <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                                    <span class="hero-genres">
+
+                                        <c:forEach var="genre" items="${genresByMovie[movie.movieId]}" varStatus="status">
+                                            ${genre.genreName}<c:if test="${not status.last}">, </c:if>
+                                        </c:forEach>
+
+                                    </span>
+
+                                </c:if>
+
+                                <c:if test="${not empty movie.releaseDate}">
+                                    <span>
+                                        <fmt:formatDate value="${movie.releaseDate}" pattern="dd/MM/yyyy" />
+                                    </span>
+                                </c:if>
+
+                            </div>
+
+
+                            <p class="hero-description">
+                                ${movie.description}
+                            </p>
+
+
+                            <div class="hero-buttons">
+
+                                <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                                   class="hero-detail-button">
+                                    Xem chi tiết
+                                </a>
+
+                                <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
+                                   class="hero-book-button">
+                                    Đặt vé ngay
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </c:forEach>
+
+            </div>
+
+
+            <button type="button"
+                    class="carousel-button carousel-prev"
+                    id="carouselPrev">
+                ❮
+            </button>
+
+
+            <button type="button"
+                    class="carousel-button carousel-next"
+                    id="carouselNext">
+                ❯
+            </button>
+
+
+            <div class="carousel-dots"
+                 id="carouselDots">
+            </div>
+
+        </div>
+
+    </c:if>
+
+
+    <c:if test="${empty featuredMovies}">
+        <div class="home-empty">
+            <h2>F-CINEMA</h2>
+            <p>Hiện chưa có phim đang chiếu.</p>
+        </div>
+    </c:if>
+
+</section>
+
+
+
+<!-- =========================
+     ĐẶT VÉ NHANH
+     ========================= -->
+<section class="quick-booking">
+
+    <div class="quick-booking-header">
+
+        <div>
+            <h2>Đặt vé nhanh</h2>
+            <p>Tìm suất chiếu phù hợp với bạn.</p>
+        </div>
+
+        <span>
+            Chọn phim · ngày · rạp
+        </span>
+
+    </div>
+
+
+    <form action="${pageContext.request.contextPath}/user/movies"
+          method="get"
+          class="quick-booking-form">
+
+
+        <!-- Tên phim -->
+        <div class="quick-field movie-field">
+
+            <label for="quickMovie">
+                Tên phim
+            </label>
+
+            <input type="text"
+                   name="keyword"
+                   id="quickMovie"
+                   list="movieOptions"
+                   placeholder="Bạn muốn xem phim gì?"
+                   autocomplete="off">
+
+
+            <!-- Danh sách phim lấy từ database -->
+            <datalist id="movieOptions">
+
+                <c:forEach var="movie" items="${nowShowingMovies}">
+
+                    <option value="${movie.title}"></option>
+
+                </c:forEach>
+
+            </datalist>
+
+        </div>
+
+
+        <!-- Ngày chiếu -->
+        <div class="quick-field">
+
+            <label for="dateDisplay">
+                Ngày chiếu
+            </label>
+
+            <div class="date-picker-wrapper">
+
+                <input type="text"
+                       id="dateDisplay"
+                       class="date-display"
+                       placeholder="dd/mm/yyyy"
+                       readonly>
+
+                <input type="date"
+                       id="date"
+                       name="date"
+                       class="real-date-input">
+
+                <span class="date-icon">
+                    📅
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- Rạp -->
+        <div class="quick-field cinema-field">
+
+            <label for="quickCinema">
+                Rạp
+            </label>
+
+            <select name="cinemaId"
+                    id="quickCinema">
+
+                <option value="">
+                    Tất cả rạp
+                </option>
+
+                <c:forEach var="cinema"
+                           items="${cinemas}">
+
+                    <option value="${cinema.cinemaId}">
+                        ${cinema.cinemaName}
+                    </option>
+
+                </c:forEach>
+
+            </select>
+
+        </div>
+
+
+        <button type="submit"
+                class="quick-search-button">
+            Tìm suất chiếu
+        </button>
+
+    </form>
+
+</section>
+
+
+
+<!-- =========================
+     PHIM ĐANG CHIẾU
+     ========================= -->
+<section class="home-section"
+         id="now-showing">
+
+    <div class="home-section-header">
+
+        <div>
+
+            <span class="home-section-small">
+                ĐANG CHIẾU
+            </span>
+
+            <h2>
+                Phim đang chiếu
+            </h2>
+
+        </div>
+
+
+        <a href="${pageContext.request.contextPath}/user/movies"
+           class="view-all">
+            Xem tất cả →
+        </a>
+
+    </div>
+
+
+    <c:if test="${not empty nowShowingMovies}">
+
+        <div class="home-movie-grid">
+
+            <c:forEach var="movie"
+                       items="${nowShowingMovies}"
+                       end="3">
+
+                <article class="home-movie-card">
+
+
+                    <!-- Poster -->
+                    <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                       class="home-movie-poster">
+
+
+                        <!-- Age rating -->
+                        <c:if test="${not empty movie.ageRating}">
+
+                            <span class="home-age">
+                                ${movie.ageRating}
+                            </span>
+
+                        </c:if>
+
+
+                        <!-- Có poster -->
+                        <c:if test="${not empty movie.posterUrl}">
+
+                            <img src="${movie.posterUrl}"
+                                 alt="${movie.title}">
+
+                        </c:if>
+
+
+                        <!-- Không có poster -->
+                        <c:if test="${empty movie.posterUrl}">
+
+                            <div class="movie-poster-fallback">
+
+                                <span>
+                                    F / CINEMA
+                                </span>
+
+                                <strong>
+                                    ${movie.title}
+                                </strong>
+
+                            </div>
+
+                        </c:if>
+
+                    </a>
+
+
+                    <!-- Nội dung card -->
+                    <div class="home-movie-content">
+
+                        <h3>
+                            ${movie.title}
+                        </h3>
+
+
+                        <div class="home-movie-meta">
+
+                            <span>${movie.durationMinutes} phút</span>
+
+                        </div>
+
+                        <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                            <div class="movie-genres">
+
+                                <c:forEach var="genre" items="${genresByMovie[movie.movieId]}">
+                                    <span>${genre.genreName}</span>
+                                </c:forEach>
+
+                            </div>
+
+                        </c:if>
+
+
+                        <div class="home-card-buttons">
+
+                            <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                               class="home-detail-button">
+                                Chi tiết
+                            </a>
+
+
+                            <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
+                               class="home-book-button">
+                                Đặt vé
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </c:forEach>
+
+        </div>
+
+    </c:if>
+
+
+    <c:if test="${empty nowShowingMovies}">
+
+        <div class="home-empty">
+
+            <h3>
+                Chưa có phim đang chiếu
+            </h3>
+
+        </div>
+
+    </c:if>
+
+</section>
+
+
+
+<!-- =========================
+     PHIM SẮP CHIẾU
+     ========================= -->
+<section class="home-section"
+         id="coming-soon">
+
+    <div class="home-section-header">
+
+        <div>
+
+            <span class="home-section-small">
+                COMING SOON
+            </span>
+
+            <h2>
+                Phim sắp chiếu
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <c:if test="${not empty comingSoonMovies}">
+
+        <div class="coming-movie-grid">
+
+            <c:forEach var="movie"
+                       items="${comingSoonMovies}"
+                       end="3">
+
+                <article class="coming-movie-card">
+
+
+                    <!-- Poster -->
+                    <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                       class="coming-poster">
+
+
+                        <c:if test="${not empty movie.posterUrl}">
+
+                            <img src="${movie.posterUrl}"
+                                 alt="${movie.title}">
+
+                        </c:if>
+
+
+                        <c:if test="${empty movie.posterUrl}">
+
+                            <div class="coming-poster-fallback">
+
+                                <strong>
+                                    ${movie.title}
+                                </strong>
+
+                            </div>
+
+                        </c:if>
+
+                    </a>
+
+
+                    <!-- Nội dung -->
+                    <div class="coming-content">
+
+
+                        <c:if test="${not empty movie.releaseDate}">
+
+                            <span class="coming-date">
+
+                                KHỞI CHIẾU
+
+                                <fmt:formatDate
+                                    value="${movie.releaseDate}"
+                                    pattern="dd.MM.yyyy" />
+
+                            </span>
+
+                        </c:if>
+
+
+                        <h3>
+                            ${movie.title}
+                        </h3>
+
+                        <c:if test="${not empty genresByMovie[movie.movieId]}">
+
+                            <div class="movie-genres">
+
+                                <c:forEach var="genre" items="${genresByMovie[movie.movieId]}">
+                                    <span>${genre.genreName}</span>
+                                </c:forEach>
+
+                            </div>
+
+                        </c:if>
+
+                        <p>
+                            ${movie.description}
+                        </p>
+
+
+                        <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                           class="coming-detail">
+                            Xem chi tiết
+                        </a>
+
+                    </div>
+
+                </article>
+
+            </c:forEach>
+
+        </div>
+
+    </c:if>
+
+
+    <c:if test="${empty comingSoonMovies}">
+
+        <div class="home-empty">
+
+            <h3>
+                Chưa có phim sắp chiếu
+            </h3>
+
+            <p>
+                Hiện chưa có thông tin phim sắp chiếu.
+            </p>
+
+        </div>
+
+    </c:if>
+
+</section>
+
+
 <%@ include file="/WEB-INF/include/footer.jsp" %>
