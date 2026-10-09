@@ -14,6 +14,7 @@ import model.Movie;
 import service.CinemaService;
 import service.MovieService;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import model.Genre;
 import model.User;
 
@@ -103,22 +104,39 @@ public class MovieController extends HttpServlet {
             case "/user/movie-detail":
 
                 String id = request.getParameter("id");
+                int movieId;
 
-                if (id == null || id.isEmpty()) {
+                try {
+                    movieId = Integer.parseInt(id);
+                } catch (NumberFormatException e) {
                     response.sendError(400);
                     return;
                 }
-
-                int movieId = Integer.parseInt(id);
 
                 Movie movie = movieService.getMovieById(movieId);
 
                 if (movie == null) {
-                    response.sendError(400);
+                    response.sendError(404);
                     return;
                 }
 
+                LocalDate today = LocalDate.now();
+
+                boolean comingSoon = movie.getReleaseDate() != null
+                        && movie.getReleaseDate().toLocalDate().isAfter(today);
+
+                boolean ended = movie.getEndDate() != null
+                        && movie.getEndDate().toLocalDate().isBefore(today);
+
+                List<Movie> detailMovies = new ArrayList<>();
+                detailMovies.add(movie);
+
+                Map<Integer, List<Genre>> detailGenres = movieService.getGenresByMovie(detailMovies);
+
                 request.setAttribute("movie", movie);
+                request.setAttribute("movieGenres", detailGenres.get(movieId));
+                request.setAttribute("comingSoon", comingSoon);
+                request.setAttribute("ended", ended);
 
                 view = "/WEB-INF/views/user/movie-detail.jsp";
                 break;

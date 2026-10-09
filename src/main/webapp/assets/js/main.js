@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", function () {
 
     /*
@@ -144,6 +145,136 @@ document.addEventListener("DOMContentLoaded", function () {
             }, 3000);
         }
     }
+
+
+    /*
+     * =========================
+     * SHOWTIME PAGE
+     * =========================
+     */
+
+    const cinemaFilter = document.getElementById("cinemaFilter");
+    const bookingForm = document.getElementById("bookingForm");
+
+    if (cinemaFilter && bookingForm) {
+
+        const slots = document.querySelectorAll(".showtimes-slot");
+
+        const selectedId = document.getElementById("selectedShowtimeId");
+        const continueButton = document.getElementById("continueButton");
+
+        const selectedCinema = document.getElementById("selectedCinema");
+        const selectedRoom = document.getElementById("selectedRoom");
+        const selectedTime = document.getElementById("selectedTime");
+
+
+        /*
+         * Select cinema
+         */
+        cinemaFilter.addEventListener("change", function () {
+
+            this.form.submit();
+        });
+
+
+        /*
+         * Clear selected showtime
+         */
+        function clearSelection() {
+
+            slots.forEach(function (slot) {
+                slot.classList.remove("active");
+            });
+
+            selectedId.value = "";
+            continueButton.disabled = true;
+
+            selectedCinema.textContent = "Chưa chọn";
+            selectedRoom.textContent = "Chưa chọn";
+            selectedTime.textContent = "Chưa chọn";
+        }
+
+
+        /*
+         * Check expired showtimes
+         */
+        function updateExpiredSlots() {
+
+            slots.forEach(function (slot) {
+
+                let startTime = Number(slot.dataset.start);
+
+                if (startTime <= Date.now()) {
+
+                    slot.disabled = true;
+
+                    if (selectedId.value === slot.dataset.id) {
+                        clearSelection();
+                    }
+                }
+            });
+        }
+
+
+        /*
+         * Select showtime
+         */
+        slots.forEach(function (slot) {
+
+            slot.addEventListener("click", function () {
+
+                updateExpiredSlots();
+
+                if (slot.disabled) {
+                    return;
+                }
+
+                clearSelection();
+
+                slot.classList.add("active");
+
+                selectedId.value = slot.dataset.id;
+
+                let cinema = slot.closest(".showtimes-cinema");
+
+                selectedCinema.textContent =
+                        cinema.querySelector(".showtimes-cinema-name")
+                        .textContent.trim();
+
+                selectedRoom.textContent =
+                        slot.querySelector(".showtimes-room")
+                        .textContent.trim();
+
+                selectedTime.textContent =
+                        slot.querySelector(".showtimes-time")
+                        .textContent.trim();
+
+                continueButton.disabled = false;
+            });
+        });
+
+
+        /*
+         * Continue to booking
+         */
+        bookingForm.addEventListener("submit", function (event) {
+
+            updateExpiredSlots();
+
+            if (selectedId.value === "") {
+                event.preventDefault();
+            }
+        });
+
+
+        /*
+         * Check showtimes every 30 seconds
+         */
+        updateExpiredSlots();
+
+        setInterval(updateExpiredSlots, 30000);
+    }
+
 });
 
 

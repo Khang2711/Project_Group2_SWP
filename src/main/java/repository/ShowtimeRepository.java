@@ -4,6 +4,7 @@ import db.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import model.Showtime;
@@ -138,4 +139,45 @@ public class ShowtimeRepository extends DBContext {
 
         return null;
     }
+
+    public List<Showtime> getByMovieIdAndDate(int movieId, LocalDate date) {
+
+        List<Showtime> showtimes = new ArrayList<>();
+
+        String sql = "SELECT * "
+                + "FROM Showtime "
+                + "WHERE movie_id = ? AND status = ? "
+                + "AND start_time >= ? AND start_time < ? "
+                + "ORDER BY start_time";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, movieId);
+            ps.setString(2, "ACTIVE");
+            ps.setTimestamp(3, Timestamp.valueOf(date.atStartOfDay()));
+            ps.setTimestamp(4, Timestamp.valueOf(date.plusDays(1).atStartOfDay()));
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Showtime showtime = new Showtime();
+
+                showtime.setShowtimeId(rs.getInt("showtime_id"));
+                showtime.setMovieId(rs.getInt("movie_id"));
+                showtime.setRoomId(rs.getInt("room_id"));
+                showtime.setStartTime(rs.getTimestamp("start_time"));
+                showtime.setEndTime(rs.getTimestamp("end_time"));
+                showtime.setStatus(rs.getString("status"));
+
+                showtimes.add(showtime);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return showtimes;
+    }
+
 }

@@ -90,9 +90,9 @@
                                     Xem chi tiết
                                 </a>
 
-                                <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
+                                <a href="${pageContext.request.contextPath}/user/showtimes?movieId=${movie.movieId}"
                                    class="hero-book-button">
-                                    Đặt vé ngay
+                                    Đặt vé
                                 </a>
 
                             </div>
@@ -379,8 +379,7 @@
                                 Chi tiết
                             </a>
 
-
-                            <a href="${pageContext.request.contextPath}/user/movies?keyword=${movie.title}"
+                            <a href="${pageContext.request.contextPath}/user/showtimes?movieId=${movie.movieId}"
                                class="home-book-button">
                                 Đặt vé
                             </a>

@@ -35,12 +35,9 @@
                                     Phim
                                 </a>
 
-                                <a href="${pageContext.request.contextPath}/user/showtimes">
-                                    Lịch chiếu
-                                </a>
-
                                 <c:if test="${not empty sessionScope.user
                                               and sessionScope.roleName eq 'CUSTOMER'}">
+
                                       <a href="${pageContext.request.contextPath}/user/tickets">
                                           Vé của tôi
                                       </a>
