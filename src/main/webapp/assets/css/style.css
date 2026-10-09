@@ -2580,3 +2580,833 @@ CSS ADMIN
         font-size: 17px;
     }
 }
+/* ==================================================
+   UC-12 BOOKING
+   ================================================== */
+
+.booking-page {
+    width: 100%;
+}
+
+
+/* =========================
+   PAGE HEADING
+   ========================= */
+
+.booking-heading {
+    margin-bottom: 28px;
+}
+
+.booking-heading h1 {
+    margin-bottom: 10px;
+
+    font-size: 36px;
+}
+
+.booking-heading p {
+    color: #aaaaaa;
+
+    font-size: 15px;
+}
+
+
+/* =========================
+   ERROR
+   ========================= */
+
+.booking-error {
+    margin-bottom: 22px;
+    padding: 14px 16px;
+
+    background-color: #281215;
+    color: #ff5b65;
+
+    border: 1px solid #6e2229;
+    border-radius: 7px;
+
+    font-size: 14px;
+}
+
+
+/* =========================
+   SHOWTIME INFO
+   ========================= */
+
+.showtime-info-bar {
+    display: flex;
+
+    gap: 50px;
+
+    margin-bottom: 24px;
+    padding: 18px 22px;
+
+    background-color: #18181c;
+
+    border: 1px solid #303038;
+    border-radius: 8px;
+}
+
+.showtime-info-bar div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.showtime-info-bar span {
+    color: #999999;
+
+    font-size: 13px;
+}
+
+.showtime-info-bar strong {
+    font-size: 16px;
+}
+
+
+/* ==================================================
+   CINEMA SEAT MAP - UC12
+   ================================================== */
+
+.cinema-seat-map {
+    margin-top: 25px;
+    padding: 35px 30px 30px;
+
+    background-color: #18181c;
+
+    border: 1px solid #303038;
+    border-radius: 10px;
+}
+
+
+/* =========================
+   SCREEN
+   ========================= */
+
+.cinema-screen-area {
+    width: 75%;
+    max-width: 750px;
+
+    margin: 0 auto 55px;
+
+    text-align: center;
+}
+
+.cinema-screen-curve {
+    height: 30px;
+
+    border-top: 5px solid #e5e5e5;
+
+    border-radius: 50% 50% 0 0;
+
+    box-shadow:
+        0 -5px 18px
+        rgba(255, 255, 255, 0.15);
+
+    transform:
+        perspective(200px)
+        rotateX(-7deg);
+}
+
+.cinema-screen-text {
+    margin-top: -15px;
+
+    color: #b6b6bd;
+
+    font-size: 12px;
+    letter-spacing: 7px;
+}
+
+
+/* =========================
+   ROW
+   ========================= */
+
+.cinema-rows {
+    display: flex;
+    flex-direction: column;
+
+    gap: 22px;
+
+    max-width: 900px;
+
+    margin: 0 auto;
+}
+
+.cinema-row {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+}
+
+.cinema-row-name {
+    width: 75px;
+
+    flex-shrink: 0;
+
+    color: #8f8f97;
+
+    text-align: right;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.cinema-row-seats {
+    flex: 1;
+
+    display: flex;
+    justify-content: center;
+
+    gap: 12px;
+
+    flex-wrap: nowrap;
+}
+
+
+/* =========================
+   SEAT
+   ========================= */
+
+.movie-seat {
+    position: relative;
+
+    display: block;
+
+    cursor: pointer;
+}
+
+.movie-seat input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.movie-seat-box {
+    position: relative;
+
+    width: 48px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #34343a;
+    color: #ffffff;
+
+    border: 1px solid #55555e;
+    border-radius: 5px 5px 8px 8px;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    transition:
+        background-color 0.2s,
+        border-color 0.2s,
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+
+/* chân ghế */
+
+.movie-seat-box::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    bottom: -5px;
+
+    width: 38px;
+    height: 4px;
+
+    transform: translateX(-50%);
+
+    background-color: #55555e;
+
+    border-radius: 0 0 4px 4px;
+}
+
+
+/* hover */
+
+.movie-seat:not(.movie-seat-occupied)
+.movie-seat-box:hover {
+
+    transform: translateY(-3px);
+
+    border-color: #ff2735;
+
+    box-shadow:
+        0 4px 12px
+        rgba(255, 31, 45, 0.18);
+}
+
+
+/* =========================
+   VIP
+   ========================= */
+
+.movie-seat-vip
+.movie-seat-box {
+
+    background-color: #29251b;
+
+    border-color: #9e7a24;
+}
+
+.movie-seat-vip
+.movie-seat-box::after {
+
+    background-color: #9e7a24;
+}
+
+
+/* =========================
+   SELECTED
+   ========================= */
+
+.movie-seat input:checked
++ .movie-seat-box {
+
+    background-color: #ff1f2d;
+
+    border-color: #ff1f2d;
+
+    color: #ffffff;
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 4px 15px
+        rgba(255, 31, 45, 0.35);
+}
+
+.movie-seat input:checked
++ .movie-seat-box::after {
+
+    background-color: #ff1f2d;
+}
+
+
+/* =========================
+   OCCUPIED
+   ========================= */
+
+.movie-seat-occupied {
+    cursor: not-allowed;
+}
+
+.movie-seat-occupied
+.movie-seat-box {
+
+    background-color: #1f1f23;
+
+    border-color: #2d2d32;
+
+    color: #66666d;
+
+    opacity: 0.7;
+}
+
+.movie-seat-occupied
+.movie-seat-box::after {
+
+    background-color: #2d2d32;
+}
+
+
+/* =========================
+   DISABLED
+   ========================= */
+
+.movie-seat-disabled {
+    cursor: not-allowed;
+}
+
+.movie-seat-disabled
+.movie-seat-box {
+
+    opacity: 0.4;
+}
+
+
+/* =========================
+   TOOLTIP
+   ========================= */
+
+.movie-seat-tooltip {
+    position: absolute;
+
+    left: 50%;
+    bottom: 55px;
+
+    min-width: 145px;
+
+    padding: 9px 11px;
+
+    transform:
+        translateX(-50%)
+        translateY(5px);
+
+    background-color: #08080a;
+    color: #ffffff;
+
+    border: 1px solid #38383f;
+    border-radius: 6px;
+
+    text-align: center;
+
+    font-size: 11px;
+    line-height: 1.5;
+
+    opacity: 0;
+    visibility: hidden;
+
+    pointer-events: none;
+
+    z-index: 20;
+
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
+}
+
+.movie-seat:hover
+.movie-seat-tooltip {
+
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translateX(-50%)
+        translateY(0);
+}
+
+
+/* =========================
+   LEGEND
+   ========================= */
+
+.cinema-seat-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 28px;
+
+    margin-top: 45px;
+
+    color: #aaaab0;
+
+    font-size: 12px;
+}
+
+.cinema-seat-legend div {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.legend-seat {
+    width: 20px;
+    height: 16px;
+
+    display: inline-block;
+
+    border-radius: 3px 3px 5px 5px;
+}
+
+.legend-available {
+    background-color: #34343a;
+
+    border: 1px solid #55555e;
+}
+
+.legend-vip-seat {
+    background-color: #29251b;
+
+    border: 1px solid #9e7a24;
+}
+
+.legend-selected {
+    background-color: #ff1f2d;
+
+    border: 1px solid #ff1f2d;
+}
+
+.legend-occupied {
+    background-color: #1f1f23;
+
+    border: 1px solid #2d2d32;
+}
+
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.booking-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 22px;
+}
+
+.booking-primary-button {
+    display: inline-block;
+
+    padding: 12px 24px;
+
+    background-color: #ff1f2d;
+    color: #ffffff;
+
+    border: 1px solid #ff1f2d;
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+
+    text-align: center;
+
+    transition:
+        background-color 0.2s,
+        border-color 0.2s;
+}
+
+.booking-primary-button:hover {
+    background-color: #d91622;
+
+    border-color: #d91622;
+}
+
+.booking-secondary-button {
+    display: block;
+
+    padding: 11px 22px;
+
+    background-color: transparent;
+    color: #ffffff;
+
+    border: 1px solid #484852;
+    border-radius: 6px;
+
+    text-align: center;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    transition:
+        border-color 0.2s,
+        background-color 0.2s;
+}
+
+.booking-secondary-button:hover {
+    background-color: #24242a;
+
+    border-color: #666670;
+}
+
+.booking-button-element {
+    display: inline-block;
+
+    cursor: pointer;
+
+    font-family: Arial, sans-serif;
+}
+
+
+/* ==================================================
+   CHECKOUT
+   ================================================== */
+
+.checkout-layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.7fr)
+        minmax(300px, 0.8fr);
+
+    gap: 24px;
+}
+
+.checkout-card,
+.checkout-summary {
+
+    background-color: #18181c;
+
+    border: 1px solid #303038;
+    border-radius: 9px;
+}
+
+.checkout-card {
+    padding: 24px;
+}
+
+.checkout-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.checkout-card-title h2,
+.checkout-summary h2 {
+
+    font-size: 21px;
+}
+
+.seat-count {
+    padding: 5px 10px;
+
+    background-color: #351217;
+    color: #ff4b56;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.booking-notice {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+
+    background-color: #202026;
+    color: #dddddd;
+
+    border-left: 3px solid #ff1f2d;
+
+    font-size: 13px;
+}
+
+
+/* =========================
+   CHECKOUT SEAT LIST
+   ========================= */
+
+.checkout-seat-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkout-seat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid #303038;
+}
+
+.checkout-seat-item:last-child {
+    border-bottom: none;
+}
+
+.checkout-seat-name {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.checkout-seat-name div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.checkout-seat-name small {
+    color: #999999;
+}
+
+.seat-icon {
+    min-width: 52px;
+
+    padding: 9px 7px;
+
+    background-color: #27272d;
+
+    border: 1px solid #494951;
+    border-radius: 5px;
+
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.checkout-seat-price {
+    color: #ffffff;
+
+    white-space: nowrap;
+}
+
+
+/* =========================
+   CHECKOUT SUMMARY
+   ========================= */
+
+.checkout-summary {
+    height: fit-content;
+
+    padding: 24px;
+
+    position: sticky;
+    top: 25px;
+}
+
+.checkout-summary h2 {
+    margin-bottom: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 10px 0;
+
+    color: #aaaaaa;
+
+    font-size: 14px;
+}
+
+.summary-row strong {
+    color: #ffffff;
+
+    text-align: right;
+}
+
+.summary-divider {
+    height: 1px;
+
+    margin: 12px 0;
+
+    background-color: #35353d;
+}
+
+.summary-total {
+    margin-bottom: 18px;
+
+    font-size: 16px;
+}
+
+.summary-total strong {
+    color: #ff3743;
+
+    font-size: 21px;
+}
+
+.checkout-confirm-form {
+    margin-top: 8px;
+}
+
+.checkout-confirm-form
+.booking-primary-button {
+
+    width: 100%;
+}
+
+.checkout-summary
+> .booking-secondary-button {
+
+    margin-top: 10px;
+}
+
+.checkout-note {
+    margin-top: 16px;
+
+    color: #77777f;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ==================================================
+   RESPONSIVE
+   ================================================== */
+
+@media (max-width: 800px) {
+
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-summary {
+        position: static;
+    }
+
+    .showtime-info-bar {
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+    .cinema-seat-map {
+        padding-left: 10px;
+        padding-right: 10px;
+
+        overflow-x: auto;
+    }
+
+    .cinema-screen-area {
+        width: 90%;
+    }
+
+    .cinema-row {
+        min-width: 430px;
+    }
+
+    .movie-seat-box {
+        width: 42px;
+        height: 35px;
+    }
+
+    .cinema-row-seats {
+        gap: 8px;
+    }
+
+    .cinema-seat-legend {
+        min-width: 430px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .booking-actions {
+        flex-direction: column;
+    }
+
+    .booking-primary-button,
+    .booking-button-element {
+
+        width: 100%;
+    }
+
+    .checkout-seat-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
