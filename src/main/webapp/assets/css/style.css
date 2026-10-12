@@ -37,54 +37,105 @@ select {
     border-bottom: 1px solid #2d2d35;
 }
 
+/*
+   Header rộng hơn vì Cinema Manager
+   có nhiều chức năng trên menu.
+*/
 .header-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1500px;
     min-height: 72px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    gap: 25px;
 }
+
+/* =========================
+   LOGO
+   ========================= */
 
 .logo {
     display: flex;
     align-items: center;
     gap: 10px;
+
     color: #ff1f2d;
+
+    flex-shrink: 0;
+
+    /* Không cho logo xuống dòng */
+    white-space: nowrap;
 }
 
 .logo-box {
     width: 35px;
     height: 35px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    flex-shrink: 0;
+
     border-radius: 2px;
+
     background-color: #ff1f2d;
     color: #ffffff;
+
     font-size: 24px;
     font-weight: bold;
 }
 
 .logo-text {
     color: #ff1f2d;
+
     font-size: 25px;
     font-weight: bold;
+
     letter-spacing: 1px;
+
+    /* F-CINEMA luôn nằm 1 dòng */
+    white-space: nowrap;
 }
 
+/* =========================
+   MAIN NAV
+   ========================= */
+
 .main-nav {
+    flex: 1;
+
     display: flex;
     align-items: center;
-    gap: 28px;
+    justify-content: center;
+
+    gap: 22px;
+
+    /*
+       Không cho menu tự xuống hàng
+    */
+    flex-wrap: nowrap;
 }
 
 .main-nav a {
     color: #dddddd;
-    font-size: 15px;
+
+    font-size: 14px;
     font-weight: 600;
+
+    /*
+       Quan trọng:
+       Quản lý giá vé
+       Quản lý lịch chiếu
+       đều nằm 1 dòng
+    */
+    white-space: nowrap;
+
     transition: color 0.2s;
 }
 
@@ -92,19 +143,36 @@ select {
     color: #ff1f2d;
 }
 
+/* =========================
+   USER / LOGOUT
+   ========================= */
+
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+
+    gap: 12px;
+
+    /*
+       Không cho tên Manager
+       và logout bị ép xuống dòng
+    */
+    flex-shrink: 0;
 }
 
 .login-button,
 .profile-button {
-    padding: 10px 22px;
+    padding: 10px 16px;
+
     border: 1px solid #ff1f2d;
     border-radius: 6px;
+
     color: #ffffff;
+
+    font-size: 14px;
     font-weight: bold;
+
+    white-space: nowrap;
 }
 
 .login-button:hover,
@@ -114,11 +182,43 @@ select {
 
 .logout-link {
     color: #dddddd;
+
     font-size: 14px;
+
+    white-space: nowrap;
 }
 
 .logout-link:hover {
     color: #ff1f2d;
+}
+
+/* =========================
+   RESPONSIVE HEADER
+   ========================= */
+
+@media (max-width: 1200px) {
+
+    .header-container {
+        gap: 15px;
+        padding: 0 16px;
+    }
+
+    .main-nav {
+        gap: 14px;
+    }
+
+    .main-nav a {
+        font-size: 13px;
+    }
+
+    .logo-text {
+        font-size: 21px;
+    }
+
+    .profile-button {
+        padding: 9px 12px;
+        font-size: 13px;
+    }
 }
 
 
