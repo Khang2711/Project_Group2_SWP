@@ -3,6 +3,7 @@ package repository;
 import db.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,7 +12,10 @@ import model.Room;
 
 public class RoomRepository extends DBContext {
 
-    // Method cũ - giữ lại để không ảnh hưởng module khác.
+    // =========================================================
+    // Lấy tất cả phòng ACTIVE
+    // Giữ lại để không ảnh hưởng module khác.
+    // =========================================================
     public List<Room> getAllActive() {
 
         List<Room> rooms = new ArrayList<>();
@@ -45,7 +49,9 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
-    // Lấy danh sách phòng thuộc một rạp.
+    // =========================================================
+    // Lấy tất cả phòng của một rạp
+    // =========================================================
     public List<Room> findByCinemaId(
             int cinemaId) {
 
@@ -88,8 +94,9 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
-    // Tìm phòng và kiểm tra phòng đó
-    // có thuộc rạp của Manager hay không.
+    // =========================================================
+    // Tìm phòng theo ID và cinema
+    // =========================================================
     public Room findByIdAndCinema(
             int roomId,
             int cinemaId) {
@@ -133,8 +140,9 @@ public class RoomRepository extends DBContext {
         return null;
     }
 
-    // Kiểm tra tên phòng có bị trùng
-    // trong cùng một rạp hay không.
+    // =========================================================
+    // Kiểm tra trùng tên phòng trong cùng một rạp
+    // =========================================================
     public boolean existsRoomName(
             int cinemaId,
             String roomName,
@@ -196,7 +204,10 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Thêm phòng mới.
+    // =========================================================
+    // Method insert cũ
+    // Giữ lại để không ảnh hưởng code khác
+    // =========================================================
     public boolean insert(Room room) {
 
         String sql =
@@ -245,7 +256,175 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Cập nhật phòng.
+    // =========================================================
+    // TẠO PHÒNG + TỰ ĐỘNG TẠO TOÀN BỘ GHẾ
+    //
+    // Dùng transaction:
+    // - tạo Room
+    // - lấy room_id vừa tạo
+    // - tạo toàn bộ Seat
+    // - lỗi thì rollback tất cả
+    // =========================================================
+    public boolean insertWithSeats(
+            Room room,
+            int rowCount,
+            int seatsPerRow) {
+
+        boolean oldAutoCommit = true;
+
+        try {
+
+            oldAutoCommit =
+                    conn.getAutoCommit();
+
+            conn.setAutoCommit(false);
+
+            // -----------------------------------------
+            // 1. Tạo phòng và lấy room_id
+            // -----------------------------------------
+            String roomSql =
+                    "INSERT INTO Room "
+                    + "(cinema_id, room_name, "
+                    + "capacity, room_type, status) "
+                    + "OUTPUT INSERTED.room_id "
+                    + "VALUES (?, ?, ?, ?, ?)";
+
+            PreparedStatement roomPs =
+                    conn.prepareStatement(
+                            roomSql
+                    );
+
+            roomPs.setInt(
+                    1,
+                    room.getCinemaId()
+            );
+
+            roomPs.setString(
+                    2,
+                    room.getRoomName()
+            );
+
+            roomPs.setInt(
+                    3,
+                    room.getCapacity()
+            );
+
+            roomPs.setString(
+                    4,
+                    room.getRoomType()
+            );
+
+            roomPs.setString(
+                    5,
+                    room.getStatus()
+            );
+
+            ResultSet rs =
+                    roomPs.executeQuery();
+
+            if (!rs.next()) {
+
+                conn.rollback();
+
+                return false;
+            }
+
+            int roomId =
+                    rs.getInt("room_id");
+
+            // -----------------------------------------
+            // 2. Tạo toàn bộ ghế
+            // Mặc định:
+            // STANDARD
+            // ACTIVE
+            // -----------------------------------------
+            String seatSql =
+                    "INSERT INTO Seat "
+                    + "(room_id, seat_row, "
+                    + "seat_number, seat_type, status) "
+                    + "VALUES (?, ?, ?, ?, ?)";
+
+            PreparedStatement seatPs =
+                    conn.prepareStatement(
+                            seatSql
+                    );
+
+            for (int row = 1;
+                    row <= rowCount;
+                    row++) {
+
+                for (int number = 1;
+                        number <= seatsPerRow;
+                        number++) {
+
+                    seatPs.setInt(
+                            1,
+                            roomId
+                    );
+
+                    seatPs.setInt(
+                            2,
+                            row
+                    );
+
+                    seatPs.setInt(
+                            3,
+                            number
+                    );
+
+                    seatPs.setString(
+                            4,
+                            "STANDARD"
+                    );
+
+                    seatPs.setString(
+                            5,
+                            "ACTIVE"
+                    );
+
+                    seatPs.addBatch();
+                }
+            }
+
+            seatPs.executeBatch();
+
+            conn.commit();
+
+            return true;
+
+        } catch (Exception e) {
+
+            try {
+
+                conn.rollback();
+
+            } catch (SQLException rollbackError) {
+
+                rollbackError.printStackTrace();
+            }
+
+            e.printStackTrace();
+
+            return false;
+
+        } finally {
+
+            try {
+
+                conn.setAutoCommit(
+                        oldAutoCommit
+                );
+
+            } catch (SQLException e) {
+
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // =========================================================
+    // Cập nhật phòng
+    // =========================================================
     public boolean update(Room room) {
 
         String sql =
@@ -302,8 +481,11 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Đếm số ghế hiện tại của phòng.
-    public int countSeats(int roomId) {
+    // =========================================================
+    // Đếm số ghế của phòng
+    // =========================================================
+    public int countSeats(
+            int roomId) {
 
         String sql =
                 "SELECT COUNT(*) AS total "
@@ -338,13 +520,14 @@ public class RoomRepository extends DBContext {
         return 0;
     }
 
-    // Kiểm tra phòng có suất chiếu
-    // ACTIVE trong tương lai hay không.
+    // =========================================================
+    // Có Showtime ACTIVE trong tương lai hay không
+    // =========================================================
     public boolean hasFutureActiveShowtime(
             int roomId) {
 
         String sql =
-                "SELECT showtime_id "
+                "SELECT TOP 1 showtime_id "
                 + "FROM Showtime "
                 + "WHERE room_id = ? "
                 + "AND status = ? "
@@ -385,8 +568,9 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Kiểm tra phòng đã từng có suất chiếu chưa.
-    // Nếu có lịch sử Showtime thì không xóa phòng.
+    // =========================================================
+    // Phòng đã từng có Showtime chưa
+    // =========================================================
     public boolean hasAnyShowtime(
             int roomId) {
 
@@ -418,9 +602,45 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Xóa phòng.
-    // Có kiểm tra cinema_id để Manager
-    // không thể xóa phòng của rạp khác.
+    // =========================================================
+    // Kiểm tra các ghế trong phòng đã có Ticket chưa
+    // =========================================================
+    public boolean hasSeatTicketHistory(
+            int roomId) {
+
+        String sql =
+                "SELECT TOP 1 t.ticket_id "
+                + "FROM Ticket t "
+                + "JOIN Seat s "
+                + "ON t.seat_id = s.seat_id "
+                + "WHERE s.room_id = ?";
+
+        try {
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            ps.setInt(
+                    1,
+                    roomId
+            );
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            return rs.next();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // =========================================================
+    // Method xóa cũ
+    // =========================================================
     public boolean delete(
             int roomId,
             int cinemaId) {
@@ -455,7 +675,109 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Chuyển dữ liệu ResultSet thành Room.
+    // =========================================================
+    // XÓA PHÒNG + TOÀN BỘ GHẾ
+    //
+    // Chỉ gọi khi Service đã kiểm tra:
+    // - không có Showtime
+    // - không có Ticket history
+    // =========================================================
+    public boolean deleteRoomWithSeats(
+            int roomId,
+            int cinemaId) {
+
+        boolean oldAutoCommit = true;
+
+        try {
+
+            oldAutoCommit =
+                    conn.getAutoCommit();
+
+            conn.setAutoCommit(false);
+
+            String seatSql =
+                    "DELETE FROM Seat "
+                    + "WHERE room_id = ?";
+
+            PreparedStatement seatPs =
+                    conn.prepareStatement(
+                            seatSql
+                    );
+
+            seatPs.setInt(
+                    1,
+                    roomId
+            );
+
+            seatPs.executeUpdate();
+
+            String roomSql =
+                    "DELETE FROM Room "
+                    + "WHERE room_id = ? "
+                    + "AND cinema_id = ?";
+
+            PreparedStatement roomPs =
+                    conn.prepareStatement(
+                            roomSql
+                    );
+
+            roomPs.setInt(
+                    1,
+                    roomId
+            );
+
+            roomPs.setInt(
+                    2,
+                    cinemaId
+            );
+
+            int affected =
+                    roomPs.executeUpdate();
+
+            if (affected == 0) {
+
+                conn.rollback();
+
+                return false;
+            }
+
+            conn.commit();
+
+            return true;
+
+        } catch (Exception e) {
+
+            try {
+
+                conn.rollback();
+
+            } catch (SQLException rollbackError) {
+
+                rollbackError.printStackTrace();
+            }
+
+            e.printStackTrace();
+
+            return false;
+
+        } finally {
+
+            try {
+
+                conn.setAutoCommit(
+                        oldAutoCommit
+                );
+
+            } catch (SQLException e) {
+
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // =========================================================
+    // Map ResultSet -> Room
+    // =========================================================
     private Room mapRoom(
             ResultSet rs)
             throws Exception {

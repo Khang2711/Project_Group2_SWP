@@ -20,9 +20,9 @@ public class RoomController extends HttpServlet {
     private final RoomService roomService =
             new RoomService();
 
-    // ================================
+    // =========================================================
     // GET
-    // ================================
+    // =========================================================
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -36,16 +36,15 @@ public class RoomController extends HttpServlet {
                 );
 
         if (user == null) {
-
             return;
         }
 
         String path =
                 request.getServletPath();
 
-        // ================================
+        // -----------------------------------------------------
         // DANH SÁCH PHÒNG
-        // ================================
+        // -----------------------------------------------------
         if ("/admin/rooms".equals(path)) {
 
             request.setAttribute(
@@ -66,9 +65,9 @@ public class RoomController extends HttpServlet {
             return;
         }
 
-        // ================================
-        // FORM THÊM / SỬA PHÒNG
-        // ================================
+        // -----------------------------------------------------
+        // FORM THÊM / SỬA
+        // -----------------------------------------------------
         if ("/admin/room-form".equals(path)) {
 
             String id =
@@ -76,7 +75,6 @@ public class RoomController extends HttpServlet {
                             "id"
                     );
 
-            // Có ID = đang sửa phòng.
             if (id != null
                     && !id.trim().isEmpty()) {
 
@@ -133,9 +131,9 @@ public class RoomController extends HttpServlet {
         );
     }
 
-    // ================================
+    // =========================================================
     // POST
-    // ================================
+    // =========================================================
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -149,17 +147,15 @@ public class RoomController extends HttpServlet {
                 );
 
         if (user == null) {
-
             return;
         }
 
         String path =
                 request.getServletPath();
 
-        // ================================
+        // -----------------------------------------------------
         // XÓA PHÒNG
-        // POST /admin/rooms
-        // ================================
+        // -----------------------------------------------------
         if ("/admin/rooms".equals(path)) {
 
             String action =
@@ -167,7 +163,6 @@ public class RoomController extends HttpServlet {
                             "action"
                     );
 
-            // Chỉ nhận action delete.
             if (!"delete".equals(action)) {
 
                 response.sendError(
@@ -191,7 +186,6 @@ public class RoomController extends HttpServlet {
                         user.getCinemaId()
                 );
 
-                // Xóa thành công.
                 response.sendRedirect(
                         request.getContextPath()
                         + "/admin/rooms?deleted=1"
@@ -205,14 +199,11 @@ public class RoomController extends HttpServlet {
 
             } catch (IllegalArgumentException e) {
 
-                // Xóa không được:
-                // ví dụ còn ghế hoặc đã có showtime.
                 request.setAttribute(
                         "error",
                         e.getMessage()
                 );
 
-                // Load lại danh sách phòng.
                 request.setAttribute(
                         "rooms",
                         roomService
@@ -232,10 +223,9 @@ public class RoomController extends HttpServlet {
             return;
         }
 
-        // ================================
+        // -----------------------------------------------------
         // THÊM / SỬA PHÒNG
-        // POST /admin/room-form
-        // ================================
+        // -----------------------------------------------------
         if (!"/admin/room-form".equals(path)) {
 
             response.sendError(
@@ -255,11 +245,6 @@ public class RoomController extends HttpServlet {
                         "roomName"
                 );
 
-        String capacityText =
-                request.getParameter(
-                        "capacity"
-                );
-
         String roomType =
                 request.getParameter(
                         "roomType"
@@ -272,30 +257,24 @@ public class RoomController extends HttpServlet {
 
         try {
 
-            int capacity =
-                    Integer.parseInt(
-                            capacityText
-                    );
-
-            // ==========================
-            // THÊM PHÒNG
-            // ==========================
+            // -------------------------------------------------
+            // TẠO PHÒNG
+            // -------------------------------------------------
             if (id == null
                     || id.trim().isEmpty()) {
 
                 roomService.createRoom(
                         user.getCinemaId(),
                         roomName,
-                        capacity,
                         roomType,
                         status
                 );
 
             } else {
 
-                // ==========================
+                // ---------------------------------------------
                 // SỬA PHÒNG
-                // ==========================
+                // ---------------------------------------------
                 int roomId =
                         Integer.parseInt(
                                 id
@@ -305,8 +284,6 @@ public class RoomController extends HttpServlet {
                         roomId,
                         user.getCinemaId(),
                         roomName,
-                        capacity,
-                        roomType,
                         status
                 );
             }
@@ -320,8 +297,7 @@ public class RoomController extends HttpServlet {
 
             request.setAttribute(
                     "error",
-                    "Sức chứa hoặc mã phòng "
-                    + "không hợp lệ."
+                    "Mã phòng không hợp lệ."
             );
 
             forwardForm(
@@ -345,9 +321,9 @@ public class RoomController extends HttpServlet {
         }
     }
 
-    // ================================
-    // LOAD LẠI FORM KHI CÓ LỖI
-    // ================================
+    // =========================================================
+    // LOAD LẠI FORM KHI LỖI
+    // =========================================================
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -362,36 +338,84 @@ public class RoomController extends HttpServlet {
         Room room =
                 new Room();
 
+        // -----------------------------------------------------
+        // ĐANG SỬA
+        // -----------------------------------------------------
         if (id != null
                 && !id.trim().isEmpty()) {
 
             try {
 
-                room.setRoomId(
-                        Integer.parseInt(
-                                id
-                        )
-                );
+                int roomId =
+                        Integer.parseInt(id);
+
+                Room currentRoom =
+                        roomService
+                                .getRoom(
+                                        roomId,
+                                        user.getCinemaId()
+                                );
+
+                if (currentRoom != null) {
+
+                    room.setRoomId(
+                            currentRoom.getRoomId()
+                    );
+
+                    room.setCinemaId(
+                            currentRoom.getCinemaId()
+                    );
+
+                    room.setCapacity(
+                            currentRoom.getCapacity()
+                    );
+
+                    room.setRoomType(
+                            currentRoom.getRoomType()
+                    );
+                }
 
             } catch (NumberFormatException e) {
 
                 room.setRoomId(0);
             }
-        }
 
-        room.setCinemaId(
-                user.getCinemaId()
-        );
+        } else {
+
+            // -------------------------------------------------
+            // ĐANG TẠO
+            // -------------------------------------------------
+            room.setCinemaId(
+                    user.getCinemaId()
+            );
+
+            String roomType =
+                    request.getParameter(
+                            "roomType"
+                    );
+
+            room.setRoomType(
+                    roomType
+            );
+
+            try {
+
+                room.setCapacity(
+                        roomService
+                                .getCapacityByRoomType(
+                                        roomType
+                                )
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                room.setCapacity(0);
+            }
+        }
 
         room.setRoomName(
                 request.getParameter(
                         "roomName"
-                )
-        );
-
-        room.setRoomType(
-                request.getParameter(
-                        "roomType"
                 )
         );
 
@@ -400,21 +424,6 @@ public class RoomController extends HttpServlet {
                         "status"
                 )
         );
-
-        try {
-
-            room.setCapacity(
-                    Integer.parseInt(
-                            request.getParameter(
-                                    "capacity"
-                            )
-                    )
-            );
-
-        } catch (NumberFormatException e) {
-
-            room.setCapacity(0);
-        }
 
         request.setAttribute(
                 "room",
@@ -429,9 +438,9 @@ public class RoomController extends HttpServlet {
         );
     }
 
-    // ================================
-    // KIỂM TRA CINEMA MANAGER
-    // ================================
+    // =========================================================
+    // CHECK CINEMA MANAGER
+    // =========================================================
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -440,7 +449,6 @@ public class RoomController extends HttpServlet {
         HttpSession session =
                 request.getSession(false);
 
-        // Chưa đăng nhập.
         if (session == null
                 || session.getAttribute(
                         "user"
@@ -459,7 +467,6 @@ public class RoomController extends HttpServlet {
                         "roleName"
                 );
 
-        // Không phải Cinema Manager.
         if (!"CINEMA_MANAGER".equals(
                 roleName)) {
 
@@ -475,7 +482,6 @@ public class RoomController extends HttpServlet {
                         "user"
                 );
 
-        // Manager chưa được gán rạp.
         if (user.getCinemaId() == null) {
 
             response.sendError(
