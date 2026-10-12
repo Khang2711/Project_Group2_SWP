@@ -58,13 +58,6 @@
         border-color: #ff1744;
     }
 
-    .form-control:disabled,
-    .form-control[readonly] {
-        color: #aaa;
-        background: #19191c;
-        cursor: not-allowed;
-    }
-
     .error-box {
         background: #32181d;
         border: 1px solid #6b2935;
@@ -74,11 +67,10 @@
         margin-bottom: 20px;
     }
 
-    .layout-note {
-        margin-top: 9px;
-        color: #888;
-        font-size: 13px;
-    }
+    /* ==========================
+       ROOM TYPE CARDS
+       Chỉ hiện khi tạo phòng
+       ========================== */
 
     .room-types {
         display: grid;
@@ -106,6 +98,12 @@
         font-size: 13px;
     }
 
+    .capacity-info {
+        margin-top: 8px;
+        color: #888;
+        font-size: 13px;
+    }
+
     .btn-primary {
         border: 0;
         background: #ff1744;
@@ -126,6 +124,10 @@
         text-decoration: none;
     }
 
+    .btn-secondary:hover {
+        color: white;
+    }
+
     @media (max-width: 700px) {
 
         .room-types {
@@ -140,6 +142,10 @@
     <c:set var="isEdit"
            value="${room.roomId > 0}" />
 
+    <!-- ==========================
+         TIÊU ĐỀ
+         ========================== -->
+
     <c:choose>
 
         <c:when test="${isEdit}">
@@ -149,8 +155,7 @@
             </h1>
 
             <p class="subtitle">
-                Loại phòng và sức chứa được cố định
-                sau khi phòng được tạo.
+                Cập nhật tên và trạng thái hoạt động của phòng.
             </p>
 
         </c:when>
@@ -162,49 +167,66 @@
             </h1>
 
             <p class="subtitle">
-                Chọn loại phòng. Hệ thống sẽ tự tạo
-                sức chứa và toàn bộ sơ đồ ghế.
+                Chọn loại phòng. Hệ thống sẽ tự xác định
+                sức chứa và tạo toàn bộ sơ đồ ghế.
             </p>
 
         </c:otherwise>
 
     </c:choose>
 
-    <!-- THÔNG TIN CÁC LOẠI PHÒNG -->
+    <!-- ==========================
+         LOẠI PHÒNG
+         CHỈ HIỆN KHI TẠO MỚI
+         ========================== -->
 
-    <div class="room-types">
+    <c:if test="${not isEdit}">
 
-        <div class="type-card">
+        <div class="room-types">
 
-            <strong>2D</strong>
+            <div class="type-card">
 
-            <span>
-                5 hàng × 8 ghế = 40 ghế
-            </span>
+                <strong>
+                    2D
+                </strong>
+
+                <span>
+                    5 hàng × 8 ghế = 40 ghế
+                </span>
+
+            </div>
+
+            <div class="type-card">
+
+                <strong>
+                    3D
+                </strong>
+
+                <span>
+                    5 hàng × 10 ghế = 50 ghế
+                </span>
+
+            </div>
+
+            <div class="type-card">
+
+                <strong>
+                    IMAX
+                </strong>
+
+                <span>
+                    6 hàng × 10 ghế = 60 ghế
+                </span>
+
+            </div>
 
         </div>
 
-        <div class="type-card">
+    </c:if>
 
-            <strong>3D</strong>
-
-            <span>
-                5 hàng × 10 ghế = 50 ghế
-            </span>
-
-        </div>
-
-        <div class="type-card">
-
-            <strong>IMAX</strong>
-
-            <span>
-                6 hàng × 10 ghế = 60 ghế
-            </span>
-
-        </div>
-
-    </div>
+    <!-- ==========================
+         FORM
+         ========================== -->
 
     <div class="form-card">
 
@@ -221,16 +243,19 @@
         <form method="post"
               action="${pageContext.request.contextPath}/admin/room-form">
 
+            <!-- ID khi update -->
+
             <c:if test="${isEdit}">
 
-                <input id="roomIdField"
-                       type="hidden"
+                <input type="hidden"
                        name="id"
                        value="${room.roomId}">
 
             </c:if>
 
-            <!-- TÊN PHÒNG -->
+            <!-- ==========================
+                 TÊN PHÒNG
+                 ========================== -->
 
             <div class="form-group">
 
@@ -248,116 +273,86 @@
 
             </div>
 
-            <!-- LOẠI PHÒNG -->
+            <!-- ==========================
+                 LOẠI PHÒNG
+                 CHỈ HIỆN KHI TẠO MỚI
+                 ========================== -->
 
-            <div class="form-group">
+            <c:if test="${not isEdit}">
 
-                <label>
-                    Loại phòng
-                </label>
+                <div class="form-group">
 
-                <c:choose>
+                    <label>
+                        Loại phòng
+                    </label>
 
-                    <c:when test="${isEdit}">
+                    <select id="roomType"
+                            class="form-control"
+                            name="roomType"
+                            onchange="updateCapacity()">
 
-                        <select id="roomType"
-                                class="form-control"
-                                disabled>
+                        <option value="2D"
+                                ${empty room.roomType ||
+                                  room.roomType == '2D'
+                                  ? 'selected' : ''}>
 
-                            <option value="2D"
-                                    ${room.roomType == '2D'
-                                      ? 'selected' : ''}>
-                                2D
-                            </option>
+                            2D
 
-                            <option value="3D"
-                                    ${room.roomType == '3D'
-                                      ? 'selected' : ''}>
-                                3D
-                            </option>
+                        </option>
 
-                            <option value="IMAX"
-                                    ${room.roomType == 'IMAX'
-                                      ? 'selected' : ''}>
-                                IMAX
-                            </option>
+                        <option value="3D"
+                                ${room.roomType == '3D'
+                                  ? 'selected' : ''}>
 
-                        </select>
+                            3D
 
-                        <input type="hidden"
-                               name="roomType"
-                               value="<c:out value='${room.roomType}' />">
+                        </option>
 
-                        <div class="layout-note">
+                        <option value="IMAX"
+                                ${room.roomType == 'IMAX'
+                                  ? 'selected' : ''}>
 
-                            Không thể đổi loại phòng sau khi
-                            sơ đồ ghế đã được tạo.
+                            IMAX
 
-                        </div>
+                        </option>
 
-                    </c:when>
-
-                    <c:otherwise>
-
-                        <select id="roomType"
-                                class="form-control"
-                                name="roomType"
-                                onchange="updateCapacity()">
-
-                            <option value="2D"
-                                    ${empty room.roomType ||
-                                      room.roomType == '2D'
-                                      ? 'selected' : ''}>
-                                2D
-                            </option>
-
-                            <option value="3D"
-                                    ${room.roomType == '3D'
-                                      ? 'selected' : ''}>
-                                3D
-                            </option>
-
-                            <option value="IMAX"
-                                    ${room.roomType == 'IMAX'
-                                      ? 'selected' : ''}>
-                                IMAX
-                            </option>
-
-                        </select>
-
-                    </c:otherwise>
-
-                </c:choose>
-
-            </div>
-
-            <!-- SỨC CHỨA -->
-
-            <div class="form-group">
-
-                <label>
-                    Sức chứa
-                </label>
-
-                <input id="capacity"
-                       class="form-control"
-                       type="number"
-                       readonly
-                       value="${room.capacity > 0
-                                ? room.capacity
-                                : 40}">
-
-                <div id="layoutText"
-                     class="layout-note">
-
-                    Số ghế được hệ thống tự động xác định
-                    theo loại phòng.
+                    </select>
 
                 </div>
 
-            </div>
+                <!-- ==========================
+                     SỨC CHỨA
+                     CHỈ HIỆN KHI TẠO
+                     ========================== -->
 
-            <!-- TRẠNG THÁI -->
+                <div class="form-group">
+
+                    <label>
+                        Sức chứa
+                    </label>
+
+                    <input id="capacity"
+                           class="form-control"
+                           type="number"
+                           readonly
+                           value="${room.capacity > 0
+                                    ? room.capacity
+                                    : 40}">
+
+                    <div id="layoutText"
+                         class="capacity-info">
+
+                        Sơ đồ: 5 hàng × 8 ghế.
+
+                    </div>
+
+                </div>
+
+            </c:if>
+
+            <!-- ==========================
+                 TRẠNG THÁI
+                 ========================== -->
 
             <div class="form-group">
 
@@ -372,18 +367,26 @@
                             ${empty room.status ||
                               room.status == 'ACTIVE'
                               ? 'selected' : ''}>
+
                         ACTIVE
+
                     </option>
 
                     <option value="INACTIVE"
                             ${room.status == 'INACTIVE'
                               ? 'selected' : ''}>
+
                         INACTIVE
+
                     </option>
 
                 </select>
 
             </div>
+
+            <!-- ==========================
+                 BUTTON
+                 ========================== -->
 
             <button class="btn-primary"
                     type="submit">
@@ -415,54 +418,58 @@
 
 </div>
 
-<script>
+<!-- ==========================
+     JS chỉ dùng khi TẠO PHÒNG
+     ========================== -->
 
-    const isEdit =
-            ${isEdit ? 'true' : 'false'};
+<c:if test="${not isEdit}">
 
-    function updateCapacity() {
+    <script>
 
-        if (isEdit) {
-            return;
+        function updateCapacity() {
+
+            const roomType =
+                    document.getElementById(
+                            "roomType"
+                    ).value;
+
+            const capacity =
+                    document.getElementById(
+                            "capacity"
+                    );
+
+            const layoutText =
+                    document.getElementById(
+                            "layoutText"
+                    );
+
+            if (roomType === "2D") {
+
+                capacity.value = 40;
+
+                layoutText.textContent =
+                        "Sơ đồ: 5 hàng × 8 ghế.";
+
+            } else if (roomType === "3D") {
+
+                capacity.value = 50;
+
+                layoutText.textContent =
+                        "Sơ đồ: 5 hàng × 10 ghế.";
+
+            } else if (roomType === "IMAX") {
+
+                capacity.value = 60;
+
+                layoutText.textContent =
+                        "Sơ đồ: 6 hàng × 10 ghế.";
+            }
         }
-
-        const roomType =
-                document.getElementById("roomType").value;
-
-        const capacity =
-                document.getElementById("capacity");
-
-        const layoutText =
-                document.getElementById("layoutText");
-
-        if (roomType === "2D") {
-
-            capacity.value = 40;
-
-            layoutText.textContent =
-                    "Sơ đồ: 5 hàng × 8 ghế.";
-
-        } else if (roomType === "3D") {
-
-            capacity.value = 50;
-
-            layoutText.textContent =
-                    "Sơ đồ: 5 hàng × 10 ghế.";
-
-        } else if (roomType === "IMAX") {
-
-            capacity.value = 60;
-
-            layoutText.textContent =
-                    "Sơ đồ: 6 hàng × 10 ghế.";
-        }
-    }
-
-    if (!isEdit) {
 
         updateCapacity();
-    }
 
-</script>
+    </script>
+
+</c:if>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
