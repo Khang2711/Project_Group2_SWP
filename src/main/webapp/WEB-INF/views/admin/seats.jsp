@@ -1,21 +1,30 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ page contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8" %>
+
+<%@ taglib prefix="c"
+           uri="jakarta.tags.core" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
-    .admin-page {
-        max-width: 1100px;
+
+    .seat-admin-page {
+        max-width: 1200px;
         margin: 0 auto;
         padding: 42px 24px 70px;
         color: #f5f5f5;
     }
 
+    /* ==============================
+       HEADER
+       ============================== */
+
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        gap: 20px;
+        margin-bottom: 22px;
     }
 
     .page-header h1 {
@@ -24,226 +33,1092 @@
     }
 
     .page-header p {
-        color: #999;
         margin: 0;
+        color: #999;
     }
 
-    .btn-primary {
-        background: #ff1744;
-        color: white;
-        text-decoration: none;
-        padding: 11px 18px;
+    .back-button {
+        color: #ccc;
+        border: 1px solid #444;
+        padding: 10px 15px;
         border-radius: 7px;
-        font-weight: 600;
+        text-decoration: none;
     }
+
+    .back-button:hover {
+        color: white;
+        border-color: #ff1744;
+    }
+
+    /* ==============================
+       ROOM INFO
+       ============================== */
 
     .room-info {
-        background: #151517;
-        border: 1px solid #29292d;
-        border-radius: 9px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        color: #bbb;
-    }
-
-    .room-info strong {
-        color: white;
-    }
-
-    .success {
-        background: #13291e;
-        border: 1px solid #225c3c;
-        color: #70d99a;
-        border-radius: 7px;
-        padding: 12px 15px;
-        margin-bottom: 20px;
-    }
-
-    .table-card {
+        display: flex;
+        gap: 25px;
+        flex-wrap: wrap;
         background: #151517;
         border: 1px solid #29292d;
         border-radius: 10px;
-        overflow: hidden;
+        padding: 17px 20px;
+        margin-bottom: 20px;
     }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th {
-        background: #1d1d20;
+    .room-info-item {
         color: #999;
-        padding: 14px 17px;
-        text-align: left;
-        font-size: 13px;
-        text-transform: uppercase;
     }
 
-    td {
-        padding: 16px 17px;
-        border-top: 1px solid #29292d;
-        color: #ddd;
-    }
-
-    tbody tr:hover {
-        background: #1c1c1f;
-    }
-
-    .seat-number {
-        font-weight: 700;
+    .room-info-item strong {
+        margin-left: 5px;
         color: white;
     }
 
-    .type-badge {
-        display: inline-block;
-        padding: 5px 9px;
-        border-radius: 5px;
-        background: #29292d;
-        color: #ddd;
+    /* ==============================
+       MESSAGES
+       ============================== */
+
+    .success-message {
+        padding: 13px 16px;
+        margin-bottom: 20px;
+        border: 1px solid #225c3c;
+        background: #13291e;
+        color: #70d99a;
+        border-radius: 7px;
+    }
+
+    .error-message {
+        padding: 13px 16px;
+        margin-bottom: 20px;
+        border: 1px solid #6b2935;
+        background: #32181d;
+        color: #ff8095;
+        border-radius: 7px;
+    }
+
+    /* ==============================
+       MAP CARD
+       ============================== */
+
+    .seat-map-card {
+        background: #111113;
+        border: 1px solid #29292d;
+        border-radius: 13px;
+        padding: 32px 28px;
+        overflow-x: auto;
+    }
+
+    /* ==============================
+       SCREEN
+       ============================== */
+
+    .screen-area {
+        width: 72%;
+        min-width: 500px;
+        margin: 0 auto 45px;
+        text-align: center;
+    }
+
+    .screen {
+        height: 8px;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            #ddd,
+            transparent
+        );
+        border-radius: 50%;
+        box-shadow: 0 5px 18px rgba(255,255,255,0.2);
+    }
+
+    .screen-text {
+        margin-top: 10px;
+        color: #777;
         font-size: 12px;
+        letter-spacing: 4px;
     }
 
-    .status-active {
-        color: #6ee49b;
+    /* ==============================
+       SEAT ROW
+       ============================== */
+
+    .seat-rows {
+        min-width: 760px;
     }
 
-    .status-inactive {
+    .seat-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 17px;
+    }
+
+    .row-name {
+        width: 55px;
+        flex-shrink: 0;
+        text-align: center;
         color: #999;
+        font-size: 13px;
+        font-weight: 700;
     }
 
-    .edit-link {
-        color: #ff4265;
-        text-decoration: none;
+    .row-seats {
+        display: flex;
+        justify-content: center;
+        gap: 9px;
+        flex-wrap: nowrap;
+    }
+
+    /* ==============================
+       SEAT
+       ============================== */
+
+    .seat-card {
+        position: relative;
+        width: 62px;
+        height: 58px;
+        border-radius: 9px 9px 6px 6px;
+        background: #28282d;
+        border: 2px solid #3f3f45;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.18s;
+        user-select: none;
+        box-sizing: border-box;
+    }
+
+    .seat-card:hover {
+        transform: translateY(-3px);
+        border-color: #999;
+    }
+
+    .seat-checkbox {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .seat-name {
+        color: white;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .seat-type-text {
+        margin-top: 3px;
+        color: #aaa;
+        font-size: 9px;
+    }
+
+    /* STANDARD */
+
+    .seat-standard {
+        background: #29292e;
+        border-color: #45454c;
+    }
+
+    /* VIP */
+
+    .seat-vip {
+        background: #3a3016;
+        border-color: #8c7427;
+    }
+
+    .seat-vip .seat-type-text {
+        color: #e6c65a;
+    }
+
+    /* COUPLE */
+
+    .seat-couple {
+        background: #342238;
+        border-color: #84528c;
+    }
+
+    .seat-couple .seat-type-text {
+        color: #d792e0;
+    }
+
+    /* INACTIVE */
+
+    .seat-inactive {
+        background: #18181a;
+        border-color: #323236;
+        opacity: 0.5;
+    }
+
+    .seat-inactive::after {
+        content: "×";
+        position: absolute;
+        right: 4px;
+        top: 1px;
+        color: #ff6b81;
+        font-weight: 700;
+    }
+
+    /* SELECTED */
+
+    .seat-card.selected {
+        background: #ff1744;
+        border-color: #ff6b81;
+        opacity: 1;
+        transform: translateY(-4px);
+        box-shadow: 0 5px 18px rgba(255, 23, 68, 0.25);
+    }
+
+    .seat-card.selected .seat-name,
+    .seat-card.selected .seat-type-text {
+        color: white;
+    }
+
+    /* ==============================
+       LEGEND
+       ============================== */
+
+    .legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 35px;
+        padding-top: 22px;
+        border-top: 1px solid #29292d;
+        color: #aaa;
+        font-size: 13px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .legend-box {
+        width: 21px;
+        height: 16px;
+        border-radius: 4px;
+        border: 2px solid #444;
+    }
+
+    .legend-standard {
+        background: #29292e;
+    }
+
+    .legend-vip {
+        background: #3a3016;
+        border-color: #8c7427;
+    }
+
+    .legend-couple {
+        background: #342238;
+        border-color: #84528c;
+    }
+
+    .legend-inactive {
+        background: #18181a;
+        opacity: 0.5;
+    }
+
+    .legend-selected {
+        background: #ff1744;
+        border-color: #ff6b81;
+    }
+
+    /* ==============================
+       TOOLBAR
+       ============================== */
+
+    .selection-toolbar {
+        margin-top: 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .selection-info {
+        color: #aaa;
+    }
+
+    .selection-info strong {
+        color: white;
+    }
+
+    .toolbar-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .small-button {
+        border: 1px solid #444;
+        background: #1c1c20;
+        color: #ddd;
+        padding: 8px 13px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .small-button:hover {
+        border-color: #ff1744;
+    }
+
+    .small-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* ==============================
+       BULK EDIT PANEL
+       ============================== */
+
+    .bulk-panel {
+        margin-top: 22px;
+        background: #151517;
+        border: 1px solid #29292d;
+        border-radius: 11px;
+        padding: 22px;
+    }
+
+    .bulk-panel h3 {
+        margin: 0 0 7px;
+    }
+
+    .bulk-description {
+        color: #888;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+
+    .bulk-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        color: #bbb;
+        font-size: 13px;
         font-weight: 600;
     }
 
-    .back-link {
-        display: inline-block;
-        margin-top: 20px;
-        color: #aaa;
-        text-decoration: none;
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 12px;
+        background: #1c1c20;
+        color: white;
+        border: 1px solid #38383e;
+        border-radius: 7px;
+        outline: none;
+    }
+
+    .form-control:focus {
+        border-color: #ff1744;
+    }
+
+    .update-button {
+        border: none;
+        padding: 11px 19px;
+        border-radius: 7px;
+        background: #ff1744;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .update-button:hover {
+        background: #e3133b;
     }
 
     .empty {
         text-align: center;
         color: #888;
-        padding: 40px;
+        padding: 50px;
     }
+
+    @media (max-width: 800px) {
+
+        .page-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .bulk-controls {
+            grid-template-columns: 1fr;
+        }
+
+        .screen-area {
+            width: 600px;
+        }
+    }
+
 </style>
 
-<div class="admin-page">
+<div class="seat-admin-page">
+
+    <!-- ==============================
+         HEADER
+         ============================== -->
 
     <div class="page-header">
 
         <div>
-            <h1>Sơ đồ ghế</h1>
-            <p>Quản lý ghế trong phòng chiếu.</p>
+
+            <h1>
+                Quản lý sơ đồ ghế
+            </h1>
+
+            <p>
+                Chọn một hoặc nhiều ghế để
+                cập nhật thông tin cùng lúc.
+            </p>
+
         </div>
 
-        <a class="btn-primary"
-           href="${pageContext.request.contextPath}/admin/seat-form?roomId=${room.roomId}">
-            + Thêm ghế
+        <a class="back-button"
+           href="${pageContext.request.contextPath}/admin/rooms">
+
+            ← Quay lại phòng
+
         </a>
 
     </div>
 
+    <!-- ==============================
+         ROOM INFO
+         ============================== -->
+
     <div class="room-info">
-        <strong>
-            <c:out value="${room.roomName}" />
-        </strong>
-        &nbsp; • &nbsp;
-        Sức chứa:
-        <strong>${room.capacity} ghế</strong>
+
+        <div class="room-info-item">
+
+            Phòng:
+
+            <strong>
+                <c:out value="${room.roomName}" />
+            </strong>
+
+        </div>
+
+        <div class="room-info-item">
+
+            Loại:
+
+            <strong>
+                <c:out value="${room.roomType}" />
+            </strong>
+
+        </div>
+
+        <div class="room-info-item">
+
+            Sức chứa:
+
+            <strong>
+                ${room.capacity} ghế
+            </strong>
+
+        </div>
+
+        <div class="room-info-item">
+
+            Trạng thái:
+
+            <strong>
+                <c:out value="${room.status}" />
+            </strong>
+
+        </div>
+
     </div>
 
-    <c:if test="${param.saved == '1'}">
-        <div class="success">
-            ✓ Lưu thông tin ghế thành công.
+    <!-- ==============================
+         MESSAGE
+         ============================== -->
+
+    <c:if test="${param.updated == '1'}">
+
+        <div class="success-message">
+
+            ✓ Cập nhật ghế thành công.
+
         </div>
+
     </c:if>
 
-    <div class="table-card">
+    <c:if test="${not empty error}">
 
-        <table>
+        <div class="error-message">
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Hàng</th>
-                    <th>Số ghế</th>
-                    <th>Loại</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
+            ⚠
+            <c:out value="${error}" />
 
-            <tbody>
+        </div>
 
-                <c:forEach var="seat" items="${seats}">
+    </c:if>
 
-                    <tr>
-                        <td>#${seat.seatId}</td>
+    <!-- ==============================
+         BULK FORM
+         ============================== -->
 
-                        <td>
-                            Hàng ${seat.seatRow}
-                        </td>
+    <form id="seatBulkForm"
+          method="post"
+          action="${pageContext.request.contextPath}/admin/seats">
 
-                        <td class="seat-number">
-                            ${seat.seatNumber}
-                        </td>
+        <input type="hidden"
+               name="action"
+               value="bulkUpdate">
 
-                        <td>
-                            <span class="type-badge">
-                                <c:out value="${seat.seatType}" />
-                            </span>
-                        </td>
+        <input type="hidden"
+               name="roomId"
+               value="${room.roomId}">
 
-                        <td>
+        <!-- ==============================
+             SEAT MAP
+             ============================== -->
+
+        <div class="seat-map-card">
+
+            <!-- SCREEN -->
+
+            <div class="screen-area">
+
+                <div class="screen"></div>
+
+                <div class="screen-text">
+                    MÀN HÌNH
+                </div>
+
+            </div>
+
+            <c:choose>
+
+                <c:when test="${not empty seatRows}">
+
+                    <div class="seat-rows">
+
+                        <c:forEach var="rowEntry"
+                                   items="${seatRows}">
+
+                            <!-- Convert row number to A B C... -->
+
+                            <c:set var="rowLabel"
+                                   value="${rowEntry.key}" />
+
                             <c:choose>
-                                <c:when test="${seat.status == 'ACTIVE'}">
-                                    <span class="status-active">
-                                        ● ACTIVE
-                                    </span>
+
+                                <c:when test="${rowEntry.key == 1}">
+                                    <c:set var="rowLabel"
+                                           value="A" />
                                 </c:when>
 
-                                <c:otherwise>
-                                    <span class="status-inactive">
-                                        ● <c:out value="${seat.status}" />
-                                    </span>
-                                </c:otherwise>
+                                <c:when test="${rowEntry.key == 2}">
+                                    <c:set var="rowLabel"
+                                           value="B" />
+                                </c:when>
+
+                                <c:when test="${rowEntry.key == 3}">
+                                    <c:set var="rowLabel"
+                                           value="C" />
+                                </c:when>
+
+                                <c:when test="${rowEntry.key == 4}">
+                                    <c:set var="rowLabel"
+                                           value="D" />
+                                </c:when>
+
+                                <c:when test="${rowEntry.key == 5}">
+                                    <c:set var="rowLabel"
+                                           value="E" />
+                                </c:when>
+
+                                <c:when test="${rowEntry.key == 6}">
+                                    <c:set var="rowLabel"
+                                           value="F" />
+                                </c:when>
+
                             </c:choose>
-                        </td>
 
-                        <td>
-                            <a class="edit-link"
-                               href="${pageContext.request.contextPath}/admin/seat-form?roomId=${room.roomId}&id=${seat.seatId}">
-                                Sửa
-                            </a>
-                        </td>
-                    </tr>
+                            <div class="seat-row">
 
-                </c:forEach>
+                                <div class="row-name">
 
-                <c:if test="${empty seats}">
-                    <tr>
-                        <td colspan="6" class="empty">
-                            Phòng này chưa có ghế.
-                        </td>
-                    </tr>
-                </c:if>
+                                    HÀNG
+                                    ${rowLabel}
 
-            </tbody>
+                                </div>
 
-        </table>
+                                <div class="row-seats">
 
-    </div>
+                                    <c:forEach var="seat"
+                                               items="${rowEntry.value}">
 
-    <a class="back-link"
-       href="${pageContext.request.contextPath}/admin/rooms">
-        ← Quay lại phòng chiếu
-    </a>
+                                        <label class="
+                                               seat-card
+
+                                               ${seat.seatType == 'VIP'
+                                                 ? 'seat-vip'
+                                                 : seat.seatType == 'COUPLE'
+                                                 ? 'seat-couple'
+                                                 : 'seat-standard'}
+
+                                               ${seat.status != 'ACTIVE'
+                                                 ? 'seat-inactive'
+                                                 : ''}
+                                               ">
+
+                                            <input class="seat-checkbox"
+                                                   type="checkbox"
+                                                   name="seatId"
+                                                   value="${seat.seatId}">
+
+                                            <span class="seat-name">
+
+                                                ${rowLabel}${seat.seatNumber}
+
+                                            </span>
+
+                                            <span class="seat-type-text">
+
+                                                <c:out value="${seat.seatType}" />
+
+                                            </span>
+
+                                        </label>
+
+                                    </c:forEach>
+
+                                </div>
+
+                            </div>
+
+                        </c:forEach>
+
+                    </div>
+
+                </c:when>
+
+                <c:otherwise>
+
+                    <div class="empty">
+
+                        Phòng này chưa có ghế.
+
+                    </div>
+
+                </c:otherwise>
+
+            </c:choose>
+
+            <!-- ==============================
+                 LEGEND
+                 ============================== -->
+
+            <div class="legend">
+
+                <div class="legend-item">
+
+                    <span class="
+                          legend-box
+                          legend-standard">
+                    </span>
+
+                    STANDARD
+
+                </div>
+
+                <div class="legend-item">
+
+                    <span class="
+                          legend-box
+                          legend-vip">
+                    </span>
+
+                    VIP
+
+                </div>
+
+                <div class="legend-item">
+
+                    <span class="
+                          legend-box
+                          legend-couple">
+                    </span>
+
+                    COUPLE
+
+                </div>
+
+                <div class="legend-item">
+
+                    <span class="
+                          legend-box
+                          legend-inactive">
+                    </span>
+
+                    INACTIVE
+
+                </div>
+
+                <div class="legend-item">
+
+                    <span class="
+                          legend-box
+                          legend-selected">
+                    </span>
+
+                    Đang chọn
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ==============================
+             SELECTION TOOLBAR
+             ============================== -->
+
+        <div class="selection-toolbar">
+
+            <div class="selection-info">
+
+                Đã chọn:
+
+                <strong id="selectedCount">
+                    0
+                </strong>
+
+                ghế
+
+            </div>
+
+            <div class="toolbar-buttons">
+
+                <button type="button"
+                        class="small-button"
+                        id="selectAllButton">
+
+                    Chọn tất cả
+
+                </button>
+
+                <button type="button"
+                        class="small-button"
+                        id="clearButton">
+
+                    Bỏ chọn
+
+                </button>
+
+                <button type="button"
+                        class="small-button"
+                        id="editOneButton"
+                        disabled>
+
+                    Sửa chi tiết 1 ghế
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ==============================
+             BULK EDIT
+             ============================== -->
+
+        <div class="bulk-panel">
+
+            <h3>
+                Cập nhật ghế đã chọn
+            </h3>
+
+            <div class="bulk-description">
+
+                Bạn có thể chỉ đổi loại ghế,
+                chỉ đổi trạng thái,
+                hoặc đổi cả hai.
+                Chọn "Giữ nguyên" nếu không muốn thay đổi mục đó.
+
+            </div>
+
+            <div class="bulk-controls">
+
+                <div class="form-group">
+
+                    <label>
+                        Loại ghế
+                    </label>
+
+                    <select id="bulkSeatType"
+                            class="form-control"
+                            name="seatType">
+
+                        <option value="">
+                            -- Giữ nguyên --
+                        </option>
+
+                        <option value="STANDARD">
+                            STANDARD
+                        </option>
+
+                        <option value="VIP">
+                            VIP
+                        </option>
+
+                        <option value="COUPLE">
+                            COUPLE
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>
+                        Trạng thái
+                    </label>
+
+                    <select id="bulkStatus"
+                            class="form-control"
+                            name="status">
+
+                        <option value="">
+                            -- Giữ nguyên --
+                        </option>
+
+                        <option value="ACTIVE">
+                            ACTIVE
+                        </option>
+
+                        <option value="INACTIVE">
+                            INACTIVE
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit"
+                        class="update-button">
+
+                    Cập nhật ghế đã chọn
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
 
 </div>
+
+<script>
+
+    const checkboxes =
+            document.querySelectorAll(
+                    ".seat-checkbox"
+            );
+
+    const selectedCount =
+            document.getElementById(
+                    "selectedCount"
+            );
+
+    const selectAllButton =
+            document.getElementById(
+                    "selectAllButton"
+            );
+
+    const clearButton =
+            document.getElementById(
+                    "clearButton"
+            );
+
+    const editOneButton =
+            document.getElementById(
+                    "editOneButton"
+            );
+
+    const form =
+            document.getElementById(
+                    "seatBulkForm"
+            );
+
+    const bulkSeatType =
+            document.getElementById(
+                    "bulkSeatType"
+            );
+
+    const bulkStatus =
+            document.getElementById(
+                    "bulkStatus"
+            );
+
+    // =========================================
+    // CẬP NHẬT GIAO DIỆN SELECTED
+    // =========================================
+    function updateSelectionUI() {
+
+        let count = 0;
+
+        checkboxes.forEach(function (checkbox) {
+
+            const seatCard =
+                    checkbox.closest(
+                            ".seat-card"
+                    );
+
+            if (checkbox.checked) {
+
+                count++;
+
+                seatCard.classList.add(
+                        "selected"
+                );
+
+            } else {
+
+                seatCard.classList.remove(
+                        "selected"
+                );
+            }
+        });
+
+        selectedCount.textContent =
+                count;
+
+        // Chỉ cho sửa chi tiết
+        // khi chọn đúng 1 ghế.
+        editOneButton.disabled =
+                count !== 1;
+    }
+
+    // =========================================
+    // CLICK GHẾ
+    // =========================================
+    checkboxes.forEach(function (checkbox) {
+
+        checkbox.addEventListener(
+                "change",
+                updateSelectionUI
+        );
+    });
+
+    // =========================================
+    // CHỌN TẤT CẢ
+    // =========================================
+    selectAllButton.addEventListener(
+            "click",
+            function () {
+
+                checkboxes.forEach(
+                        function (checkbox) {
+
+                            checkbox.checked = true;
+                        }
+                );
+
+                updateSelectionUI();
+            }
+    );
+
+    // =========================================
+    // BỎ CHỌN
+    // =========================================
+    clearButton.addEventListener(
+            "click",
+            function () {
+
+                checkboxes.forEach(
+                        function (checkbox) {
+
+                            checkbox.checked = false;
+                        }
+                );
+
+                updateSelectionUI();
+            }
+    );
+
+    // =========================================
+    // SỬA CHI TIẾT 1 GHẾ
+    // =========================================
+    editOneButton.addEventListener(
+            "click",
+            function () {
+
+                const selected =
+                        document.querySelectorAll(
+                                ".seat-checkbox:checked"
+                        );
+
+                if (selected.length !== 1) {
+
+                    return;
+                }
+
+                const seatId =
+                        selected[0].value;
+
+                window.location.href =
+                        "${pageContext.request.contextPath}"
+                        + "/admin/seat-form"
+                        + "?roomId=${room.roomId}"
+                        + "&id="
+                        + seatId;
+            }
+    );
+
+    // =========================================
+    // VALIDATE BULK UPDATE
+    // =========================================
+    form.addEventListener(
+            "submit",
+            function (event) {
+
+                const selected =
+                        document.querySelectorAll(
+                                ".seat-checkbox:checked"
+                        );
+
+                if (selected.length === 0) {
+
+                    event.preventDefault();
+
+                    alert(
+                            "Vui lòng chọn ít nhất một ghế."
+                    );
+
+                    return;
+                }
+
+                if (bulkSeatType.value === ""
+                        && bulkStatus.value === "") {
+
+                    event.preventDefault();
+
+                    alert(
+                            "Vui lòng chọn loại ghế hoặc trạng thái cần cập nhật."
+                    );
+                }
+            }
+    );
+
+    updateSelectionUI();
+
+</script>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
