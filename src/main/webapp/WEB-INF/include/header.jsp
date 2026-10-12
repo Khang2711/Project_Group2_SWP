@@ -76,6 +76,10 @@
                                 Quản lý phim
                             </a>
 
+                            <a href="${pageContext.request.contextPath}/admin/pricing">
+                                Quản lý giá vé
+                            </a>
+
                             <a href="${pageContext.request.contextPath}/admin/showtimes">
                                 Quản lý lịch chiếu
                             </a>
