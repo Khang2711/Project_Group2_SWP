@@ -40,7 +40,7 @@ VNPay không thể gọi **localhost** trực tiếp từ máy chủ của họ.
 ## 3. Luồng xử lý
 
 1. Booking và Ticket được tạo ở trạng thái **PENDING**.
-2. PaymentService tạo bản ghi Payment **PENDING** và URL VNPay. Mỗi lần thử mới dùng **merchant_reference** riêng; link chờ quá 15 phút sẽ được thay bằng reference mới.
+2. PaymentService tạo bản ghi Payment **PENDING** và URL VNPay. Mỗi lần bắt đầu thanh toán dùng **merchant_reference** riêng; các attempt đang chờ trước đó được đánh dấu **FAILED**. Callback thành công đến muộn vẫn được xác minh, và giao dịch thu trùng sẽ được đánh dấu cần hoàn tiền.
 3. VNPay trả về **/payment/vnpay-return** hoặc gọi **/payment/vnpay-ipn**. Cả hai endpoint dùng chung quy trình xác minh.
 4. Server xác minh **vnp_SecureHash** bằng HMAC-SHA512, đối chiếu **vnp_TmnCode**, **vnp_TxnRef**, tiền (**vnp_Amount** = số tiền DB × 100), **vnp_CurrCode**, **vnp_ResponseCode** và **vnp_TransactionStatus**.
 5. Chỉ khi chữ ký và giao dịch hợp lệ, server mới mở transaction DB, khóa booking, kiểm tra lại xung đột ghế rồi cập nhật Payment/Booking/Ticket cùng nhau.
