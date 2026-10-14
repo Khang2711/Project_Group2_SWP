@@ -27,7 +27,7 @@ public class AuthService {
             throw new IllegalArgumentException("Vui lòng nhập mật khẩu.");
         }
 
-        email = email.trim();
+        email = email.trim().toLowerCase(Locale.ROOT);
 
         if (email.length() > 100 || !email.contains("@")) {
             throw new IllegalArgumentException("Email không hợp lệ.");
