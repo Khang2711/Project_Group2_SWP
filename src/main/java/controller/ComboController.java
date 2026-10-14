@@ -73,7 +73,7 @@ public class ComboController extends HttpServlet {
 
             request.setAttribute("combo", combo);
             request.setAttribute("selectedItems", selectedItems);
-            request.setAttribute("foodItems", foodService.getActiveItemsByCinema(manager.getCinemaId()));
+            request.setAttribute("foodItems", foodService.getItemsByCinema(manager.getCinemaId()));
             request.getRequestDispatcher("/WEB-INF/views/admin/combo-form.jsp")
                     .forward(request, response);
             return;
@@ -190,7 +190,7 @@ public class ComboController extends HttpServlet {
         }
         request.setAttribute("combo", combo);
         request.setAttribute("selectedItems", selectedItems);
-        request.setAttribute("foodItems", foodService.getActiveItemsByCinema(manager.getCinemaId()));
+        request.setAttribute("foodItems", foodService.getItemsByCinema(manager.getCinemaId()));
         request.getRequestDispatcher("/WEB-INF/views/admin/combo-form.jsp")
                 .forward(request, response);
     }
