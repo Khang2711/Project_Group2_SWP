@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<c:set var="ctx" value="\${pageContext.request.contextPath}" />
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
 
 <section class="booking-page">
     <div class="booking-heading">
@@ -12,10 +12,10 @@
     </div>
 
     <div class="checkout-card">
-        <c:if test="\${not empty error}">
+        <c:if test="${not empty error}">
             <div class="booking-notice">
                 <strong>Chưa thể mở cổng thanh toán</strong>
-                <p><c:out value="\${error}" /></p>
+                <p><c:out value="${error}" /></p>
             </div>
         </c:if>
 
@@ -25,7 +25,7 @@
             <code>VNPAY_RETURN_URL</code>, sau đó khởi động lại Tomcat.
         </p>
 
-        <a class="booking-primary-button" href="\${ctx}/user/bookings">
+        <a class="booking-primary-button" href="${ctx}/user/bookings">
             Quay lại đơn đặt vé
         </a>
     </div>
