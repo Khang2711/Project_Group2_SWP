@@ -1,6 +1,7 @@
 package service;
 
 import java.sql.SQLException;
+import java.util.Locale;
 import model.Role;
 import model.User;
 import repository.RoleRepository;
@@ -48,6 +49,12 @@ public class AuthService {
             );
         }
 
+        if (!user.isEmailVerified()) {
+            throw new IllegalArgumentException(
+                    "Email chưa được xác thực. Vui lòng xác thực email trước khi đăng nhập."
+            );
+        }
+
         user.setPasswordHash(null);
 
         return user;
@@ -85,6 +92,7 @@ public class AuthService {
         user.setPhone(phone);
         user.setPasswordHash(PasswordUtil.md5(password));
         user.setStatus("ACTIVE");
+        user.setEmailVerified(false);
 
         userRepository.insertCustomer(user);
     }
