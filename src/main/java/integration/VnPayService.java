@@ -209,6 +209,22 @@ public class VnPayService {
         }
     }
 
+    private LocalDateTime referenceCreatedAt(
+            String merchantReference,
+            LocalDateTime fallback
+    ) {
+        try {
+            long createdAtMillis = Long.parseLong(
+                    merchantReference.substring(2, 15)
+            );
+            return LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(createdAtMillis),
+                    ZoneId.of("Asia/Ho_Chi_Minh")
+            );
+        } catch (RuntimeException e) {
+            return fallback;
+        }
+    }
     private String normalizeIp(String ipAddress) {
         if (isBlank(ipAddress) || "::1".equals(ipAddress)) {
             return "127.0.0.1";
