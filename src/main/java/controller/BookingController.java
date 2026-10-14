@@ -395,27 +395,14 @@ case "/user/booking-detail":
 
 
         /*
-         * UC-13 hiện nhóm chưa cấu hình VNPay.
-         *
-         * Tạm thời chuyển qua UC-14 để
-         * nhìn thấy Booking PENDING vừa tạo.
+         * Booking và Ticket vẫn là PENDING.
+         * VNPay callback sẽ xác minh giao dịch rồi mới xác nhận vé.
          */
         response.sendRedirect(
                 request.getContextPath()
-                + "/user/bookings"
+                + "/user/payment?bookingId="
+                + bookingId
         );
-
-
-        /*
-         * Sau này khi UC-13 làm xong,
-         * thay redirect phía trên bằng:
-         *
-         * response.sendRedirect(
-         *     request.getContextPath()
-         *     + "/user/payment?bookingId="
-         *     + bookingId
-         * );
-         */
     }
 
 

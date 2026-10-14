@@ -8,10 +8,12 @@ public class Payment {
     private int paymentId; // payment_id
     private int bookingId; // booking_id
     private String paymentMethod; // payment_method
+    private String merchantReference; // merchant_reference
     private String transactionCode; // transaction_code
     private BigDecimal amount; // amount
     private Timestamp paymentTime; // payment_time
     private String status; // status
+    private String refundStatus; // refund_status
 
     public Payment() {
     }
@@ -24,6 +26,22 @@ public class Payment {
         this.amount = amount;
         this.paymentTime = paymentTime;
         this.status = status;
+    }
+
+    public String getMerchantReference() {
+        return merchantReference;
+    }
+
+    public void setMerchantReference(String merchantReference) {
+        this.merchantReference = merchantReference;
+    }
+
+    public String getRefundStatus() {
+        return refundStatus;
+    }
+
+    public void setRefundStatus(String refundStatus) {
+        this.refundStatus = refundStatus;
     }
 
     public int getPaymentId() {

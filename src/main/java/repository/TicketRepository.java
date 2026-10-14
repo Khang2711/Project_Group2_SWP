@@ -183,6 +183,76 @@ public class TicketRepository {
     return tickets;
 }
 
+
+    public int countPendingTickets(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "SELECT COUNT(*) AS ticket_count "
+                + "FROM dbo.Ticket WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt("ticket_count") : 0;
+            }
+        }
+    }
+
+    public boolean hasSeatConflict(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "SELECT TOP 1 candidate.ticket_id "
+                + "FROM dbo.Ticket candidate WITH (UPDLOCK, HOLDLOCK) "
+                + "JOIN dbo.Ticket occupied WITH (UPDLOCK, HOLDLOCK) "
+                + "ON occupied.showtime_id = candidate.showtime_id "
+                + "AND occupied.seat_id = candidate.seat_id "
+                + "AND occupied.ticket_id <> candidate.ticket_id "
+                + "WHERE candidate.booking_id = ? "
+                + "AND candidate.status = 'PENDING' "
+                + "AND occupied.status IN ('VALID', 'USED')";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public int confirmPendingTickets(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "UPDATE dbo.Ticket "
+                + "SET status = 'VALID', "
+                + "ticket_code = 'FC-' + REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', '') "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
+    }
+
+    public int cancelPendingTickets(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "UPDATE dbo.Ticket "
+                + "SET status = 'CANCELLED', ticket_code = NULL "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
+    }
+
     private Connection getConnection()
             throws SQLException {
 
