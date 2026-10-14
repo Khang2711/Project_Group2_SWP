@@ -17,7 +17,7 @@ public class UserRepository {
 
         String sql = "SELECT u.user_id, u.role_id, u.full_name, "
                 + "u.email, u.phone, u.password_hash, u.avatar_url, "
-                + "u.status, u.created_at, u.updated_at, "
+                + "u.status, u.email_verified, u.created_at, u.updated_at, "
                 + "s.cinema_id AS staff_cinema_id "
                 + "FROM dbo.[User] u "
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
@@ -38,7 +38,7 @@ public class UserRepository {
     public User findById(int userId) throws SQLException {
         String sql = "SELECT u.user_id, u.role_id, u.full_name, "
                 + "u.email, u.phone, u.password_hash, u.avatar_url, "
-                + "u.status, u.created_at, u.updated_at, "
+                + "u.status, u.email_verified, u.created_at, u.updated_at, "
                 + "s.cinema_id AS staff_cinema_id "
                 + "FROM dbo.[User] u "
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
@@ -62,7 +62,7 @@ public class UserRepository {
     public User findByEmail(String email) throws SQLException {
         String sql = "SELECT u.user_id, u.role_id, u.full_name, "
                 + "u.email, u.phone, u.password_hash, u.avatar_url, "
-                + "u.status, u.created_at, u.updated_at, "
+                + "u.status, u.email_verified, u.created_at, u.updated_at, "
                 + "s.cinema_id AS staff_cinema_id "
                 + "FROM dbo.[User] u "
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
@@ -174,6 +174,19 @@ public class UserRepository {
         }
     }
 
+    public boolean markEmailVerified(int userId) throws SQLException {
+        String sql = "UPDATE dbo.[User] "
+                + "SET email_verified = 1, updated_at = SYSDATETIME() "
+                + "WHERE user_id = ? AND status = 'ACTIVE'";
+
+        try (Connection connection = new DBContext().getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, userId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
     public boolean updateStatus(int userId, String status)
             throws SQLException {
 
@@ -279,6 +292,7 @@ public class UserRepository {
         user.setPasswordHash(resultSet.getString("password_hash"));
         user.setAvatarUrl(resultSet.getString("avatar_url"));
         user.setStatus(resultSet.getString("status"));
+        user.setEmailVerified(resultSet.getBoolean("email_verified"));
         user.setCreatedAt(resultSet.getTimestamp("created_at"));
         user.setUpdatedAt(resultSet.getTimestamp("updated_at"));
 
@@ -295,8 +309,8 @@ public class UserRepository {
 
     public void insertCustomer(User user) throws SQLException {
         String userSql = "INSERT INTO dbo.[User] "
-                + "(role_id, full_name, email, password_hash, phone, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(role_id, full_name, email, password_hash, phone, status, email_verified) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         String customerSql =
                 "INSERT INTO dbo.Customer (customer_id) VALUES (?)";
@@ -321,6 +335,7 @@ public class UserRepository {
                     statement.setString(4, user.getPasswordHash());
                     statement.setString(5, user.getPhone());
                     statement.setString(6, user.getStatus());
+                    statement.setBoolean(7, user.isEmailVerified());
 
                     if (statement.executeUpdate() != 1) {
                         throw new SQLException("Cannot insert user.");
