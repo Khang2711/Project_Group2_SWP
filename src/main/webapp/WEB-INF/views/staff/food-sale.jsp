@@ -232,7 +232,7 @@
 
             <c:otherwise>
                 <p class="empty-text">
-                    Chưa có danh sách món ăn từ UC-26.
+                    Chưa có sản phẩm đang kinh doanh.
                 </p>
             </c:otherwise>
 
@@ -289,7 +289,7 @@
 
             <c:otherwise>
                 <p class="empty-text">
-                    Chưa có danh sách combo từ UC-26.
+                    Chưa có combo đủ điều kiện để bán.
                 </p>
             </c:otherwise>
 
