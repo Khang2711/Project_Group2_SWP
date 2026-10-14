@@ -177,13 +177,17 @@ public class PaymentService {
             );
         }
 
-        if (!"pay".equals(params.get("vnp_Command"))
-                || !"VND".equals(params.get("vnp_CurrCode"))
-                || !isNumericAmount(params.get("vnp_Amount"))) {
+        /*
+         * VNPay's browser return/IPN response does not guarantee that
+         * vnp_Command and vnp_CurrCode are echoed back. Those values are
+         * set when creating the payment request; validate the signed response
+         * fields here and compare vnp_Amount with the stored DB amount below.
+         */
+        if (!isNumericAmount(params.get("vnp_Amount"))) {
             return result(
-                    "04", "Invalid amount or transaction", true, false,
+                    "04", "Invalid amount", true, false,
                     false, false, 0,
-                    "Thông tin giao dịch hoặc số tiền không hợp lệ."
+                    "VNPay không trả về số tiền giao dịch hợp lệ."
             );
         }
 
