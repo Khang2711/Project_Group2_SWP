@@ -254,6 +254,10 @@ public class PaymentService {
 
                 if ("SUCCESS".equals(payment.getStatus())) {
                     if (sameValue(payment.getTransactionCode(), transactionCode)) {
+                        paymentRepository.failPendingPaymentsForBooking(
+                                connection,
+                                bookingId
+                        );
                         connection.commit();
                         boolean confirmed = "CONFIRMED".equals(booking.getStatus());
                         boolean refundRequired
@@ -325,6 +329,11 @@ public class PaymentService {
                         );
                     }
 
+                    paymentRepository.failPendingPaymentsForBooking(
+                            connection,
+                            bookingId
+                    );
+
                     if ("CANCELLED".equals(booking.getStatus())) {
                         ticketRepository.cancelPendingTickets(
                                 connection,
@@ -365,6 +374,11 @@ public class PaymentService {
                                 "Không thể ghi nhận giao dịch thanh toán trùng."
                         );
                     }
+
+                    paymentRepository.failPendingPaymentsForBooking(
+                            connection,
+                            bookingId
+                    );
 
                     if (conflict) {
                         bookingRepository.updateStatus(
@@ -433,6 +447,10 @@ public class PaymentService {
                         );
                     }
 
+                    paymentRepository.failPendingPaymentsForBooking(
+                            connection,
+                            bookingId
+                    );
                     bookingRepository.updateStatus(
                             connection,
                             bookingId,
@@ -490,6 +508,11 @@ public class PaymentService {
                             "Không thể lưu trạng thái thanh toán thành công."
                     );
                 }
+
+                paymentRepository.failPendingPaymentsForBooking(
+                        connection,
+                        bookingId
+                );
 
                 connection.commit();
 
