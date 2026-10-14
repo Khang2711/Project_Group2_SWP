@@ -92,6 +92,20 @@ public class PaymentRepository {
         throw new SQLException("Không thể tạo bản ghi thanh toán VNPay.");
     }
 
+
+    public int failPendingPaymentsForBooking(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "UPDATE dbo.Payment SET status = 'FAILED' "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
+    }
+
     public boolean hasSuccessfulPayment(
             Connection connection,
             int bookingId,
