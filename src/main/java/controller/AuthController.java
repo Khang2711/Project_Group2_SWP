@@ -411,6 +411,7 @@ public class AuthController extends HttpServlet {
         try {
             emailVerificationService.markEmailVerified(email);
             clearEmailVerificationData(session);
+            session.removeAttribute("loginError");
             session.setAttribute(
                     "registrationMessage",
                     "Xác thực email thành công. Bạn có thể đăng nhập."
