@@ -26,7 +26,6 @@ import repository.TicketRepository;
  */
 public class PaymentService {
 
-    private static final long PAYMENT_LINK_LIFETIME_MILLIS = 15 * 60 * 1000L;
     private static final DateTimeFormatter VNP_PAY_DATE_FORMAT
             = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -104,44 +103,22 @@ public class PaymentService {
                     );
                 }
 
-                payment = paymentRepository.findPendingByBookingId(
+                /*
+                 * Mỗi lần bắt đầu thanh toán dùng một merchant_reference mới.
+                 * Callback thành công đến muộn từ attempt cũ vẫn được xác minh;
+                 * nếu đã có giao dịch khác xác nhận đơn, attempt này sẽ được đánh dấu cần hoàn tiền.
+                 */
+                paymentRepository.failPendingPaymentsForBooking(
                         connection,
                         bookingId
                 );
 
-                if (payment != null
-                        && !isFreshReference(payment.getMerchantReference())) {
-                    int expired = paymentRepository.updateStatus(
-                            connection,
-                            payment.getPaymentId(),
-                            "FAILED",
-                            null,
-                            null,
-                            null
-                    );
-
-                    if (expired != 1) {
-                        throw new SQLException(
-                                "Không thể hết hạn giao dịch VNPay cũ."
-                        );
-                    }
-
-                    payment = null;
-                }
-
-                if (payment == null) {
-                    payment = paymentRepository.insertPending(
-                            connection,
-                            bookingId,
-                            createMerchantReference(),
-                            amount
-                    );
-                } else if (payment.getAmount() == null
-                        || payment.getAmount().compareTo(amount) != 0) {
-                    throw new IllegalArgumentException(
-                            "Số tiền đơn đặt vé đã thay đổi. Vui lòng tạo đơn mới."
-                    );
-                }
+                payment = paymentRepository.insertPending(
+                        connection,
+                        bookingId,
+                        createMerchantReference(),
+                        amount
+                );
 
                 connection.commit();
 
@@ -544,21 +521,6 @@ public class PaymentService {
                     .toBigIntegerExact();
             return expected.equals(returned);
         } catch (ArithmeticException | NumberFormatException e) {
-            return false;
-        }
-    }
-
-    private boolean isFreshReference(String reference) {
-        if (reference == null || !reference.startsWith("FC")
-                || reference.length() < 15) {
-            return false;
-        }
-
-        try {
-            long createdAt = Long.parseLong(reference.substring(2, 15));
-            long age = System.currentTimeMillis() - createdAt;
-            return age >= 0 && age < PAYMENT_LINK_LIFETIME_MILLIS;
-        } catch (NumberFormatException e) {
             return false;
         }
     }
