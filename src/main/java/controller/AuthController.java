@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import model.User;
 import service.AuthService;
 import service.PasswordResetService;
+import service.EmailVerificationService;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
