@@ -64,7 +64,7 @@ public class AuthService {
             String password, String confirmPassword) throws SQLException {
 
         fullName = fullName == null ? "" : fullName.trim();
-        email = email == null ? "" : email.trim();
+        email = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         phone = phone == null ? "" : phone.trim();
 
         checkRegisterInput(fullName, email, phone, password, confirmPassword);
