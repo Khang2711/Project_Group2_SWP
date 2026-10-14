@@ -136,6 +136,20 @@ public class PaymentRepository {
         }
     }
 
+
+    public int markSuccessfulPaymentsRefundRequired(
+            Connection connection,
+            int bookingId
+    ) throws SQLException {
+        String sql = "UPDATE dbo.Payment SET refund_status = 'REQUIRED' "
+                + "WHERE booking_id = ? AND status = 'SUCCESS'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
+    }
+
     private Payment mapPayment(ResultSet rs) throws SQLException {
         Payment payment = new Payment();
         payment.setPaymentId(rs.getInt("payment_id"));
