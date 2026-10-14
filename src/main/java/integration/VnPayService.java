@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -80,7 +81,8 @@ public class VnPayService {
         params.put("vnp_ReturnUrl", returnUrl);
         params.put("vnp_IpAddr", normalizeIp(clientIp));
         params.put("vnp_CreateDate", now.format(VNP_DATE_FORMAT));
-        params.put("vnp_ExpireDate", now.plusMinutes(15).format(VNP_DATE_FORMAT));
+        LocalDateTime referenceCreatedAt = referenceCreatedAt(merchantReference, now);
+        params.put("vnp_ExpireDate", referenceCreatedAt.plusMinutes(15).format(VNP_DATE_FORMAT));
 
         String secureHash = hmacSha512(hashSecret, buildHashData(params));
         params.put("vnp_SecureHash", secureHash);
