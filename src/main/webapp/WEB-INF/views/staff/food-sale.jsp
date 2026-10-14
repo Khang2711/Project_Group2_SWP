@@ -195,6 +195,13 @@
                             </strong>
 
                             <p class="product-description">
+                                <c:choose>
+                                    <c:when test="${item.itemType eq 'DRINK'}">Thức uống</c:when>
+                                    <c:otherwise>Món ăn</c:otherwise>
+                                </c:choose>
+                            </p>
+
+                            <p class="product-description">
                                 <c:out value="${item.description}" />
                             </p>
 
@@ -525,24 +532,44 @@
 
             var row = document.createElement("tr");
 
-            row.innerHTML =
-                    "<td>" + item.name + "</td>"
-                    + "<td>"
-                    + '<input type="number" '
-                    + 'class="quantity-input" '
-                    + 'min="1" '
-                    + 'value="' + item.quantity + '" '
-                    + 'onchange="changeQuantity(' + i + ', this.value)">'
-                    + "</td>"
-                    + "<td>" + formatMoney(item.price) + " VNĐ</td>"
-                    + "<td>" + formatMoney(lineTotal) + " VNĐ</td>"
-                    + "<td>"
-                    + '<button type="button" '
-                    + 'class="sale-button" '
-                    + 'onclick="removeItem(' + i + ')">'
-                    + "Xóa"
-                    + "</button>"
-                    + "</td>";
+            var nameCell = document.createElement("td");
+            nameCell.textContent = item.name;
+            row.appendChild(nameCell);
+
+            var quantityCell = document.createElement("td");
+            var quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.className = "quantity-input";
+            quantityInput.min = "1";
+            quantityInput.value = item.quantity;
+            quantityInput.onchange = (function (index) {
+                return function () {
+                    changeQuantity(index, this.value);
+                };
+            })(i);
+            quantityCell.appendChild(quantityInput);
+            row.appendChild(quantityCell);
+
+            var priceCell = document.createElement("td");
+            priceCell.textContent = formatMoney(item.price) + " VNĐ";
+            row.appendChild(priceCell);
+
+            var lineTotalCell = document.createElement("td");
+            lineTotalCell.textContent = formatMoney(lineTotal) + " VNĐ";
+            row.appendChild(lineTotalCell);
+
+            var actionCell = document.createElement("td");
+            var removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "sale-button";
+            removeButton.textContent = "Xóa";
+            removeButton.onclick = (function (index) {
+                return function () {
+                    removeItem(index);
+                };
+            })(i);
+            actionCell.appendChild(removeButton);
+            row.appendChild(actionCell);
 
             body.appendChild(row);
 
@@ -564,11 +591,6 @@
                     item.quantity
                     );
 
-            addHiddenInput(
-                    hiddenItems,
-                    "unitPrice",
-                    item.price
-                    );
         }
 
         document.getElementById("totalText").innerText
