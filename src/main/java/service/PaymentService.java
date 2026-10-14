@@ -332,8 +332,7 @@ public class PaymentService {
                                 payment.getPaymentId()
                         );
 
-                if (!"PENDING".equals(booking.getStatus())
-                        || anotherSuccessfulPayment) {
+                if (!"PENDING".equals(booking.getStatus())) {
                     int updated = paymentRepository.updateStatus(
                             connection,
                             payment.getPaymentId(),
@@ -364,6 +363,74 @@ public class PaymentService {
                             true, bookingId,
                             "Đã nhận thanh toán nhưng đơn không thể được xác nhận tự động. "
                             + "Cần kiểm tra và hoàn tiền nếu giao dịch bị thu trùng."
+                    );
+                }
+
+                if (anotherSuccessfulPayment) {
+                    int pendingTicketCount = ticketRepository.countPendingTickets(
+                            connection,
+                            bookingId
+                    );
+                    boolean conflict = pendingTicketCount <= 0
+                            || ticketRepository.hasSeatConflict(connection, bookingId);
+
+                    int updated = paymentRepository.updateStatus(
+                            connection,
+                            payment.getPaymentId(),
+                            "SUCCESS",
+                            transactionCode,
+                            paymentTime(params),
+                            "REQUIRED"
+                    );
+
+                    if (updated != 1) {
+                        throw new SQLException(
+                                "Không thể ghi nhận giao dịch thanh toán trùng."
+                        );
+                    }
+
+                    if (conflict) {
+                        bookingRepository.updateStatus(
+                                connection,
+                                bookingId,
+                                "CANCELLED"
+                        );
+                        ticketRepository.cancelPendingTickets(
+                                connection,
+                                bookingId
+                        );
+                        paymentRepository.markSuccessfulPaymentsRefundRequired(
+                                connection,
+                                bookingId
+                        );
+                    } else {
+                        int confirmedTickets = ticketRepository.confirmPendingTickets(
+                                connection,
+                                bookingId
+                        );
+
+                        if (confirmedTickets != pendingTicketCount
+                                || bookingRepository.updateStatus(
+                                        connection,
+                                        bookingId,
+                                        "CONFIRMED"
+                                ) != 1) {
+                            throw new SQLException(
+                                    "Không thể khôi phục trạng thái booking đã thanh toán."
+                            );
+                        }
+                    }
+
+                    connection.commit();
+
+                    return result(
+                            "00", "Confirm Success", true, true,
+                            !conflict, true, bookingId,
+                            conflict
+                                    ? "Có nhiều giao dịch thành công nhưng ghế không còn khả dụng. "
+                                    + "Cần xử lý hoàn tiền cho các giao dịch đã thu."
+                                    : "Đơn đã được xác nhận bằng giao dịch thành công trước đó. "
+                                    + "Giao dịch này cần được hoàn tiền để tránh thu trùng."
                     );
                 }
 
