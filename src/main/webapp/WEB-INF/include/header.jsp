@@ -84,6 +84,14 @@
                                 Quản lý lịch chiếu
                             </a>
 
+                            <a href="${pageContext.request.contextPath}/admin/food-items">
+                                Quản lý đồ ăn / thức uống
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/combos">
+                                Quản lý combo
+                            </a>
+
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'ADMIN'}">
