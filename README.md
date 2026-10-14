@@ -2,6 +2,8 @@
 
 VNPay Sandbox setup and manual verification: [docs/VNPAY_SANDBOX_SETUP.md](docs/VNPAY_SANDBOX_SETUP.md)
 
+Email verification OTP setup and database migration: [docs/EMAIL_VERIFICATION_SETUP.md](docs/EMAIL_VERIFICATION_SETUP.md)
+
 
 Dự án Maven Web Application dùng Java Servlet/JSP, SQL Server. Đầu vào ban đầu: Group2_RDS Document (2)(2).docx và DBcontext(1).txt; cấu trúc source sau đó được đồng bộ theo quyết định mới của nhóm là bỏ cơ chế giữ ghế 10 phút.
 

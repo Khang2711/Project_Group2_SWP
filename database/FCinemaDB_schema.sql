@@ -53,6 +53,7 @@ CREATE TABLE dbo.[User] (
     phone VARCHAR(20) NULL,
     avatar_url VARCHAR(500) NULL,
     status VARCHAR(20) NOT NULL CONSTRAINT DF_User_Status DEFAULT ('ACTIVE'),
+    email_verified BIT NOT NULL CONSTRAINT DF_User_EmailVerified DEFAULT (1),
     created_at DATETIME2 NOT NULL CONSTRAINT DF_User_CreatedAt DEFAULT (SYSDATETIME()),
     updated_at DATETIME2 NOT NULL CONSTRAINT DF_User_UpdatedAt DEFAULT (SYSDATETIME()),
     CONSTRAINT UQ_User_Email UNIQUE (email),

@@ -12,11 +12,13 @@ import java.sql.SQLException;
 import model.User;
 import service.AuthService;
 import service.PasswordResetService;
+import service.EmailVerificationService;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
     "/auth/logout",
     "/auth/register",
+    "/auth/verify-email",
     "/auth/forgot-password",
     "/auth/verify-otp",
     "/auth/reset-password"
@@ -27,11 +29,13 @@ public class AuthController extends HttpServlet {
 
     private AuthService authService;
     private PasswordResetService passwordResetService;
+    private EmailVerificationService emailVerificationService;
 
     @Override
     public void init() {
         authService = new AuthService();
         passwordResetService = new PasswordResetService();
+        emailVerificationService = new EmailVerificationService();
     }
 
     @Override
@@ -65,6 +69,10 @@ public class AuthController extends HttpServlet {
                 }
 
                 showRegister(request, response);
+                break;
+
+            case "/auth/verify-email":
+                showVerifyEmail(request, response);
                 break;
 
             case "/auth/forgot-password":
@@ -109,6 +117,14 @@ public class AuthController extends HttpServlet {
                 }
 
                 register(request, response);
+                break;
+
+            case "/auth/verify-email":
+                if ("verify".equals(request.getParameter("action"))) {
+                    verifyEmailOtp(request, response);
+                } else {
+                    sendEmailVerificationOtp(request, response);
+                }
                 break;
 
             case "/auth/forgot-password":
@@ -214,17 +230,238 @@ public class AuthController extends HttpServlet {
             return;
         }
 
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(true);
 
         session.removeAttribute("loginError");
-        session.setAttribute(
-                "registrationMessage",
-                "Đăng ký thành công. Bạn có thể đăng nhập."
-        );
+        session.removeAttribute("registrationMessage");
+        clearEmailVerificationData(session);
 
-        response.sendRedirect(
-                request.getContextPath() + "/auth/login"
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+        session.setAttribute("emailVerificationEmail", normalizedEmail);
+
+        try {
+            String otp = emailVerificationService.sendOtp(normalizedEmail);
+            saveEmailVerificationOtp(session, otp);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email?sent=1"
+            );
+
+        } catch (MessagingException e) {
+            log("Cannot send registration email verification OTP.", e);
+            clearEmailVerificationOtp(session);
+            session.setAttribute(
+                    "emailVerificationError",
+                    "Tài khoản đã được tạo nhưng chưa gửi được OTP. "
+                    + "Vui lòng kiểm tra cấu hình email rồi bấm Gửi lại OTP."
+            );
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email?sendError=1"
+            );
+
+        } catch (IllegalArgumentException e) {
+            clearEmailVerificationOtp(session);
+            session.setAttribute("emailVerificationError", e.getMessage());
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email?sendError=1"
+            );
+
+        } catch (SQLException e) {
+            log("Cannot prepare registration email verification.", e);
+            clearEmailVerificationOtp(session);
+            session.setAttribute(
+                    "emailVerificationError",
+                    "Tài khoản đã được tạo nhưng không thể chuẩn bị OTP. "
+                    + "Vui lòng thử gửi lại mã."
+            );
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email?sendError=1"
+            );
+        }
+    }
+
+    private void sendEmailVerificationOtp(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(true);
+        String email = request.getParameter("email");
+
+        if (email == null || email.trim().isEmpty()) {
+            email = (String) session.getAttribute("emailVerificationEmail");
+        }
+
+        email = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
+        request.setAttribute("emailVerificationEmail", email);
+        session.setAttribute("emailVerificationEmail", email);
+        clearEmailVerificationOtp(session);
+
+        try {
+            if (email.isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng nhập email.");
+            }
+
+            String otp = emailVerificationService.sendOtp(email);
+            saveEmailVerificationOtp(session, otp);
+            session.removeAttribute("emailVerificationError");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email?sent=1"
+            );
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showVerifyEmail(request, response);
+
+        } catch (MessagingException e) {
+            log("Cannot send email verification OTP.", e);
+            request.setAttribute(
+                    "error",
+                    "Không thể gửi OTP. Vui lòng kiểm tra cấu hình email rồi thử lại."
+            );
+            showVerifyEmail(request, response);
+
+        } catch (SQLException e) {
+            log("Cannot prepare email verification OTP.", e);
+            request.setAttribute(
+                    "error",
+                    "Không thể kiểm tra tài khoản lúc này. Vui lòng thử lại sau."
+            );
+            showVerifyEmail(request, response);
+        }
+    }
+
+    private void verifyEmailOtp(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null
+                || session.getAttribute("emailVerificationEmail") == null) {
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/verify-email"
+            );
+            return;
+        }
+
+        String email = (String) session.getAttribute("emailVerificationEmail");
+        String expectedOtp = (String) session.getAttribute("emailVerificationOtp");
+        Long expiresAt = (Long) session.getAttribute("emailVerificationOtpExpiresAt");
+
+        if (expectedOtp == null || expiresAt == null) {
+            request.setAttribute(
+                    "error",
+                    "Bạn cần gửi OTP trước khi xác thực email. Hãy bấm Gửi OTP."
+            );
+            showVerifyEmail(request, response);
+            return;
+        }
+
+        if (System.currentTimeMillis() > expiresAt) {
+            clearEmailVerificationOtp(session);
+            request.setAttribute(
+                    "error",
+                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
+            );
+            showVerifyEmail(request, response);
+            return;
+        }
+
+        String enteredOtp = request.getParameter("otp");
+        if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập mã OTP.");
+            showVerifyEmail(request, response);
+            return;
+        }
+
+        Integer attemptsValue = (Integer) session.getAttribute("emailVerificationOtpAttempts");
+        int attempts = attemptsValue == null ? 0 : attemptsValue;
+
+        if (attempts >= 5) {
+            clearEmailVerificationOtp(session);
+            request.setAttribute(
+                    "error",
+                    "Bạn đã nhập sai OTP quá 5 lần. Vui lòng gửi lại mã mới."
+            );
+            showVerifyEmail(request, response);
+            return;
+        }
+
+        if (!expectedOtp.equals(enteredOtp.trim())) {
+            attempts++;
+            if (attempts >= 5) {
+                clearEmailVerificationOtp(session);
+                request.setAttribute(
+                        "error",
+                        "Bạn đã nhập sai OTP 5 lần. Vui lòng gửi lại mã mới."
+                );
+            } else {
+                session.setAttribute("emailVerificationOtpAttempts", attempts);
+                request.setAttribute(
+                        "error",
+                        "Mã OTP không đúng. Bạn còn "
+                        + (5 - attempts) + " lần thử."
+                );
+            }
+            showVerifyEmail(request, response);
+            return;
+        }
+
+        try {
+            emailVerificationService.markEmailVerified(email);
+            clearEmailVerificationData(session);
+            session.removeAttribute("loginError");
+            session.setAttribute(
+                    "registrationMessage",
+                    "Xác thực email thành công. Bạn có thể đăng nhập."
+            );
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login?verified=1"
+            );
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showVerifyEmail(request, response);
+
+        } catch (SQLException e) {
+            log("Cannot mark customer email as verified.", e);
+            request.setAttribute(
+                    "error",
+                    "Không thể lưu trạng thái xác thực email lúc này. Vui lòng thử lại."
+            );
+            showVerifyEmail(request, response);
+        }
+    }
+
+    private void saveEmailVerificationOtp(HttpSession session, String otp) {
+        session.setAttribute("emailVerificationOtp", otp);
+        session.setAttribute(
+                "emailVerificationOtpExpiresAt",
+                System.currentTimeMillis() + OTP_VALID_MILLIS
         );
+        session.setAttribute("emailVerificationOtpAttempts", 0);
+    }
+
+    private void clearEmailVerificationOtp(HttpSession session) {
+        if (session == null) {
+            return;
+        }
+
+        session.removeAttribute("emailVerificationOtp");
+        session.removeAttribute("emailVerificationOtpExpiresAt");
+        session.removeAttribute("emailVerificationOtpAttempts");
+    }
+
+    private void clearEmailVerificationData(HttpSession session) {
+        if (session == null) {
+            return;
+        }
+
+        session.removeAttribute("emailVerificationEmail");
+        session.removeAttribute("emailVerificationError");
+        clearEmailVerificationOtp(session);
     }
 
     private void sendOtp(HttpServletRequest request,
@@ -506,6 +743,37 @@ public class AuthController extends HttpServlet {
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/auth/register.jsp"
+        ).forward(request, response);
+    }
+
+    private void showVerifyEmail(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (request.getAttribute("emailVerificationEmail") == null) {
+            request.setAttribute(
+                    "emailVerificationEmail",
+                    session == null ? "" : session.getAttribute("emailVerificationEmail")
+            );
+        }
+
+        request.setAttribute(
+                "otpSent",
+                session != null && session.getAttribute("emailVerificationOtp") != null
+        );
+
+        if (request.getAttribute("error") == null && session != null) {
+            Object storedError = session.getAttribute("emailVerificationError");
+            if (storedError != null) {
+                request.setAttribute("error", storedError);
+                session.removeAttribute("emailVerificationError");
+            }
+        }
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/auth/verify-email.jsp"
         ).forward(request, response);
     }
 
