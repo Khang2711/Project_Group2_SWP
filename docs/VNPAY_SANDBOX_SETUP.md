@@ -17,8 +17,8 @@ Biến tùy chọn:
 Trên Windows, có thể dùng PowerShell (thay giá trị mẫu bằng thông tin Sandbox của nhóm):
 
 ~~~powershell
-setx VNPAY_TMN_CODE "YOUR_TMN_CODE"
-setx VNPAY_HASH_SECRET "YOUR_HASH_SECRET"
+setx VNPAY_TMN_CODE "6NUQZPYY"
+setx VNPAY_HASH_SECRET "ERHBRVNSQLHOTHBFJYWQKSPDSHRPXAHB"
 setx VNPAY_RETURN_URL "http://localhost:8080/FCinema/payment/vnpay-return"
 setx VNPAY_PAYMENT_URL "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
 ~~~
