@@ -18,7 +18,7 @@ The application uses Gmail SMTP. Configure these Windows environment variables w
 
 ```powershell
 setx FCINEMA_EMAIL "fcinemasystem@gmail.com"
-setx FCINEMA_EMAIL_APP_PASSWORD "swpgroup2"
+setx FCINEMA_EMAIL_APP_PASSWORD "shenixjiqibghjjg"
 ```
 
 Close and reopen NetBeans after setting the variables, then restart Tomcat. Never commit the sender's app password to GitHub.
