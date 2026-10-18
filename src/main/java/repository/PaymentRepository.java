@@ -9,16 +9,12 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import model.Payment;
 
-/**
- * Repository for VNPay payment records. All methods use the caller's
- * connection so payment, booking and ticket changes can share one transaction.
- */
 public class PaymentRepository {
 
     public Payment findPendingByBookingId(
             Connection connection,
-            int bookingId
-    ) throws SQLException {
+            int bookingId) throws SQLException {
+
         String sql = "SELECT TOP 1 payment_id, booking_id, payment_method, "
                 + "merchant_reference, transaction_code, amount, payment_time, "
                 + "status, refund_status "
@@ -38,8 +34,8 @@ public class PaymentRepository {
     public Payment findByMerchantReference(
             Connection connection,
             String merchantReference,
-            boolean forUpdate
-    ) throws SQLException {
+            boolean forUpdate) throws SQLException {
+
         String sql = "SELECT payment_id, booking_id, payment_method, "
                 + "merchant_reference, transaction_code, amount, payment_time, "
                 + "status, refund_status FROM dbo.Payment "
@@ -59,17 +55,16 @@ public class PaymentRepository {
             Connection connection,
             int bookingId,
             String merchantReference,
-            BigDecimal amount
-    ) throws SQLException {
+            BigDecimal amount) throws SQLException {
+
         String sql = "INSERT INTO dbo.Payment "
                 + "(booking_id, payment_method, merchant_reference, "
                 + "transaction_code, amount, payment_time, status) "
                 + "VALUES (?, 'VNPAY', ?, NULL, ?, NULL, 'PENDING')";
 
         try (PreparedStatement ps = connection.prepareStatement(
-                sql,
-                Statement.RETURN_GENERATED_KEYS
-        )) {
+                sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setInt(1, bookingId);
             ps.setString(2, merchantReference);
             ps.setBigDecimal(3, amount);
@@ -78,25 +73,27 @@ public class PaymentRepository {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     Payment payment = new Payment();
+
                     payment.setPaymentId(rs.getInt(1));
                     payment.setBookingId(bookingId);
                     payment.setPaymentMethod("VNPAY");
                     payment.setMerchantReference(merchantReference);
                     payment.setAmount(amount);
                     payment.setStatus("PENDING");
+
                     return payment;
                 }
             }
         }
 
-        throw new SQLException("Không thể tạo bản ghi thanh toán VNPay.");
+        throw new SQLException(
+                "Không thể tạo bản ghi thanh toán VNPay.");
     }
-
 
     public int failPendingPaymentsForBooking(
             Connection connection,
-            int bookingId
-    ) throws SQLException {
+            int bookingId) throws SQLException {
+
         String sql = "UPDATE dbo.Payment SET status = 'FAILED' "
                 + "WHERE booking_id = ? AND status = 'PENDING'";
 
@@ -109,8 +106,8 @@ public class PaymentRepository {
     public boolean hasSuccessfulPayment(
             Connection connection,
             int bookingId,
-            int excludedPaymentId
-    ) throws SQLException {
+            int excludedPaymentId) throws SQLException {
+
         String sql = "SELECT TOP 1 payment_id "
                 + "FROM dbo.Payment WITH (UPDLOCK, HOLDLOCK) "
                 + "WHERE booking_id = ? AND status = 'SUCCESS' "
@@ -132,8 +129,8 @@ public class PaymentRepository {
             String status,
             String transactionCode,
             Timestamp paymentTime,
-            String refundStatus
-    ) throws SQLException {
+            String refundStatus) throws SQLException {
+
         String sql = "UPDATE dbo.Payment "
                 + "SET status = ?, "
                 + "transaction_code = COALESCE(NULLIF(?, ''), transaction_code), "
@@ -146,15 +143,15 @@ public class PaymentRepository {
             ps.setTimestamp(3, paymentTime);
             ps.setString(4, refundStatus);
             ps.setInt(5, paymentId);
+
             return ps.executeUpdate();
         }
     }
 
-
     public int markSuccessfulPaymentsRefundRequired(
             Connection connection,
-            int bookingId
-    ) throws SQLException {
+            int bookingId) throws SQLException {
+
         String sql = "UPDATE dbo.Payment SET refund_status = 'REQUIRED' "
                 + "WHERE booking_id = ? AND status = 'SUCCESS'";
 
@@ -165,7 +162,9 @@ public class PaymentRepository {
     }
 
     private Payment mapPayment(ResultSet rs) throws SQLException {
+
         Payment payment = new Payment();
+
         payment.setPaymentId(rs.getInt("payment_id"));
         payment.setBookingId(rs.getInt("booking_id"));
         payment.setPaymentMethod(rs.getString("payment_method"));
@@ -175,6 +174,28 @@ public class PaymentRepository {
         payment.setPaymentTime(rs.getTimestamp("payment_time"));
         payment.setStatus(rs.getString("status"));
         payment.setRefundStatus(rs.getString("refund_status"));
+
         return payment;
+    }
+
+    // UC-25: ghi nhận thanh toán tiền mặt tại quầy.
+    // Dùng cùng connection với booking và vé để lưu chung một transaction.
+    public void insertCounterCashPayment(
+            Connection connection,
+            int bookingId,
+            BigDecimal amount) throws SQLException {
+
+        String sql = "INSERT INTO Payment "
+                + "(booking_id, payment_method, merchant_reference, "
+                + "amount, payment_time, status) "
+                + "VALUES (?, 'CASH', ?, ?, SYSDATETIME(), 'SUCCESS')";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.setString(2, "COUNTER-" + bookingId);
+            ps.setBigDecimal(3, amount);
+
+            ps.executeUpdate();
+        }
     }
 }
