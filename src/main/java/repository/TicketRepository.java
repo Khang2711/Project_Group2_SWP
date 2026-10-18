@@ -38,7 +38,9 @@ public class TicketRepository {
         return seatIds;
     }
 
-    public void insert(Connection connection, Ticket ticket,
+    public void insert(
+            Connection connection,
+            Ticket ticket,
             int showtimeId) throws SQLException {
 
         String sql = "INSERT INTO Ticket "
@@ -94,8 +96,9 @@ public class TicketRepository {
     }
 
     // UC-25: bán vé tại quầy.
-    public int findCounterStaffCinema(Connection connection, int staffId)
-            throws SQLException {
+    public int findCounterStaffCinema(
+            Connection connection,
+            int staffId) throws SQLException {
 
         String sql = "SELECT st.cinema_id FROM Staff st "
                 + "JOIN [User] u ON u.user_id = st.staff_id "
@@ -114,8 +117,9 @@ public class TicketRepository {
         return 0;
     }
 
-    public int findCounterCustomerId(Connection connection, String email)
-            throws SQLException {
+    public int findCounterCustomerId(
+            Connection connection,
+            String email) throws SQLException {
 
         String sql = "SELECT c.customer_id FROM Customer c "
                 + "JOIN [User] u ON u.user_id = c.customer_id "
@@ -134,8 +138,10 @@ public class TicketRepository {
         return 0;
     }
 
-    public Showtime findCounterShowtime(Connection connection,
-            int showtimeId, int cinemaId) throws SQLException {
+    public Showtime findCounterShowtime(
+            Connection connection,
+            int showtimeId,
+            int cinemaId) throws SQLException {
 
         // Giữ khóa đến khi lưu hoặc hủy đơn tại quầy.
         String sql = "SELECT st.showtime_id, st.room_id FROM Showtime st "
@@ -171,8 +177,11 @@ public class TicketRepository {
         return null;
     }
 
-    public BigDecimal findCounterSeatPrice(Connection connection,
-            int seatId, int roomId, int cinemaId) throws SQLException {
+    public BigDecimal findCounterSeatPrice(
+            Connection connection,
+            int seatId,
+            int roomId,
+            int cinemaId) throws SQLException {
 
         String sql = "SELECT TOP 1 p.price FROM Seat s "
                 + "JOIN Pricing p ON p.seat_type = s.seat_type "
@@ -199,8 +208,10 @@ public class TicketRepository {
         return null;
     }
 
-    public boolean isCounterSeatSold(Connection connection,
-            int showtimeId, int seatId) throws SQLException {
+    public boolean isCounterSeatSold(
+            Connection connection,
+            int showtimeId,
+            int seatId) throws SQLException {
 
         String sql = "SELECT TOP 1 ticket_id FROM Ticket "
                 + "WITH (UPDLOCK, HOLDLOCK) "
@@ -258,8 +269,10 @@ public class TicketRepository {
         return showtimes;
     }
 
-    public Ticket findTicketForCheckIn(String ticketCode,
-            int showtimeId, int staffId) throws SQLException {
+    public Ticket findTicketForCheckIn(
+            String ticketCode,
+            int showtimeId,
+            int staffId) throws SQLException {
 
         String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
                 + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
@@ -306,11 +319,13 @@ public class TicketRepository {
         return null;
     }
 
-    public boolean markTicketUsed(String ticketCode,
-            int showtimeId, int staffId) throws SQLException {
+    public boolean markTicketUsed(
+            String ticketCode,
+            int showtimeId,
+            int staffId) throws SQLException {
 
-        // Kiểm tra ngay trong UPDATE:
-        // Nếu hai lần check-in cùng lúc, chỉ một lần đổi VALID thành USED.
+        // Kiểm tra ngay trong UPDATE để hai lần quét cùng lúc
+        // chỉ có một lần đổi vé từ VALID sang USED.
         String sql = "UPDATE t SET status = 'USED', "
                 + "checked_in_at = SYSDATETIME() FROM Ticket t "
                 + "JOIN Booking b ON b.booking_id = t.booking_id "
@@ -341,6 +356,7 @@ public class TicketRepository {
     }
 
     private Connection getConnection() throws SQLException {
+
         Connection connection = new DBContext().getConnection();
 
         if (connection == null) {
@@ -348,5 +364,75 @@ public class TicketRepository {
         }
 
         return connection;
+    }
+
+    // Các hàm từ main dùng khi xử lý thanh toán VNPay.
+    public int countPendingTickets(
+            Connection connection,
+            int bookingId) throws SQLException {
+
+        String sql = "SELECT COUNT(*) AS ticket_count "
+                + "FROM dbo.Ticket WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt("ticket_count") : 0;
+            }
+        }
+    }
+
+    public boolean hasSeatConflict(
+            Connection connection,
+            int bookingId) throws SQLException {
+
+        String sql = "SELECT TOP 1 candidate.ticket_id "
+                + "FROM dbo.Ticket candidate WITH (UPDLOCK, HOLDLOCK) "
+                + "JOIN dbo.Ticket occupied WITH (UPDLOCK, HOLDLOCK) "
+                + "ON occupied.showtime_id = candidate.showtime_id "
+                + "AND occupied.seat_id = candidate.seat_id "
+                + "AND occupied.ticket_id <> candidate.ticket_id "
+                + "WHERE candidate.booking_id = ? "
+                + "AND candidate.status = 'PENDING' "
+                + "AND occupied.status IN ('VALID', 'USED')";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public int confirmPendingTickets(
+            Connection connection,
+            int bookingId) throws SQLException {
+
+        String sql = "UPDATE dbo.Ticket "
+                + "SET status = 'VALID', "
+                + "ticket_code = 'FC-' + REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', '') "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
+    }
+
+    public int cancelPendingTickets(
+            Connection connection,
+            int bookingId) throws SQLException {
+
+        String sql = "UPDATE dbo.Ticket "
+                + "SET status = 'CANCELLED', ticket_code = NULL "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            return ps.executeUpdate();
+        }
     }
 }

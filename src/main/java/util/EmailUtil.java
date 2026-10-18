@@ -17,23 +17,44 @@ public class EmailUtil {
 
     public static void sendOtp(String toEmail, String otp)
             throws MessagingException {
+        sendOtpEmail(
+                toEmail,
+                "F-Cinema - Mã OTP đặt lại mật khẩu",
+                "Mã OTP đặt lại mật khẩu F-Cinema của bạn là: "
+                + otp
+                + "\n\nMã OTP có hiệu lực trong 5 phút."
+                + "\nNếu bạn không yêu cầu đặt lại mật khẩu, "
+                + "hãy bỏ qua email này."
+        );
+    }
+
+    public static void sendVerificationOtp(String toEmail, String otp)
+            throws MessagingException {
+        sendOtpEmail(
+                toEmail,
+                "F-Cinema - Xác thực email đăng ký",
+                "Mã OTP xác thực email F-Cinema của bạn là: "
+                + otp
+                + "\n\nMã OTP có hiệu lực trong 5 phút."
+                + "\nNhập mã này trên trang xác thực email để hoàn tất đăng ký."
+                + "\nNếu bạn không tạo tài khoản F-Cinema, hãy bỏ qua email này."
+        );
+    }
+
+    private static void sendOtpEmail(String toEmail, String subject, String body)
+            throws MessagingException {
 
         String fromEmail = System.getenv("FCINEMA_EMAIL");
-        String appPassword = System.getenv(
-                "FCINEMA_EMAIL_APP_PASSWORD"
-        );
+        String appPassword = System.getenv("FCINEMA_EMAIL_APP_PASSWORD");
 
         if (fromEmail == null || fromEmail.trim().isEmpty()
-                || appPassword == null
-                || appPassword.trim().isEmpty()) {
-
+                || appPassword == null || appPassword.trim().isEmpty()) {
             throw new MessagingException(
                     "Chưa cấu hình email gửi OTP."
             );
         }
 
         Properties properties = new Properties();
-
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");
         properties.put("mail.smtp.host", SMTP_HOST);
@@ -43,38 +64,20 @@ public class EmailUtil {
                 properties,
                 new Authenticator() {
                     @Override
-                    protected PasswordAuthentication
-                            getPasswordAuthentication() {
-
-                        return new PasswordAuthentication(
-                                fromEmail,
-                                appPassword
-                        );
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(fromEmail, appPassword);
                     }
                 }
         );
 
         MimeMessage message = new MimeMessage(mailSession);
-
         message.setFrom(new InternetAddress(fromEmail));
         message.setRecipients(
                 Message.RecipientType.TO,
                 InternetAddress.parse(toEmail)
         );
-
-        message.setSubject(
-                "F-Cinema - Mã OTP đặt lại mật khẩu",
-                "UTF-8"
-        );
-
-        message.setText(
-                "Mã OTP đặt lại mật khẩu F-Cinema của bạn là: "
-                + otp
-                + "\n\nMã OTP có hiệu lực trong 5 phút."
-                + "\nNếu bạn không yêu cầu đặt lại mật khẩu, "
-                + "hãy bỏ qua email này.",
-                "UTF-8"
-        );
+        message.setSubject(subject, "UTF-8");
+        message.setText(body, "UTF-8");
 
         Transport.send(message);
     }

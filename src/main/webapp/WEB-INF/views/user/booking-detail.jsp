@@ -464,11 +464,10 @@
 
             <c:if test="${booking.status eq 'PENDING'}">
 
-                <p class="booking-pending-note">
-
-                    Đơn này hiện đang chờ thanh toán.
-
-                </p>
+                <a class="booking-primary-button"
+                   href="${ctx}/user/payment?bookingId=${booking.bookingId}">
+                    Thanh toán ngay
+                </a>
 
             </c:if>
 

@@ -39,7 +39,8 @@ public class BookingController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
+    protected void doGet(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -47,7 +48,6 @@ public class BookingController extends HttpServlet {
 
         try {
             switch (path) {
-
                 case "/user/select-seats":
                     showSeatSelection(request, response);
                     break;
@@ -71,7 +71,6 @@ public class BookingController extends HttpServlet {
             }
 
         } catch (IllegalArgumentException e) {
-
             request.setAttribute("error", e.getMessage());
 
             request.getRequestDispatcher(
@@ -84,7 +83,8 @@ public class BookingController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
+    protected void doPost(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -99,7 +99,6 @@ public class BookingController extends HttpServlet {
             }
 
             if ("/user/checkout".equals(path)) {
-
                 String action = request.getParameter("action");
 
                 // Áp hoặc bỏ mã chỉ tính lại tiền, chưa tạo booking.
@@ -184,10 +183,11 @@ public class BookingController extends HttpServlet {
                 && "/user/select-seats".equals(
                         request.getServletPath());
 
-        List<Seat> selectedSeats = bookingService.prepareSelectedSeats(
-                showtimeId,
-                request.getParameterValues("seatId"),
-                selectWholeRoom);
+        List<Seat> selectedSeats
+                = bookingService.prepareSelectedSeats(
+                        showtimeId,
+                        request.getParameterValues("seatId"),
+                        selectWholeRoom);
 
         Map<Integer, BigDecimal> seatPrices
                 = bookingService.getSeatPrices(
@@ -197,9 +197,7 @@ public class BookingController extends HttpServlet {
         BigDecimal subtotal = BigDecimal.ZERO;
 
         for (Seat seat : selectedSeats) {
-
-            BigDecimal price = seatPrices.get(
-                    seat.getSeatId());
+            BigDecimal price = seatPrices.get(seat.getSeatId());
 
             if (price == null) {
                 throw new IllegalArgumentException(
@@ -215,7 +213,6 @@ public class BookingController extends HttpServlet {
 
         if (promoCode == null
                 || "REMOVE_PROMO".equals(action)) {
-
             promoCode = "";
         }
 
@@ -242,7 +239,6 @@ public class BookingController extends HttpServlet {
                     subtotal);
 
             if (promotion != null) {
-
                 promoCode = promotion.getPromoCode();
 
                 request.setAttribute(
@@ -250,7 +246,6 @@ public class BookingController extends HttpServlet {
                         "Đã áp dụng mã " + promoCode + ".");
 
             } else if ("REMOVE_PROMO".equals(action)) {
-
                 request.setAttribute(
                         "promoSuccess",
                         "Đã bỏ mã khuyến mãi.");
@@ -271,9 +266,11 @@ public class BookingController extends HttpServlet {
         request.setAttribute("promoCode", promoCode);
         request.setAttribute("appliedPromotion", promotion);
         request.setAttribute("discountAmount", discount);
+
         request.setAttribute(
                 "finalAmount",
                 subtotal.subtract(discount));
+
         request.setAttribute("promoError", promoError);
 
         request.getRequestDispatcher(
@@ -292,16 +289,17 @@ public class BookingController extends HttpServlet {
                 request.getParameter("showtimeId"),
                 "Suất chiếu không hợp lệ.");
 
+        int bookingId;
+
         try {
-            // Service tự đọc giá và kiểm tra mã lại trước khi lưu.
-            bookingService.createPendingBooking(
+            // Service đọc lại giá và kiểm tra mã trước khi lưu.
+            bookingId = bookingService.createPendingBooking(
                     customerId,
                     showtimeId,
                     request.getParameterValues("seatId"),
                     request.getParameter("promoCode"));
 
         } catch (IllegalArgumentException e) {
-
             request.setAttribute(
                     "checkoutError",
                     e.getMessage());
@@ -310,9 +308,10 @@ public class BookingController extends HttpServlet {
             return;
         }
 
-        // Giữ chuyển hướng hiện tại sau khi tạo đơn PENDING.
+        // Giữ luồng chuyển sang trang thanh toán VNPay của nhóm.
         response.sendRedirect(
-                request.getContextPath() + "/user/bookings");
+                request.getContextPath()
+                + "/user/payment?bookingId=" + bookingId);
     }
 
     private void loadSeatSelection(
@@ -334,7 +333,6 @@ public class BookingController extends HttpServlet {
         Map<Integer, List<Seat>> seatRows = new LinkedHashMap<>();
 
         for (Seat seat : seats) {
-
             if (!seatRows.containsKey(seat.getSeatRow())) {
                 seatRows.put(
                         seat.getSeatRow(),
@@ -365,12 +363,10 @@ public class BookingController extends HttpServlet {
         Map<Integer, Movie> movieMap = new LinkedHashMap<>();
 
         for (Booking booking : bookings) {
-
             Showtime showtime
                     = bookingService.getShowtimeForBooking(booking);
 
             if (showtime != null) {
-
                 showtimeMap.put(
                         booking.getBookingId(),
                         showtime);
@@ -422,7 +418,6 @@ public class BookingController extends HttpServlet {
         Map<Integer, Seat> seatMap = new LinkedHashMap<>();
 
         for (Ticket ticket : tickets) {
-
             Seat seat = bookingService.getSeatForTicket(
                     ticket,
                     showtime);
@@ -457,7 +452,6 @@ public class BookingController extends HttpServlet {
                     errorMessage);
 
         } catch (IllegalArgumentException e) {
-
             request.setAttribute("error", errorMessage);
 
             request.getRequestDispatcher(

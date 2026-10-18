@@ -159,7 +159,7 @@
     </div>
 
 
-    <form action="${pageContext.request.contextPath}/user/movies"
+    <form action="${pageContext.request.contextPath}/user/showtimes"
           method="get"
           class="quick-booking-form">
 

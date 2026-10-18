@@ -138,7 +138,8 @@ public class BookingRepository {
         return null;
     }
 
-    // Đọc lại rạp được phân công từ DB, không nhận cinemaId từ URL.
+    // UC-17: đọc rạp được phân công từ DB.
+    // Không lấy cinemaId do người dùng tự truyền trên URL.
     public Cinema findDashboardCinema(int managerId)
             throws SQLException {
 
@@ -173,8 +174,9 @@ public class BookingRepository {
     }
 
     public List<Map<String, Object>> getDashboardDailyData(
-            int cinemaId, LocalDate fromDate, LocalDate toDate)
-            throws SQLException {
+            int cinemaId,
+            LocalDate fromDate,
+            LocalDate toDate) throws SQLException {
 
         List<Map<String, Object>> rows = new ArrayList<>();
 
@@ -255,5 +257,60 @@ public class BookingRepository {
         }
 
         return connection;
+    }
+
+    // Giữ các hàm từ main để service thanh toán VNPay tiếp tục hoạt động.
+    public Booking findByIdForPayment(
+            Connection connection,
+            int bookingId,
+            int customerId) throws SQLException {
+
+        String sql = "SELECT booking_id, customer_id, showtime_id, "
+                + "promotion_id, booking_time, subtotal, discount_amount, "
+                + "total_amount, status FROM dbo.Booking WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE booking_id = ? AND customer_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.setInt(2, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapBooking(rs) : null;
+            }
+        }
+    }
+
+    public Booking findByIdForUpdate(
+            Connection connection,
+            int bookingId) throws SQLException {
+
+        String sql = "SELECT booking_id, customer_id, showtime_id, "
+                + "promotion_id, booking_time, subtotal, discount_amount, "
+                + "total_amount, status FROM dbo.Booking WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE booking_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapBooking(rs) : null;
+            }
+        }
+    }
+
+    public int updateStatus(
+            Connection connection,
+            int bookingId,
+            String status) throws SQLException {
+
+        String sql = "UPDATE dbo.Booking SET status = ? "
+                + "WHERE booking_id = ? AND status = 'PENDING'";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, bookingId);
+
+            return ps.executeUpdate();
+        }
     }
 }
