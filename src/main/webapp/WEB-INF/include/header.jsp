@@ -5,6 +5,7 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
+
         <meta name="viewport"
               content="width=device-width, initial-scale=1.0">
 
@@ -12,6 +13,71 @@
 
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/assets/css/style.css">
+
+        <%-- Chỉ chỉnh bố cục header của Cinema Manager. --%>
+        <c:if test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+            <style>
+                .site-header .header-container {
+                    max-width: 1400px;
+                    padding: 14px 20px;
+                    gap: 20px;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                }
+
+                .site-header .logo {
+                    flex-shrink: 0;
+                    white-space: nowrap;
+                }
+
+                .site-header .logo-box {
+                    flex-shrink: 0;
+                }
+
+                .site-header .logo-text {
+                    white-space: nowrap;
+                }
+
+                .site-header .main-nav {
+                    flex: 1;
+                    min-width: 0;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 14px 18px;
+                }
+
+                .site-header .main-nav a {
+                    font-size: 14px;
+                    white-space: nowrap;
+                }
+
+                .site-header .header-actions {
+                    flex-shrink: 0;
+                    max-width: 100%;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: 12px;
+                }
+
+                .site-header .profile-button,
+                .site-header .logout-link {
+                    white-space: nowrap;
+                }
+
+                @media (max-width: 1100px) {
+                    .site-header .main-nav {
+                        order: 3;
+                        flex-basis: 100%;
+                    }
+                }
+
+                @media (max-width: 600px) {
+                    .site-header .header-container {
+                        justify-content: center;
+                    }
+                }
+            </style>
+        </c:if>
 
         <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
     </head>
@@ -28,6 +94,7 @@
 
                 <nav class="main-nav">
                     <c:choose>
+
                         <c:when test="${empty sessionScope.user
                                         or sessionScope.roleName eq 'CUSTOMER'}">
 
@@ -45,10 +112,12 @@
                                       <a href="${pageContext.request.contextPath}/user/bookings">
                                           Đơn đặt vé
                                       </a>
+
                                 </c:if>
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'STAFF'}">
+
                             <a href="${pageContext.request.contextPath}/staff/counter">
                                 Bán tại quầy
                             </a>
@@ -56,6 +125,7 @@
                             <a href="${pageContext.request.contextPath}/staff/check-in">
                                 Check-in vé
                             </a>
+
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
@@ -84,31 +154,48 @@
                                 Quản lý lịch chiếu
                             </a>
 
+                            <a href="${pageContext.request.contextPath}/admin/food-items">
+                                Quản lý đồ ăn / thức uống
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/combos">
+                                Quản lý combo
+                            </a>
+
                         </c:when>
 
                         <c:when test="${sessionScope.roleName eq 'ADMIN'}">
+
                             <a href="${pageContext.request.contextPath}/system/users">
                                 Quản lý người dùng
                             </a>
+
                         </c:when>
+
                     </c:choose>
                 </nav>
 
                 <div class="header-actions">
                     <c:choose>
+
                         <c:when test="${not empty sessionScope.user}">
+
                             <c:choose>
                                 <c:when test="${sessionScope.roleName eq 'CUSTOMER'}">
+
                                     <a href="${pageContext.request.contextPath}/user/profile"
                                        class="profile-button">
                                         <c:out value="${sessionScope.user.fullName}" />
                                     </a>
+
                                 </c:when>
 
                                 <c:otherwise>
+
                                     <span class="profile-button">
                                         <c:out value="${sessionScope.user.fullName}" />
                                     </span>
+
                                 </c:otherwise>
                             </c:choose>
 
@@ -116,9 +203,11 @@
                                class="logout-link">
                                 Đăng xuất
                             </a>
+
                         </c:when>
 
                         <c:otherwise>
+
                             <a href="${pageContext.request.contextPath}/auth/login"
                                class="login-button">
                                 Đăng nhập
@@ -128,7 +217,9 @@
                                class="login-button">
                                 Đăng ký
                             </a>
+
                         </c:otherwise>
+
                     </c:choose>
                 </div>
 
