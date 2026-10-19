@@ -56,32 +56,115 @@ public class BookingRepository {
                 "Cannot get booking_id after insert.");
     }
 
-    public BigDecimal findSeatPrice(int showtimeId, int seatId)
+    public BigDecimal findSeatPrice(
+            int showtimeId,
+            int seatId)
             throws SQLException {
 
-        String sql = "SELECT TOP 1 p.price "
+        String sql
+                = "SELECT TOP 1 p.price "
                 + "FROM Showtime st "
-                + "JOIN Room r ON st.room_id = r.room_id "
-                + "JOIN Seat s ON s.room_id = r.room_id "
-                + "JOIN Pricing p ON p.cinema_id = r.cinema_id "
+                + "JOIN Room r "
+                + "ON st.room_id = r.room_id "
+                + "JOIN Seat s "
+                + "ON s.room_id = r.room_id "
+                + "JOIN Pricing p "
+                + "ON p.cinema_id = r.cinema_id "
                 + "AND p.seat_type = s.seat_type "
                 + "WHERE st.showtime_id = ? "
                 + "AND s.seat_id = ? "
                 + "AND s.status = 'ACTIVE' "
                 + "AND p.status = 'ACTIVE' "
-                + "AND p.start_date <= CAST(SYSDATETIME() AS DATE) "
+                // Pricing phải áp dụng vào ngày SHOWTIME,
+                // không phải ngày khách đang booking.
+                + "AND p.start_date "
+                + "<= CAST(st.start_time AS DATE) "
                 + "AND (p.end_date IS NULL "
-                + "OR p.end_date >= CAST(SYSDATETIME() AS DATE)) "
-                + "ORDER BY p.start_date DESC, p.pricing_id DESC";
+                + "OR p.end_date "
+                + ">= CAST(st.start_time AS DATE)) "
+                // NULL movie_id = tất cả phim.
+                + "AND (p.movie_id IS NULL "
+                + "OR p.movie_id = st.movie_id) "
+                // NULL room_type = tất cả phòng.
+                + "AND (p.room_type IS NULL "
+                + "OR p.room_type = r.room_type) "
+                // Ngày đặc biệt hoặc weekday/weekend.
+                + "AND ("
+                + "p.special_date "
+                + "= CAST(st.start_time AS DATE) "
+                + "OR ("
+                + "p.special_date IS NULL "
+                + "AND ("
+                + "p.day_type = 'ALL' "
+                + "OR ("
+                + "p.day_type = 'WEEKDAY' "
+                + "AND ("
+                + "DATEDIFF("
+                + "DAY, "
+                + "'19000101', "
+                + "CAST(st.start_time AS DATE)"
+                + ") % 7"
+                + ") BETWEEN 0 AND 4"
+                + ") "
+                + "OR ("
+                + "p.day_type = 'WEEKEND' "
+                + "AND ("
+                + "DATEDIFF("
+                + "DAY, "
+                + "'19000101', "
+                + "CAST(st.start_time AS DATE)"
+                + ") % 7"
+                + ") IN (5, 6)"
+                + ")"
+                + ")"
+                + ")"
+                + ") "
+                // NULL time = cả ngày.
+                + "AND (p.start_time IS NULL "
+                + "OR CAST(st.start_time AS TIME) "
+                + ">= p.start_time) "
+                + "AND (p.end_time IS NULL "
+                + "OR CAST(st.start_time AS TIME) "
+                + "< p.end_time) "
+                // Rule càng cụ thể thì càng ưu tiên.
+                + "ORDER BY "
+                + "("
+                + "CASE WHEN p.special_date IS NOT NULL "
+                + "THEN 100 ELSE 0 END "
+                + "+ CASE WHEN p.movie_id IS NOT NULL "
+                + "THEN 20 ELSE 0 END "
+                + "+ CASE WHEN p.room_type IS NOT NULL "
+                + "THEN 10 ELSE 0 END "
+                + "+ CASE WHEN p.day_type <> 'ALL' "
+                + "THEN 5 ELSE 0 END "
+                + "+ CASE WHEN p.start_time IS NOT NULL "
+                + "THEN 2 ELSE 0 END"
+                + ") DESC, "
+                + "p.start_date DESC, "
+                + "p.pricing_id DESC";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection
+                = getConnection(); PreparedStatement ps
+                = connection.prepareStatement(sql)) {
 
-            ps.setInt(1, showtimeId);
-            ps.setInt(2, seatId);
+            ps.setInt(
+                    1,
+                    showtimeId
+            );
 
-            try (ResultSet rs = ps.executeQuery()) {
+            ps.setInt(
+                    2,
+                    seatId
+            );
+
+            try (ResultSet rs
+                    = ps.executeQuery()) {
+
                 if (rs.next()) {
-                    return rs.getBigDecimal("price");
+
+                    return rs.getBigDecimal(
+                            "price"
+                    );
                 }
             }
         }
