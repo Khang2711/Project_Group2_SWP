@@ -9,8 +9,11 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalTime;
 import model.Pricing;
 import model.User;
+import service.MovieService;
 import service.PricingService;
 
 @WebServlet(urlPatterns = {
@@ -23,9 +26,9 @@ public class PricingController
     private final PricingService pricingService =
             new PricingService();
 
-    // =========================================================
-    // GET
-    // =========================================================
+    private final MovieService movieService =
+            new MovieService();
+
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -45,17 +48,11 @@ public class PricingController
         String path =
                 request.getServletPath();
 
-        // -----------------------------------------------------
-        // DANH SÁCH GIÁ VÉ
-        // -----------------------------------------------------
         if ("/admin/pricing".equals(path)) {
 
-            request.setAttribute(
-                    "pricingList",
-                    pricingService
-                            .getPricingByCinema(
-                                    user.getCinemaId()
-                            )
+            loadPricingList(
+                    request,
+                    user
             );
 
             request.getRequestDispatcher(
@@ -68,15 +65,10 @@ public class PricingController
             return;
         }
 
-        // -----------------------------------------------------
-        // FORM THÊM / SỬA
-        // -----------------------------------------------------
         if ("/admin/pricing-form".equals(path)) {
 
             String id =
-                    request.getParameter(
-                            "id"
-                    );
+                    request.getParameter("id");
 
             if (id != null
                     && !id.trim().isEmpty()) {
@@ -119,6 +111,11 @@ public class PricingController
                 }
             }
 
+            loadMovies(
+                    request,
+                    user
+            );
+
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/pricing-form.jsp"
             ).forward(
@@ -134,9 +131,6 @@ public class PricingController
         );
     }
 
-    // =========================================================
-    // POST
-    // =========================================================
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -156,9 +150,6 @@ public class PricingController
         String path =
                 request.getServletPath();
 
-        // -----------------------------------------------------
-        // XÓA PRICING
-        // -----------------------------------------------------
         if ("/admin/pricing".equals(path)) {
 
             String action =
@@ -223,9 +214,6 @@ public class PricingController
             return;
         }
 
-        // -----------------------------------------------------
-        // THÊM / SỬA PRICING
-        // -----------------------------------------------------
         if (!"/admin/pricing-form".equals(path)) {
 
             response.sendError(
@@ -235,89 +223,96 @@ public class PricingController
             return;
         }
 
-        String id =
-                request.getParameter(
-                        "id"
-                );
-
-        String seatType =
-                request.getParameter(
-                        "seatType"
-                );
-
-        String priceText =
-                request.getParameter(
-                        "price"
-                );
-
-        String startDateText =
-                request.getParameter(
-                        "startDate"
-                );
-
-        String endDateText =
-                request.getParameter(
-                        "endDate"
-                );
-
-        String status =
-                request.getParameter(
-                        "status"
-                );
-
         try {
 
-            // -----------------------------------------
-            // PRICE
-            // -----------------------------------------
-            BigDecimal price =
-                    new BigDecimal(
-                            priceText.trim()
+            String id =
+                    request.getParameter("id");
+
+            Integer movieId =
+                    parseOptionalInteger(
+                            request.getParameter(
+                                    "movieId"
+                            )
                     );
 
-            // -----------------------------------------
-            // START DATE
-            // -----------------------------------------
-            if (startDateText == null
-                    || startDateText
-                            .trim()
-                            .isEmpty()) {
+            String roomType =
+                    request.getParameter(
+                            "roomType"
+                    );
 
-                throw new IllegalArgumentException(
-                        "Ngày bắt đầu không được để trống."
-                );
-            }
+            String seatType =
+                    request.getParameter(
+                            "seatType"
+                    );
+
+            String dayType =
+                    request.getParameter(
+                            "dayType"
+                    );
+
+            Date specialDate =
+                    parseOptionalDate(
+                            request.getParameter(
+                                    "specialDate"
+                            ),
+                            "Ngày đặc biệt không hợp lệ."
+                    );
+
+            Time startTime =
+                    parseOptionalTime(
+                            request.getParameter(
+                                    "startTime"
+                            ),
+                            "Giờ bắt đầu không hợp lệ."
+                    );
+
+            Time endTime =
+                    parseOptionalTime(
+                            request.getParameter(
+                                    "endTime"
+                            ),
+                            "Giờ kết thúc không hợp lệ."
+                    );
+
+            BigDecimal price =
+                    parsePrice(
+                            request.getParameter(
+                                    "price"
+                            )
+                    );
 
             Date startDate =
-                    Date.valueOf(
-                            startDateText
+                    parseRequiredDate(
+                            request.getParameter(
+                                    "startDate"
+                            )
                     );
 
-            // -----------------------------------------
-            // END DATE - OPTIONAL
-            // -----------------------------------------
-            Date endDate = null;
+            Date endDate =
+                    parseOptionalDate(
+                            request.getParameter(
+                                    "endDate"
+                            ),
+                            "Ngày kết thúc không hợp lệ."
+                    );
 
-            if (endDateText != null
-                    && !endDateText
-                            .trim()
-                            .isEmpty()) {
+            String status =
+                    request.getParameter(
+                            "status"
+                    );
 
-                endDate =
-                        Date.valueOf(
-                                endDateText
-                        );
-            }
-
-            // -----------------------------------------
-            // CREATE
-            // -----------------------------------------
             if (id == null
                     || id.trim().isEmpty()) {
 
                 pricingService.createPricing(
                         user.getCinemaId(),
+                        movieId,
+                        roomType,
                         seatType,
+                        dayType,
+                        specialDate,
+                        startTime,
+                        endTime,
                         price,
                         startDate,
                         endDate,
@@ -326,18 +321,19 @@ public class PricingController
 
             } else {
 
-                // -------------------------------------
-                // UPDATE
-                // -------------------------------------
                 int pricingId =
-                        Integer.parseInt(
-                                id
-                        );
+                        Integer.parseInt(id);
 
                 pricingService.updatePricing(
                         pricingId,
                         user.getCinemaId(),
+                        movieId,
+                        roomType,
                         seatType,
+                        dayType,
+                        specialDate,
+                        startTime,
+                        endTime,
                         price,
                         startDate,
                         endDate,
@@ -354,8 +350,7 @@ public class PricingController
 
             request.setAttribute(
                     "error",
-                    "Giá vé hoặc mã giá vé "
-                    + "không hợp lệ."
+                    "Giá vé hoặc mã dữ liệu không hợp lệ."
             );
 
             forwardForm(
@@ -379,9 +374,132 @@ public class PricingController
         }
     }
 
-    // =========================================================
-    // LOAD LIST
-    // =========================================================
+    private BigDecimal parsePrice(
+            String value) {
+
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Giá vé không được để trống."
+            );
+        }
+
+        try {
+
+            return new BigDecimal(
+                    value.trim()
+            );
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException(
+                    "Giá vé không hợp lệ."
+            );
+        }
+    }
+
+    private Integer parseOptionalInteger(
+            String value) {
+
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            return null;
+        }
+
+        try {
+
+            return Integer.valueOf(
+                    value.trim()
+            );
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException(
+                    "Phim không hợp lệ."
+            );
+        }
+    }
+
+    private Date parseRequiredDate(
+            String value) {
+
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Ngày bắt đầu không được để trống."
+            );
+        }
+
+        try {
+
+            return Date.valueOf(
+                    value.trim()
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            throw new IllegalArgumentException(
+                    "Ngày bắt đầu không hợp lệ."
+            );
+        }
+    }
+
+    private Date parseOptionalDate(
+            String value,
+            String errorMessage) {
+
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            return null;
+        }
+
+        try {
+
+            return Date.valueOf(
+                    value.trim()
+            );
+
+        } catch (IllegalArgumentException e) {
+
+            throw new IllegalArgumentException(
+                    errorMessage
+            );
+        }
+    }
+
+    private Time parseOptionalTime(
+            String value,
+            String errorMessage) {
+
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            return null;
+        }
+
+        try {
+
+            LocalTime localTime =
+                    LocalTime.parse(
+                            value.trim()
+                    );
+
+            return Time.valueOf(
+                    localTime
+            );
+
+        } catch (Exception e) {
+
+            throw new IllegalArgumentException(
+                    errorMessage
+            );
+        }
+    }
+
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -395,9 +513,19 @@ public class PricingController
         );
     }
 
-    // =========================================================
-    // LOAD LẠI FORM KHI LỖI
-    // =========================================================
+    private void loadMovies(
+            HttpServletRequest request,
+            User user) {
+
+        request.setAttribute(
+                "movies",
+                movieService
+                        .getMoviesByCinema(
+                                user.getCinemaId()
+                        )
+        );
+    }
+
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -407,28 +535,45 @@ public class PricingController
         Pricing pricing =
                 new Pricing();
 
-        String id =
-                request.getParameter(
-                        "id"
-                );
+        try {
 
-        if (id != null
-                && !id.trim().isEmpty()) {
+            String id =
+                    request.getParameter("id");
 
-            try {
+            if (id != null
+                    && !id.trim().isEmpty()) {
 
                 pricing.setPricingId(
                         Integer.parseInt(id)
                 );
-
-            } catch (NumberFormatException e) {
-
-                pricing.setPricingId(0);
             }
+
+        } catch (Exception e) {
+            pricing.setPricingId(0);
         }
 
         pricing.setCinemaId(
                 user.getCinemaId()
+        );
+
+        try {
+
+            pricing.setMovieId(
+                    parseOptionalInteger(
+                            request.getParameter(
+                                    "movieId"
+                            )
+                    )
+            );
+
+        } catch (Exception e) {
+            pricing.setMovieId(null);
+        }
+
+        pricing.setRoomType(
+                request.getParameter(
+                        "roomType"
+                )
         );
 
         pricing.setSeatType(
@@ -437,84 +582,104 @@ public class PricingController
                 )
         );
 
-        // -----------------------------------------
-        // PRICE
-        // -----------------------------------------
+        pricing.setDayType(
+                request.getParameter(
+                        "dayType"
+                )
+        );
+
         try {
 
-            String priceText =
-                    request.getParameter(
-                            "price"
-                    );
+            pricing.setSpecialDate(
+                    parseOptionalDate(
+                            request.getParameter(
+                                    "specialDate"
+                            ),
+                            ""
+                    )
+            );
 
-            if (priceText != null
-                    && !priceText
-                            .trim()
-                            .isEmpty()) {
+        } catch (Exception e) {
+            pricing.setSpecialDate(null);
+        }
 
-                pricing.setPrice(
-                        new BigDecimal(
-                                priceText.trim()
-                        )
-                );
-            }
+        try {
 
-        } catch (NumberFormatException e) {
+            pricing.setStartTime(
+                    parseOptionalTime(
+                            request.getParameter(
+                                    "startTime"
+                            ),
+                            ""
+                    )
+            );
 
+        } catch (Exception e) {
+            pricing.setStartTime(null);
+        }
+
+        try {
+
+            pricing.setEndTime(
+                    parseOptionalTime(
+                            request.getParameter(
+                                    "endTime"
+                            ),
+                            ""
+                    )
+            );
+
+        } catch (Exception e) {
+            pricing.setEndTime(null);
+        }
+
+        try {
+
+            pricing.setPrice(
+                    parsePrice(
+                            request.getParameter(
+                                    "price"
+                            )
+                    )
+            );
+
+        } catch (Exception e) {
             pricing.setPrice(null);
         }
 
-        // -----------------------------------------
-        // START DATE
-        // -----------------------------------------
         try {
 
-            String startDateText =
+            String value =
                     request.getParameter(
                             "startDate"
                     );
 
-            if (startDateText != null
-                    && !startDateText
-                            .trim()
-                            .isEmpty()) {
+            if (value != null
+                    && !value.trim().isEmpty()) {
 
                 pricing.setStartDate(
                         Date.valueOf(
-                                startDateText
+                                value.trim()
                         )
                 );
             }
 
-        } catch (IllegalArgumentException e) {
-
+        } catch (Exception e) {
             pricing.setStartDate(null);
         }
 
-        // -----------------------------------------
-        // END DATE
-        // -----------------------------------------
         try {
 
-            String endDateText =
-                    request.getParameter(
-                            "endDate"
-                    );
+            pricing.setEndDate(
+                    parseOptionalDate(
+                            request.getParameter(
+                                    "endDate"
+                            ),
+                            ""
+                    )
+            );
 
-            if (endDateText != null
-                    && !endDateText
-                            .trim()
-                            .isEmpty()) {
-
-                pricing.setEndDate(
-                        Date.valueOf(
-                                endDateText
-                        )
-                );
-            }
-
-        } catch (IllegalArgumentException e) {
-
+        } catch (Exception e) {
             pricing.setEndDate(null);
         }
 
@@ -529,6 +694,11 @@ public class PricingController
                 pricing
         );
 
+        loadMovies(
+                request,
+                user
+        );
+
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/pricing-form.jsp"
         ).forward(
@@ -537,9 +707,6 @@ public class PricingController
         );
     }
 
-    // =========================================================
-    // CHECK CINEMA MANAGER
-    // =========================================================
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)

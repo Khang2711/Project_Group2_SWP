@@ -2,9 +2,9 @@ package repository;
 
 import db.DBContext;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,11 +13,7 @@ import model.Pricing;
 
 public class PricingRepository extends DBContext {
 
-    // =========================================================
-    // METHOD CŨ
-    // Giữ lại vì MovieService đang sử dụng.
-    // Lấy giá thấp nhất đang có hiệu lực của từng rạp.
-    // =========================================================
+    // Giữ lại để MovieService hiện tại không bị vỡ.
     public Map<Integer, BigDecimal> getMinPriceByCinema() {
 
         Map<Integer, BigDecimal> prices =
@@ -27,7 +23,7 @@ public class PricingRepository extends DBContext {
                 "SELECT cinema_id, "
                 + "MIN(price) AS min_price "
                 + "FROM Pricing "
-                + "WHERE status = ? "
+                + "WHERE status = 'ACTIVE' "
                 + "AND start_date <= "
                 + "CAST(SYSDATETIME() AS DATE) "
                 + "AND (end_date IS NULL "
@@ -40,43 +36,24 @@ public class PricingRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setString(
-                    1,
-                    "ACTIVE"
-            );
-
             ResultSet rs =
                     ps.executeQuery();
 
             while (rs.next()) {
 
-                int cinemaId =
-                        rs.getInt(
-                                "cinema_id"
-                        );
-
-                BigDecimal minPrice =
-                        rs.getBigDecimal(
-                                "min_price"
-                        );
-
                 prices.put(
-                        cinemaId,
-                        minPrice
+                        rs.getInt("cinema_id"),
+                        rs.getBigDecimal("min_price")
                 );
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return prices;
     }
 
-    // =========================================================
-    // LẤY TẤT CẢ GIÁ CỦA MỘT RẠP
-    // =========================================================
     public List<Pricing> findByCinemaId(
             int cinemaId) {
 
@@ -84,23 +61,36 @@ public class PricingRepository extends DBContext {
                 new ArrayList<>();
 
         String sql =
-                "SELECT pricing_id, cinema_id, "
-                + "seat_type, price, "
-                + "start_date, end_date, status "
-                + "FROM Pricing "
-                + "WHERE cinema_id = ? "
-                + "ORDER BY seat_type, "
-                + "start_date DESC, pricing_id DESC";
+                "SELECT p.pricing_id, "
+                + "p.cinema_id, "
+                + "p.movie_id, "
+                + "m.title AS movie_title, "
+                + "p.room_type, "
+                + "p.seat_type, "
+                + "p.day_type, "
+                + "p.special_date, "
+                + "p.start_time, "
+                + "p.end_time, "
+                + "p.price, "
+                + "p.start_date, "
+                + "p.end_date, "
+                + "p.status "
+                + "FROM Pricing p "
+                + "LEFT JOIN Movie m "
+                + "ON p.movie_id = m.movie_id "
+                + "WHERE p.cinema_id = ? "
+                + "ORDER BY "
+                + "p.status DESC, "
+                + "p.special_date DESC, "
+                + "p.seat_type, "
+                + "p.pricing_id DESC";
 
         try {
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    cinemaId
-            );
+            ps.setInt(1, cinemaId);
 
             ResultSet rs =
                     ps.executeQuery();
@@ -113,186 +103,69 @@ public class PricingRepository extends DBContext {
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return pricingList;
     }
 
-    // =========================================================
-    // TÌM 1 PRICING
-    // Đồng thời kiểm tra thuộc đúng rạp của Manager.
-    // =========================================================
     public Pricing findByIdAndCinema(
             int pricingId,
             int cinemaId) {
 
         String sql =
-                "SELECT pricing_id, cinema_id, "
-                + "seat_type, price, "
-                + "start_date, end_date, status "
-                + "FROM Pricing "
-                + "WHERE pricing_id = ? "
-                + "AND cinema_id = ?";
+                "SELECT p.pricing_id, "
+                + "p.cinema_id, "
+                + "p.movie_id, "
+                + "m.title AS movie_title, "
+                + "p.room_type, "
+                + "p.seat_type, "
+                + "p.day_type, "
+                + "p.special_date, "
+                + "p.start_time, "
+                + "p.end_time, "
+                + "p.price, "
+                + "p.start_date, "
+                + "p.end_date, "
+                + "p.status "
+                + "FROM Pricing p "
+                + "LEFT JOIN Movie m "
+                + "ON p.movie_id = m.movie_id "
+                + "WHERE p.pricing_id = ? "
+                + "AND p.cinema_id = ?";
 
         try {
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    pricingId
-            );
-
-            ps.setInt(
-                    2,
-                    cinemaId
-            );
+            ps.setInt(1, pricingId);
+            ps.setInt(2, cinemaId);
 
             ResultSet rs =
                     ps.executeQuery();
 
             if (rs.next()) {
-
                 return mapPricing(rs);
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return null;
     }
 
-    // =========================================================
-    // KIỂM TRA KHOẢNG GIÁ ACTIVE BỊ CHỒNG
-    //
-    // Ví dụ:
-    // giá cũ: 01/10 -> 31/10
-    // giá mới: 15/10 -> 15/11
-    // => overlap = true
-    // =========================================================
-    public boolean hasOverlappingActivePeriod(
-            int cinemaId,
-            String seatType,
-            Date startDate,
-            Date endDate,
-            Integer excludePricingId) {
-
-        StringBuilder sql =
-                new StringBuilder();
-
-        sql.append(
-                "SELECT TOP 1 pricing_id "
-        );
-
-        sql.append(
-                "FROM Pricing "
-        );
-
-        sql.append(
-                "WHERE cinema_id = ? "
-        );
-
-        sql.append(
-                "AND seat_type = ? "
-        );
-
-        sql.append(
-                "AND status = 'ACTIVE' "
-        );
-
-        if (excludePricingId != null) {
-
-            sql.append(
-                    "AND pricing_id <> ? "
-            );
-        }
-
-        // Pricing cũ phải chưa kết thúc
-        // trước ngày pricing mới bắt đầu.
-        sql.append(
-                "AND (end_date IS NULL "
-                + "OR end_date >= ?) "
-        );
-
-        // Nếu pricing mới có end date
-        // thì pricing cũ phải bắt đầu
-        // trước hoặc đúng end date mới.
-        if (endDate != null) {
-
-            sql.append(
-                    "AND start_date <= ? "
-            );
-        }
-
-        try {
-
-            PreparedStatement ps =
-                    conn.prepareStatement(
-                            sql.toString()
-                    );
-
-            int index = 1;
-
-            ps.setInt(
-                    index++,
-                    cinemaId
-            );
-
-            ps.setString(
-                    index++,
-                    seatType
-            );
-
-            if (excludePricingId != null) {
-
-                ps.setInt(
-                        index++,
-                        excludePricingId
-                );
-            }
-
-            ps.setDate(
-                    index++,
-                    startDate
-            );
-
-            if (endDate != null) {
-
-                ps.setDate(
-                        index,
-                        endDate
-                );
-            }
-
-            ResultSet rs =
-                    ps.executeQuery();
-
-            return rs.next();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    // =========================================================
-    // THÊM GIÁ
-    // =========================================================
     public boolean insert(
             Pricing pricing) {
 
         String sql =
                 "INSERT INTO Pricing "
-                + "(cinema_id, seat_type, price, "
-                + "start_date, end_date, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(cinema_id, movie_id, room_type, "
+                + "seat_type, day_type, special_date, "
+                + "start_time, end_time, "
+                + "price, start_date, end_date, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
 
@@ -304,62 +177,124 @@ public class PricingRepository extends DBContext {
                     pricing.getCinemaId()
             );
 
-            ps.setString(
+            setNullableInteger(
+                    ps,
                     2,
+                    pricing.getMovieId()
+            );
+
+            setNullableString(
+                    ps,
+                    3,
+                    pricing.getRoomType()
+            );
+
+            ps.setString(
+                    4,
                     pricing.getSeatType()
             );
 
-            ps.setBigDecimal(
-                    3,
-                    pricing.getPrice()
+            ps.setString(
+                    5,
+                    pricing.getDayType()
             );
 
-            ps.setDate(
-                    4,
-                    pricing.getStartDate()
-            );
-
-            if (pricing.getEndDate()
-                    == null) {
+            if (pricing.getSpecialDate() == null) {
 
                 ps.setNull(
-                        5,
-                        java.sql.Types.DATE
+                        6,
+                        Types.DATE
                 );
 
             } else {
 
                 ps.setDate(
-                        5,
+                        6,
+                        pricing.getSpecialDate()
+                );
+            }
+
+            if (pricing.getStartTime() == null) {
+
+                ps.setNull(
+                        7,
+                        Types.TIME
+                );
+
+            } else {
+
+                ps.setTime(
+                        7,
+                        pricing.getStartTime()
+                );
+            }
+
+            if (pricing.getEndTime() == null) {
+
+                ps.setNull(
+                        8,
+                        Types.TIME
+                );
+
+            } else {
+
+                ps.setTime(
+                        8,
+                        pricing.getEndTime()
+                );
+            }
+
+            ps.setBigDecimal(
+                    9,
+                    pricing.getPrice()
+            );
+
+            ps.setDate(
+                    10,
+                    pricing.getStartDate()
+            );
+
+            if (pricing.getEndDate() == null) {
+
+                ps.setNull(
+                        11,
+                        Types.DATE
+                );
+
+            } else {
+
+                ps.setDate(
+                        11,
                         pricing.getEndDate()
                 );
             }
 
             ps.setString(
-                    6,
+                    12,
                     pricing.getStatus()
             );
 
-            return ps.executeUpdate()
-                    > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // CẬP NHẬT GIÁ
-    // =========================================================
     public boolean update(
             Pricing pricing) {
 
         String sql =
                 "UPDATE Pricing "
-                + "SET seat_type = ?, "
+                + "SET movie_id = ?, "
+                + "room_type = ?, "
+                + "seat_type = ?, "
+                + "day_type = ?, "
+                + "special_date = ?, "
+                + "start_time = ?, "
+                + "end_time = ?, "
                 + "price = ?, "
                 + "start_date = ?, "
                 + "end_date = ?, "
@@ -372,66 +307,122 @@ public class PricingRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setString(
+            setNullableInteger(
+                    ps,
                     1,
+                    pricing.getMovieId()
+            );
+
+            setNullableString(
+                    ps,
+                    2,
+                    pricing.getRoomType()
+            );
+
+            ps.setString(
+                    3,
                     pricing.getSeatType()
             );
 
-            ps.setBigDecimal(
-                    2,
-                    pricing.getPrice()
+            ps.setString(
+                    4,
+                    pricing.getDayType()
             );
 
-            ps.setDate(
-                    3,
-                    pricing.getStartDate()
-            );
-
-            if (pricing.getEndDate()
-                    == null) {
+            if (pricing.getSpecialDate() == null) {
 
                 ps.setNull(
-                        4,
-                        java.sql.Types.DATE
+                        5,
+                        Types.DATE
                 );
 
             } else {
 
                 ps.setDate(
-                        4,
+                        5,
+                        pricing.getSpecialDate()
+                );
+            }
+
+            if (pricing.getStartTime() == null) {
+
+                ps.setNull(
+                        6,
+                        Types.TIME
+                );
+
+            } else {
+
+                ps.setTime(
+                        6,
+                        pricing.getStartTime()
+                );
+            }
+
+            if (pricing.getEndTime() == null) {
+
+                ps.setNull(
+                        7,
+                        Types.TIME
+                );
+
+            } else {
+
+                ps.setTime(
+                        7,
+                        pricing.getEndTime()
+                );
+            }
+
+            ps.setBigDecimal(
+                    8,
+                    pricing.getPrice()
+            );
+
+            ps.setDate(
+                    9,
+                    pricing.getStartDate()
+            );
+
+            if (pricing.getEndDate() == null) {
+
+                ps.setNull(
+                        10,
+                        Types.DATE
+                );
+
+            } else {
+
+                ps.setDate(
+                        10,
                         pricing.getEndDate()
                 );
             }
 
             ps.setString(
-                    5,
+                    11,
                     pricing.getStatus()
             );
 
             ps.setInt(
-                    6,
+                    12,
                     pricing.getPricingId()
             );
 
             ps.setInt(
-                    7,
+                    13,
                     pricing.getCinemaId()
             );
 
-            return ps.executeUpdate()
-                    > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // XÓA GIÁ
-    // =========================================================
     public boolean delete(
             int pricingId,
             int cinemaId) {
@@ -446,38 +437,86 @@ public class PricingRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    pricingId
-            );
+            ps.setInt(1, pricingId);
+            ps.setInt(2, cinemaId);
 
-            ps.setInt(
-                    2,
-                    cinemaId
-            );
-
-            return ps.executeUpdate()
-                    > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // RESULTSET -> PRICING
-    // =========================================================
+    private void setNullableInteger(
+            PreparedStatement ps,
+            int index,
+            Integer value)
+            throws Exception {
+
+        if (value == null) {
+
+            ps.setNull(
+                    index,
+                    Types.INTEGER
+            );
+
+        } else {
+
+            ps.setInt(
+                    index,
+                    value
+            );
+        }
+    }
+
+    private void setNullableString(
+            PreparedStatement ps,
+            int index,
+            String value)
+            throws Exception {
+
+        if (value == null) {
+
+            ps.setNull(
+                    index,
+                    Types.VARCHAR
+            );
+
+        } else {
+
+            ps.setString(
+                    index,
+                    value
+            );
+        }
+    }
+
     private Pricing mapPricing(
             ResultSet rs)
             throws Exception {
 
+        Integer movieId = null;
+
+        int movieValue =
+                rs.getInt("movie_id");
+
+        if (!rs.wasNull()) {
+            movieId = movieValue;
+        }
+
         return new Pricing(
                 rs.getInt("pricing_id"),
                 rs.getInt("cinema_id"),
+                movieId,
+                rs.getString("movie_title"),
+                rs.getString("room_type"),
                 rs.getString("seat_type"),
+                rs.getString("day_type"),
+                rs.getDate("special_date"),
+                rs.getTime("start_time"),
+                rs.getTime("end_time"),
                 rs.getBigDecimal("price"),
                 rs.getDate("start_date"),
                 rs.getDate("end_date"),

@@ -9,33 +9,22 @@ public class RoomService {
     private final RoomRepository roomRepository;
 
     public RoomService() {
-
-        roomRepository =
-                new RoomRepository();
+        roomRepository = new RoomRepository();
     }
 
-    // =========================================================
-    // DANH SÁCH PHÒNG
-    // =========================================================
     public List<Room> getRoomsByCinema(
             int cinemaId) {
 
         if (cinemaId <= 0) {
-
             throw new IllegalArgumentException(
                     "Rạp không hợp lệ."
             );
         }
 
         return roomRepository
-                .findByCinemaId(
-                        cinemaId
-                );
+                .findByCinemaId(cinemaId);
     }
 
-    // =========================================================
-    // LẤY 1 PHÒNG
-    // =========================================================
     public Room getRoom(
             int roomId,
             int cinemaId) {
@@ -57,41 +46,31 @@ public class RoomService {
 
     // =========================================================
     // TẠO PHÒNG
-    //
-    // 2D   = 5 x 8  = 40 ghế
-    // 3D   = 5 x 10 = 50 ghế
-    // IMAX = 6 x 10 = 60 ghế
+    // Không còn cố định số ghế theo 2D/3D/IMAX.
     // =========================================================
     public void createRoom(
             int cinemaId,
             String roomName,
             String roomType,
+            int rowCount,
+            int seatsPerRow,
             String status) {
 
         String normalizedType =
-                normalizeRoomType(
-                        roomType
-                );
+                normalizeRoomType(roomType);
 
-        int rowCount =
-                getRowCount(
-                        normalizedType
-                );
-
-        int seatsPerRow =
-                getSeatsPerRow(
-                        normalizedType
-                );
+        validateLayout(
+                rowCount,
+                seatsPerRow
+        );
 
         int capacity =
-                rowCount
-                * seatsPerRow;
+                rowCount * seatsPerRow;
 
         validateRoom(
                 cinemaId,
                 null,
                 roomName,
-                capacity,
                 normalizedType,
                 status
         );
@@ -120,17 +99,16 @@ public class RoomService {
     }
 
     // =========================================================
-    // CẬP NHẬT PHÒNG
+    // SỬA PHÒNG
     //
-    // Loại phòng và capacity được giữ cố định.
-    // Manager chỉ đổi:
-    // - tên phòng
-    // - trạng thái
+    // Capacity không nhập trực tiếp.
+    // Muốn đổi số ghế -> Quản lý ghế.
     // =========================================================
     public void updateRoom(
             int roomId,
             int cinemaId,
             String roomName,
+            String roomType,
             String status) {
 
         Room currentRoom =
@@ -147,16 +125,17 @@ public class RoomService {
             );
         }
 
+        String normalizedType =
+                normalizeRoomType(roomType);
+
         validateRoom(
                 cinemaId,
                 roomId,
                 roomName,
-                currentRoom.getCapacity(),
-                currentRoom.getRoomType(),
+                normalizedType,
                 status
         );
 
-        // Không cho tắt phòng đang có suất chiếu tương lai.
         if ("ACTIVE".equals(
                 currentRoom.getStatus())
                 && "INACTIVE".equals(status)
@@ -177,12 +156,11 @@ public class RoomService {
                         cinemaId,
                         roomName.trim(),
                         currentRoom.getCapacity(),
-                        currentRoom.getRoomType(),
+                        normalizedType,
                         status
                 );
 
-        if (!roomRepository
-                .update(room)) {
+        if (!roomRepository.update(room)) {
 
             throw new IllegalArgumentException(
                     "Không thể cập nhật phòng."
@@ -190,12 +168,6 @@ public class RoomService {
         }
     }
 
-    // =========================================================
-    // XÓA PHÒNG
-    //
-    // Phòng mới được tạo có ghế tự động,
-    // nên khi xóa phòng sẽ xóa ghế cùng lúc.
-    // =========================================================
     public void deleteRoom(
             int roomId,
             int cinemaId) {
@@ -222,22 +194,16 @@ public class RoomService {
             );
         }
 
-        // Phòng đã có showtime thì giữ lại lịch sử.
         if (roomRepository
-                .hasAnyShowtime(
-                        roomId
-                )) {
+                .hasAnyShowtime(roomId)) {
 
             throw new IllegalArgumentException(
                     "Không thể xóa phòng đã có lịch sử suất chiếu."
             );
         }
 
-        // Kiểm tra thêm lịch sử ticket.
         if (roomRepository
-                .hasSeatTicketHistory(
-                        roomId
-                )) {
+                .hasSeatTicketHistory(roomId)) {
 
             throw new IllegalArgumentException(
                     "Không thể xóa phòng vì ghế đã có lịch sử vé."
@@ -256,30 +222,50 @@ public class RoomService {
         }
     }
 
-    // =========================================================
-    // LẤY CAPACITY THEO LOẠI PHÒNG
-    // Dùng cho Controller/JSP khi có lỗi form.
-    // =========================================================
-    public int getCapacityByRoomType(
-            String roomType) {
+    private void validateLayout(
+            int rowCount,
+            int seatsPerRow) {
 
-        String type =
-                normalizeRoomType(
-                        roomType
-                );
+        if (rowCount <= 0) {
 
-        return getRowCount(type)
-                * getSeatsPerRow(type);
+            throw new IllegalArgumentException(
+                    "Số hàng phải lớn hơn 0."
+            );
+        }
+
+        if (seatsPerRow <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Số ghế mỗi hàng phải lớn hơn 0."
+            );
+        }
+
+        if (rowCount > 30) {
+
+            throw new IllegalArgumentException(
+                    "Số hàng tối đa là 30."
+            );
+        }
+
+        if (seatsPerRow > 50) {
+
+            throw new IllegalArgumentException(
+                    "Số ghế mỗi hàng tối đa là 50."
+            );
+        }
+
+        if (rowCount * seatsPerRow > 500) {
+
+            throw new IllegalArgumentException(
+                    "Một phòng không được vượt quá 500 ghế."
+            );
+        }
     }
 
-    // =========================================================
-    // VALIDATE
-    // =========================================================
     private void validateRoom(
             int cinemaId,
             Integer roomId,
             String roomName,
-            int capacity,
             String roomType,
             String status) {
 
@@ -298,24 +284,14 @@ public class RoomService {
             );
         }
 
-        if (roomName.trim().length()
-                > 100) {
+        if (roomName.trim().length() > 100) {
 
             throw new IllegalArgumentException(
                     "Tên phòng không được vượt quá 100 ký tự."
             );
         }
 
-        if (capacity <= 0) {
-
-            throw new IllegalArgumentException(
-                    "Sức chứa phòng không hợp lệ."
-            );
-        }
-
-        validateRoomType(
-                roomType
-        );
+        validateRoomType(roomType);
 
         if (!"ACTIVE".equals(status)
                 && !"INACTIVE".equals(status)) {
@@ -338,9 +314,6 @@ public class RoomService {
         }
     }
 
-    // =========================================================
-    // VALIDATE ROOM TYPE
-    // =========================================================
     private void validateRoomType(
             String roomType) {
 
@@ -354,9 +327,6 @@ public class RoomService {
         }
     }
 
-    // =========================================================
-    // CHUẨN HÓA ROOM TYPE
-    // =========================================================
     private String normalizeRoomType(
             String roomType) {
 
@@ -369,59 +339,10 @@ public class RoomService {
         }
 
         String type =
-                roomType.trim()
-                        .toUpperCase();
+                roomType.trim().toUpperCase();
 
         validateRoomType(type);
 
         return type;
-    }
-
-    // =========================================================
-    // SỐ HÀNG THEO LOẠI PHÒNG
-    // =========================================================
-    private int getRowCount(
-            String roomType) {
-
-        switch (roomType) {
-
-            case "2D":
-                return 5;
-
-            case "3D":
-                return 5;
-
-            case "IMAX":
-                return 6;
-
-            default:
-                throw new IllegalArgumentException(
-                        "Loại phòng không hợp lệ."
-                );
-        }
-    }
-
-    // =========================================================
-    // SỐ GHẾ MỖI HÀNG
-    // =========================================================
-    private int getSeatsPerRow(
-            String roomType) {
-
-        switch (roomType) {
-
-            case "2D":
-                return 8;
-
-            case "3D":
-                return 10;
-
-            case "IMAX":
-                return 10;
-
-            default:
-                throw new IllegalArgumentException(
-                        "Loại phòng không hợp lệ."
-                );
-        }
     }
 }
