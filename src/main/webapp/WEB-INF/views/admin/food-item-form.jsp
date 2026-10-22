@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
@@ -12,6 +13,9 @@
     .field label { font-weight:600; }
     .field input, .field select, .field textarea { width:100%; box-sizing:border-box; padding:11px 12px; color:#f5f5f5; background:#101012; border:1px solid #494951; border-radius:5px; }
     .field textarea { min-height:90px; resize:vertical; }
+    .image-preview { display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-top:10px; }
+    .image-preview img { display:block; max-width:240px; max-height:160px; object-fit:contain; background:#101012; border:1px solid #494951; border-radius:6px; padding:5px; }
+    .image-help { color:#aaa; font-size:13px; margin:0; }
     .form-actions { display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
     .primary-button, .secondary-link { padding:10px 15px; border-radius:5px; border:0; text-decoration:none; font-weight:700; cursor:pointer; }
     .primary-button { background:#e50914; color:white; }
@@ -26,7 +30,7 @@
     <c:if test="${not empty error}"><div class="notice"><c:out value="${error}" /></div></c:if>
 
     <div class="form-card">
-        <form method="post" action="${pageContext.request.contextPath}/admin/food-item-form">
+        <form method="post" enctype="multipart/form-data" action="${pageContext.request.contextPath}/admin/food-item-form">
             <input type="hidden" name="id" value="${foodItem.foodItemId}">
             <div class="form-grid">
                 <div class="field full">
@@ -49,8 +53,26 @@
                     <textarea id="description" name="description" maxlength="255"><c:out value="${foodItem.description}" /></textarea>
                 </div>
                 <div class="field full">
-                    <label for="imageUrl">Đường dẫn hình ảnh</label>
-                    <input id="imageUrl" name="imageUrl" maxlength="500" value="${foodItem.imageUrl}">
+                    <label for="foodImage">Ảnh sản phẩm (JPG, PNG hoặc GIF; tối đa 5 MB)</label>
+                    <input id="foodImage" name="foodImage" type="file"
+                           accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif">
+                    <p class="image-help">Chọn ảnh từ máy tính. Nếu đang sửa sản phẩm, để trống sẽ giữ ảnh hiện tại.</p>
+                    <c:if test="${not empty foodItem.imageUrl}">
+                        <c:set var="currentImagePath" value="${fn:trim(foodItem.imageUrl)}" />
+                        <c:choose>
+                            <c:when test="${fn:startsWith(currentImagePath, 'http://') or fn:startsWith(currentImagePath, 'https://') or fn:startsWith(currentImagePath, '/')}">
+                                <c:url var="currentImageSrc" value="${currentImagePath}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="currentImageSrc" value="/${currentImagePath}" />
+                            </c:otherwise>
+                        </c:choose>
+                        <div class="image-preview">
+                            <img src="<c:out value='${currentImageSrc}' />"
+                                 alt="Ảnh sản phẩm hiện tại"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    </c:if>
                 </div>
                 <div class="field">
                     <label for="status">Trạng thái</label>
