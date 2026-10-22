@@ -231,7 +231,7 @@
        ========================================================= */
 
     .seat-rows {
-        min-width: 760px;
+        min-width: 820px;
     }
 
     .seat-row {
@@ -242,13 +242,48 @@
         margin-bottom: 17px;
     }
 
-    .row-name {
-        width: 65px;
+    .row-control {
+        width: 105px;
         flex-shrink: 0;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .row-name {
         text-align: center;
         color: #999;
         font-size: 13px;
         font-weight: 700;
+    }
+
+    .row-select-button {
+        width: 95px;
+
+        padding: 5px 7px;
+
+        border: 1px solid #444;
+        border-radius: 5px;
+
+        background: #1c1c20;
+        color: #bbb;
+
+        cursor: pointer;
+
+        font-size: 10px;
+    }
+
+    .row-select-button:hover {
+        border-color: #ff1744;
+        color: white;
+    }
+
+    .row-select-button.row-selected {
+        background: #ff1744;
+        border-color: #ff1744;
+        color: white;
     }
 
     .row-seats {
@@ -637,16 +672,12 @@
 
         <div class="header-actions">
 
-            <!-- THÊM 1 GHẾ -->
-
             <a class="btn-primary"
                href="${pageContext.request.contextPath}/admin/seat-form?roomId=${room.roomId}">
 
                 + Thêm ghế
 
             </a>
-
-            <!-- QUAY LẠI -->
 
             <a class="back-button"
                href="${pageContext.request.contextPath}/admin/rooms">
@@ -850,10 +881,6 @@
                name="roomId"
                value="${room.roomId}">
 
-        <!-- =================================================
-             SEAT MAP
-             ================================================= -->
-
         <div class="seat-map-card">
 
             <!-- SCREEN -->
@@ -879,24 +906,12 @@
                         <c:forEach var="rowEntry"
                                    items="${seatRows}">
 
-                            <!--
-                                1 -> A
-                                2 -> B
-                                ...
-                                26 -> Z
-                                > 26 -> R27, R28...
-                            -->
-
                             <c:choose>
 
                                 <c:when test="${rowEntry.key <= 26}">
 
                                     <c:set var="rowLabel"
-                                           value="${fn:substring(
-                                               'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                                               rowEntry.key - 1,
-                                               rowEntry.key
-                                           )}" />
+                                           value="${fn:substring('ABCDEFGHIJKLMNOPQRSTUVWXYZ', rowEntry.key - 1, rowEntry.key)}" />
 
                                 </c:when>
 
@@ -911,12 +926,31 @@
 
                             <div class="seat-row">
 
-                                <div class="row-name">
+                                <!-- =================================
+                                     TÊN HÀNG + CHỌN NGUYÊN HÀNG
+                                     ================================= -->
 
-                                    HÀNG
-                                    ${rowLabel}
+                                <div class="row-control">
+
+                                    <div class="row-name">
+
+                                        HÀNG ${rowLabel}
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="row-select-button"
+                                            data-row-label="${rowLabel}">
+
+                                        Chọn hàng ${rowLabel}
+
+                                    </button>
 
                                 </div>
+
+                                <!-- =================================
+                                     GHẾ
+                                     ================================= -->
 
                                 <div class="row-seats">
 
@@ -1077,7 +1111,7 @@
                         class="small-button"
                         id="clearButton">
 
-                    Bỏ chọn
+                    Bỏ chọn tất cả
 
                 </button>
 
@@ -1106,7 +1140,12 @@
 
             <div class="bulk-description">
 
-                Bạn có thể đổi loại ghế,
+                Bạn có thể chọn từng ghế,
+                chọn nguyên một hàng hoặc chọn tất cả ghế.
+
+                <br>
+
+                Sau đó có thể đổi loại ghế,
                 đổi trạng thái hoặc xóa nhiều ghế cùng lúc.
 
                 <br>
@@ -1118,8 +1157,6 @@
             </div>
 
             <div class="bulk-controls">
-
-                <!-- TYPE -->
 
                 <div class="form-group">
 
@@ -1151,8 +1188,6 @@
 
                 </div>
 
-                <!-- STATUS -->
-
                 <div class="form-group">
 
                     <label>
@@ -1179,8 +1214,6 @@
 
                 </div>
 
-                <!-- UPDATE -->
-
                 <button type="submit"
                         name="action"
                         value="bulkUpdate"
@@ -1189,8 +1222,6 @@
                     Cập nhật ghế
 
                 </button>
-
-                <!-- DELETE -->
 
                 <button type="submit"
                         name="action"
@@ -1220,6 +1251,11 @@
     const checkboxes =
             document.querySelectorAll(
                     ".seat-checkbox"
+            );
+
+    const rowSelectButtons =
+            document.querySelectorAll(
+                    ".row-select-button"
             );
 
     const selectedCount =
@@ -1295,10 +1331,67 @@
 
         editOneButton.disabled =
                 count !== 1;
+
+        /* =====================================================
+           UPDATE NÚT CHỌN TỪNG HÀNG
+           ===================================================== */
+
+        rowSelectButtons.forEach(
+            function (button) {
+
+                const seatRow =
+                        button.closest(
+                                ".seat-row"
+                        );
+
+                const rowCheckboxes =
+                        seatRow.querySelectorAll(
+                                ".seat-checkbox"
+                        );
+
+                let allSelected =
+                        rowCheckboxes.length > 0;
+
+                rowCheckboxes.forEach(
+                    function (checkbox) {
+
+                        if (!checkbox.checked) {
+
+                            allSelected =
+                                    false;
+                        }
+                    }
+                );
+
+                const rowLabel =
+                        button.dataset.rowLabel;
+
+                if (allSelected) {
+
+                    button.textContent =
+                            "Bỏ hàng "
+                            + rowLabel;
+
+                    button.classList.add(
+                            "row-selected"
+                    );
+
+                } else {
+
+                    button.textContent =
+                            "Chọn hàng "
+                            + rowLabel;
+
+                    button.classList.remove(
+                            "row-selected"
+                    );
+                }
+            }
+        );
     }
 
     /* =========================================================
-       CLICK SEAT
+       CLICK TỪNG GHẾ
        ========================================================= */
 
     checkboxes.forEach(
@@ -1307,6 +1400,62 @@
             checkbox.addEventListener(
                     "change",
                     updateSelectionUI
+            );
+        }
+    );
+
+    /* =========================================================
+       CHỌN / BỎ CHỌN NGUYÊN MỘT HÀNG
+       ========================================================= */
+
+    rowSelectButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                    "click",
+                    function () {
+
+                        const seatRow =
+                                button.closest(
+                                        ".seat-row"
+                                );
+
+                        const rowCheckboxes =
+                                seatRow.querySelectorAll(
+                                        ".seat-checkbox"
+                                );
+
+                        let allSelected =
+                                rowCheckboxes.length > 0;
+
+                        rowCheckboxes.forEach(
+                            function (checkbox) {
+
+                                if (!checkbox.checked) {
+
+                                    allSelected =
+                                            false;
+                                }
+                            }
+                        );
+
+                        /*
+                           Nếu cả hàng đang được chọn
+                           thì bỏ chọn cả hàng.
+
+                           Nếu chưa chọn đủ
+                           thì chọn nguyên hàng.
+                        */
+                        rowCheckboxes.forEach(
+                            function (checkbox) {
+
+                                checkbox.checked =
+                                        !allSelected;
+                            }
+                        );
+
+                        updateSelectionUI();
+                    }
             );
         }
     );
@@ -1332,7 +1481,7 @@
     );
 
     /* =========================================================
-       CLEAR
+       CLEAR ALL
        ========================================================= */
 
     clearButton.addEventListener(
@@ -1404,19 +1553,11 @@
                     return;
                 }
 
-                /*
-                   Xác định button nào vừa submit:
-                   bulkUpdate hay deleteSelected.
-                */
                 const action =
                         event.submitter
                         ? event.submitter.value
                         : "";
 
-                /*
-                   Nếu Update thì phải chọn
-                   ít nhất Type hoặc Status.
-                */
                 if (action === "bulkUpdate") {
 
                     if (bulkSeatType.value === ""
