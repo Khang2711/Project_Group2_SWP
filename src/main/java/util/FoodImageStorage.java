@@ -102,6 +102,21 @@ public final class FoodImageStorage {
         return file;
     }
 
+    public static void deleteUploadedImage(String imageUrl) {
+        if (imageUrl == null || !imageUrl.startsWith(URL_PREFIX)) {
+            return;
+        }
+
+        Path file = findUploadedImage(imageUrl.substring(URL_PREFIX.length()));
+        if (file != null) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static Path getFoodImageDirectory() {
         String configuredRoot = System.getProperty("fcinema.upload.dir");
         Path root;
