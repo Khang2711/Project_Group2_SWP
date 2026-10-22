@@ -33,12 +33,9 @@
         .site-header .header-container {
             max-width: 1400px;
             margin: 0 auto;
-
             display: flex;
             align-items: center;
-
             gap: 28px;
-
             padding: 14px 22px;
         }
 
@@ -49,235 +46,168 @@
 
         .site-header .main-nav {
             flex: 1;
-
             display: flex;
             justify-content: center;
             align-items: center;
-
             gap: 24px;
-
             min-width: 0;
         }
 
         .site-header .header-actions {
             margin-left: auto;
-
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             flex-shrink: 0;
         }
 
-        /* =========================
-           MANAGER DROPDOWN
-           ========================= */
-
-        .manager-menu {
+        .account-menu {
             position: relative;
         }
 
-        .manager-menu summary {
+        .account-menu summary {
             list-style: none;
         }
 
-        .manager-menu summary::-webkit-details-marker {
+        .account-menu summary::-webkit-details-marker {
             display: none;
         }
 
-        .manager-menu-button {
-            min-width: 165px;
-
+        .account-menu-button {
+            min-width: 170px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             gap: 12px;
-
-            padding: 10px 16px;
-
-            border: 1px solid #3b3b42;
-            border-radius: 9px;
-
+            padding: 10px 15px;
             background: #1c1c21;
             color: white;
-
+            border: 1px solid #3b3b42;
+            border-radius: 9px;
             cursor: pointer;
-
             font-size: 14px;
             font-weight: 600;
-
             user-select: none;
-
             transition: 0.18s;
         }
 
-        .manager-menu-button:hover {
+        .account-menu-button:hover {
             border-color: #ff1744;
             background: #242429;
         }
 
-        .manager-account {
+        .account-info {
             display: flex;
             align-items: center;
-
-            gap: 9px;
-
             min-width: 0;
+            gap: 9px;
         }
 
-        .manager-avatar {
-            width: 28px;
-            height: 28px;
-
+        .account-avatar {
+            width: 30px;
+            height: 30px;
             flex-shrink: 0;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             border-radius: 50%;
-
             background: #ff1744;
             color: white;
-
             font-size: 13px;
             font-weight: 700;
         }
 
-        .manager-name {
-            max-width: 120px;
-
+        .account-name {
+            max-width: 130px;
             overflow: hidden;
-
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
-        .manager-arrow {
+        .account-arrow {
             color: #aaa;
             font-size: 11px;
-
             transition: 0.2s;
         }
 
-        .manager-menu[open] .manager-arrow {
+        .account-menu[open] .account-arrow {
             transform: rotate(180deg);
         }
 
-        .manager-dropdown {
+        .account-dropdown {
             position: absolute;
-
             top: calc(100% + 10px);
             right: 0;
-
-            width: 270px;
-
+            width: 275px;
             overflow: hidden;
-
             background: #1b1b20;
-
             border: 1px solid #34343b;
-            border-radius: 10px;
-
-            box-shadow:
-                0 18px 45px
-                rgba(0, 0, 0, 0.45);
-
+            border-radius: 11px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.48);
             z-index: 9999;
         }
 
-        .manager-dropdown-header {
-            padding: 14px 17px;
-
+        .account-dropdown-header {
+            padding: 15px 17px;
             border-bottom: 1px solid #303036;
-
             color: #888;
-
             font-size: 11px;
             font-weight: 700;
-
             letter-spacing: 1px;
         }
 
-        .manager-dropdown a {
+        .account-dropdown a {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             width: 100%;
             box-sizing: border-box;
-
             padding: 13px 17px;
-
             color: #ddd;
-
             text-decoration: none;
-
             font-size: 14px;
-
             transition: 0.15s;
         }
 
-        .manager-dropdown a:hover {
+        .account-dropdown a:hover {
             background: #29292f;
             color: white;
         }
 
-        .manager-dropdown-icon {
-            width: 20px;
-
+        .menu-icon {
+            width: 22px;
             flex-shrink: 0;
-
             text-align: center;
-
             color: #999;
         }
 
-        .manager-dropdown a:hover
-        .manager-dropdown-icon {
+        .account-dropdown a:hover .menu-icon {
             color: #ff1744;
         }
 
-        .manager-menu-divider {
+        .menu-divider {
             height: 1px;
-
             margin: 5px 0;
-
             background: #303036;
         }
 
-        .manager-dropdown .logout-menu {
+        .account-dropdown .logout-menu {
             color: #ff718b;
         }
 
-        .manager-dropdown .logout-menu:hover {
+        .account-dropdown .logout-menu:hover {
             background: #351a20;
             color: #ff879b;
         }
 
-        .manager-dropdown .logout-menu
-        .manager-dropdown-icon {
+        .account-dropdown .logout-menu .menu-icon {
             color: #ff526f;
         }
 
-        /* =========================
-           NORMAL ACCOUNT
-           ========================= */
-
-        .normal-profile-button {
-            display: inline-block;
-
-            padding: 9px 14px;
-
-            border-radius: 6px;
-
-            background: #25252a;
-            color: white;
-
-            text-decoration: none;
+        .guest-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         @media (max-width: 800px) {
@@ -295,18 +225,17 @@
 
         @media (max-width: 550px) {
 
-            .manager-menu {
+            .account-menu {
                 width: 100%;
             }
 
-            .manager-menu-button {
+            .account-menu-button {
                 width: 100%;
             }
 
-            .manager-dropdown {
+            .account-dropdown {
                 left: 0;
                 right: auto;
-
                 width: 100%;
             }
         }
@@ -326,9 +255,7 @@
         <a href="${pageContext.request.contextPath}/home"
            class="logo">
 
-            <span class="logo-box">
-                F
-            </span>
+            <span class="logo-box">F</span>
 
             <span class="logo-text">
                 F-CINEMA
@@ -339,273 +266,278 @@
 
         <nav class="main-nav">
 
-            <c:choose>
+            <c:if test="${empty sessionScope.user}">
 
-                <c:when test="${empty sessionScope.user
-                                or sessionScope.roleName eq 'CUSTOMER'}">
+                <a href="${pageContext.request.contextPath}/user/movies">
+                    Phim
+                </a>
 
-                    <a href="${pageContext.request.contextPath}/user/movies">
-                        Phim
-                    </a>
-
-                    <c:if test="${not empty sessionScope.user
-                                  and sessionScope.roleName eq 'CUSTOMER'}">
-
-                        <a href="${pageContext.request.contextPath}/user/tickets">
-                            Vé của tôi
-                        </a>
-
-                        <a href="${pageContext.request.contextPath}/user/bookings">
-                            Đơn đặt vé
-                        </a>
-
-                    </c:if>
-
-                </c:when>
-
-
-                <c:when test="${sessionScope.roleName eq 'STAFF'}">
-
-                    <a href="${pageContext.request.contextPath}/staff/counter">
-                        Bán tại quầy
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/staff/check-in">
-                        Check-in vé
-                    </a>
-
-                </c:when>
-
-
-                <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
-
-                </c:when>
-
-
-                <c:when test="${sessionScope.roleName eq 'ADMIN'}">
-
-                    <a href="${pageContext.request.contextPath}/system/users">
-                        Quản lý người dùng
-                    </a>
-
-                </c:when>
-
-            </c:choose>
+            </c:if>
 
         </nav>
 
 
         <div class="header-actions">
 
-            <c:choose>
 
-                <c:when test="${not empty sessionScope.user}">
+            <c:if test="${not empty sessionScope.user}">
 
-                    <c:choose>
+                <details class="account-menu"
+                         id="accountMenu">
 
-                        <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+                    <summary class="account-menu-button">
 
-                            <details class="manager-menu"
-                                     id="managerMenu">
+                        <span class="account-info">
 
-                                <summary class="manager-menu-button">
+                            <span class="account-avatar">
 
-                                    <span class="manager-account">
+                                <c:if test="${not empty sessionScope.user.fullName}">
 
-                                        <span class="manager-avatar">
+                                    <c:out value="${fn:substring(sessionScope.user.fullName, 0, 1)}" />
 
-                                            <c:choose>
+                                </c:if>
 
-                                                <c:when test="${not empty sessionScope.user.fullName}">
+                                <c:if test="${empty sessionScope.user.fullName}">
+                                    U
+                                </c:if>
 
-                                                    <c:out value="${fn:substring(sessionScope.user.fullName, 0, 1)}" />
+                            </span>
 
-                                                </c:when>
-
-                                                <c:otherwise>
-                                                    M
-                                                </c:otherwise>
-
-                                            </c:choose>
-
-                                        </span>
-
-                                        <span class="manager-name">
-
-                                            <c:out value="${sessionScope.user.fullName}" />
-
-                                        </span>
-
-                                    </span>
-
-                                    <span class="manager-arrow">
-                                        ▼
-                                    </span>
-
-                                </summary>
-
-
-                                <div class="manager-dropdown">
-
-                                    <div class="manager-dropdown-header">
-                                        CINEMA MANAGER
-                                    </div>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/dashboard">
-
-                                        <span class="manager-dropdown-icon">
-                                            ▣
-                                        </span>
-
-                                        Dashboard
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/cinemas">
-
-                                        <span class="manager-dropdown-icon">
-                                            ★
-                                        </span>
-
-                                        Thông tin rạp
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/rooms">
-
-                                        <span class="manager-dropdown-icon">
-                                            ▦
-                                        </span>
-
-                                        Quản lý phòng chiếu
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/movies">
-
-                                        <span class="manager-dropdown-icon">
-                                            ▶
-                                        </span>
-
-                                        Quản lý phim
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/pricing">
-
-                                        <span class="manager-dropdown-icon">
-                                            $
-                                        </span>
-
-                                        Quản lý giá vé
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/showtimes">
-
-                                        <span class="manager-dropdown-icon">
-                                            ◷
-                                        </span>
-
-                                        Quản lý lịch chiếu
-
-                                    </a>
-
-
-                                    <div class="manager-menu-divider"></div>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/food-items">
-
-                                        <span class="manager-dropdown-icon">
-                                            ●
-                                        </span>
-
-                                        Đồ ăn / thức uống
-
-                                    </a>
-
-
-                                    <a href="${pageContext.request.contextPath}/admin/combos">
-
-                                        <span class="manager-dropdown-icon">
-                                            ◈
-                                        </span>
-
-                                        Quản lý combo
-
-                                    </a>
-
-
-                                    <div class="manager-menu-divider"></div>
-
-
-                                    <a href="${pageContext.request.contextPath}/auth/logout"
-                                       class="logout-menu">
-
-                                        <span class="manager-dropdown-icon">
-                                            ↪
-                                        </span>
-
-                                        Đăng xuất
-
-                                    </a>
-
-                                </div>
-
-                            </details>
-
-                        </c:when>
-
-
-                        <c:when test="${sessionScope.roleName eq 'CUSTOMER'}">
-
-                            <a href="${pageContext.request.contextPath}/user/profile"
-                               class="normal-profile-button">
-
-                                <c:out value="${sessionScope.user.fullName}" />
-
-                            </a>
-
-                            <a href="${pageContext.request.contextPath}/auth/logout"
-                               class="logout-link">
-
-                                Đăng xuất
-
-                            </a>
-
-                        </c:when>
-
-
-                        <c:otherwise>
-
-                            <span class="normal-profile-button">
+                            <span class="account-name">
 
                                 <c:out value="${sessionScope.user.fullName}" />
 
                             </span>
 
-                            <a href="${pageContext.request.contextPath}/auth/logout"
-                               class="logout-link">
+                        </span>
 
-                                Đăng xuất
+                        <span class="account-arrow">
+                            ▼
+                        </span>
+
+                    </summary>
+
+
+                    <div class="account-dropdown">
+
+
+                        <c:if test="${sessionScope.roleName eq 'CUSTOMER'}">
+
+                            <div class="account-dropdown-header">
+                                KHÁCH HÀNG
+                            </div>
+
+                            <a href="${pageContext.request.contextPath}/user/movies">
+
+                                <span class="menu-icon">
+                                    ▶
+                                </span>
+
+                                Phim
 
                             </a>
 
-                        </c:otherwise>
+                            <a href="${pageContext.request.contextPath}/user/profile">
 
-                    </c:choose>
+                                <span class="menu-icon">
+                                    ●
+                                </span>
 
-                </c:when>
+                                Hồ sơ cá nhân
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/user/tickets">
+
+                                <span class="menu-icon">
+                                    🎫
+                                </span>
+
+                                Vé của tôi
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/user/bookings">
+
+                                <span class="menu-icon">
+                                    ▦
+                                </span>
+
+                                Đơn đặt vé
+
+                            </a>
+
+                            <div class="menu-divider"></div>
+
+                        </c:if>
 
 
-                <c:otherwise>
+                        <c:if test="${sessionScope.roleName eq 'STAFF'}">
+
+                            <div class="account-dropdown-header">
+                                NHÂN VIÊN
+                            </div>
+
+                            <a href="${pageContext.request.contextPath}/staff/counter">
+
+                                <span class="menu-icon">
+                                    $
+                                </span>
+
+                                Bán vé tại quầy
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/staff/check-in">
+
+                                <span class="menu-icon">
+                                    ✓
+                                </span>
+
+                                Check-in vé
+
+                            </a>
+
+                            <div class="menu-divider"></div>
+
+                        </c:if>
+
+
+                        <c:if test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+
+                            <div class="account-dropdown-header">
+                                CINEMA MANAGER
+                            </div>
+
+                            <a href="${pageContext.request.contextPath}/admin/dashboard">
+
+                                <span class="menu-icon">
+                                    ▣
+                                </span>
+
+                                Dashboard
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/cinemas">
+
+                                <span class="menu-icon">
+                                    ★
+                                </span>
+
+                                Thông tin rạp
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/rooms">
+
+                                <span class="menu-icon">
+                                    ▦
+                                </span>
+
+                                Quản lý phòng chiếu
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/movies">
+
+                                <span class="menu-icon">
+                                    ▶
+                                </span>
+
+                                Quản lý phim
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/pricing">
+
+                                <span class="menu-icon">
+                                    $
+                                </span>
+
+                                Quản lý giá vé
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/showtimes">
+
+                                <span class="menu-icon">
+                                    ◷
+                                </span>
+
+                                Quản lý lịch chiếu
+
+                            </a>
+
+                            <div class="menu-divider"></div>
+
+                            <a href="${pageContext.request.contextPath}/admin/food-items">
+
+                                <span class="menu-icon">
+                                    ●
+                                </span>
+
+                                Đồ ăn / thức uống
+
+                            </a>
+
+                            <a href="${pageContext.request.contextPath}/admin/combos">
+
+                                <span class="menu-icon">
+                                    ◈
+                                </span>
+
+                                Quản lý combo
+
+                            </a>
+
+                            <div class="menu-divider"></div>
+
+                        </c:if>
+
+
+                        <c:if test="${sessionScope.roleName eq 'ADMIN'}">
+
+                            <div class="account-dropdown-header">
+                                ADMIN
+                            </div>
+
+                            <a href="${pageContext.request.contextPath}/system/users">
+
+                                <span class="menu-icon">
+                                    ♟
+                                </span>
+
+                                Quản lý người dùng
+
+                            </a>
+
+                            <div class="menu-divider"></div>
+
+                        </c:if>
+
+
+                        <a href="${pageContext.request.contextPath}/auth/logout"
+                           class="logout-menu">
+
+                            <span class="menu-icon">
+                                ↪
+                            </span>
+
+                            Đăng xuất
+
+                        </a>
+
+                    </div>
+
+                </details>
+
+            </c:if>
+
+
+            <c:if test="${empty sessionScope.user}">
+
+                <div class="guest-actions">
 
                     <a href="${pageContext.request.contextPath}/auth/login"
                        class="login-button">
@@ -621,9 +553,10 @@
 
                     </a>
 
-                </c:otherwise>
+                </div>
 
-            </c:choose>
+            </c:if>
+
 
         </div>
 
@@ -638,21 +571,19 @@
         "click",
         function (event) {
 
-            const managerMenu =
-                    document.getElementById(
-                            "managerMenu"
-                    );
+            const accountMenu =
+                document.getElementById(
+                    "accountMenu"
+                );
 
-            if (!managerMenu) {
+            if (!accountMenu) {
                 return;
             }
 
-            if (!managerMenu.contains(
-                    event.target
-            )) {
+            if (!accountMenu.contains(event.target)) {
 
-                managerMenu.removeAttribute(
-                        "open"
+                accountMenu.removeAttribute(
+                    "open"
                 );
             }
         }
