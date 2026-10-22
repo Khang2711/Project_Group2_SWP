@@ -1,11 +1,13 @@
 package controller;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -20,7 +22,12 @@ import model.FoodItem;
 import model.User;
 import service.ComboService;
 import service.FoodService;
+import util.ComboImageStorage;
 
+@MultipartConfig(
+        maxFileSize = 5L * 1024 * 1024,
+        maxRequestSize = 8L * 1024 * 1024
+)
 @WebServlet(urlPatterns = {
     "/admin/combos",
     "/admin/combo-form",
@@ -115,16 +122,26 @@ public class ComboController extends HttpServlet {
 
         Combo combo = new Combo();
         combo.setCinemaId(manager.getCinemaId());
-        combo.setComboName(request.getParameter("comboName"));
-        combo.setDescription(request.getParameter("description"));
-        combo.setImageUrl(request.getParameter("imageUrl"));
-        combo.setStatus(request.getParameter("status"));
         List<ComboItem> items = new ArrayList<>();
+        String existingImageUrl = null;
+        String uploadedImageUrl = null;
 
         try {
+            combo.setComboName(request.getParameter("comboName"));
+            combo.setDescription(request.getParameter("description"));
+            combo.setStatus(request.getParameter("status"));
+
             String id = request.getParameter("id");
             if (id != null && !id.trim().isEmpty()) {
                 combo.setComboId(Integer.parseInt(id));
+                Combo existingCombo = comboService.getCombo(
+                        combo.getComboId(), manager.getCinemaId());
+                if (existingCombo == null) {
+                    throw new IllegalArgumentException(
+                            "Không tìm thấy combo trong rạp này.");
+                }
+                existingImageUrl = existingCombo.getImageUrl();
+                combo.setImageUrl(existingImageUrl);
             }
 
             String price = request.getParameter("comboPrice");
@@ -134,12 +151,33 @@ public class ComboController extends HttpServlet {
             combo.setComboPrice(new BigDecimal(price.trim()));
 
             items = readComboItems(request);
+            if (items.isEmpty()) {
+                throw new IllegalArgumentException("Combo phải có ít nhất một món.");
+            }
+
+            Part imagePart = request.getPart("comboImage");
+            if (imagePart != null && imagePart.getSize() > 0) {
+                try {
+                    uploadedImageUrl = ComboImageStorage.saveComboImage(imagePart);
+                } catch (IOException e) {
+                    throw new IllegalStateException(
+                            "Không thể lưu ảnh combo. Vui lòng thử lại.", e);
+                }
+                if (uploadedImageUrl != null) {
+                    combo.setImageUrl(uploadedImageUrl);
+                }
+            }
+
             comboService.saveCombo(combo, items);
             response.sendRedirect(request.getContextPath() + "/admin/combos?saved=1");
         } catch (NumberFormatException e) {
+            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
+            combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", "Mã combo, giá bán hoặc số lượng không hợp lệ.");
             forwardForm(request, response, manager, combo, items);
         } catch (IllegalArgumentException | IllegalStateException e) {
+            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
+            combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", e.getMessage());
             forwardForm(request, response, manager, combo, items);
         }
