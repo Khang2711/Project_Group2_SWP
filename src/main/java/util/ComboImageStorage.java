@@ -40,7 +40,7 @@ public final class ComboImageStorage {
         }
 
         // Chỉ lấy tên cuối cùng, không dùng đường dẫn do trình duyệt gửi lên.
-        submittedName = submittedName.replace('\\\\', '/');
+        submittedName = submittedName.replace('\\', '/');
         submittedName = submittedName.substring(submittedName.lastIndexOf('/') + 1);
         int dotIndex = submittedName.lastIndexOf('.');
         if (dotIndex <= 0 || dotIndex == submittedName.length() - 1) {
