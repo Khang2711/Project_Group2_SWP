@@ -124,16 +124,23 @@
 
             <c:otherwise>
 
-                <c:forEach var="dayEntry" items="${scheduleByDate}">
+                <c:forEach var="dayEntry"
+                           items="${scheduleByDate}"
+                           varStatus="loop">
 
-                    <div class="showtimes-search-day">
+                    <details class="showtimes-search-day"
+                             name="showtime-day"
+                             ${loop.first ? 'open' : ''}>
 
-                        <div class="showtimes-search-day-heading">
+                        <summary class="showtimes-search-day-heading">
                             <span>NGÀY CHIẾU</span>
+
                             <h3>
                                 <c:out value="${dayEntry.key}" />
                             </h3>
-                        </div>
+
+                            <span class="showtimes-day-arrow">▼</span>
+                        </summary>
 
                         <c:forEach var="movieEntry" items="${dayEntry.value}">
 
@@ -236,7 +243,8 @@
                             </article>
 
                         </c:forEach>
-                    </div>
+                            
+                    </details>
 
                 </c:forEach>
 

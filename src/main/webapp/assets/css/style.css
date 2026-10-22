@@ -3951,9 +3951,12 @@ END CSS ADMIN
 }
 
 
+
 /* =========================================
    SHOWTIME SEARCH PAGE
-   ========================================= */
+========================================= */
+
+/* Page header */
 
 .showtimes-search-page .showtimes-header {
     margin-bottom: 24px;
@@ -4000,6 +4003,8 @@ END CSS ADMIN
     color: #e50914;
 }
 
+/* Search form */
+
 .showtimes-search-form {
     grid-template-columns:
         minmax(0, 1.5fr)
@@ -4036,7 +4041,7 @@ END CSS ADMIN
     background: #ba0811;
 }
 
-/* Results */
+/* Search results */
 
 .showtimes-search-results-heading {
     display: flex;
@@ -4060,7 +4065,13 @@ END CSS ADMIN
     font-size: 12px;
 }
 
+/* Showtime date accordion */
+
 .showtimes-search-day {
+    margin-bottom: 14px;
+}
+
+.showtimes-search-day[open] {
     margin-bottom: 32px;
 }
 
@@ -4068,7 +4079,21 @@ END CSS ADMIN
     display: flex;
     align-items: center;
     gap: 12px;
+
     margin-bottom: 14px;
+    padding: 18px 22px;
+
+    background: #291a1e;
+    border: 1px solid #70303a;
+    border-left: 5px solid #e50914;
+    border-radius: 8px;
+
+    cursor: pointer;
+    list-style: none;
+}
+
+.showtimes-search-day-heading::-webkit-details-marker {
+    display: none;
 }
 
 .showtimes-search-day-heading span {
@@ -4082,6 +4107,32 @@ END CSS ADMIN
     margin: 0;
     color: #fff;
     font-size: 19px;
+}
+
+/* Selected date */
+
+.showtimes-search-day[open] .showtimes-search-day-heading {
+    background: #e50914;
+    margin-bottom: 20px;
+}
+
+.showtimes-search-day[open] .showtimes-search-day-heading span {
+    color: #fff;
+}
+
+.showtimes-search-day-heading:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+/* Date arrow */
+
+.showtimes-day-arrow {
+    margin-left: auto;
+}
+
+.showtimes-search-day[open] .showtimes-day-arrow {
+    transform: rotate(180deg);
 }
 
 /* Movie cards */
@@ -4116,6 +4167,8 @@ END CSS ADMIN
     white-space: nowrap;
 }
 
+/* Movie information */
+
 .showtimes-search-movie-meta {
     display: flex;
     align-items: center;
@@ -4134,6 +4187,8 @@ END CSS ADMIN
     font-size: 11px;
     font-weight: bold;
 }
+
+/* Showtime slots */
 
 .showtimes-search-times-title {
     margin-bottom: 12px;
@@ -4188,6 +4243,10 @@ END CSS ADMIN
 
     .showtimes-search-form {
         grid-template-columns: 1fr;
+    }
+
+    .showtimes-search-day-heading {
+        padding: 15px;
     }
 
     .showtimes-search-movie {
