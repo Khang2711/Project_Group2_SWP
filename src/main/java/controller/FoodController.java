@@ -1,17 +1,24 @@
 package controller;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.math.BigDecimal;
 import model.FoodItem;
 import model.User;
 import service.FoodService;
+import util.FoodImageStorage;
 
+@MultipartConfig(
+        maxFileSize = 5L * 1024 * 1024,
+        maxRequestSize = 8L * 1024 * 1024
+)
 @WebServlet(urlPatterns = {
     "/admin/food-items",
     "/admin/food-item-form",
@@ -105,13 +112,25 @@ public class FoodController extends HttpServlet {
         item.setItemName(request.getParameter("itemName"));
         item.setItemType(request.getParameter("itemType"));
         item.setDescription(request.getParameter("description"));
-        item.setImageUrl(request.getParameter("imageUrl"));
         item.setStatus(request.getParameter("status"));
+
+        String existingImageUrl = null;
+        String uploadedImageUrl = null;
 
         try {
             String id = request.getParameter("id");
             if (id != null && !id.trim().isEmpty()) {
-                item.setFoodItemId(Integer.parseInt(id));
+                int foodItemId = Integer.parseInt(id);
+                item.setFoodItemId(foodItemId);
+
+                FoodItem existingItem = foodService.getItem(
+                        foodItemId, manager.getCinemaId());
+                if (existingItem == null) {
+                    throw new IllegalArgumentException(
+                            "Không tìm thấy sản phẩm trong rạp này.");
+                }
+                existingImageUrl = existingItem.getImageUrl();
+                item.setImageUrl(existingImageUrl);
             }
 
             String price = request.getParameter("price");
@@ -120,14 +139,31 @@ public class FoodController extends HttpServlet {
             }
             item.setPrice(new BigDecimal(price.trim()));
 
+            Part imagePart = request.getPart("foodImage");
+            if (imagePart != null && imagePart.getSize() > 0) {
+                try {
+                    uploadedImageUrl = FoodImageStorage.saveFoodImage(imagePart);
+                } catch (IOException e) {
+                    throw new IllegalStateException(
+                            "Không thể lưu ảnh sản phẩm. Vui lòng thử lại.", e);
+                }
+                if (uploadedImageUrl != null) {
+                    item.setImageUrl(uploadedImageUrl);
+                }
+            }
+
             foodService.saveItem(item);
             response.sendRedirect(request.getContextPath() + "/admin/food-items?saved=1");
         } catch (NumberFormatException e) {
+            FoodImageStorage.deleteUploadedImage(uploadedImageUrl);
+            item.setImageUrl(existingImageUrl);
             request.setAttribute("error", "Mã sản phẩm hoặc giá bán không hợp lệ.");
             request.setAttribute("foodItem", item);
             request.getRequestDispatcher("/WEB-INF/views/admin/food-item-form.jsp")
                     .forward(request, response);
         } catch (IllegalArgumentException | IllegalStateException e) {
+            FoodImageStorage.deleteUploadedImage(uploadedImageUrl);
+            item.setImageUrl(existingImageUrl);
             request.setAttribute("error", e.getMessage());
             request.setAttribute("foodItem", item);
             request.getRequestDispatcher("/WEB-INF/views/admin/food-item-form.jsp")

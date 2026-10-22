@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
@@ -12,6 +13,9 @@
     .field label { font-weight:600; }
     .field input, .field select, .field textarea { width:100%; box-sizing:border-box; padding:11px 12px; color:#f5f5f5; background:#101012; border:1px solid #494951; border-radius:5px; }
     .field textarea { min-height:85px; resize:vertical; }
+    .image-preview { display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-top:10px; }
+    .image-preview img { display:block; max-width:240px; max-height:160px; object-fit:contain; background:#101012; border:1px solid #494951; border-radius:6px; padding:5px; }
+    .image-help { color:#aaa; font-size:13px; margin:0; }
     .items-table { width:100%; border-collapse:collapse; margin-top:15px; }
     .items-table th, .items-table td { padding:11px; border:1px solid #3b3b44; text-align:left; }
     .items-table th { background:#222228; }
@@ -32,7 +36,7 @@
     <c:if test="${not empty error}"><div class="notice"><c:out value="${error}" /></div></c:if>
 
     <div class="form-card">
-        <form method="post" action="${pageContext.request.contextPath}/admin/combo-form">
+        <form method="post" enctype="multipart/form-data" action="${pageContext.request.contextPath}/admin/combo-form">
             <input type="hidden" name="id" value="${combo.comboId}">
             <div class="form-grid">
                 <div class="field full">
@@ -55,8 +59,26 @@
                     <textarea id="description" name="description" maxlength="255"><c:out value="${combo.description}" /></textarea>
                 </div>
                 <div class="field full">
-                    <label for="imageUrl">Đường dẫn hình ảnh</label>
-                    <input id="imageUrl" name="imageUrl" maxlength="500" value="${combo.imageUrl}">
+                    <label for="comboImage">Ảnh combo (JPG, PNG hoặc GIF; tối đa 5 MB)</label>
+                    <input id="comboImage" name="comboImage" type="file"
+                           accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif">
+                    <p class="image-help">Chọn ảnh từ máy tính. Nếu đang sửa combo, để trống sẽ giữ ảnh hiện tại.</p>
+                    <c:if test="${not empty combo.imageUrl}">
+                        <c:set var="currentImagePath" value="${fn:trim(combo.imageUrl)}" />
+                        <c:choose>
+                            <c:when test="${fn:startsWith(currentImagePath, 'http://') or fn:startsWith(currentImagePath, 'https://') or fn:startsWith(currentImagePath, '/')}">
+                                <c:url var="currentImageSrc" value="${currentImagePath}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="currentImageSrc" value="/${currentImagePath}" />
+                            </c:otherwise>
+                        </c:choose>
+                        <div class="image-preview">
+                            <img src="<c:out value='${currentImageSrc}' />"
+                                 alt="Ảnh combo hiện tại"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    </c:if>
                 </div>
             </div>
 
