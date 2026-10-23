@@ -19,47 +19,89 @@ import repository.ShowtimeRepository;
 
 public class ShowtimeService {
 
-    private ShowtimeRepository showtimeRepository = new ShowtimeRepository();
-    private RoomRepository roomRepository = new RoomRepository();
-    private CinemaRepository cinemaRepository = new CinemaRepository();
-    private MovieRepository movieRepository = new MovieRepository();
+    private final ShowtimeRepository showtimeRepository =
+            new ShowtimeRepository();
 
-    public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
-        return showtimeRepository.getByMovieIdAndDate(movieId, date);
+    private final RoomRepository roomRepository =
+            new RoomRepository();
+
+    private final CinemaRepository cinemaRepository =
+            new CinemaRepository();
+
+    private final MovieRepository movieRepository =
+            new MovieRepository();
+
+    public List<Showtime> getByMovieAndDate(
+            int movieId,
+            LocalDate date) {
+
+        return showtimeRepository
+                .getByMovieIdAndDate(
+                        movieId,
+                        date
+                );
     }
 
     public List<Cinema> getActiveCinema() {
-        return cinemaRepository.getAllActive();
+
+        return cinemaRepository
+                .getAllActive();
     }
 
     public Map<Integer, Room> getActiveRoomById() {
-        Map<Integer, Room> rooms = new HashMap<>();
 
-        for (Room room : roomRepository.getAllActive()) {
-            rooms.put(room.getRoomId(), room);
+        Map<Integer, Room> rooms =
+                new HashMap<>();
+
+        for (Room room
+                : roomRepository.getAllActive()) {
+
+            rooms.put(
+                    room.getRoomId(),
+                    room
+            );
         }
 
         return rooms;
     }
 
-    public Map<Integer, List<Showtime>> groupByCinema(List<Showtime> showtimes, Map<Integer, Room> roomsById, List<Cinema> cinemas) {
+    public Map<Integer, List<Showtime>>
+            groupByCinema(
+                    List<Showtime> showtimes,
+                    Map<Integer, Room> roomsById,
+                    List<Cinema> cinemas) {
 
-        Map<Integer, List<Showtime>> result = new LinkedHashMap<>();
+        Map<Integer, List<Showtime>> result =
+                new LinkedHashMap<>();
 
         for (Cinema cinema : cinemas) {
 
-            for (Showtime showtime : showtimes) {
+            for (Showtime showtime
+                    : showtimes) {
 
-                Room room = roomsById.get(showtime.getRoomId());
+                Room room =
+                        roomsById.get(
+                                showtime.getRoomId()
+                        );
 
-                if (room != null && room.getCinemaId() == cinema.getCinemaId()) {
+                if (room != null
+                        && room.getCinemaId()
+                        == cinema.getCinemaId()) {
 
-                    if (!result.containsKey(cinema.getCinemaId())) {
+                    if (!result.containsKey(
+                            cinema.getCinemaId())) {
 
-                        result.put(cinema.getCinemaId(), new ArrayList<>());
+                        result.put(
+                                cinema.getCinemaId(),
+                                new ArrayList<>()
+                        );
                     }
 
-                    result.get(cinema.getCinemaId()).add(showtime);
+                    result
+                            .get(
+                                    cinema.getCinemaId()
+                            )
+                            .add(showtime);
                 }
             }
         }
@@ -67,45 +109,74 @@ public class ShowtimeService {
         return result;
     }
 
-    public boolean isBookable(int showtimeId) {
+    public boolean isBookable(
+            int showtimeId) {
 
-        Showtime showtime = showtimeRepository.getById(showtimeId);
+        Showtime showtime =
+                showtimeRepository.getById(
+                        showtimeId
+                );
 
         if (showtime == null) {
             return false;
         }
 
-        if (!"ACTIVE".equalsIgnoreCase(showtime.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(
+                showtime.getStatus())) {
+
             return false;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now =
+                LocalDateTime.now();
 
-        if (showtime.getStartTime() == null || !showtime.getStartTime().toLocalDateTime().isAfter(now)) {
+        if (showtime.getStartTime() == null
+                || !showtime
+                        .getStartTime()
+                        .toLocalDateTime()
+                        .isAfter(now)) {
+
             return false;
         }
 
-        Movie movie = movieRepository.getById(showtime.getMovieId());
+        Movie movie =
+                movieRepository.getById(
+                        showtime.getMovieId()
+                );
 
         if (movie == null) {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today =
+                LocalDate.now();
 
-        if (movie.getReleaseDate() == null || movie.getReleaseDate().toLocalDate().isAfter(today)) {
+        if (movie.getReleaseDate() == null
+                || movie
+                        .getReleaseDate()
+                        .toLocalDate()
+                        .isAfter(today)) {
+
             return false;
         }
 
-        if (movie.getEndDate() != null && movie.getEndDate().toLocalDate().isBefore(today)) {
+        if (movie.getEndDate() != null
+                && movie
+                        .getEndDate()
+                        .toLocalDate()
+                        .isBefore(today)) {
+
             return false;
         }
 
         Room room = null;
 
-        for (Room r : roomRepository.getAllActive()) {
+        for (Room r
+                : roomRepository.getAllActive()) {
 
-            if (r.getRoomId() == showtime.getRoomId()) {
+            if (r.getRoomId()
+                    == showtime.getRoomId()) {
+
                 room = r;
                 break;
             }
@@ -115,12 +186,346 @@ public class ShowtimeService {
             return false;
         }
 
-        Cinema cinema = cinemaRepository.findById(room.getCinemaId());
+        Cinema cinema =
+                cinemaRepository.findById(
+                        room.getCinemaId()
+                );
 
-        if (cinema == null || !"ACTIVE".equalsIgnoreCase(cinema.getStatus())) {
-            return false;
+        return cinema != null
+                && "ACTIVE".equalsIgnoreCase(
+                        cinema.getStatus()
+                );
+    }
+
+    public List<Showtime>
+            getShowtimesForManager(
+                    int cinemaId) {
+
+        if (cinemaId <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Rạp không hợp lệ."
+            );
         }
 
-        return true;
+        return showtimeRepository
+                .getByCinemaId(cinemaId);
+    }
+
+    public Showtime getShowtimeForManager(
+            int showtimeId,
+            int cinemaId) {
+
+        if (showtimeId <= 0
+                || cinemaId <= 0) {
+
+            return null;
+        }
+
+        return showtimeRepository
+                .getByIdAndCinema(
+                        showtimeId,
+                        cinemaId
+                );
+    }
+
+    public void createShowtime(
+            int cinemaId,
+            int movieId,
+            int roomId,
+            LocalDateTime startTime,
+            String status) {
+
+        Showtime showtime =
+                buildShowtime(
+                        0,
+                        cinemaId,
+                        movieId,
+                        roomId,
+                        startTime,
+                        status,
+                        null
+                );
+
+        if (!showtimeRepository.insert(
+                showtime)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể thêm lịch chiếu."
+            );
+        }
+    }
+
+    public void updateShowtime(
+            int showtimeId,
+            int cinemaId,
+            int movieId,
+            int roomId,
+            LocalDateTime startTime,
+            String status) {
+
+        Showtime oldShowtime =
+                showtimeRepository
+                        .getByIdAndCinema(
+                                showtimeId,
+                                cinemaId
+                        );
+
+        if (oldShowtime == null) {
+
+            throw new IllegalArgumentException(
+                    "Không tìm thấy lịch chiếu."
+            );
+        }
+
+        Showtime showtime =
+                buildShowtime(
+                        showtimeId,
+                        cinemaId,
+                        movieId,
+                        roomId,
+                        startTime,
+                        status,
+                        showtimeId
+                );
+
+        if (!showtimeRepository.update(
+                showtime,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể cập nhật lịch chiếu."
+            );
+        }
+    }
+
+    public void deleteShowtime(
+            int showtimeId,
+            int cinemaId) {
+
+        Showtime showtime =
+                showtimeRepository
+                        .getByIdAndCinema(
+                                showtimeId,
+                                cinemaId
+                        );
+
+        if (showtime == null) {
+
+            throw new IllegalArgumentException(
+                    "Không tìm thấy lịch chiếu."
+            );
+        }
+
+        /*
+         * Nếu suất chiếu đã có vé thì giữ lịch sử,
+         * chỉ chuyển sang INACTIVE.
+         */
+        if (showtimeRepository.hasTickets(
+                showtimeId)) {
+
+            if (!showtimeRepository.setInactive(
+                    showtimeId,
+                    cinemaId)) {
+
+                throw new IllegalArgumentException(
+                        "Không thể ngừng lịch chiếu."
+                );
+            }
+
+            return;
+        }
+
+        if (!showtimeRepository.delete(
+                showtimeId,
+                cinemaId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể xóa lịch chiếu."
+            );
+        }
+    }
+
+    private Showtime buildShowtime(
+            int showtimeId,
+            int cinemaId,
+            int movieId,
+            int roomId,
+            LocalDateTime startTime,
+            String status,
+            Integer excludeShowtimeId) {
+
+        if (cinemaId <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Rạp không hợp lệ."
+            );
+        }
+
+        Movie movie =
+                movieRepository
+                        .getByIdAnyStatus(
+                                movieId
+                        );
+
+        if (movie == null
+                || !movieRepository
+                        .belongsToCinema(
+                                movieId,
+                                cinemaId
+                        )) {
+
+            throw new IllegalArgumentException(
+                    "Phim không thuộc rạp của bạn."
+            );
+        }
+
+        Room room =
+                roomRepository
+                        .findByIdAndCinema(
+                                roomId,
+                                cinemaId
+                        );
+
+        if (room == null) {
+
+            throw new IllegalArgumentException(
+                    "Phòng chiếu không thuộc rạp của bạn."
+            );
+        }
+
+        if (startTime == null) {
+
+            throw new IllegalArgumentException(
+                    "Thời gian bắt đầu không được để trống."
+            );
+        }
+
+        if (!"ACTIVE".equals(status)
+                && !"INACTIVE".equals(status)) {
+
+            throw new IllegalArgumentException(
+                    "Trạng thái lịch chiếu không hợp lệ."
+            );
+        }
+
+        if ("ACTIVE".equals(status)) {
+
+            if (!"ACTIVE".equalsIgnoreCase(
+                    movie.getStatus())) {
+
+                throw new IllegalArgumentException(
+                        "Phim đang không hoạt động."
+                );
+            }
+
+            if (!"ACTIVE".equalsIgnoreCase(
+                    room.getStatus())) {
+
+                throw new IllegalArgumentException(
+                        "Phòng chiếu đang không hoạt động."
+                );
+            }
+
+            if (!startTime.isAfter(
+                    LocalDateTime.now())) {
+
+                throw new IllegalArgumentException(
+                        "Suất chiếu phải bắt đầu trong tương lai."
+                );
+            }
+        }
+
+        LocalDate showDate =
+                startTime.toLocalDate();
+
+        if (movie.getReleaseDate() != null
+                && showDate.isBefore(
+                        movie
+                                .getReleaseDate()
+                                .toLocalDate()
+                )) {
+
+            throw new IllegalArgumentException(
+                    "Ngày chiếu không được trước ngày phát hành phim."
+            );
+        }
+
+        if (movie.getEndDate() != null
+                && showDate.isAfter(
+                        movie
+                                .getEndDate()
+                                .toLocalDate()
+                )) {
+
+            throw new IllegalArgumentException(
+                    "Phim đã hết thời gian chiếu tại rạp."
+            );
+        }
+
+        if (movie.getDurationMinutes()
+                <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Thời lượng phim không hợp lệ."
+            );
+        }
+
+        LocalDateTime endTime =
+                startTime.plusMinutes(
+                        movie.getDurationMinutes()
+                );
+
+        Timestamp startTimestamp =
+                Timestamp.valueOf(
+                        startTime
+                );
+
+        Timestamp endTimestamp =
+                Timestamp.valueOf(
+                        endTime
+                );
+
+        if ("ACTIVE".equals(status)
+                && showtimeRepository.hasConflict(
+                        roomId,
+                        startTimestamp,
+                        endTimestamp,
+                        excludeShowtimeId
+                )) {
+
+            throw new IllegalArgumentException(
+                    "Phòng chiếu đã có lịch khác trong khoảng thời gian này."
+            );
+        }
+
+        Showtime showtime =
+                new Showtime();
+
+        showtime.setShowtimeId(
+                showtimeId
+        );
+
+        showtime.setMovieId(
+                movieId
+        );
+
+        showtime.setRoomId(
+                roomId
+        );
+
+        showtime.setStartTime(
+                startTimestamp
+        );
+
+        showtime.setEndTime(
+                endTimestamp
+        );
+
+        showtime.setStatus(
+                status
+        );
+
+        return showtime;
     }
 }

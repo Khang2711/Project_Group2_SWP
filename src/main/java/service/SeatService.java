@@ -25,9 +25,6 @@ public class SeatService {
                 new RoomRepository();
     }
 
-    // =========================================================
-    // DANH SÁCH GHẾ
-    // =========================================================
     public List<Seat> getSeatsByRoom(
             int roomId,
             int cinemaId) {
@@ -38,18 +35,9 @@ public class SeatService {
         );
 
         return seatRepository
-                .findByRoomId(
-                        roomId
-                );
+                .findByRoomId(roomId);
     }
 
-    // =========================================================
-    // DANH SÁCH GHẾ NHÓM THEO HÀNG
-    //
-    // row 1 -> List Seat
-    // row 2 -> List Seat
-    // ...
-    // =========================================================
     public Map<Integer, List<Seat>>
             getSeatRowsByRoom(
                     int roomId,
@@ -75,9 +63,6 @@ public class SeatService {
         return rows;
     }
 
-    // =========================================================
-    // LẤY 1 GHẾ
-    // =========================================================
     public Seat getSeat(
             int seatId,
             int roomId,
@@ -104,7 +89,8 @@ public class SeatService {
 
     // =========================================================
     // THÊM 1 GHẾ
-    // Giữ lại để tương thích code cũ.
+    // Không còn bị giới hạn bởi capacity cũ.
+    // Sau khi thêm -> capacity tăng theo số ghế.
     // =========================================================
     public void createSeat(
             int roomId,
@@ -114,11 +100,10 @@ public class SeatService {
             String seatType,
             String status) {
 
-        Room room =
-                checkRoom(
-                        roomId,
-                        cinemaId
-                );
+        checkRoom(
+                roomId,
+                cinemaId
+        );
 
         validateSeat(
                 roomId,
@@ -129,42 +114,95 @@ public class SeatService {
                 status
         );
 
-        int currentSeats =
-                seatRepository
-                        .countSeats(
-                                roomId
-                        );
-
-        if (currentSeats
-                >= room.getCapacity()) {
-
-            throw new IllegalArgumentException(
-                    "Số ghế đã đạt sức chứa tối đa của phòng."
-            );
-        }
-
         Seat seat =
                 new Seat(
                         0,
                         roomId,
                         seatRow,
                         seatNumber,
-                        seatType.trim(),
+                        normalizeSeatType(
+                                seatType
+                        ),
                         status
                 );
 
-        if (!seatRepository
-                .insert(seat)) {
+        if (!seatRepository.insert(seat)) {
 
             throw new IllegalArgumentException(
                     "Không thể thêm ghế."
             );
         }
+
+        roomRepository
+                .syncCapacityFromSeats(
+                        roomId
+                );
     }
 
     // =========================================================
-    // UPDATE 1 GHẾ
+    // THÊM MỘT HÀNG GHẾ MỚI
     // =========================================================
+    public void addRow(
+            int roomId,
+            int cinemaId,
+            int seatCount,
+            String seatType) {
+
+        checkRoom(
+                roomId,
+                cinemaId
+        );
+
+        if (seatCount <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Số ghế của hàng phải lớn hơn 0."
+            );
+        }
+
+        if (seatCount > 50) {
+
+            throw new IllegalArgumentException(
+                    "Một hàng tối đa 50 ghế."
+            );
+        }
+
+        String normalizedType =
+                normalizeSeatType(
+                        seatType
+                );
+
+        int nextRow =
+                seatRepository
+                        .getMaxRow(roomId)
+                + 1;
+
+        if (nextRow > 30) {
+
+            throw new IllegalArgumentException(
+                    "Phòng tối đa 30 hàng ghế."
+            );
+        }
+
+        if (!seatRepository
+                .insertRow(
+                        roomId,
+                        nextRow,
+                        seatCount,
+                        normalizedType
+                )) {
+
+            throw new IllegalArgumentException(
+                    "Không thể thêm hàng ghế."
+            );
+        }
+
+        roomRepository
+                .syncCapacityFromSeats(
+                        roomId
+                );
+    }
+
     public void updateSeat(
             int seatId,
             int roomId,
@@ -208,8 +246,6 @@ public class SeatService {
                 || currentSeat.getSeatNumber()
                 != seatNumber;
 
-        // Ghế đã có ticket history
-        // thì không cho đổi vị trí.
         if (positionChanged
                 && seatRepository
                         .hasTicketHistory(
@@ -228,12 +264,13 @@ public class SeatService {
                         roomId,
                         seatRow,
                         seatNumber,
-                        seatType.trim(),
+                        normalizeSeatType(
+                                seatType
+                        ),
                         status
                 );
 
-        if (!seatRepository
-                .update(seat)) {
+        if (!seatRepository.update(seat)) {
 
             throw new IllegalArgumentException(
                     "Không thể cập nhật ghế."
@@ -241,16 +278,6 @@ public class SeatService {
         }
     }
 
-    // =========================================================
-    // UPDATE NHIỀU GHẾ
-    //
-    // Cho phép:
-    // - đổi loại ghế
-    // - đổi ACTIVE / INACTIVE
-    //
-    // Không đổi row/number hàng loạt vì
-    // sẽ gây trùng vị trí.
-    // =========================================================
     public void bulkUpdateSeats(
             List<Integer> seatIds,
             int roomId,
@@ -263,13 +290,11 @@ public class SeatService {
                 cinemaId
         );
 
-        if (seatIds == null
-                || seatIds.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Vui lòng chọn ít nhất một ghế."
-            );
-        }
+        List<Integer> ids =
+                validateSelectedSeats(
+                        seatIds,
+                        roomId
+                );
 
         String normalizedSeatType =
                 normalizeOptionalSeatType(
@@ -289,15 +314,119 @@ public class SeatService {
             );
         }
 
-        // Loại bỏ ID trùng.
+        int updated =
+                seatRepository
+                        .updateBulk(
+                                ids,
+                                roomId,
+                                normalizedSeatType,
+                                normalizedStatus
+                        );
+
+        if (updated != ids.size()) {
+
+            throw new IllegalArgumentException(
+                    "Không thể cập nhật đầy đủ "
+                    + "các ghế đã chọn."
+            );
+        }
+    }
+
+    // =========================================================
+    // XÓA NHIỀU GHẾ
+    //
+    // - Chưa từng bán vé -> hard delete.
+    // - Có lịch sử Ticket -> không xóa DB,
+    //   chỉ chuyển INACTIVE.
+    // =========================================================
+    public void deleteSeats(
+            List<Integer> seatIds,
+            int roomId,
+            int cinemaId) {
+
+        checkRoom(
+                roomId,
+                cinemaId
+        );
+
+        List<Integer> ids =
+                validateSelectedSeats(
+                        seatIds,
+                        roomId
+                );
+
+        int currentSeatCount =
+                seatRepository
+                        .countSeats(roomId);
+
+        int hardDeleteCount = 0;
+
+        for (Integer seatId : ids) {
+
+            if (!seatRepository
+                    .hasTicketHistory(
+                            seatId
+                    )) {
+
+                hardDeleteCount++;
+            }
+        }
+
+        if (currentSeatCount
+                - hardDeleteCount <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Phòng phải còn ít nhất một ghế."
+            );
+        }
+
+        for (Integer seatId : ids) {
+
+            if (seatRepository
+                    .hasTicketHistory(
+                            seatId
+                    )) {
+
+                seatRepository.updateStatus(
+                        seatId,
+                        roomId,
+                        "INACTIVE"
+                );
+
+            } else {
+
+                seatRepository.delete(
+                        seatId,
+                        roomId
+                );
+            }
+        }
+
+        roomRepository
+                .syncCapacityFromSeats(
+                        roomId
+                );
+    }
+
+    private List<Integer>
+            validateSelectedSeats(
+                    List<Integer> seatIds,
+                    int roomId) {
+
+        if (seatIds == null
+                || seatIds.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Vui lòng chọn ít nhất một ghế."
+            );
+        }
+
         Set<Integer> uniqueIds =
                 new LinkedHashSet<>(
                         seatIds
                 );
 
-        // Kiểm tra tất cả ghế đều thuộc phòng.
-        for (Integer seatId
-                : uniqueIds) {
+        for (Integer seatId : uniqueIds) {
 
             if (seatId == null
                     || seatId <= 0) {
@@ -322,33 +451,11 @@ public class SeatService {
             }
         }
 
-        List<Integer> ids =
-                new ArrayList<>(
-                        uniqueIds
-                );
-
-        int updated =
-                seatRepository
-                        .updateBulk(
-                                ids,
-                                roomId,
-                                normalizedSeatType,
-                                normalizedStatus
-                        );
-
-        if (updated
-                != ids.size()) {
-
-            throw new IllegalArgumentException(
-                    "Không thể cập nhật đầy đủ "
-                    + "các ghế đã chọn."
-            );
-        }
+        return new ArrayList<>(
+                uniqueIds
+        );
     }
 
-    // =========================================================
-    // CHECK ROOM
-    // =========================================================
     private Room checkRoom(
             int roomId,
             int cinemaId) {
@@ -378,9 +485,6 @@ public class SeatService {
         return room;
     }
 
-    // =========================================================
-    // VALIDATE 1 GHẾ
-    // =========================================================
     private void validateSeat(
             int roomId,
             Integer seatId,
@@ -396,6 +500,13 @@ public class SeatService {
             );
         }
 
+        if (seatRow > 30) {
+
+            throw new IllegalArgumentException(
+                    "Hàng ghế tối đa là 30."
+            );
+        }
+
         if (seatNumber <= 0) {
 
             throw new IllegalArgumentException(
@@ -403,26 +514,16 @@ public class SeatService {
             );
         }
 
-        if (seatType == null
-                || seatType.trim().isEmpty()) {
+        if (seatNumber > 50) {
 
             throw new IllegalArgumentException(
-                    "Loại ghế không được để trống."
+                    "Số ghế trong hàng tối đa là 50."
             );
         }
 
-        String type =
-                seatType.trim()
-                        .toUpperCase();
-
-        if (!"STANDARD".equals(type)
-                && !"VIP".equals(type)
-                && !"COUPLE".equals(type)) {
-
-            throw new IllegalArgumentException(
-                    "Loại ghế không hợp lệ."
-            );
-        }
+        normalizeSeatType(
+                seatType
+        );
 
         if (!"ACTIVE".equals(status)
                 && !"INACTIVE".equals(status)) {
@@ -446,17 +547,15 @@ public class SeatService {
         }
     }
 
-    // =========================================================
-    // TYPE CHO BULK UPDATE
-    // Blank = giữ nguyên
-    // =========================================================
-    private String normalizeOptionalSeatType(
+    private String normalizeSeatType(
             String seatType) {
 
         if (seatType == null
                 || seatType.trim().isEmpty()) {
 
-            return null;
+            throw new IllegalArgumentException(
+                    "Loại ghế không được để trống."
+            );
         }
 
         String type =
@@ -475,10 +574,20 @@ public class SeatService {
         return type;
     }
 
-    // =========================================================
-    // STATUS CHO BULK UPDATE
-    // Blank = giữ nguyên
-    // =========================================================
+    private String normalizeOptionalSeatType(
+            String seatType) {
+
+        if (seatType == null
+                || seatType.trim().isEmpty()) {
+
+            return null;
+        }
+
+        return normalizeSeatType(
+                seatType
+        );
+    }
+
     private String normalizeOptionalStatus(
             String status) {
 

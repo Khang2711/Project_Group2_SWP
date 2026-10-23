@@ -4,20 +4,23 @@
 <%@ taglib prefix="c"
            uri="jakarta.tags.core" %>
 
+<%@ taglib prefix="fn"
+           uri="jakarta.tags.functions" %>
+
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
 
     .seat-admin-page {
-        max-width: 1200px;
+        max-width: 1250px;
         margin: 0 auto;
         padding: 42px 24px 70px;
         color: #f5f5f5;
     }
 
-    /* ==============================
+    /* =========================================================
        HEADER
-       ============================== */
+       ========================================================= */
 
     .page-header {
         display: flex;
@@ -37,6 +40,29 @@
         color: #999;
     }
 
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 7px;
+        background: #ff1744;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #e3133b;
+    }
+
     .back-button {
         color: #ccc;
         border: 1px solid #444;
@@ -50,9 +76,9 @@
         border-color: #ff1744;
     }
 
-    /* ==============================
+    /* =========================================================
        ROOM INFO
-       ============================== */
+       ========================================================= */
 
     .room-info {
         display: flex;
@@ -74,9 +100,9 @@
         color: white;
     }
 
-    /* ==============================
-       MESSAGES
-       ============================== */
+    /* =========================================================
+       MESSAGE
+       ========================================================= */
 
     .success-message {
         padding: 13px 16px;
@@ -96,9 +122,66 @@
         border-radius: 7px;
     }
 
-    /* ==============================
-       MAP CARD
-       ============================== */
+    /* =========================================================
+       ADD ROW PANEL
+       ========================================================= */
+
+    .add-row-panel {
+        background: #151517;
+        border: 1px solid #29292d;
+        border-radius: 11px;
+        padding: 20px 22px;
+        margin-bottom: 22px;
+    }
+
+    .add-row-panel h3 {
+        margin: 0 0 6px;
+        color: white;
+    }
+
+    .add-row-description {
+        margin: 0 0 17px;
+        color: #888;
+        font-size: 13px;
+    }
+
+    .add-row-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        align-items: end;
+        gap: 14px;
+    }
+
+    /* =========================================================
+       FORM
+       ========================================================= */
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        color: #bbb;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 12px;
+        background: #1c1c20;
+        color: white;
+        border: 1px solid #38383e;
+        border-radius: 7px;
+        outline: none;
+    }
+
+    .form-control:focus {
+        border-color: #ff1744;
+    }
+
+    /* =========================================================
+       SEAT MAP
+       ========================================================= */
 
     .seat-map-card {
         background: #111113;
@@ -108,9 +191,9 @@
         overflow-x: auto;
     }
 
-    /* ==============================
+    /* =========================================================
        SCREEN
-       ============================== */
+       ========================================================= */
 
     .screen-area {
         width: 72%;
@@ -121,14 +204,19 @@
 
     .screen {
         height: 8px;
+
         background: linear-gradient(
             90deg,
             transparent,
             #ddd,
             transparent
         );
+
         border-radius: 50%;
-        box-shadow: 0 5px 18px rgba(255,255,255,0.2);
+
+        box-shadow:
+            0 5px 18px
+            rgba(255, 255, 255, 0.2);
     }
 
     .screen-text {
@@ -138,12 +226,12 @@
         letter-spacing: 4px;
     }
 
-    /* ==============================
+    /* =========================================================
        SEAT ROW
-       ============================== */
+       ========================================================= */
 
     .seat-rows {
-        min-width: 760px;
+        min-width: 820px;
     }
 
     .seat-row {
@@ -154,13 +242,48 @@
         margin-bottom: 17px;
     }
 
-    .row-name {
-        width: 55px;
+    .row-control {
+        width: 105px;
         flex-shrink: 0;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .row-name {
         text-align: center;
         color: #999;
         font-size: 13px;
         font-weight: 700;
+    }
+
+    .row-select-button {
+        width: 95px;
+
+        padding: 5px 7px;
+
+        border: 1px solid #444;
+        border-radius: 5px;
+
+        background: #1c1c20;
+        color: #bbb;
+
+        cursor: pointer;
+
+        font-size: 10px;
+    }
+
+    .row-select-button:hover {
+        border-color: #ff1744;
+        color: white;
+    }
+
+    .row-select-button.row-selected {
+        background: #ff1744;
+        border-color: #ff1744;
+        color: white;
     }
 
     .row-seats {
@@ -170,24 +293,32 @@
         flex-wrap: nowrap;
     }
 
-    /* ==============================
+    /* =========================================================
        SEAT
-       ============================== */
+       ========================================================= */
 
     .seat-card {
         position: relative;
+
         width: 62px;
         height: 58px;
+
         border-radius: 9px 9px 6px 6px;
+
         background: #28282d;
         border: 2px solid #3f3f45;
+
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+
         cursor: pointer;
+
         transition: 0.18s;
+
         user-select: none;
+
         box-sizing: border-box;
     }
 
@@ -253,9 +384,11 @@
 
     .seat-inactive::after {
         content: "×";
+
         position: absolute;
         right: 4px;
         top: 1px;
+
         color: #ff6b81;
         font-weight: 700;
     }
@@ -265,9 +398,14 @@
     .seat-card.selected {
         background: #ff1744;
         border-color: #ff6b81;
+
         opacity: 1;
+
         transform: translateY(-4px);
-        box-shadow: 0 5px 18px rgba(255, 23, 68, 0.25);
+
+        box-shadow:
+            0 5px 18px
+            rgba(255, 23, 68, 0.25);
     }
 
     .seat-card.selected .seat-name,
@@ -275,18 +413,21 @@
         color: white;
     }
 
-    /* ==============================
+    /* =========================================================
        LEGEND
-       ============================== */
+       ========================================================= */
 
     .legend {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
         gap: 20px;
+
         margin-top: 35px;
         padding-top: 22px;
+
         border-top: 1px solid #29292d;
+
         color: #aaa;
         font-size: 13px;
     }
@@ -300,6 +441,7 @@
     .legend-box {
         width: 21px;
         height: 16px;
+
         border-radius: 4px;
         border: 2px solid #444;
     }
@@ -328,16 +470,19 @@
         border-color: #ff6b81;
     }
 
-    /* ==============================
-       TOOLBAR
-       ============================== */
+    /* =========================================================
+       SELECTION TOOLBAR
+       ========================================================= */
 
     .selection-toolbar {
         margin-top: 22px;
+
         display: flex;
         justify-content: space-between;
         align-items: center;
+
         gap: 15px;
+
         flex-wrap: wrap;
     }
 
@@ -357,10 +502,14 @@
 
     .small-button {
         border: 1px solid #444;
+
         background: #1c1c20;
         color: #ddd;
+
         padding: 8px 13px;
+
         border-radius: 6px;
+
         cursor: pointer;
     }
 
@@ -373,15 +522,17 @@
         cursor: not-allowed;
     }
 
-    /* ==============================
-       BULK EDIT PANEL
-       ============================== */
+    /* =========================================================
+       BULK PANEL
+       ========================================================= */
 
     .bulk-panel {
         margin-top: 22px;
+
         background: #151517;
         border: 1px solid #29292d;
         border-radius: 11px;
+
         padding: 22px;
     }
 
@@ -393,50 +544,62 @@
         color: #888;
         font-size: 13px;
         margin-bottom: 18px;
+        line-height: 1.5;
     }
 
     .bulk-controls {
         display: grid;
-        grid-template-columns: 1fr 1fr auto;
+
+        grid-template-columns:
+            1fr
+            1fr
+            auto
+            auto;
+
         gap: 14px;
+
         align-items: end;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 7px;
-        color: #bbb;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .form-control {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 11px 12px;
-        background: #1c1c20;
-        color: white;
-        border: 1px solid #38383e;
-        border-radius: 7px;
-        outline: none;
-    }
-
-    .form-control:focus {
-        border-color: #ff1744;
     }
 
     .update-button {
         border: none;
+
         padding: 11px 19px;
+
         border-radius: 7px;
+
         background: #ff1744;
         color: white;
+
         cursor: pointer;
         font-weight: 600;
+
+        white-space: nowrap;
     }
 
     .update-button:hover {
         background: #e3133b;
+    }
+
+    .delete-button {
+        padding: 10px 17px;
+
+        background: transparent;
+        color: #ff6b81;
+
+        border: 1px solid #73313d;
+        border-radius: 7px;
+
+        cursor: pointer;
+        font-weight: 600;
+
+        white-space: nowrap;
+    }
+
+    .delete-button:hover {
+        background: #c71837;
+        color: white;
+        border-color: #c71837;
     }
 
     .empty {
@@ -445,14 +608,37 @@
         padding: 50px;
     }
 
-    @media (max-width: 800px) {
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 950px) {
+
+        .bulk-controls {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .add-row-controls {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 700px) {
 
         .page-header {
             align-items: flex-start;
             flex-direction: column;
         }
 
+        .header-actions {
+            width: 100%;
+        }
+
         .bulk-controls {
+            grid-template-columns: 1fr;
+        }
+
+        .add-row-controls {
             grid-template-columns: 1fr;
         }
 
@@ -465,9 +651,9 @@
 
 <div class="seat-admin-page">
 
-    <!-- ==============================
+    <!-- =====================================================
          HEADER
-         ============================== -->
+         ===================================================== -->
 
     <div class="page-header">
 
@@ -478,24 +664,35 @@
             </h1>
 
             <p>
-                Chọn một hoặc nhiều ghế để
-                cập nhật thông tin cùng lúc.
+                Thêm, xóa và cập nhật nhiều ghế
+                trong phòng chiếu.
             </p>
 
         </div>
 
-        <a class="back-button"
-           href="${pageContext.request.contextPath}/admin/rooms">
+        <div class="header-actions">
 
-            ← Quay lại phòng
+            <a class="btn-primary"
+               href="${pageContext.request.contextPath}/admin/seat-form?roomId=${room.roomId}">
 
-        </a>
+                + Thêm ghế
+
+            </a>
+
+            <a class="back-button"
+               href="${pageContext.request.contextPath}/admin/rooms">
+
+                ← Quay lại phòng
+
+            </a>
+
+        </div>
 
     </div>
 
-    <!-- ==============================
+    <!-- =====================================================
          ROOM INFO
-         ============================== -->
+         ===================================================== -->
 
     <div class="room-info">
 
@@ -521,7 +718,7 @@
 
         <div class="room-info-item">
 
-            Sức chứa:
+            Sức chứa hiện tại:
 
             <strong>
                 ${room.capacity} ghế
@@ -541,15 +738,37 @@
 
     </div>
 
-    <!-- ==============================
+    <!-- =====================================================
          MESSAGE
-         ============================== -->
+         ===================================================== -->
 
     <c:if test="${param.updated == '1'}">
 
         <div class="success-message">
 
             ✓ Cập nhật ghế thành công.
+
+        </div>
+
+    </c:if>
+
+    <c:if test="${param.rowAdded == '1'}">
+
+        <div class="success-message">
+
+            ✓ Thêm hàng ghế mới thành công.
+
+        </div>
+
+    </c:if>
+
+    <c:if test="${param.deleted == '1'}">
+
+        <div class="success-message">
+
+            ✓ Cập nhật số lượng ghế thành công.
+            Ghế đã có lịch sử vé sẽ được giữ lại
+            và chuyển sang INACTIVE.
 
         </div>
 
@@ -566,25 +785,101 @@
 
     </c:if>
 
-    <!-- ==============================
-         BULK FORM
-         ============================== -->
+    <!-- =====================================================
+         THÊM NGUYÊN MỘT HÀNG
+         ===================================================== -->
+
+    <div class="add-row-panel">
+
+        <h3>
+            Thêm hàng ghế mới
+        </h3>
+
+        <p class="add-row-description">
+
+            Hệ thống sẽ tự tạo hàng tiếp theo.
+            Ví dụ đang có A–E thì hàng mới sẽ là F.
+
+        </p>
+
+        <form method="post"
+              action="${pageContext.request.contextPath}/admin/seats">
+
+            <input type="hidden"
+                   name="action"
+                   value="addRow">
+
+            <input type="hidden"
+                   name="roomId"
+                   value="${room.roomId}">
+
+            <div class="add-row-controls">
+
+                <div class="form-group">
+
+                    <label>
+                        Số ghế của hàng mới
+                    </label>
+
+                    <input class="form-control"
+                           type="number"
+                           name="seatCount"
+                           min="1"
+                           max="50"
+                           value="8"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>
+                        Loại ghế mặc định
+                    </label>
+
+                    <select class="form-control"
+                            name="rowSeatType">
+
+                        <option value="STANDARD">
+                            STANDARD
+                        </option>
+
+                        <option value="VIP">
+                            VIP
+                        </option>
+
+                        <option value="COUPLE">
+                            COUPLE
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button type="submit"
+                        class="btn-primary">
+
+                    + Thêm hàng
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- =====================================================
+         FORM CHỌN NHIỀU GHẾ
+         ===================================================== -->
 
     <form id="seatBulkForm"
           method="post"
           action="${pageContext.request.contextPath}/admin/seats">
 
         <input type="hidden"
-               name="action"
-               value="bulkUpdate">
-
-        <input type="hidden"
                name="roomId"
                value="${room.roomId}">
-
-        <!-- ==============================
-             SEAT MAP
-             ============================== -->
 
         <div class="seat-map-card">
 
@@ -595,7 +890,9 @@
                 <div class="screen"></div>
 
                 <div class="screen-text">
+
                     MÀN HÌNH
+
                 </div>
 
             </div>
@@ -609,53 +906,51 @@
                         <c:forEach var="rowEntry"
                                    items="${seatRows}">
 
-                            <!-- Convert row number to A B C... -->
-
-                            <c:set var="rowLabel"
-                                   value="${rowEntry.key}" />
-
                             <c:choose>
 
-                                <c:when test="${rowEntry.key == 1}">
+                                <c:when test="${rowEntry.key <= 26}">
+
                                     <c:set var="rowLabel"
-                                           value="A" />
+                                           value="${fn:substring('ABCDEFGHIJKLMNOPQRSTUVWXYZ', rowEntry.key - 1, rowEntry.key)}" />
+
                                 </c:when>
 
-                                <c:when test="${rowEntry.key == 2}">
-                                    <c:set var="rowLabel"
-                                           value="B" />
-                                </c:when>
+                                <c:otherwise>
 
-                                <c:when test="${rowEntry.key == 3}">
                                     <c:set var="rowLabel"
-                                           value="C" />
-                                </c:when>
+                                           value="R${rowEntry.key}" />
 
-                                <c:when test="${rowEntry.key == 4}">
-                                    <c:set var="rowLabel"
-                                           value="D" />
-                                </c:when>
-
-                                <c:when test="${rowEntry.key == 5}">
-                                    <c:set var="rowLabel"
-                                           value="E" />
-                                </c:when>
-
-                                <c:when test="${rowEntry.key == 6}">
-                                    <c:set var="rowLabel"
-                                           value="F" />
-                                </c:when>
+                                </c:otherwise>
 
                             </c:choose>
 
                             <div class="seat-row">
 
-                                <div class="row-name">
+                                <!-- =================================
+                                     TÊN HÀNG + CHỌN NGUYÊN HÀNG
+                                     ================================= -->
 
-                                    HÀNG
-                                    ${rowLabel}
+                                <div class="row-control">
+
+                                    <div class="row-name">
+
+                                        HÀNG ${rowLabel}
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="row-select-button"
+                                            data-row-label="${rowLabel}">
+
+                                        Chọn hàng ${rowLabel}
+
+                                    </button>
 
                                 </div>
+
+                                <!-- =================================
+                                     GHẾ
+                                     ================================= -->
 
                                 <div class="row-seats">
 
@@ -719,9 +1014,9 @@
 
             </c:choose>
 
-            <!-- ==============================
+            <!-- =================================================
                  LEGEND
-                 ============================== -->
+                 ================================================= -->
 
             <div class="legend">
 
@@ -784,9 +1079,9 @@
 
         </div>
 
-        <!-- ==============================
-             SELECTION TOOLBAR
-             ============================== -->
+        <!-- =================================================
+             TOOLBAR
+             ================================================= -->
 
         <div class="selection-toolbar">
 
@@ -816,7 +1111,7 @@
                         class="small-button"
                         id="clearButton">
 
-                    Bỏ chọn
+                    Bỏ chọn tất cả
 
                 </button>
 
@@ -833,22 +1128,31 @@
 
         </div>
 
-        <!-- ==============================
+        <!-- =================================================
              BULK EDIT
-             ============================== -->
+             ================================================= -->
 
         <div class="bulk-panel">
 
             <h3>
-                Cập nhật ghế đã chọn
+                Xử lý các ghế đã chọn
             </h3>
 
             <div class="bulk-description">
 
-                Bạn có thể chỉ đổi loại ghế,
-                chỉ đổi trạng thái,
-                hoặc đổi cả hai.
-                Chọn "Giữ nguyên" nếu không muốn thay đổi mục đó.
+                Bạn có thể chọn từng ghế,
+                chọn nguyên một hàng hoặc chọn tất cả ghế.
+
+                <br>
+
+                Sau đó có thể đổi loại ghế,
+                đổi trạng thái hoặc xóa nhiều ghế cùng lúc.
+
+                <br>
+
+                Ghế đã từng có Ticket sẽ không bị xóa khỏi database;
+                khi bấm Xóa, hệ thống sẽ chuyển ghế đó sang INACTIVE
+                để giữ lịch sử vé.
 
             </div>
 
@@ -911,9 +1215,26 @@
                 </div>
 
                 <button type="submit"
+                        name="action"
+                        value="bulkUpdate"
                         class="update-button">
 
-                    Cập nhật ghế đã chọn
+                    Cập nhật ghế
+
+                </button>
+
+                <button type="submit"
+                        name="action"
+                        value="deleteSelected"
+                        class="delete-button"
+                        onclick="
+                            return confirm(
+                                'Bạn có chắc muốn xóa các ghế đã chọn? '
+                                + 'Ghế đã có lịch sử vé sẽ chỉ chuyển sang INACTIVE.'
+                            );
+                        ">
+
+                    Xóa ghế đã chọn
 
                 </button>
 
@@ -930,6 +1251,11 @@
     const checkboxes =
             document.querySelectorAll(
                     ".seat-checkbox"
+            );
+
+    const rowSelectButtons =
+            document.querySelectorAll(
+                    ".row-select-button"
             );
 
     const selectedCount =
@@ -967,95 +1293,217 @@
                     "bulkStatus"
             );
 
-    // =========================================
-    // CẬP NHẬT GIAO DIỆN SELECTED
-    // =========================================
+    /* =========================================================
+       UPDATE SELECT UI
+       ========================================================= */
+
     function updateSelectionUI() {
 
         let count = 0;
 
-        checkboxes.forEach(function (checkbox) {
+        checkboxes.forEach(
+            function (checkbox) {
 
-            const seatCard =
-                    checkbox.closest(
-                            ".seat-card"
+                const seatCard =
+                        checkbox.closest(
+                                ".seat-card"
+                        );
+
+                if (checkbox.checked) {
+
+                    count++;
+
+                    seatCard.classList.add(
+                            "selected"
                     );
 
-            if (checkbox.checked) {
+                } else {
 
-                count++;
-
-                seatCard.classList.add(
-                        "selected"
-                );
-
-            } else {
-
-                seatCard.classList.remove(
-                        "selected"
-                );
+                    seatCard.classList.remove(
+                            "selected"
+                    );
+                }
             }
-        });
+        );
 
         selectedCount.textContent =
                 count;
 
-        // Chỉ cho sửa chi tiết
-        // khi chọn đúng 1 ghế.
         editOneButton.disabled =
                 count !== 1;
+
+        /* =====================================================
+           UPDATE NÚT CHỌN TỪNG HÀNG
+           ===================================================== */
+
+        rowSelectButtons.forEach(
+            function (button) {
+
+                const seatRow =
+                        button.closest(
+                                ".seat-row"
+                        );
+
+                const rowCheckboxes =
+                        seatRow.querySelectorAll(
+                                ".seat-checkbox"
+                        );
+
+                let allSelected =
+                        rowCheckboxes.length > 0;
+
+                rowCheckboxes.forEach(
+                    function (checkbox) {
+
+                        if (!checkbox.checked) {
+
+                            allSelected =
+                                    false;
+                        }
+                    }
+                );
+
+                const rowLabel =
+                        button.dataset.rowLabel;
+
+                if (allSelected) {
+
+                    button.textContent =
+                            "Bỏ hàng "
+                            + rowLabel;
+
+                    button.classList.add(
+                            "row-selected"
+                    );
+
+                } else {
+
+                    button.textContent =
+                            "Chọn hàng "
+                            + rowLabel;
+
+                    button.classList.remove(
+                            "row-selected"
+                    );
+                }
+            }
+        );
     }
 
-    // =========================================
-    // CLICK GHẾ
-    // =========================================
-    checkboxes.forEach(function (checkbox) {
+    /* =========================================================
+       CLICK TỪNG GHẾ
+       ========================================================= */
 
-        checkbox.addEventListener(
-                "change",
-                updateSelectionUI
-        );
-    });
+    checkboxes.forEach(
+        function (checkbox) {
 
-    // =========================================
-    // CHỌN TẤT CẢ
-    // =========================================
+            checkbox.addEventListener(
+                    "change",
+                    updateSelectionUI
+            );
+        }
+    );
+
+    /* =========================================================
+       CHỌN / BỎ CHỌN NGUYÊN MỘT HÀNG
+       ========================================================= */
+
+    rowSelectButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                    "click",
+                    function () {
+
+                        const seatRow =
+                                button.closest(
+                                        ".seat-row"
+                                );
+
+                        const rowCheckboxes =
+                                seatRow.querySelectorAll(
+                                        ".seat-checkbox"
+                                );
+
+                        let allSelected =
+                                rowCheckboxes.length > 0;
+
+                        rowCheckboxes.forEach(
+                            function (checkbox) {
+
+                                if (!checkbox.checked) {
+
+                                    allSelected =
+                                            false;
+                                }
+                            }
+                        );
+
+                        /*
+                           Nếu cả hàng đang được chọn
+                           thì bỏ chọn cả hàng.
+
+                           Nếu chưa chọn đủ
+                           thì chọn nguyên hàng.
+                        */
+                        rowCheckboxes.forEach(
+                            function (checkbox) {
+
+                                checkbox.checked =
+                                        !allSelected;
+                            }
+                        );
+
+                        updateSelectionUI();
+                    }
+            );
+        }
+    );
+
+    /* =========================================================
+       SELECT ALL
+       ========================================================= */
+
     selectAllButton.addEventListener(
             "click",
             function () {
 
                 checkboxes.forEach(
-                        function (checkbox) {
+                    function (checkbox) {
 
-                            checkbox.checked = true;
-                        }
+                        checkbox.checked =
+                                true;
+                    }
                 );
 
                 updateSelectionUI();
             }
     );
 
-    // =========================================
-    // BỎ CHỌN
-    // =========================================
+    /* =========================================================
+       CLEAR ALL
+       ========================================================= */
+
     clearButton.addEventListener(
             "click",
             function () {
 
                 checkboxes.forEach(
-                        function (checkbox) {
+                    function (checkbox) {
 
-                            checkbox.checked = false;
-                        }
+                        checkbox.checked =
+                                false;
+                    }
                 );
 
                 updateSelectionUI();
             }
     );
 
-    // =========================================
-    // SỬA CHI TIẾT 1 GHẾ
-    // =========================================
+    /* =========================================================
+       EDIT ONE SEAT
+       ========================================================= */
+
     editOneButton.addEventListener(
             "click",
             function () {
@@ -1066,7 +1514,6 @@
                         );
 
                 if (selected.length !== 1) {
-
                     return;
                 }
 
@@ -1082,9 +1529,10 @@
             }
     );
 
-    // =========================================
-    // VALIDATE BULK UPDATE
-    // =========================================
+    /* =========================================================
+       VALIDATE SUBMIT
+       ========================================================= */
+
     form.addEventListener(
             "submit",
             function (event) {
@@ -1105,14 +1553,23 @@
                     return;
                 }
 
-                if (bulkSeatType.value === ""
-                        && bulkStatus.value === "") {
+                const action =
+                        event.submitter
+                        ? event.submitter.value
+                        : "";
 
-                    event.preventDefault();
+                if (action === "bulkUpdate") {
 
-                    alert(
-                            "Vui lòng chọn loại ghế hoặc trạng thái cần cập nhật."
-                    );
+                    if (bulkSeatType.value === ""
+                            && bulkStatus.value === "") {
+
+                        event.preventDefault();
+
+                        alert(
+                                "Vui lòng chọn loại ghế "
+                                + "hoặc trạng thái cần cập nhật."
+                        );
+                    }
                 }
             }
     );

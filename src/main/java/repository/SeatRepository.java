@@ -3,15 +3,12 @@ package repository;
 import db.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import model.Seat;
 
 public class SeatRepository extends DBContext {
 
-    // =========================================================
-    // DANH SÁCH GHẾ CỦA PHÒNG
-    // =========================================================
     public List<Seat> findByRoomId(
             int roomId) {
 
@@ -19,8 +16,9 @@ public class SeatRepository extends DBContext {
                 new ArrayList<>();
 
         String sql =
-                "SELECT seat_id, room_id, seat_row, "
-                + "seat_number, seat_type, status "
+                "SELECT seat_id, room_id, "
+                + "seat_row, seat_number, "
+                + "seat_type, status "
                 + "FROM Seat "
                 + "WHERE room_id = ? "
                 + "ORDER BY seat_row, seat_number";
@@ -30,39 +28,30 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    roomId
-            );
+            ps.setInt(1, roomId);
 
             ResultSet rs =
                     ps.executeQuery();
 
             while (rs.next()) {
-
-                seats.add(
-                        mapSeat(rs)
-                );
+                seats.add(mapSeat(rs));
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return seats;
     }
 
-    // =========================================================
-    // TÌM 1 GHẾ
-    // =========================================================
     public Seat findByIdAndRoom(
             int seatId,
             int roomId) {
 
         String sql =
-                "SELECT seat_id, room_id, seat_row, "
-                + "seat_number, seat_type, status "
+                "SELECT seat_id, room_id, "
+                + "seat_row, seat_number, "
+                + "seat_type, status "
                 + "FROM Seat "
                 + "WHERE seat_id = ? "
                 + "AND room_id = ?";
@@ -72,35 +61,23 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    seatId
-            );
-
-            ps.setInt(
-                    2,
-                    roomId
-            );
+            ps.setInt(1, seatId);
+            ps.setInt(2, roomId);
 
             ResultSet rs =
                     ps.executeQuery();
 
             if (rs.next()) {
-
                 return mapSeat(rs);
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return null;
     }
 
-    // =========================================================
-    // KIỂM TRA TRÙNG VỊ TRÍ
-    // =========================================================
     public boolean existsPosition(
             int roomId,
             int seatRow,
@@ -134,27 +111,12 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    roomId
-            );
-
-            ps.setInt(
-                    2,
-                    seatRow
-            );
-
-            ps.setInt(
-                    3,
-                    seatNumber
-            );
+            ps.setInt(1, roomId);
+            ps.setInt(2, seatRow);
+            ps.setInt(3, seatNumber);
 
             if (excludeSeatId != null) {
-
-                ps.setInt(
-                        4,
-                        excludeSeatId
-                );
+                ps.setInt(4, excludeSeatId);
             }
 
             ResultSet rs =
@@ -163,16 +125,12 @@ public class SeatRepository extends DBContext {
             return rs.next();
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // ĐẾM GHẾ
-    // =========================================================
     public int countSeats(
             int roomId) {
 
@@ -186,32 +144,51 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    roomId
-            );
+            ps.setInt(1, roomId);
 
             ResultSet rs =
                     ps.executeQuery();
 
             if (rs.next()) {
-
-                return rs.getInt(
-                        "total"
-                );
+                return rs.getInt("total");
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return 0;
     }
 
-    // =========================================================
-    // KIỂM TRA LỊCH SỬ VÉ
-    // =========================================================
+    public int getMaxRow(
+            int roomId) {
+
+        String sql =
+                "SELECT COALESCE(MAX(seat_row), 0) AS max_row "
+                + "FROM Seat "
+                + "WHERE room_id = ?";
+
+        try {
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            ps.setInt(1, roomId);
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("max_row");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     public boolean hasTicketHistory(
             int seatId) {
 
@@ -225,10 +202,7 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    seatId
-            );
+            ps.setInt(1, seatId);
 
             ResultSet rs =
                     ps.executeQuery();
@@ -236,17 +210,12 @@ public class SeatRepository extends DBContext {
             return rs.next();
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // THÊM GHẾ
-    // Giữ lại để không ảnh hưởng chức năng cũ.
-    // =========================================================
     public boolean insert(
             Seat seat) {
 
@@ -261,35 +230,15 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    seat.getRoomId()
-            );
-
-            ps.setInt(
-                    2,
-                    seat.getSeatRow()
-            );
-
-            ps.setInt(
-                    3,
-                    seat.getSeatNumber()
-            );
-
-            ps.setString(
-                    4,
-                    seat.getSeatType()
-            );
-
-            ps.setString(
-                    5,
-                    seat.getStatus()
-            );
+            ps.setInt(1, seat.getRoomId());
+            ps.setInt(2, seat.getSeatRow());
+            ps.setInt(3, seat.getSeatNumber());
+            ps.setString(4, seat.getSeatType());
+            ps.setString(5, seat.getStatus());
 
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
@@ -297,8 +246,48 @@ public class SeatRepository extends DBContext {
     }
 
     // =========================================================
-    // UPDATE 1 GHẾ
+    // Thêm nguyên một hàng mới.
     // =========================================================
+    public boolean insertRow(
+            int roomId,
+            int seatRow,
+            int seatCount,
+            String seatType) {
+
+        String sql =
+                "INSERT INTO Seat "
+                + "(room_id, seat_row, seat_number, "
+                + "seat_type, status) "
+                + "VALUES (?, ?, ?, ?, 'ACTIVE')";
+
+        try {
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            for (int number = 1;
+                    number <= seatCount;
+                    number++) {
+
+                ps.setInt(1, roomId);
+                ps.setInt(2, seatRow);
+                ps.setInt(3, number);
+                ps.setString(4, seatType);
+
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     public boolean update(
             Seat seat) {
 
@@ -316,52 +305,51 @@ public class SeatRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    seat.getSeatRow()
-            );
-
-            ps.setInt(
-                    2,
-                    seat.getSeatNumber()
-            );
-
-            ps.setString(
-                    3,
-                    seat.getSeatType()
-            );
-
-            ps.setString(
-                    4,
-                    seat.getStatus()
-            );
-
-            ps.setInt(
-                    5,
-                    seat.getSeatId()
-            );
-
-            ps.setInt(
-                    6,
-                    seat.getRoomId()
-            );
+            ps.setInt(1, seat.getSeatRow());
+            ps.setInt(2, seat.getSeatNumber());
+            ps.setString(3, seat.getSeatType());
+            ps.setString(4, seat.getStatus());
+            ps.setInt(5, seat.getSeatId());
+            ps.setInt(6, seat.getRoomId());
 
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
     }
 
-    // =========================================================
-    // UPDATE NHIỀU GHẾ CÙNG LÚC
-    //
-    // seatType = null -> không đổi loại ghế
-    // status   = null -> không đổi status
-    // =========================================================
+    public boolean updateStatus(
+            int seatId,
+            int roomId,
+            String status) {
+
+        String sql =
+                "UPDATE Seat "
+                + "SET status = ? "
+                + "WHERE seat_id = ? "
+                + "AND room_id = ?";
+
+        try {
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            ps.setString(1, status);
+            ps.setInt(2, seatId);
+            ps.setInt(3, roomId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     public int updateBulk(
             List<Integer> seatIds,
             int roomId,
@@ -385,7 +373,7 @@ public class SeatRepository extends DBContext {
                         "UPDATE Seat SET "
                 );
 
-        boolean hasPreviousField =
+        boolean previous =
                 false;
 
         if (seatType != null) {
@@ -394,14 +382,12 @@ public class SeatRepository extends DBContext {
                     "seat_type = ?"
             );
 
-            hasPreviousField =
-                    true;
+            previous = true;
         }
 
         if (status != null) {
 
-            if (hasPreviousField) {
-
+            if (previous) {
                 sql.append(", ");
             }
 
@@ -461,8 +447,7 @@ public class SeatRepository extends DBContext {
                     roomId
             );
 
-            for (Integer seatId
-                    : seatIds) {
+            for (Integer seatId : seatIds) {
 
                 ps.setInt(
                         index++,
@@ -473,16 +458,38 @@ public class SeatRepository extends DBContext {
             return ps.executeUpdate();
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return 0;
     }
 
-    // =========================================================
-    // MAP
-    // =========================================================
+    public boolean delete(
+            int seatId,
+            int roomId) {
+
+        String sql =
+                "DELETE FROM Seat "
+                + "WHERE seat_id = ? "
+                + "AND room_id = ?";
+
+        try {
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            ps.setInt(1, seatId);
+            ps.setInt(2, roomId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     private Seat mapSeat(
             ResultSet rs)
             throws Exception {

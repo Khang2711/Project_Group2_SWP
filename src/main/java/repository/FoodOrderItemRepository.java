@@ -84,17 +84,20 @@ public class FoodOrderItemRepository {
                 + "WHERE food_order_id = ? "
                 + "ORDER BY food_order_item_id";
 
-        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, foodOrderId);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    items.add(mapFoodOrderItem(resultSet));
-                }
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                return items;
             }
 
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, foodOrderId);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        items.add(mapFoodOrderItem(resultSet));
+                    }
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

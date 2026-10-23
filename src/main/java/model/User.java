@@ -13,6 +13,7 @@ public class User {
     private String passwordHash; // password_hash
     private String avatarUrl; // avatar_url
     private String status; // status
+    private boolean emailVerified; // email_verified
     private Timestamp createdAt; // created_at
     private Timestamp updatedAt; // updated_at
 
@@ -103,6 +104,14 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     public Timestamp getCreatedAt() {
