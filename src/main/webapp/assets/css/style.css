@@ -4385,3 +4385,406 @@ END CSS ADMIN
         gap: 8px;
     }
 }
+
+
+/* =========================================
+   GENRES PAGE
+   ========================================= */
+
+.genres-page {
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    color: #f5f5f5;
+}
+
+/* Page header */
+.genres-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.genres-header h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.genres-header p {
+    margin: 0;
+    color: #999;
+    font-size: 15px;
+}
+
+/* Add button */
+.genres-btn-add {
+    display: inline-block;
+    padding: 11px 20px;
+    background: #ff1744;
+    color: #fff;
+    border-radius: 7px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.genres-btn-add:hover {
+    background: #e3133b;
+    transform: translateY(-1px);
+}
+
+/* Messages */
+.genres-success-message {
+    padding: 13px 16px;
+    margin-bottom: 22px;
+    background: #13291e;
+    border: 1px solid #225c3c;
+    border-radius: 7px;
+    color: #70d99a;
+}
+
+.genres-error-message {
+    padding: 13px 16px;
+    margin-bottom: 22px;
+    background: #32181d;
+    border: 1px solid #6b2935;
+    border-radius: 7px;
+    color: #ff8095;
+}
+
+/* Table */
+.genres-card {
+    background: #151517;
+    border: 1px solid #29292d;
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.genres-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.genres-table th {
+    padding: 15px 17px;
+    background: #1d1d20;
+    border-bottom: 1px solid #303034;
+    color: #aaa;
+    text-align: left;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.genres-table td {
+    padding: 17px;
+    border-bottom: 1px solid #28282c;
+    color: #ddd;
+    vertical-align: middle;
+}
+
+.genres-table tbody tr:hover {
+    background: #1c1c1f;
+}
+
+.genres-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Genre information */
+.genres-id {
+    color: #888 !important;
+}
+
+.genres-name {
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.genres-description {
+    color: #bbb;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Status */
+.genres-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.genres-active {
+    color: #65d890;
+    background: #183323;
+    border: 1px solid #28573a;
+}
+
+.genres-inactive {
+    color: #aaa;
+    background: #29292d;
+    border: 1px solid #3b3b40;
+}
+
+/* Actions */
+.genres-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.genres-status-form {
+    margin: 0;
+}
+
+.genres-btn-edit {
+    display: inline-block;
+    padding: 8px 13px;
+    border: 1px solid #ff1744;
+    border-radius: 5px;
+    background: transparent;
+    color: #ff4265;
+    font-size: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.genres-btn-edit:hover {
+    background: #ff1744;
+    color: #fff;
+}
+
+.genres-btn-deactivate {
+    padding: 8px 13px;
+    border: 1px solid #5d3038;
+    border-radius: 5px;
+    background: transparent;
+    color: #ff6b81;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.genres-btn-deactivate:hover {
+    background: #ff1744;
+    border-color: #ff1744;
+    color: #fff;
+}
+
+.genres-btn-activate {
+    padding: 8px 13px;
+    border: 1px solid #28573a;
+    border-radius: 5px;
+    background: transparent;
+    color: #65d890;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.genres-btn-activate:hover {
+    background: #183323;
+}
+
+/* Empty list */
+.genres-empty {
+    padding: 45px !important;
+    color: #888 !important;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+
+    .genres-table {
+        min-width: 780px;
+    }
+
+    .genres-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+
+/* =========================================
+   GENRE FORM PAGE
+   ========================================= */
+
+.genre-form-page {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    color: #f5f5f5;
+}
+
+/* Page header */
+.genre-form-header {
+    margin-bottom: 28px;
+}
+
+.genre-form-header h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.genre-form-header p {
+    margin: 0;
+    color: #999;
+    font-size: 15px;
+}
+
+/* Form card */
+.genre-form-card {
+    padding: 30px;
+    background: #151517;
+    border: 1px solid #29292d;
+    border-radius: 10px;
+}
+
+/* Form fields */
+.genre-form-group {
+    margin-bottom: 24px;
+}
+
+.genre-form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #ddd;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.genre-form-group .required {
+    color: #ff1744;
+}
+
+.genre-form-group input,
+.genre-form-group textarea,
+.genre-form-group select {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    background: #1c1c1f;
+    border: 1px solid #39393f;
+    border-radius: 7px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.genre-form-group input:focus,
+.genre-form-group textarea:focus,
+.genre-form-group select:focus {
+    border-color: #ff1744;
+}
+
+.genre-form-group input::placeholder,
+.genre-form-group textarea::placeholder {
+    color: #777;
+}
+
+.genre-form-group textarea {
+    min-height: 120px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.genre-form-group select {
+    cursor: pointer;
+}
+
+.genre-form-group select option {
+    background: #1c1c1f;
+    color: #fff;
+}
+
+/* Default status */
+.genre-form-status-note {
+    padding: 12px 14px;
+    background: #183323;
+    border: 1px solid #28573a;
+    border-radius: 7px;
+    color: #65d890;
+    font-size: 14px;
+}
+
+/* Form buttons */
+.genre-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.genre-form-btn-cancel {
+    display: inline-block;
+    padding: 11px 20px;
+    background: transparent;
+    border: 1px solid #444;
+    border-radius: 7px;
+    color: #ddd;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.genre-form-btn-cancel:hover {
+    background: #29292d;
+    color: #fff;
+}
+
+.genre-form-btn-save {
+    padding: 11px 20px;
+    background: #ff1744;
+    border: 1px solid #ff1744;
+    border-radius: 7px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.genre-form-btn-save:hover {
+    background: #e3133b;
+    border-color: #e3133b;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+
+    .genre-form-card {
+        padding: 20px;
+    }
+
+    .genre-form-header h1 {
+        font-size: 27px;
+    }
+
+    .genre-form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .genre-form-btn-cancel,
+    .genre-form-btn-save {
+        width: 100%;
+        text-align: center;
+    }
+}
+
