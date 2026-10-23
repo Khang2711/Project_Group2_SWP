@@ -27,9 +27,6 @@ public class SeatController extends HttpServlet {
     private final RoomService roomService =
             new RoomService();
 
-    // =========================================================
-    // GET
-    // =========================================================
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -37,10 +34,7 @@ public class SeatController extends HttpServlet {
             throws ServletException, IOException {
 
         User user =
-                getManager(
-                        request,
-                        response
-                );
+                getManager(request, response);
 
         if (user == null) {
             return;
@@ -68,17 +62,15 @@ public class SeatController extends HttpServlet {
         }
 
         Room room =
-                roomService
-                        .getRoom(
-                                roomId,
-                                user.getCinemaId()
-                        );
+                roomService.getRoom(
+                        roomId,
+                        user.getCinemaId()
+                );
 
         if (room == null) {
 
             response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND,
-                    "Không tìm thấy phòng."
+                    HttpServletResponse.SC_NOT_FOUND
             );
 
             return;
@@ -87,9 +79,6 @@ public class SeatController extends HttpServlet {
         String path =
                 request.getServletPath();
 
-        // -----------------------------------------------------
-        // SƠ ĐỒ GHẾ
-        // -----------------------------------------------------
         if ("/admin/seats".equals(path)) {
 
             loadSeatMap(
@@ -100,23 +89,15 @@ public class SeatController extends HttpServlet {
 
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/seats.jsp"
-            ).forward(
-                    request,
-                    response
-            );
+            ).forward(request, response);
 
             return;
         }
 
-        // -----------------------------------------------------
-        // FORM SỬA CHI TIẾT 1 GHẾ
-        // -----------------------------------------------------
         if ("/admin/seat-form".equals(path)) {
 
             String id =
-                    request.getParameter(
-                            "id"
-                    );
+                    request.getParameter("id");
 
             if (id != null
                     && !id.trim().isEmpty()) {
@@ -124,23 +105,19 @@ public class SeatController extends HttpServlet {
                 try {
 
                     int seatId =
-                            Integer.parseInt(
-                                    id
-                            );
+                            Integer.parseInt(id);
 
                     Seat seat =
-                            seatService
-                                    .getSeat(
-                                            seatId,
-                                            roomId,
-                                            user.getCinemaId()
-                                    );
+                            seatService.getSeat(
+                                    seatId,
+                                    roomId,
+                                    user.getCinemaId()
+                            );
 
                     if (seat == null) {
 
                         response.sendError(
-                                HttpServletResponse.SC_NOT_FOUND,
-                                "Không tìm thấy ghế."
+                                HttpServletResponse.SC_NOT_FOUND
                         );
 
                         return;
@@ -154,8 +131,7 @@ public class SeatController extends HttpServlet {
                 } catch (NumberFormatException e) {
 
                     response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            "Mã ghế không hợp lệ."
+                            HttpServletResponse.SC_BAD_REQUEST
                     );
 
                     return;
@@ -169,10 +145,7 @@ public class SeatController extends HttpServlet {
 
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/seat-form.jsp"
-            ).forward(
-                    request,
-                    response
-            );
+            ).forward(request, response);
 
             return;
         }
@@ -182,9 +155,6 @@ public class SeatController extends HttpServlet {
         );
     }
 
-    // =========================================================
-    // POST
-    // =========================================================
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -192,10 +162,7 @@ public class SeatController extends HttpServlet {
             throws ServletException, IOException {
 
         User user =
-                getManager(
-                        request,
-                        response
-                );
+                getManager(request, response);
 
         if (user == null) {
             return;
@@ -204,24 +171,10 @@ public class SeatController extends HttpServlet {
         String path =
                 request.getServletPath();
 
-        // -----------------------------------------------------
-        // BULK UPDATE NHIỀU GHẾ
-        // -----------------------------------------------------
+        // =====================================================
+        // SEAT MAP ACTION
+        // =====================================================
         if ("/admin/seats".equals(path)) {
-
-            String action =
-                    request.getParameter(
-                            "action"
-                    );
-
-            if (!"bulkUpdate".equals(action)) {
-
-                response.sendError(
-                        HttpServletResponse.SC_BAD_REQUEST
-                );
-
-                return;
-            }
 
             int roomId;
 
@@ -237,91 +190,135 @@ public class SeatController extends HttpServlet {
             } catch (NumberFormatException e) {
 
                 response.sendError(
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        "Mã phòng không hợp lệ."
+                        HttpServletResponse.SC_BAD_REQUEST
                 );
 
                 return;
             }
 
+            String action =
+                    request.getParameter(
+                            "action"
+                    );
+
             try {
 
-                List<Integer> seatIds =
-                        parseSeatIds(
-                                request.getParameterValues(
-                                        "seatId"
-                                )
-                        );
+                if ("bulkUpdate".equals(action)) {
 
-                String seatType =
-                        request.getParameter(
-                                "seatType"
-                        );
+                    List<Integer> seatIds =
+                            parseSeatIds(
+                                    request.getParameterValues(
+                                            "seatId"
+                                    )
+                            );
 
-                String status =
-                        request.getParameter(
-                                "status"
-                        );
+                    seatService.bulkUpdateSeats(
+                            seatIds,
+                            roomId,
+                            user.getCinemaId(),
+                            request.getParameter(
+                                    "seatType"
+                            ),
+                            request.getParameter(
+                                    "status"
+                            )
+                    );
 
-                seatService.bulkUpdateSeats(
-                        seatIds,
-                        roomId,
-                        user.getCinemaId(),
-                        seatType,
-                        status
-                );
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/seats?roomId="
-                        + roomId
-                        + "&updated=1"
-                );
-
-            } catch (IllegalArgumentException e) {
-
-                Room room =
-                        roomService
-                                .getRoom(
-                                        roomId,
-                                        user.getCinemaId()
-                                );
-
-                if (room == null) {
-
-                    response.sendError(
-                            HttpServletResponse.SC_NOT_FOUND
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin/seats?roomId="
+                            + roomId
+                            + "&updated=1"
                     );
 
                     return;
                 }
 
-                request.setAttribute(
-                        "error",
+                if ("addRow".equals(action)) {
+
+                    int seatCount =
+                            Integer.parseInt(
+                                    request.getParameter(
+                                            "seatCount"
+                                    )
+                            );
+
+                    seatService.addRow(
+                            roomId,
+                            user.getCinemaId(),
+                            seatCount,
+                            request.getParameter(
+                                    "rowSeatType"
+                            )
+                    );
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin/seats?roomId="
+                            + roomId
+                            + "&rowAdded=1"
+                    );
+
+                    return;
+                }
+
+                if ("deleteSelected".equals(
+                        action)) {
+
+                    List<Integer> seatIds =
+                            parseSeatIds(
+                                    request.getParameterValues(
+                                            "seatId"
+                                    )
+                            );
+
+                    seatService.deleteSeats(
+                            seatIds,
+                            roomId,
+                            user.getCinemaId()
+                    );
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin/seats?roomId="
+                            + roomId
+                            + "&deleted=1"
+                    );
+
+                    return;
+                }
+
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
+
+            } catch (NumberFormatException e) {
+
+                showSeatMapError(
+                        request,
+                        response,
+                        user,
+                        roomId,
+                        "Số lượng ghế không hợp lệ."
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                showSeatMapError(
+                        request,
+                        response,
+                        user,
+                        roomId,
                         e.getMessage()
-                );
-
-                loadSeatMap(
-                        request,
-                        room,
-                        user
-                );
-
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/admin/seats.jsp"
-                ).forward(
-                        request,
-                        response
                 );
             }
 
             return;
         }
 
-        // -----------------------------------------------------
-        // FORM CŨ: THÊM / SỬA 1 GHẾ
-        // Giữ lại để sửa chi tiết vị trí.
-        // -----------------------------------------------------
+        // =====================================================
+        // CREATE / UPDATE 1 SEAT
+        // =====================================================
         if (!"/admin/seat-form".equals(path)) {
 
             response.sendError(
@@ -332,50 +329,39 @@ public class SeatController extends HttpServlet {
         }
 
         String id =
-                request.getParameter(
-                        "id"
-                );
-
-        String roomIdText =
-                request.getParameter(
-                        "roomId"
-                );
-
-        String rowText =
-                request.getParameter(
-                        "seatRow"
-                );
-
-        String numberText =
-                request.getParameter(
-                        "seatNumber"
-                );
-
-        String seatType =
-                request.getParameter(
-                        "seatType"
-                );
-
-        String status =
-                request.getParameter(
-                        "status"
-                );
+                request.getParameter("id");
 
         try {
 
             int roomId =
                     Integer.parseInt(
-                            roomIdText
+                            request.getParameter(
+                                    "roomId"
+                            )
                     );
 
             int seatRow =
                     Integer.parseInt(
-                            rowText
+                            request.getParameter(
+                                    "seatRow"
+                            )
                     );
 
             int seatNumber =
                     Integer.parseInt(
-                            numberText
+                            request.getParameter(
+                                    "seatNumber"
+                            )
+                    );
+
+            String seatType =
+                    request.getParameter(
+                            "seatType"
+                    );
+
+            String status =
+                    request.getParameter(
+                            "status"
                     );
 
             if (id == null
@@ -393,9 +379,7 @@ public class SeatController extends HttpServlet {
             } else {
 
                 int seatId =
-                        Integer.parseInt(
-                                id
-                        );
+                        Integer.parseInt(id);
 
                 seatService.updateSeat(
                         seatId,
@@ -443,32 +427,71 @@ public class SeatController extends HttpServlet {
         }
     }
 
-    // =========================================================
-    // LOAD SƠ ĐỒ GHẾ
-    // =========================================================
+    private void showSeatMapError(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            User user,
+            int roomId,
+            String message)
+            throws ServletException, IOException {
+
+        Room room =
+                roomService.getRoom(
+                        roomId,
+                        user.getCinemaId()
+                );
+
+        if (room == null) {
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+
+            return;
+        }
+
+        request.setAttribute(
+                "error",
+                message
+        );
+
+        loadSeatMap(
+                request,
+                room,
+                user
+        );
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/admin/seats.jsp"
+        ).forward(request, response);
+    }
+
     private void loadSeatMap(
             HttpServletRequest request,
             Room room,
             User user) {
 
+        // Load room lại để capacity mới nhất.
+        Room latestRoom =
+                roomService.getRoom(
+                        room.getRoomId(),
+                        user.getCinemaId()
+                );
+
         request.setAttribute(
                 "room",
-                room
+                latestRoom
         );
 
         request.setAttribute(
                 "seatRows",
-                seatService
-                        .getSeatRowsByRoom(
-                                room.getRoomId(),
-                                user.getCinemaId()
-                        )
+                seatService.getSeatRowsByRoom(
+                        room.getRoomId(),
+                        user.getCinemaId()
+                )
         );
     }
 
-    // =========================================================
-    // PARSE CHECKBOX SEAT IDs
-    // =========================================================
     private List<Integer> parseSeatIds(
             String[] values) {
 
@@ -488,12 +511,9 @@ public class SeatController extends HttpServlet {
             try {
 
                 int id =
-                        Integer.parseInt(
-                                value
-                        );
+                        Integer.parseInt(value);
 
                 if (id <= 0) {
-
                     throw new NumberFormatException();
                 }
 
@@ -510,9 +530,6 @@ public class SeatController extends HttpServlet {
         return ids;
     }
 
-    // =========================================================
-    // LOAD LẠI FORM CHI TIẾT
-    // =========================================================
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -529,11 +546,10 @@ public class SeatController extends HttpServlet {
                     );
 
             Room room =
-                    roomService
-                            .getRoom(
-                                    roomId,
-                                    user.getCinemaId()
-                            );
+                    roomService.getRoom(
+                            roomId,
+                            user.getCinemaId()
+                    );
 
             if (room == null) {
 
@@ -544,13 +560,10 @@ public class SeatController extends HttpServlet {
                 return;
             }
 
-            Seat seat =
-                    new Seat();
+            Seat seat = new Seat();
 
             String id =
-                    request.getParameter(
-                            "id"
-                    );
+                    request.getParameter("id");
 
             if (id != null
                     && !id.trim().isEmpty()) {
@@ -558,9 +571,7 @@ public class SeatController extends HttpServlet {
                 try {
 
                     seat.setSeatId(
-                            Integer.parseInt(
-                                    id
-                            )
+                            Integer.parseInt(id)
                     );
 
                 } catch (NumberFormatException e) {
@@ -569,9 +580,7 @@ public class SeatController extends HttpServlet {
                 }
             }
 
-            seat.setRoomId(
-                    roomId
-            );
+            seat.setRoomId(roomId);
 
             try {
 
@@ -627,23 +636,16 @@ public class SeatController extends HttpServlet {
 
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/seat-form.jsp"
-            ).forward(
-                    request,
-                    response
-            );
+            ).forward(request, response);
 
         } catch (NumberFormatException e) {
 
             response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    "Mã phòng không hợp lệ."
+                    HttpServletResponse.SC_BAD_REQUEST
             );
         }
     }
 
-    // =========================================================
-    // CHECK CINEMA MANAGER
-    // =========================================================
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -653,9 +655,8 @@ public class SeatController extends HttpServlet {
                 request.getSession(false);
 
         if (session == null
-                || session.getAttribute(
-                        "user"
-                ) == null) {
+                || session.getAttribute("user")
+                == null) {
 
             response.sendRedirect(
                     request.getContextPath()

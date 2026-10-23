@@ -60,6 +60,10 @@
             Quên mật khẩu?
         </a>
 
+        <a href="${pageContext.request.contextPath}/auth/verify-email">
+            Xác thực email
+        </a>
+
         <a href="${pageContext.request.contextPath}/user/movies">
             Xem phim
         </a>

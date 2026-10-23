@@ -1,6 +1,7 @@
 package service;
 
 import java.sql.SQLException;
+import java.util.Locale;
 import model.Role;
 import model.User;
 import repository.RoleRepository;
@@ -26,7 +27,7 @@ public class AuthService {
             throw new IllegalArgumentException("Vui lòng nhập mật khẩu.");
         }
 
-        email = email.trim();
+        email = email.trim().toLowerCase(Locale.ROOT);
 
         if (email.length() > 100 || !email.contains("@")) {
             throw new IllegalArgumentException("Email không hợp lệ.");
@@ -48,6 +49,12 @@ public class AuthService {
             );
         }
 
+        if (!user.isEmailVerified()) {
+            throw new IllegalArgumentException(
+                    "Email chưa được xác thực. Vui lòng xác thực email trước khi đăng nhập."
+            );
+        }
+
         user.setPasswordHash(null);
 
         return user;
@@ -57,7 +64,7 @@ public class AuthService {
             String password, String confirmPassword) throws SQLException {
 
         fullName = fullName == null ? "" : fullName.trim();
-        email = email == null ? "" : email.trim();
+        email = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         phone = phone == null ? "" : phone.trim();
 
         checkRegisterInput(fullName, email, phone, password, confirmPassword);
@@ -85,6 +92,7 @@ public class AuthService {
         user.setPhone(phone);
         user.setPasswordHash(PasswordUtil.md5(password));
         user.setStatus("ACTIVE");
+        user.setEmailVerified(false);
 
         userRepository.insertCustomer(user);
     }

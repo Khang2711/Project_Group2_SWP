@@ -1,7 +1,12 @@
 package service;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import model.Combo;
+import model.FoodItem;
 import model.FoodOrder;
 import model.FoodOrderItem;
 import repository.FoodOrderItemRepository;
@@ -15,136 +20,211 @@ public class FoodOrderService {
     private final FoodOrderItemRepository foodOrderItemRepository
             = new FoodOrderItemRepository();
 
-    public int createPaidOrder(
-            FoodOrder foodOrder,
-            List<FoodOrderItem> items) {
+    public int getStaffCinema(int staffId) {
 
-        validateOrder(foodOrder, items);
+        try {
+            int cinemaId = foodOrderRepository.findStaffCinema(staffId);
 
-        BigDecimal subtotal = BigDecimal.ZERO;
+            if (cinemaId <= 0) {
+                throw new IllegalArgumentException(
+                        "Nhân viên chưa được phân công rạp đang hoạt động.");
+            }
 
-        for (FoodOrderItem item : items) {
+            return cinemaId;
 
-            validateItem(item);
+        } catch (SQLException e) {
+            e.printStackTrace();
 
-            BigDecimal lineTotal = item.getUnitPrice()
-                    .multiply(BigDecimal.valueOf(item.getQuantity()));
-
-            item.setLineTotal(lineTotal);
-            subtotal = subtotal.add(lineTotal);
-        }
-
-        foodOrder.setSubtotal(subtotal);
-        foodOrder.setTotalAmount(subtotal);
-
-        foodOrder.setPaymentMethod(
-                foodOrder.getPaymentMethod()
-                        .trim()
-                        .toUpperCase()
-        );
-
-        foodOrder.setPaymentStatus("PAID");
-        foodOrder.setOrderStatus("COMPLETED");
-
-        int foodOrderId = foodOrderRepository.insertWithItems(
-                foodOrder,
-                items
-        );
-
-        if (foodOrderId <= 0) {
             throw new IllegalStateException(
-                    "Không thể tạo đơn đồ ăn/combo."
-            );
+                    "Không thể kiểm tra rạp của nhân viên.");
         }
-
-        return foodOrderId;
     }
 
-    public FoodOrder getOrderById(int foodOrderId) {
+    public List<FoodItem> getFoodsForCounter(int cinemaId) {
 
-        if (foodOrderId <= 0) {
+        try {
+            return foodOrderRepository.findFoodsForCounter(cinemaId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Không thể tải danh sách món ăn, nước uống.");
+        }
+    }
+
+    public List<Combo> getCombosForCounter(int cinemaId) {
+
+        try {
+            return foodOrderRepository.findCombosForCounter(cinemaId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Không thể tải danh sách combo.");
+        }
+    }
+
+    public int createPaidOrder(
+            FoodOrder order,
+            List<FoodOrderItem> items) {
+
+        validateOrder(order, items);
+
+        if (getStaffCinema(order.getStaffId()) != order.getCinemaId()) {
+            throw new IllegalArgumentException(
+                    "Nhân viên không thuộc rạp của đơn hàng.");
+        }
+
+        List<FoodItem> foods = getFoodsForCounter(order.getCinemaId());
+        List<Combo> combos = getCombosForCounter(order.getCinemaId());
+
+        List<String> selectedKeys = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (FoodOrderItem item : items) {
+            validateItem(item);
+
+            BigDecimal price = null;
+            String key;
+
+            // Tìm sản phẩm trong danh sách ACTIVE của đúng rạp.
+            if (item.getFoodItemId() != null) {
+                key = "FOOD-" + item.getFoodItemId();
+
+                for (FoodItem food : foods) {
+                    if (food.getFoodItemId() == item.getFoodItemId()) {
+                        price = food.getPrice();
+                        break;
+                    }
+                }
+
+            } else {
+                key = "COMBO-" + item.getComboId();
+
+                for (Combo combo : combos) {
+                    if (combo.getComboId() == item.getComboId()) {
+                        price = combo.getComboPrice();
+                        break;
+                    }
+                }
+            }
+
+            if (selectedKeys.contains(key)) {
+                throw new IllegalArgumentException(
+                        "Sản phẩm bị lặp trong đơn hàng.");
+            }
+
+            selectedKeys.add(key);
+
+            if (price == null || price.signum() < 0) {
+                throw new IllegalArgumentException(
+                        "Sản phẩm không thuộc rạp hoặc đã ngừng bán. "
+                        + "Vui lòng chọn lại.");
+            }
+
+            // Giá thanh toán lấy từ database, không lấy từ trình duyệt.
+            item.setUnitPrice(price);
+
+            BigDecimal lineTotal = price.multiply(
+                    BigDecimal.valueOf(item.getQuantity()));
+
+            item.setLineTotal(lineTotal);
+            total = total.add(lineTotal);
+        }
+
+        order.setSubtotal(total);
+        order.setTotalAmount(total);
+        order.setPaymentMethod("CASH");
+        order.setPaymentStatus("PAID");
+        order.setOrderStatus("COMPLETED");
+
+        int orderId = foodOrderRepository.insertWithItems(order, items);
+
+        if (orderId <= 0) {
+            throw new IllegalStateException(
+                    "Không thể lưu đơn food/combo.");
+        }
+
+        return orderId;
+    }
+
+    public FoodOrder getOrderById(int orderId) {
+
+        if (orderId <= 0) {
             return null;
         }
 
-        return foodOrderRepository.getById(foodOrderId);
+        return foodOrderRepository.getById(orderId);
     }
 
-    public List<FoodOrderItem> getOrderItems(int foodOrderId) {
+    public List<FoodOrderItem> getOrderItems(int orderId) {
 
-        if (foodOrderId <= 0) {
+        if (orderId <= 0) {
             return List.of();
         }
 
-        return foodOrderItemRepository.getByFoodOrderId(foodOrderId);
+        return foodOrderItemRepository.getByFoodOrderId(orderId);
+    }
+
+    public Map<Integer, String> getReceiptNames(
+            int orderId, int cinemaId) {
+
+        try {
+            return foodOrderRepository.findReceiptNames(orderId, cinemaId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Không thể tải tên sản phẩm trong hóa đơn.");
+        }
     }
 
     private void validateOrder(
-            FoodOrder foodOrder,
+            FoodOrder order,
             List<FoodOrderItem> items) {
 
-        if (foodOrder == null) {
+        if (order == null
+                || order.getStaffId() <= 0
+                || order.getCinemaId() <= 0) {
+
             throw new IllegalArgumentException(
-                    "Đơn hàng không hợp lệ."
-            );
+                    "Thông tin đơn hàng không hợp lệ.");
         }
 
-        if (foodOrder.getStaffId() <= 0) {
+        if (!"CASH".equals(order.getPaymentMethod())) {
             throw new IllegalArgumentException(
-                    "Nhân viên không hợp lệ."
-            );
-        }
-
-        if (foodOrder.getCinemaId() <= 0) {
-            throw new IllegalArgumentException(
-                    "Rạp không hợp lệ."
-            );
-        }
-
-        if (foodOrder.getPaymentMethod() == null
-                || foodOrder.getPaymentMethod().trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Vui lòng chọn phương thức thanh toán."
-            );
+                    "Vui lòng chọn thanh toán tiền mặt.");
         }
 
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Đơn hàng phải có ít nhất một sản phẩm."
-            );
+                    "Đơn hàng phải có ít nhất một sản phẩm.");
         }
     }
 
     private void validateItem(FoodOrderItem item) {
 
-        if (item == null) {
+        if (item == null || item.getQuantity() <= 0) {
             throw new IllegalArgumentException(
-                    "Sản phẩm trong đơn không hợp lệ."
-            );
+                    "Sản phẩm hoặc số lượng không hợp lệ.");
         }
 
-        boolean hasFoodItem = item.getFoodItemId() != null
-                && item.getFoodItemId() > 0;
+        boolean hasFood = item.getFoodItemId() != null;
+        boolean hasCombo = item.getComboId() != null;
 
-        boolean hasCombo = item.getComboId() != null
-                && item.getComboId() > 0;
-
-        if (hasFoodItem == hasCombo) {
+        if (hasFood == hasCombo) {
             throw new IllegalArgumentException(
-                    "Mỗi dòng chỉ được chọn món ăn hoặc combo."
-            );
+                    "Mỗi dòng phải là món ăn hoặc combo.");
         }
 
-        if (item.getQuantity() <= 0) {
-            throw new IllegalArgumentException(
-                    "Số lượng sản phẩm phải lớn hơn 0."
-            );
-        }
+        if ((hasFood && item.getFoodItemId() <= 0)
+                || (hasCombo && item.getComboId() <= 0)) {
 
-        if (item.getUnitPrice() == null
-                || item.getUnitPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException(
-                    "Giá sản phẩm không hợp lệ."
-            );
+                    "Mã sản phẩm không hợp lệ.");
         }
     }
 }

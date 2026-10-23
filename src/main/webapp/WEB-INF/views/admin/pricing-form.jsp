@@ -4,12 +4,30 @@
 <%@ taglib prefix="c"
            uri="jakarta.tags.core" %>
 
+<%@ taglib prefix="fmt"
+           uri="jakarta.tags.fmt" %>
+
 <%@ include file="/WEB-INF/include/header.jsp" %>
+
+<c:set var="startTimeValue" value="" />
+<c:set var="endTimeValue" value="" />
+
+<c:if test="${not empty pricing.startTime}">
+    <fmt:formatDate var="startTimeValue"
+                    value="${pricing.startTime}"
+                    pattern="HH:mm" />
+</c:if>
+
+<c:if test="${not empty pricing.endTime}">
+    <fmt:formatDate var="endTimeValue"
+                    value="${pricing.endTime}"
+                    pattern="HH:mm" />
+</c:if>
 
 <style>
 
     .pricing-form-page {
-        max-width: 800px;
+        max-width: 950px;
         margin: 0 auto;
         padding: 42px 24px 70px;
         color: #f5f5f5;
@@ -21,8 +39,9 @@
     }
 
     .subtitle {
-        margin: 0 0 28px;
         color: #999;
+        margin: 0 0 28px;
+        line-height: 1.5;
     }
 
     .form-card {
@@ -41,10 +60,18 @@
         border-radius: 7px;
     }
 
+    .section-title {
+        margin: 5px 0 18px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid #29292d;
+        color: white;
+        font-size: 17px;
+    }
+
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        gap: 0 20px;
     }
 
     .form-group {
@@ -84,28 +111,20 @@
         line-height: 1.5;
     }
 
-    /* TYPE CARDS */
-
-    .type-guide {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+    .example-box {
+        padding: 15px 17px;
         margin-bottom: 25px;
-    }
-
-    .type-card {
-        padding: 13px;
-        border: 1px solid #303034;
-        background: #1b1b1e;
         border-radius: 8px;
-        text-align: center;
+        border: 1px solid #34343a;
+        background: #1a1a1d;
+        color: #aaa;
+        line-height: 1.7;
+        font-size: 13px;
     }
 
-    .type-card strong {
+    .example-box strong {
         color: white;
     }
-
-    /* BUTTON */
 
     .buttons {
         margin-top: 8px;
@@ -131,10 +150,6 @@
         text-decoration: none;
     }
 
-    .btn-cancel:hover {
-        color: white;
-    }
-
     @media (max-width: 700px) {
 
         .form-grid {
@@ -143,10 +158,6 @@
 
         .form-group.full {
             grid-column: auto;
-        }
-
-        .type-guide {
-            grid-template-columns: 1fr;
         }
     }
 
@@ -162,44 +173,44 @@
         <c:when test="${isEdit}">
 
             <h1>
-                Cập nhật giá vé
+                Cập nhật quy tắc giá vé
             </h1>
-
-            <p class="subtitle">
-                Điều chỉnh giá và thời gian
-                áp dụng của loại ghế.
-            </p>
 
         </c:when>
 
         <c:otherwise>
 
             <h1>
-                Thêm giá vé
+                Thêm quy tắc giá vé
             </h1>
-
-            <p class="subtitle">
-                Tạo mức giá mới cho một
-                loại ghế tại rạp.
-            </p>
 
         </c:otherwise>
 
     </c:choose>
 
-    <div class="type-guide">
+    <p class="subtitle">
+        Giá có thể được áp dụng theo phim,
+        loại phòng, loại ghế, ngày trong tuần,
+        khung giờ hoặc một ngày đặc biệt.
+    </p>
 
-        <div class="type-card">
-            <strong>STANDARD</strong>
-        </div>
+    <div class="example-box">
 
-        <div class="type-card">
-            <strong>VIP</strong>
-        </div>
+        Ví dụ:
 
-        <div class="type-card">
-            <strong>COUPLE</strong>
-        </div>
+        <strong>
+            Tất cả phim + IMAX + VIP +
+            WEEKEND + 17:00–23:59 = 150.000đ
+        </strong>
+
+        <br>
+
+        Hoặc:
+
+        <strong>
+            Avatar + IMAX + VIP +
+            24/12 = 180.000đ
+        </strong>
 
     </div>
 
@@ -227,7 +238,97 @@
 
             </c:if>
 
+            <div class="section-title">
+                Điều kiện áp dụng
+            </div>
+
             <div class="form-grid">
+
+                <!-- MOVIE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Phim
+                    </label>
+
+                    <select class="form-control"
+                            name="movieId">
+
+                        <option value="">
+                            Tất cả phim
+                        </option>
+
+                        <c:forEach var="movie"
+                                   items="${movies}">
+
+                            <option value="${movie.movieId}"
+                                    ${pricing.movieId == movie.movieId
+                                      ? 'selected' : ''}>
+
+                                <c:out value="${movie.title}" />
+
+                            </option>
+
+                        </c:forEach>
+
+                    </select>
+
+                    <div class="help-text">
+
+                        Chọn Tất cả phim để tạo
+                        giá mặc định.
+
+                    </div>
+
+                </div>
+
+                <!-- ROOM TYPE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Loại phòng
+                    </label>
+
+                    <select class="form-control"
+                            name="roomType">
+
+                        <option value=""
+                                ${empty pricing.roomType
+                                  ? 'selected' : ''}>
+
+                            Tất cả loại phòng
+
+                        </option>
+
+                        <option value="2D"
+                                ${pricing.roomType == '2D'
+                                  ? 'selected' : ''}>
+
+                            2D
+
+                        </option>
+
+                        <option value="3D"
+                                ${pricing.roomType == '3D'
+                                  ? 'selected' : ''}>
+
+                            3D
+
+                        </option>
+
+                        <option value="IMAX"
+                                ${pricing.roomType == 'IMAX'
+                                  ? 'selected' : ''}>
+
+                            IMAX
+
+                        </option>
+
+                    </select>
+
+                </div>
 
                 <!-- SEAT TYPE -->
 
@@ -270,9 +371,117 @@
 
                 </div>
 
-                <!-- PRICE -->
+                <!-- DAY TYPE -->
 
                 <div class="form-group">
+
+                    <label>
+                        Loại ngày
+                    </label>
+
+                    <select class="form-control"
+                            name="dayType">
+
+                        <option value="ALL"
+                                ${empty pricing.dayType ||
+                                  pricing.dayType == 'ALL'
+                                  ? 'selected' : ''}>
+
+                            Tất cả các ngày
+
+                        </option>
+
+                        <option value="WEEKDAY"
+                                ${pricing.dayType == 'WEEKDAY'
+                                  ? 'selected' : ''}>
+
+                            Thứ 2 - Thứ 6
+
+                        </option>
+
+                        <option value="WEEKEND"
+                                ${pricing.dayType == 'WEEKEND'
+                                  ? 'selected' : ''}>
+
+                            Thứ 7 - Chủ nhật
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- SPECIAL DATE -->
+
+                <div class="form-group full">
+
+                    <label>
+                        Ngày đặc biệt / ngày lễ
+                    </label>
+
+                    <input class="form-control"
+                           type="date"
+                           name="specialDate"
+                           value="${pricing.specialDate}">
+
+                    <div class="help-text">
+
+                        Để trống nếu đây là giá thông thường.
+                        Nếu nhập ngày đặc biệt thì hệ thống
+                        ưu tiên rule này hơn WEEKDAY/WEEKEND.
+
+                    </div>
+
+                </div>
+
+                <!-- START TIME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Giờ bắt đầu
+                    </label>
+
+                    <input class="form-control"
+                           type="time"
+                           name="startTime"
+                           value="${startTimeValue}">
+
+                </div>
+
+                <!-- END TIME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Giờ kết thúc
+                    </label>
+
+                    <input class="form-control"
+                           type="time"
+                           name="endTime"
+                           value="${endTimeValue}">
+
+                    <div class="help-text">
+
+                        Để trống cả hai nếu áp dụng
+                        cho toàn bộ ngày.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="section-title">
+                Giá và thời gian hiệu lực
+            </div>
+
+            <div class="form-grid">
+
+                <!-- PRICE -->
+
+                <div class="form-group full">
 
                     <label>
                         Giá vé (VNĐ)
@@ -281,10 +490,10 @@
                     <input class="form-control"
                            type="number"
                            name="price"
-                           min="0"
+                           min="1000"
                            step="1000"
                            required
-                           placeholder="Ví dụ: 80000"
+                           placeholder="Ví dụ: 90000"
                            value="${pricing.price}">
 
                 </div>
@@ -294,7 +503,7 @@
                 <div class="form-group">
 
                     <label>
-                        Ngày bắt đầu
+                        Hiệu lực từ ngày
                     </label>
 
                     <input class="form-control"
@@ -310,7 +519,7 @@
                 <div class="form-group">
 
                     <label>
-                        Ngày kết thúc
+                        Hiệu lực đến ngày
                     </label>
 
                     <input class="form-control"
@@ -320,7 +529,7 @@
 
                     <div class="help-text">
 
-                        Có thể để trống nếu mức giá
+                        Có thể để trống nếu
                         không có ngày kết thúc.
 
                     </div>
@@ -357,13 +566,6 @@
 
                     </select>
 
-                    <div class="help-text">
-
-                        Hai mức giá ACTIVE của cùng loại ghế
-                        không được có thời gian áp dụng chồng nhau.
-
-                    </div>
-
                 </div>
 
             </div>
@@ -380,7 +582,7 @@
                         </c:when>
 
                         <c:otherwise>
-                            Thêm giá vé
+                            Thêm quy tắc giá
                         </c:otherwise>
 
                     </c:choose>

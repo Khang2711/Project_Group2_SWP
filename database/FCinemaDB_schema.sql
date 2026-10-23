@@ -53,6 +53,7 @@ CREATE TABLE dbo.[User] (
     phone VARCHAR(20) NULL,
     avatar_url VARCHAR(500) NULL,
     status VARCHAR(20) NOT NULL CONSTRAINT DF_User_Status DEFAULT ('ACTIVE'),
+    email_verified BIT NOT NULL CONSTRAINT DF_User_EmailVerified DEFAULT (1),
     created_at DATETIME2 NOT NULL CONSTRAINT DF_User_CreatedAt DEFAULT (SYSDATETIME()),
     updated_at DATETIME2 NOT NULL CONSTRAINT DF_User_UpdatedAt DEFAULT (SYSDATETIME()),
     CONSTRAINT UQ_User_Email UNIQUE (email),
@@ -123,15 +124,81 @@ GO
    ========================================================= */
 CREATE TABLE dbo.Pricing (
     pricing_id INT IDENTITY(1,1) PRIMARY KEY,
+
     cinema_id INT NOT NULL,
+
+    /* NULL = áp dụng cho tất cả phim */
+    movie_id INT NULL,
+
+    /* NULL = áp dụng cho tất cả loại phòng */
+    room_type VARCHAR(50) NULL,
+
     seat_type VARCHAR(50) NOT NULL,
+
+    /* ALL / WEEKDAY / WEEKEND */
+    day_type VARCHAR(20) NOT NULL
+        CONSTRAINT DF_Pricing_DayType DEFAULT ('ALL'),
+
+    /* NULL = không phải ngày đặc biệt */
+    special_date DATE NULL,
+
+    /* Cả hai NULL = áp dụng cả ngày */
+    start_time TIME NULL,
+    end_time TIME NULL,
+
     price DECIMAL(12,2) NOT NULL,
+
+    /* Khoảng ngày rule có hiệu lực */
     start_date DATE NOT NULL,
     end_date DATE NULL,
-    status VARCHAR(20) NOT NULL CONSTRAINT DF_Pricing_Status DEFAULT ('ACTIVE'),
-    CONSTRAINT CK_Pricing_Price CHECK (price >= 0),
-    CONSTRAINT CK_Pricing_DateRange CHECK (end_date IS NULL OR end_date >= start_date),
-    CONSTRAINT FK_Pricing_Cinema FOREIGN KEY (cinema_id)
+
+    status VARCHAR(20) NOT NULL
+        CONSTRAINT DF_Pricing_Status DEFAULT ('ACTIVE'),
+
+    CONSTRAINT CK_Pricing_Price
+        CHECK (price >= 0),
+
+    CONSTRAINT CK_Pricing_DateRange
+        CHECK (
+            end_date IS NULL
+            OR end_date >= start_date
+        ),
+
+    CONSTRAINT CK_Pricing_DayType
+        CHECK (
+            day_type IN (
+                'ALL',
+                'WEEKDAY',
+                'WEEKEND'
+            )
+        ),
+
+    CONSTRAINT CK_Pricing_RoomType
+        CHECK (
+            room_type IS NULL
+            OR room_type IN (
+                '2D',
+                '3D',
+                'IMAX'
+            )
+        ),
+
+    CONSTRAINT CK_Pricing_TimeRange
+        CHECK (
+            (
+                start_time IS NULL
+                AND end_time IS NULL
+            )
+            OR
+            (
+                start_time IS NOT NULL
+                AND end_time IS NOT NULL
+                AND end_time > start_time
+            )
+        ),
+
+    CONSTRAINT FK_Pricing_Cinema
+        FOREIGN KEY (cinema_id)
         REFERENCES dbo.Cinema(cinema_id)
 );
 GO
@@ -155,6 +222,15 @@ CREATE TABLE dbo.Movie (
         release_date IS NULL OR end_date IS NULL OR end_date >= release_date
     )
 );
+GO
+/* =========================================================
+   Pricing -> Movie
+   Pricing được tạo trước Movie nên FK thêm sau.
+   ========================================================= */
+ALTER TABLE dbo.Pricing
+ADD CONSTRAINT FK_Pricing_Movie
+    FOREIGN KEY (movie_id)
+    REFERENCES dbo.Movie(movie_id);
 GO
 
 /* =========================================================
@@ -459,6 +535,13 @@ CREATE INDEX IX_Staff_CinemaId ON dbo.Staff(cinema_id);
 CREATE INDEX IX_Room_CinemaId ON dbo.Room(cinema_id);
 CREATE INDEX IX_Seat_RoomId ON dbo.Seat(room_id);
 CREATE INDEX IX_Pricing_CinemaSeatType ON dbo.Pricing(cinema_id, seat_type);
+CREATE INDEX IX_Pricing_RuleLookup
+    ON dbo.Pricing(
+        cinema_id,
+        seat_type,
+        status,
+        start_date
+    );
 CREATE INDEX IX_Showtime_RoomStartTime ON dbo.Showtime(room_id, start_time);
 CREATE INDEX IX_Showtime_MovieStartTime ON dbo.Showtime(movie_id, start_time);
 CREATE INDEX IX_Booking_CustomerId ON dbo.Booking(customer_id);
