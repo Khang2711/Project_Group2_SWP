@@ -53,6 +53,7 @@ public class AuthController extends HttpServlet {
 
                 if (currentSession != null
                         && currentSession.getAttribute("user") != null) {
+
                     currentSession.invalidate();
                 }
 
@@ -141,8 +142,7 @@ public class AuthController extends HttpServlet {
 
             default:
                 response.sendError(
-                        HttpServletResponse.SC_METHOD_NOT_ALLOWED
-                );
+                        HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
 
@@ -165,8 +165,7 @@ public class AuthController extends HttpServlet {
                 startSession(request, user, roleName);
 
                 response.sendRedirect(
-                        request.getContextPath() + homePath
-                );
+                        request.getContextPath() + homePath);
                 return;
             }
 
@@ -185,8 +184,7 @@ public class AuthController extends HttpServlet {
         request.getSession().setAttribute("loginError", error);
 
         response.sendRedirect(
-                request.getContextPath() + "/auth/login"
-        );
+                request.getContextPath() + "/auth/login");
     }
 
     private void register(HttpServletRequest request,
@@ -200,19 +198,17 @@ public class AuthController extends HttpServlet {
         String confirmPassword = request.getParameter("confirmPassword");
 
         request.setAttribute(
-                "fullName", fullName == null ? "" : fullName.trim()
-        );
+                "fullName", fullName == null ? "" : fullName.trim());
+
         request.setAttribute(
-                "email", email == null ? "" : email.trim()
-        );
+                "email", email == null ? "" : email.trim());
+
         request.setAttribute(
-                "phone", phone == null ? "" : phone.trim()
-        );
+                "phone", phone == null ? "" : phone.trim());
 
         try {
             authService.register(
-                    fullName, email, phone, password, confirmPassword
-            );
+                    fullName, email, phone, password, confirmPassword);
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -224,8 +220,8 @@ public class AuthController extends HttpServlet {
 
             request.setAttribute(
                     "error",
-                    "Không thể đăng ký lúc này. Vui lòng thử lại sau."
-            );
+                    "Không thể đăng ký lúc này. Vui lòng thử lại sau.");
+
             showRegister(request, response);
             return;
         }
@@ -236,47 +232,56 @@ public class AuthController extends HttpServlet {
         session.removeAttribute("registrationMessage");
         clearEmailVerificationData(session);
 
-        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
-        session.setAttribute("emailVerificationEmail", normalizedEmail);
+        String normalizedEmail
+                = email.trim().toLowerCase(java.util.Locale.ROOT);
+
+        session.setAttribute(
+                "emailVerificationEmail", normalizedEmail);
 
         try {
             String otp = emailVerificationService.sendOtp(normalizedEmail);
             saveEmailVerificationOtp(session, otp);
 
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email?sent=1"
-            );
+                    request.getContextPath() + "/auth/verify-email?sent=1");
 
         } catch (MessagingException e) {
             log("Cannot send registration email verification OTP.", e);
+
             clearEmailVerificationOtp(session);
+
             session.setAttribute(
                     "emailVerificationError",
                     "Tài khoản đã được tạo nhưng chưa gửi được OTP. "
-                    + "Vui lòng kiểm tra cấu hình email rồi bấm Gửi lại OTP."
-            );
+                    + "Vui lòng kiểm tra cấu hình email rồi bấm Gửi lại OTP.");
+
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email?sendError=1"
-            );
+                    request.getContextPath()
+                    + "/auth/verify-email?sendError=1");
 
         } catch (IllegalArgumentException e) {
             clearEmailVerificationOtp(session);
-            session.setAttribute("emailVerificationError", e.getMessage());
+
+            session.setAttribute(
+                    "emailVerificationError", e.getMessage());
+
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email?sendError=1"
-            );
+                    request.getContextPath()
+                    + "/auth/verify-email?sendError=1");
 
         } catch (SQLException e) {
             log("Cannot prepare registration email verification.", e);
+
             clearEmailVerificationOtp(session);
+
             session.setAttribute(
                     "emailVerificationError",
                     "Tài khoản đã được tạo nhưng không thể chuẩn bị OTP. "
-                    + "Vui lòng thử gửi lại mã."
-            );
+                    + "Vui lòng thử gửi lại mã.");
+
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email?sendError=1"
-            );
+                    request.getContextPath()
+                    + "/auth/verify-email?sendError=1");
         }
     }
 
@@ -288,26 +293,33 @@ public class AuthController extends HttpServlet {
         String email = request.getParameter("email");
 
         if (email == null || email.trim().isEmpty()) {
-            email = (String) session.getAttribute("emailVerificationEmail");
+            email = (String) session.getAttribute(
+                    "emailVerificationEmail");
         }
 
-        email = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
+        email = email == null
+                ? ""
+                : email.trim().toLowerCase(java.util.Locale.ROOT);
+
         request.setAttribute("emailVerificationEmail", email);
         session.setAttribute("emailVerificationEmail", email);
+
         clearEmailVerificationOtp(session);
 
         try {
             if (email.isEmpty()) {
-                throw new IllegalArgumentException("Vui lòng nhập email.");
+                throw new IllegalArgumentException(
+                        "Vui lòng nhập email.");
             }
 
             String otp = emailVerificationService.sendOtp(email);
             saveEmailVerificationOtp(session, otp);
+
             session.removeAttribute("emailVerificationError");
 
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email?sent=1"
-            );
+                    request.getContextPath()
+                    + "/auth/verify-email?sent=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -315,18 +327,20 @@ public class AuthController extends HttpServlet {
 
         } catch (MessagingException e) {
             log("Cannot send email verification OTP.", e);
+
             request.setAttribute(
                     "error",
-                    "Không thể gửi OTP. Vui lòng kiểm tra cấu hình email rồi thử lại."
-            );
+                    "Không thể gửi OTP. Vui lòng kiểm tra cấu hình email rồi thử lại.");
+
             showVerifyEmail(request, response);
 
         } catch (SQLException e) {
             log("Cannot prepare email verification OTP.", e);
+
             request.setAttribute(
                     "error",
-                    "Không thể kiểm tra tài khoản lúc này. Vui lòng thử lại sau."
-            );
+                    "Không thể kiểm tra tài khoản lúc này. Vui lòng thử lại sau.");
+
             showVerifyEmail(request, response);
         }
     }
@@ -339,87 +353,107 @@ public class AuthController extends HttpServlet {
 
         if (session == null
                 || session.getAttribute("emailVerificationEmail") == null) {
+
             response.sendRedirect(
-                    request.getContextPath() + "/auth/verify-email"
-            );
+                    request.getContextPath() + "/auth/verify-email");
             return;
         }
 
-        String email = (String) session.getAttribute("emailVerificationEmail");
-        String expectedOtp = (String) session.getAttribute("emailVerificationOtp");
-        Long expiresAt = (Long) session.getAttribute("emailVerificationOtpExpiresAt");
+        String email
+                = (String) session.getAttribute("emailVerificationEmail");
+
+        String expectedOtp
+                = (String) session.getAttribute("emailVerificationOtp");
+
+        Long expiresAt
+                = (Long) session.getAttribute(
+                        "emailVerificationOtpExpiresAt");
 
         if (expectedOtp == null || expiresAt == null) {
             request.setAttribute(
                     "error",
-                    "Bạn cần gửi OTP trước khi xác thực email. Hãy bấm Gửi OTP."
-            );
+                    "Bạn cần gửi OTP trước khi xác thực email. Hãy bấm Gửi OTP.");
+
             showVerifyEmail(request, response);
             return;
         }
 
         if (System.currentTimeMillis() > expiresAt) {
             clearEmailVerificationOtp(session);
+
             request.setAttribute(
                     "error",
-                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
-            );
+                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
+
             showVerifyEmail(request, response);
             return;
         }
 
         String enteredOtp = request.getParameter("otp");
+
         if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
-            request.setAttribute("error", "Vui lòng nhập mã OTP.");
+            request.setAttribute(
+                    "error", "Vui lòng nhập mã OTP.");
+
             showVerifyEmail(request, response);
             return;
         }
 
-        Integer attemptsValue = (Integer) session.getAttribute("emailVerificationOtpAttempts");
+        Integer attemptsValue
+                = (Integer) session.getAttribute(
+                        "emailVerificationOtpAttempts");
+
         int attempts = attemptsValue == null ? 0 : attemptsValue;
 
         if (attempts >= 5) {
             clearEmailVerificationOtp(session);
+
             request.setAttribute(
                     "error",
-                    "Bạn đã nhập sai OTP quá 5 lần. Vui lòng gửi lại mã mới."
-            );
+                    "Bạn đã nhập sai OTP quá 5 lần. Vui lòng gửi lại mã mới.");
+
             showVerifyEmail(request, response);
             return;
         }
 
         if (!expectedOtp.equals(enteredOtp.trim())) {
             attempts++;
+
             if (attempts >= 5) {
                 clearEmailVerificationOtp(session);
+
                 request.setAttribute(
                         "error",
-                        "Bạn đã nhập sai OTP 5 lần. Vui lòng gửi lại mã mới."
-                );
+                        "Bạn đã nhập sai OTP 5 lần. Vui lòng gửi lại mã mới.");
+
             } else {
-                session.setAttribute("emailVerificationOtpAttempts", attempts);
+                session.setAttribute(
+                        "emailVerificationOtpAttempts", attempts);
+
                 request.setAttribute(
                         "error",
                         "Mã OTP không đúng. Bạn còn "
-                        + (5 - attempts) + " lần thử."
-                );
+                        + (5 - attempts) + " lần thử.");
             }
+
             showVerifyEmail(request, response);
             return;
         }
 
         try {
             emailVerificationService.markEmailVerified(email);
+
             clearEmailVerificationData(session);
+
             session.removeAttribute("loginError");
+
             session.setAttribute(
                     "registrationMessage",
-                    "Xác thực email thành công. Bạn có thể đăng nhập."
-            );
+                    "Xác thực email thành công. Bạn có thể đăng nhập.");
 
             response.sendRedirect(
-                    request.getContextPath() + "/auth/login?verified=1"
-            );
+                    request.getContextPath()
+                    + "/auth/login?verified=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -427,24 +461,30 @@ public class AuthController extends HttpServlet {
 
         } catch (SQLException e) {
             log("Cannot mark customer email as verified.", e);
+
             request.setAttribute(
                     "error",
-                    "Không thể lưu trạng thái xác thực email lúc này. Vui lòng thử lại."
-            );
+                    "Không thể lưu trạng thái xác thực email lúc này. Vui lòng thử lại.");
+
             showVerifyEmail(request, response);
         }
     }
 
-    private void saveEmailVerificationOtp(HttpSession session, String otp) {
+    private void saveEmailVerificationOtp(
+            HttpSession session, String otp) {
+
         session.setAttribute("emailVerificationOtp", otp);
+
         session.setAttribute(
                 "emailVerificationOtpExpiresAt",
-                System.currentTimeMillis() + OTP_VALID_MILLIS
-        );
-        session.setAttribute("emailVerificationOtpAttempts", 0);
+                System.currentTimeMillis() + OTP_VALID_MILLIS);
+
+        session.setAttribute(
+                "emailVerificationOtpAttempts", 0);
     }
 
     private void clearEmailVerificationOtp(HttpSession session) {
+
         if (session == null) {
             return;
         }
@@ -455,12 +495,14 @@ public class AuthController extends HttpServlet {
     }
 
     private void clearEmailVerificationData(HttpSession session) {
+
         if (session == null) {
             return;
         }
 
         session.removeAttribute("emailVerificationEmail");
         session.removeAttribute("emailVerificationError");
+
         clearEmailVerificationOtp(session);
     }
 
@@ -472,8 +514,7 @@ public class AuthController extends HttpServlet {
 
         request.setAttribute(
                 "email",
-                email == null ? "" : email.trim()
-        );
+                email == null ? "" : email.trim());
 
         try {
             String otp = passwordResetService.sendOtp(email);
@@ -485,16 +526,16 @@ public class AuthController extends HttpServlet {
 
             session.setAttribute("resetEmail", resetEmail);
             session.setAttribute("resetOtp", otp);
+
             session.setAttribute(
                     "resetOtpExpiresAt",
-                    System.currentTimeMillis() + OTP_VALID_MILLIS
-            );
+                    System.currentTimeMillis() + OTP_VALID_MILLIS);
+
             session.setAttribute("resetOtpVerified", false);
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/verify-otp?sent=1"
-            );
+                    + "/auth/verify-otp?sent=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -505,8 +546,7 @@ public class AuthController extends HttpServlet {
 
             request.setAttribute(
                     "error",
-                    "Không thể kiểm tra tài khoản lúc này."
-            );
+                    "Không thể kiểm tra tài khoản lúc này.");
 
             showForgotPassword(request, response);
 
@@ -516,8 +556,7 @@ public class AuthController extends HttpServlet {
             request.setAttribute(
                     "error",
                     "Không thể gửi OTP. "
-                    + "Vui lòng kiểm tra cấu hình email."
-            );
+                    + "Vui lòng kiểm tra cấu hình email.");
 
             showForgotPassword(request, response);
         }
@@ -532,22 +571,23 @@ public class AuthController extends HttpServlet {
         if (!hasResetRequest(session)) {
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/forgot-password"
-            );
+                    + "/auth/forgot-password");
             return;
         }
 
         String enteredOtp = request.getParameter("otp");
-        String expectedOtp =
-                (String) session.getAttribute("resetOtp");
-        Long expiresAt =
-                (Long) session.getAttribute("resetOtpExpiresAt");
+
+        String expectedOtp
+                = (String) session.getAttribute("resetOtp");
+
+        Long expiresAt
+                = (Long) session.getAttribute("resetOtpExpiresAt");
 
         if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
             request.setAttribute(
                     "error",
-                    "Vui lòng nhập mã OTP."
-            );
+                    "Vui lòng nhập mã OTP.");
+
             showVerifyOtp(request, response);
             return;
         }
@@ -560,8 +600,7 @@ public class AuthController extends HttpServlet {
 
             request.setAttribute(
                     "error",
-                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
-            );
+                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
 
             showVerifyOtp(request, response);
             return;
@@ -570,20 +609,20 @@ public class AuthController extends HttpServlet {
         if (!expectedOtp.equals(enteredOtp.trim())) {
             request.setAttribute(
                     "error",
-                    "Mã OTP không đúng."
-            );
+                    "Mã OTP không đúng.");
+
             showVerifyOtp(request, response);
             return;
         }
 
         session.setAttribute("resetOtpVerified", true);
+
         session.removeAttribute("resetOtp");
         session.removeAttribute("resetOtpExpiresAt");
 
         response.sendRedirect(
                 request.getContextPath()
-                + "/auth/reset-password"
-        );
+                + "/auth/reset-password");
     }
 
     private void resetPassword(HttpServletRequest request,
@@ -595,33 +634,30 @@ public class AuthController extends HttpServlet {
         if (!isOtpVerified(session)) {
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/forgot-password"
-            );
+                    + "/auth/forgot-password");
             return;
         }
 
-        String email =
-                (String) session.getAttribute("resetEmail");
+        String email
+                = (String) session.getAttribute("resetEmail");
 
-        String newPassword =
-                request.getParameter("newPassword");
+        String newPassword
+                = request.getParameter("newPassword");
 
-        String confirmPassword =
-                request.getParameter("confirmPassword");
+        String confirmPassword
+                = request.getParameter("confirmPassword");
 
         try {
             passwordResetService.resetPassword(
                     email,
                     newPassword,
-                    confirmPassword
-            );
+                    confirmPassword);
 
             clearResetData(session);
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/login?reset=1"
-            );
+                    + "/auth/login?reset=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -632,8 +668,7 @@ public class AuthController extends HttpServlet {
 
             request.setAttribute(
                     "error",
-                    "Không thể cập nhật mật khẩu lúc này."
-            );
+                    "Không thể cập nhật mật khẩu lúc này.");
 
             showResetPassword(request, response);
         }
@@ -649,8 +684,7 @@ public class AuthController extends HttpServlet {
         }
 
         response.sendRedirect(
-                request.getContextPath() + "/auth/login"
-        );
+                request.getContextPath() + "/auth/login");
     }
 
     private void startSession(HttpServletRequest request,
@@ -670,6 +704,7 @@ public class AuthController extends HttpServlet {
     }
 
     private String getHomePath(String roleName) {
+
         if (roleName == null) {
             return null;
         }
@@ -679,7 +714,7 @@ public class AuthController extends HttpServlet {
                 return "/home";
 
             case "STAFF":
-                return "/staff/check-in";
+                return "/staff/counter";
 
             case "CINEMA_MANAGER":
                 return "/admin/dashboard";
@@ -702,15 +737,16 @@ public class AuthController extends HttpServlet {
         }
 
         String homePath = getHomePath(
-                (String) session.getAttribute("roleName")
-        );
+                (String) session.getAttribute("roleName"));
 
         if (homePath == null) {
             session.invalidate();
             return false;
         }
 
-        response.sendRedirect(request.getContextPath() + homePath);
+        response.sendRedirect(
+                request.getContextPath() + homePath);
+
         return true;
     }
 
@@ -722,11 +758,12 @@ public class AuthController extends HttpServlet {
 
         if (session != null) {
             request.setAttribute(
-                    "error", session.getAttribute("loginError")
-            );
+                    "error",
+                    session.getAttribute("loginError"));
+
             request.setAttribute(
-                    "success", session.getAttribute("registrationMessage")
-            );
+                    "success",
+                    session.getAttribute("registrationMessage"));
 
             session.removeAttribute("loginError");
             session.removeAttribute("registrationMessage");
@@ -755,20 +792,25 @@ public class AuthController extends HttpServlet {
         if (request.getAttribute("emailVerificationEmail") == null) {
             request.setAttribute(
                     "emailVerificationEmail",
-                    session == null ? "" : session.getAttribute("emailVerificationEmail")
-            );
+                    session == null
+                            ? ""
+                            : session.getAttribute("emailVerificationEmail"));
         }
 
         request.setAttribute(
                 "otpSent",
-                session != null && session.getAttribute("emailVerificationOtp") != null
-        );
+                session != null
+                && session.getAttribute("emailVerificationOtp") != null);
 
         if (request.getAttribute("error") == null && session != null) {
-            Object storedError = session.getAttribute("emailVerificationError");
+            Object storedError
+                    = session.getAttribute("emailVerificationError");
+
             if (storedError != null) {
                 request.setAttribute("error", storedError);
-                session.removeAttribute("emailVerificationError");
+
+                session.removeAttribute(
+                        "emailVerificationError");
             }
         }
 
@@ -795,15 +837,13 @@ public class AuthController extends HttpServlet {
         if (!hasResetRequest(session)) {
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/forgot-password"
-            );
+                    + "/auth/forgot-password");
             return;
         }
 
         request.setAttribute(
                 "resetEmail",
-                session.getAttribute("resetEmail")
-        );
+                session.getAttribute("resetEmail"));
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/auth/verify-otp.jsp"
@@ -819,8 +859,7 @@ public class AuthController extends HttpServlet {
         if (!isOtpVerified(session)) {
             response.sendRedirect(
                     request.getContextPath()
-                    + "/auth/forgot-password"
-            );
+                    + "/auth/forgot-password");
             return;
         }
 
@@ -837,11 +876,11 @@ public class AuthController extends HttpServlet {
     private boolean isOtpVerified(HttpSession session) {
         return hasResetRequest(session)
                 && Boolean.TRUE.equals(
-                        session.getAttribute("resetOtpVerified")
-                );
+                        session.getAttribute("resetOtpVerified"));
     }
 
     private void clearResetData(HttpSession session) {
+
         if (session == null) {
             return;
         }
@@ -853,10 +892,11 @@ public class AuthController extends HttpServlet {
     }
 
     private void preventCache(HttpServletResponse response) {
+
         response.setHeader(
                 "Cache-Control",
-                "no-store, no-cache, must-revalidate"
-        );
+                "no-store, no-cache, must-revalidate");
+
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);
     }

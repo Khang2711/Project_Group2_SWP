@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
+
 <fmt:setLocale value="vi_VN" />
 
 <style>
@@ -63,6 +64,11 @@
         cursor: pointer;
         font-size: 15px;
         font-weight: bold;
+    }
+
+    .uc17-dashboard .dashboard-export {
+        background: #292932;
+        border: 1px solid #555563;
     }
 
     .uc17-dashboard .dashboard-reset {
@@ -189,6 +195,64 @@
         color: #ffb9c1;
     }
 
+    .uc17-dashboard .analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .uc17-dashboard .analysis-grid .dashboard-panel {
+        min-width: 0;
+    }
+
+    .uc17-dashboard .ticket-chart-row {
+        display: grid;
+        grid-template-columns: minmax(120px, 1fr) minmax(80px, 1.2fr) 70px;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        font-size: 16px;
+    }
+
+    .uc17-dashboard .ticket-chart-label {
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+    }
+
+    .uc17-dashboard .ticket-chart-count {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .uc17-dashboard .dashboard-details > summary {
+        display: list-item;
+        list-style-position: inside;
+        cursor: pointer;
+        color: #fff;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .uc17-dashboard .dashboard-details > summary::marker {
+        color: #ff3542;
+    }
+
+    .uc17-dashboard .dashboard-details[open] > summary {
+        margin-bottom: 20px;
+    }
+
+    .uc17-dashboard .dashboard-details > summary:focus-visible {
+        outline: 2px solid #ff3542;
+        outline-offset: 6px;
+    }
+
+    @media (max-width: 1000px) {
+        .uc17-dashboard .analysis-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
     @media (max-width: 700px) {
         .uc17-dashboard .dashboard-cards {
             grid-template-columns: 1fr;
@@ -206,6 +270,22 @@
             grid-column: 2;
         }
     }
+
+    @media (max-width: 500px) {
+        .uc17-dashboard .ticket-chart-row {
+            grid-template-columns: minmax(0, 1fr) 70px;
+        }
+
+        .uc17-dashboard .ticket-chart-row .chart-track {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .uc17-dashboard .ticket-chart-count {
+            grid-column: 2;
+            grid-row: 1 / 3;
+        }
+    }
 </style>
 
 <section class="uc17-dashboard">
@@ -220,7 +300,7 @@
             <br>
         </c:if>
 
-        Thống kê theo ngày đặt vé, chỉ tính các đơn đã xác nhận.
+      
     </p>
 
     <form class="dashboard-filter"
@@ -251,10 +331,18 @@
             Xem thống kê
         </button>
 
+        <button type="submit"
+                name="export"
+                value="excel"
+                class="dashboard-button dashboard-export">
+            Xuất Excel
+        </button>
+
         <a class="dashboard-reset"
            href="${pageContext.request.contextPath}/admin/dashboard">
             Tháng hiện tại
         </a>
+
     </form>
 
     <c:choose>
@@ -274,9 +362,8 @@
                     </p>
 
                     <p class="card-value">
-                    <fmt:formatNumber
-                        value="${totalBookings}"
-                        pattern="#,##0" />
+                        <fmt:formatNumber value="${totalBookings}"
+                                          pattern="#,##0" />
                     </p>
                 </article>
 
@@ -284,9 +371,19 @@
                     <p class="card-label">Vé đã bán</p>
 
                     <p class="card-value">
-                    <fmt:formatNumber
-                        value="${totalTickets}"
-                        pattern="#,##0" />
+                        <fmt:formatNumber value="${totalTickets}"
+                                          pattern="#,##0" />
+                    </p>
+                </article>
+
+                <article class="dashboard-card">
+                    <p class="card-label">
+                        Đơn bắp nước/combo hoàn tất
+                    </p>
+
+                    <p class="card-value">
+                        <fmt:formatNumber value="${totalFoodOrders}"
+                                          pattern="#,##0" />
                     </p>
                 </article>
 
@@ -296,34 +393,155 @@
                     </p>
 
                     <p class="card-value revenue-value">
-                    <fmt:formatNumber
-                        value="${totalRevenue}"
-                        pattern="#,##0" />
-                    đ
+                        <fmt:formatNumber value="${totalRevenue}"
+                                          pattern="#,##0" />
+                        đ
                     </p>
                 </article>
+
+                <article class="dashboard-card">
+                    <p class="card-label">
+                        Doanh thu bắp nước/combo
+                    </p>
+
+                    <p class="card-value revenue-value">
+                        <fmt:formatNumber value="${foodRevenue}"
+                                          pattern="#,##0" />
+                        đ
+                    </p>
+                </article>
+
+                <article class="dashboard-card">
+                    <p class="card-label">Tổng doanh thu</p>
+
+                    <p class="card-value revenue-value">
+                        <fmt:formatNumber value="${combinedRevenue}"
+                                          pattern="#,##0" />
+                        đ
+                    </p>
+                </article>
+
+            </div>
+
+            <div class="analysis-grid">
+
+                <section class="dashboard-panel">
+
+                    <h2>Vé bán theo phim</h2>
+
+                    <p class="panel-note">
+                        Số vé bán trong khoảng ngày đã chọn,
+                        sắp xếp giảm dần.
+                    </p>
+
+                    <c:choose>
+                        <c:when test="${empty movieRows}">
+                            <p class="dashboard-empty">
+                                Chưa có vé bán trong khoảng ngày này.
+                            </p>
+                        </c:when>
+
+                        <c:otherwise>
+                            <c:forEach var="row" items="${movieRows}">
+
+                                <div class="ticket-chart-row">
+
+                                    <span class="ticket-chart-label">
+                                        <c:out value="${row.movieTitle}" />
+                                    </span>
+
+                                    <div class="chart-track"
+                                         aria-hidden="true">
+                                        <div class="chart-bar"
+                                             style="width: ${row.ticketPercent}%;">
+                                        </div>
+                                    </div>
+
+                                    <strong class="ticket-chart-count">
+                                        <fmt:formatNumber
+                                            value="${row.ticketCount}"
+                                            pattern="#,##0" />
+                                        vé
+                                    </strong>
+
+                                </div>
+
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+
+                </section>
+
+                <section class="dashboard-panel">
+
+                    <h2>Vé bán theo khung giờ chiếu</h2>
+
+                    <p class="panel-note">
+                        Nhóm theo giờ bắt đầu suất chiếu.
+                        Chỉ hiện khung giờ có vé bán.
+                    </p>
+
+                    <c:choose>
+                        <c:when test="${empty showHourRows}">
+                            <p class="dashboard-empty">
+                                Chưa có vé bán trong khoảng ngày này.
+                            </p>
+                        </c:when>
+
+                        <c:otherwise>
+                            <c:forEach var="row" items="${showHourRows}">
+
+                                <div class="ticket-chart-row">
+
+                                    <span class="ticket-chart-label">
+                                        <c:out value="${row.hourLabel}" />
+                                    </span>
+
+                                    <div class="chart-track"
+                                         aria-hidden="true">
+                                        <div class="chart-bar"
+                                             style="width: ${row.ticketPercent}%;">
+                                        </div>
+                                    </div>
+
+                                    <strong class="ticket-chart-count">
+                                        <fmt:formatNumber
+                                            value="${row.ticketCount}"
+                                            pattern="#,##0" />
+                                        vé
+                                    </strong>
+
+                                </div>
+
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+
+                </section>
 
             </div>
 
             <c:choose>
                 <c:when test="${empty dailyRows}">
                     <div class="dashboard-panel dashboard-empty">
-                        Chưa có đơn đặt vé đã xác nhận
-                        trong khoảng ngày đã chọn.
+                        Chưa có đơn vé đã xác nhận hoặc đơn bắp nước/combo
+                        đã thanh toán và hoàn tất trong khoảng ngày đã chọn.
                     </div>
                 </c:when>
 
                 <c:otherwise>
 
                     <section class="dashboard-panel">
-                        <h2>Doanh thu theo ngày</h2>
+
+                        <h2>Tổng doanh thu theo ngày</h2>
 
                         <p class="panel-note">
-                            Hiển thị các ngày có đơn đã xác nhận
-                            trong khoảng đã chọn.
+                            Gồm doanh thu vé sau giảm giá và bắp nước/combo.
+                            Hiển thị cả ngày chỉ có một trong hai loại đơn.
                         </p>
 
                         <c:forEach items="${dailyRows}" var="row">
+
                             <div class="chart-row">
 
                                 <span>
@@ -334,71 +552,94 @@
 
                                 <div class="chart-track"
                                      aria-hidden="true">
-
                                     <div class="chart-bar"
                                          style="width: ${row.revenuePercent}%;">
                                     </div>
-
                                 </div>
 
                                 <strong class="chart-amount">
                                     <fmt:formatNumber
-                                        value="${row.revenue}"
+                                        value="${row.dailyTotalRevenue}"
                                         pattern="#,##0" />
                                     đ
                                 </strong>
 
                             </div>
+
                         </c:forEach>
+
                     </section>
 
-                    <section class="dashboard-panel">
-                        <h2>Chi tiết theo ngày</h2>
+                    <details class="dashboard-panel dashboard-details">
+
+                        <summary>Chi tiết theo ngày</summary>
 
                         <div class="table-wrap">
                             <table>
 
                                 <thead>
                                     <tr>
-                                        <th>Ngày đặt vé</th>
-                                        <th>Đơn xác nhận</th>
+                                        <th>Ngày tạo đơn</th>
+                                        <th>Đơn vé</th>
                                         <th>Vé đã bán</th>
+                                        <th>Đơn bắp nước/combo</th>
                                         <th>Doanh thu vé</th>
+                                        <th>Doanh thu bắp nước/combo</th>
+                                        <th>Tổng doanh thu</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    <c:forEach items="${dailyRows}"
-                                               var="row">
+                                    <c:forEach items="${dailyRows}" var="row">
 
                                         <tr>
                                             <td>
-                                    <fmt:formatDate
-                                        value="${row.bookingDate}"
-                                        pattern="dd/MM/yyyy" />
-                                    </td>
+                                                <fmt:formatDate
+                                                    value="${row.bookingDate}"
+                                                    pattern="dd/MM/yyyy" />
+                                            </td>
 
-                                    <td>
-                                    <fmt:formatNumber
-                                        value="${row.bookingCount}"
-                                        pattern="#,##0" />
-                                    </td>
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.bookingCount}"
+                                                    pattern="#,##0" />
+                                            </td>
 
-                                    <td>
-                                    <fmt:formatNumber
-                                        value="${row.ticketCount}"
-                                        pattern="#,##0" />
-                                    </td>
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.ticketCount}"
+                                                    pattern="#,##0" />
+                                            </td>
 
-                                    <td>
-                                    <fmt:formatNumber
-                                        value="${row.revenue}"
-                                        pattern="#,##0" />
-                                    đ
-                                    </td>
-                                    </tr>
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.foodOrderCount}"
+                                                    pattern="#,##0" />
+                                            </td>
 
-                                </c:forEach>
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.revenue}"
+                                                    pattern="#,##0" />
+                                                đ
+                                            </td>
+
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.foodRevenue}"
+                                                    pattern="#,##0" />
+                                                đ
+                                            </td>
+
+                                            <td>
+                                                <fmt:formatNumber
+                                                    value="${row.dailyTotalRevenue}"
+                                                    pattern="#,##0" />
+                                                đ
+                                            </td>
+                                        </tr>
+
+                                    </c:forEach>
                                 </tbody>
 
                                 <tfoot>
@@ -406,29 +647,50 @@
                                         <td>Tổng cộng</td>
 
                                         <td>
-                                <fmt:formatNumber
-                                    value="${totalBookings}"
-                                    pattern="#,##0" />
-                                </td>
+                                            <fmt:formatNumber
+                                                value="${totalBookings}"
+                                                pattern="#,##0" />
+                                        </td>
 
-                                <td>
-                                <fmt:formatNumber
-                                    value="${totalTickets}"
-                                    pattern="#,##0" />
-                                </td>
+                                        <td>
+                                            <fmt:formatNumber
+                                                value="${totalTickets}"
+                                                pattern="#,##0" />
+                                        </td>
 
-                                <td>
-                                <fmt:formatNumber
-                                    value="${totalRevenue}"
-                                    pattern="#,##0" />
-                                đ
-                                </td>
-                                </tr>
+                                        <td>
+                                            <fmt:formatNumber
+                                                value="${totalFoodOrders}"
+                                                pattern="#,##0" />
+                                        </td>
+
+                                        <td>
+                                            <fmt:formatNumber
+                                                value="${totalRevenue}"
+                                                pattern="#,##0" />
+                                            đ
+                                        </td>
+
+                                        <td>
+                                            <fmt:formatNumber
+                                                value="${foodRevenue}"
+                                                pattern="#,##0" />
+                                            đ
+                                        </td>
+
+                                        <td>
+                                            <fmt:formatNumber
+                                                value="${combinedRevenue}"
+                                                pattern="#,##0" />
+                                            đ
+                                        </td>
+                                    </tr>
                                 </tfoot>
 
                             </table>
                         </div>
-                    </section>
+
+                    </details>
 
                 </c:otherwise>
             </c:choose>

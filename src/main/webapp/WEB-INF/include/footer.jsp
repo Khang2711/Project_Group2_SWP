@@ -14,6 +14,7 @@
 
         <div class="footer-links">
             <c:choose>
+
                 <c:when test="${empty sessionScope.user
                                 or sessionScope.roleName eq 'CUSTOMER'}">
 
@@ -27,6 +28,7 @@
 
                     <c:if test="${not empty sessionScope.user
                                   and sessionScope.roleName eq 'CUSTOMER'}">
+
                         <a href="${pageContext.request.contextPath}/user/tickets">
                             Vé của tôi
                         </a>
@@ -34,16 +36,21 @@
                         <a href="${pageContext.request.contextPath}/user/bookings">
                             Đơn đặt vé
                         </a>
+
                     </c:if>
+
                 </c:when>
 
                 <c:when test="${sessionScope.roleName eq 'STAFF'}">
+
                     <a href="${pageContext.request.contextPath}/staff/check-in">
                         Check-in vé
                     </a>
+
                 </c:when>
 
                 <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+
                     <a href="${pageContext.request.contextPath}/admin/dashboard">
                         Dashboard
                     </a>
@@ -56,6 +63,10 @@
                         Quản lý lịch chiếu
                     </a>
 
+                    <a href="${pageContext.request.contextPath}/admin/promotions">
+                        Quản lý khuyến mãi
+                    </a>
+
                     <a href="${pageContext.request.contextPath}/admin/food-items">
                         Quản lý đồ ăn / thức uống
                     </a>
@@ -63,13 +74,17 @@
                     <a href="${pageContext.request.contextPath}/admin/combos">
                         Quản lý combo
                     </a>
+
                 </c:when>
 
                 <c:when test="${sessionScope.roleName eq 'ADMIN'}">
+
                     <a href="${pageContext.request.contextPath}/system/users">
                         Quản lý người dùng
                     </a>
+
                 </c:when>
+
             </c:choose>
         </div>
 

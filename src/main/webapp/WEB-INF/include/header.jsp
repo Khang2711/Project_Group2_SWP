@@ -1,19 +1,12 @@
-
 <%@ page contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8" %>
-
-<%@ taglib prefix="c"
-           uri="jakarta.tags.core" %>
-
-<%@ taglib prefix="fn"
-           uri="jakarta.tags.functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
-
 <html lang="vi">
 
     <head>
-
         <meta charset="UTF-8">
 
         <meta name="viewport"
@@ -25,7 +18,6 @@
               href="${pageContext.request.contextPath}/assets/css/style.css">
 
         <style>
-
             .site-header {
                 position: relative;
                 z-index: 1000;
@@ -212,7 +204,6 @@
             }
 
             @media (max-width: 800px) {
-
                 .site-header .header-container {
                     flex-wrap: wrap;
                 }
@@ -225,7 +216,6 @@
             }
 
             @media (max-width: 550px) {
-
                 .account-menu {
                     width: 100%;
                 }
@@ -240,62 +230,44 @@
                     width: 100%;
                 }
             }
-
         </style>
 
         <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
-
     </head>
 
     <body>
 
         <header class="site-header">
-
             <div class="header-container">
 
                 <a href="${pageContext.request.contextPath}/home"
                    class="logo">
 
                     <span class="logo-box">F</span>
-
-                    <span class="logo-text">
-                        F-CINEMA
-                    </span>
-
+                    <span class="logo-text">F-CINEMA</span>
                 </a>
 
-
                 <nav class="main-nav">
-
                     <c:if test="${empty sessionScope.user}">
-
                         <a href="${pageContext.request.contextPath}/user/movies">
                             Phim
                         </a>
-
                     </c:if>
-
                 </nav>
-
 
                 <div class="header-actions">
 
-
                     <c:if test="${not empty sessionScope.user}">
 
-                        <details class="account-menu"
-                                 id="accountMenu">
+                        <details class="account-menu" id="accountMenu">
 
                             <summary class="account-menu-button">
 
                                 <span class="account-info">
-
                                     <span class="account-avatar">
 
                                         <c:if test="${not empty sessionScope.user.fullName}">
-
                                             <c:out value="${fn:substring(sessionScope.user.fullName, 0, 1)}" />
-
                                         </c:if>
 
                                         <c:if test="${empty sessionScope.user.fullName}">
@@ -305,22 +277,15 @@
                                     </span>
 
                                     <span class="account-name">
-
                                         <c:out value="${sessionScope.user.fullName}" />
-
                                     </span>
-
                                 </span>
 
-                                <span class="account-arrow">
-                                    ▼
-                                </span>
+                                <span class="account-arrow">▼</span>
 
                             </summary>
 
-
                             <div class="account-dropdown">
-
 
                                 <c:if test="${sessionScope.roleName eq 'CUSTOMER'}">
 
@@ -329,49 +294,28 @@
                                     </div>
 
                                     <a href="${pageContext.request.contextPath}/user/movies">
-
-                                        <span class="menu-icon">
-                                            ▶
-                                        </span>
-
+                                        <span class="menu-icon">▶</span>
                                         Phim
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/user/profile">
-
-                                        <span class="menu-icon">
-                                            ●
-                                        </span>
-
+                                        <span class="menu-icon">●</span>
                                         Hồ sơ cá nhân
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/user/tickets">
-
-                                        <span class="menu-icon">
-                                            🎫
-                                        </span>
-
+                                        <span class="menu-icon">🎫</span>
                                         Vé của tôi
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/user/bookings">
-
-                                        <span class="menu-icon">
-                                            ▦
-                                        </span>
-
+                                        <span class="menu-icon">▦</span>
                                         Đơn đặt vé
-
                                     </a>
 
                                     <div class="menu-divider"></div>
 
                                 </c:if>
-
 
                                 <c:if test="${sessionScope.roleName eq 'STAFF'}">
 
@@ -380,29 +324,43 @@
                                     </div>
 
                                     <a href="${pageContext.request.contextPath}/staff/counter">
+                                        <span class="menu-icon">⌂</span>
+                                        Quầy bán hàng
+                                    </a>
 
-                                        <span class="menu-icon">
-                                            $
-                                        </span>
-
+                                    <a href="${pageContext.request.contextPath}/staff/ticket-sale">
+                                        <span class="menu-icon">$</span>
                                         Bán vé tại quầy
+                                    </a>
 
+                                    <a href="${pageContext.request.contextPath}/staff/food-sale">
+                                        <span class="menu-icon">+</span>
+                                        Bán bắp nước/combo
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/staff/check-in">
-
-                                        <span class="menu-icon">
-                                            ✓
-                                        </span>
-
+                                        <span class="menu-icon">✓</span>
                                         Check-in vé
+                                    </a>
 
+                                    <a href="${pageContext.request.contextPath}/staff/counter?tab=statistics">
+                                        <span class="menu-icon">▥</span>
+                                        Thống kê của tôi
+                                    </a>
+
+                                    <a href="${pageContext.request.contextPath}/staff/counter?tab=tickets">
+                                        <span class="menu-icon">▤</span>
+                                        Vé đã bán
+                                    </a>
+
+                                    <a href="${pageContext.request.contextPath}/staff/counter?tab=food">
+                                        <span class="menu-icon">▤</span>
+                                        Bắp nước/combo đã bán
                                     </a>
 
                                     <div class="menu-divider"></div>
 
                                 </c:if>
-
 
                                 <c:if test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
 
@@ -411,101 +369,60 @@
                                     </div>
 
                                     <a href="${pageContext.request.contextPath}/admin/dashboard">
-
-                                        <span class="menu-icon">
-                                            ▣
-                                        </span>
-
+                                        <span class="menu-icon">▣</span>
                                         Dashboard
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/cinemas">
-
-                                        <span class="menu-icon">
-                                            ★
-                                        </span>
-
+                                        <span class="menu-icon">★</span>
                                         Thông tin rạp
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/rooms">
-
-                                        <span class="menu-icon">
-                                            ▦
-                                        </span>
-
+                                        <span class="menu-icon">▦</span>
                                         Quản lý phòng chiếu
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/movies">
-
-                                        <span class="menu-icon">
-                                            ▶
-                                        </span>
-
+                                        <span class="menu-icon">▶</span>
                                         Quản lý phim
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/genres">
-
-                                        <span class="menu-icon">
-                                            🎬︎
-                                        </span>
-
+                                        <span class="menu-icon">🎬︎</span>
                                         Quản lý thể loại
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/pricing">
-
-                                        <span class="menu-icon">
-                                            $
-                                        </span>
-
+                                        <span class="menu-icon">$</span>
                                         Quản lý giá vé
+                                    </a>
 
+                                    <a href="${pageContext.request.contextPath}/admin/promotions">
+                                        <span class="menu-icon">%</span>
+                                        Quản lý khuyến mãi
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/showtimes">
-
-                                        <span class="menu-icon">
-                                            ◷
-                                        </span>
-
+                                        <span class="menu-icon">◷</span>
                                         Quản lý lịch chiếu
-
                                     </a>
 
                                     <div class="menu-divider"></div>
 
                                     <a href="${pageContext.request.contextPath}/admin/food-items">
-
-                                        <span class="menu-icon">
-                                            ●
-                                        </span>
-
+                                        <span class="menu-icon">●</span>
                                         Đồ ăn / thức uống
-
                                     </a>
 
                                     <a href="${pageContext.request.contextPath}/admin/combos">
-
-                                        <span class="menu-icon">
-                                            ◈
-                                        </span>
-
+                                        <span class="menu-icon">◈</span>
                                         Quản lý combo
-
                                     </a>
 
                                     <div class="menu-divider"></div>
 
                                 </c:if>
-
 
                                 <c:if test="${sessionScope.roleName eq 'ADMIN'}">
 
@@ -514,29 +431,19 @@
                                     </div>
 
                                     <a href="${pageContext.request.contextPath}/system/users">
-
-                                        <span class="menu-icon">
-                                            ♟
-                                        </span>
-
+                                        <span class="menu-icon">♟</span>
                                         Quản lý người dùng
-
                                     </a>
 
                                     <div class="menu-divider"></div>
 
                                 </c:if>
 
-
                                 <a href="${pageContext.request.contextPath}/auth/logout"
                                    class="logout-menu">
 
-                                    <span class="menu-icon">
-                                        ↪
-                                    </span>
-
+                                    <span class="menu-icon">↪</span>
                                     Đăng xuất
-
                                 </a>
 
                             </div>
@@ -545,62 +452,42 @@
 
                     </c:if>
 
-
                     <c:if test="${empty sessionScope.user}">
 
                         <div class="guest-actions">
 
                             <a href="${pageContext.request.contextPath}/auth/login"
                                class="login-button">
-
                                 Đăng nhập
-
                             </a>
 
                             <a href="${pageContext.request.contextPath}/auth/register"
                                class="login-button">
-
                                 Đăng ký
-
                             </a>
 
                         </div>
 
                     </c:if>
 
-
                 </div>
 
             </div>
-
         </header>
 
-
         <script>
+            document.addEventListener("click", function (event) {
 
-            document.addEventListener(
-                    "click",
-                    function (event) {
+                const accountMenu = document.getElementById("accountMenu");
 
-                        const accountMenu =
-                                document.getElementById(
-                                        "accountMenu"
-                                        );
+                if (!accountMenu) {
+                    return;
+                }
 
-                        if (!accountMenu) {
-                            return;
-                        }
-
-                        if (!accountMenu.contains(event.target)) {
-
-                            accountMenu.removeAttribute(
-                                    "open"
-                                    );
-                        }
-                    }
-            );
-
+                if (!accountMenu.contains(event.target)) {
+                    accountMenu.removeAttribute("open");
+                }
+            });
         </script>
-
 
         <main class="page-container">
