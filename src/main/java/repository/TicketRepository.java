@@ -24,7 +24,8 @@ public class TicketRepository {
                 + "WHERE showtime_id = ? "
                 + "AND status IN ('VALID', 'USED')";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, showtimeId);
 
@@ -71,7 +72,8 @@ public class TicketRepository {
                 + "FROM Ticket WHERE booking_id = ? "
                 + "ORDER BY ticket_id";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, bookingId);
 
@@ -246,7 +248,8 @@ public class TicketRepository {
                 + "AND st.end_time > SYSDATETIME() "
                 + "ORDER BY st.start_time, st.showtime_id";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, staffId);
 
@@ -293,7 +296,8 @@ public class TicketRepository {
                 + "AND c.status = 'ACTIVE' "
                 + "AND st.end_time > SYSDATETIME()";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
             ps.setInt(2, showtimeId);
@@ -345,7 +349,8 @@ public class TicketRepository {
                 + "AND c.status = 'ACTIVE' "
                 + "AND st.end_time > SYSDATETIME()";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
             ps.setInt(2, showtimeId);

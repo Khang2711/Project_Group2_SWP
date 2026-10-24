@@ -5,8 +5,10 @@ import java.sql.Timestamp;
 
 /** Model cho bảng Booking. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
 public class Booking {
+
     private int bookingId; // booking_id
     private int customerId; // customer_id
+    private Integer staffId; // NULL nếu đơn chưa có thông tin nhân viên bán
     private int showtimeId; // showtime_id
     private Integer promotionId; // promotion_id
     private Timestamp bookingTime; // booking_time
@@ -18,9 +20,11 @@ public class Booking {
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int showtimeId, Integer promotionId,
-            Timestamp bookingTime, BigDecimal subtotal, BigDecimal discountAmount,
+    public Booking(int bookingId, int customerId, int showtimeId,
+            Integer promotionId, Timestamp bookingTime,
+            BigDecimal subtotal, BigDecimal discountAmount,
             BigDecimal totalAmount, String status) {
+
         this.bookingId = bookingId;
         this.customerId = customerId;
         this.showtimeId = showtimeId;
@@ -46,6 +50,14 @@ public class Booking {
 
     public void setCustomerId(int customerId) {
         this.customerId = customerId;
+    }
+
+    public Integer getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(Integer staffId) {
+        this.staffId = staffId;
     }
 
     public int getShowtimeId() {
