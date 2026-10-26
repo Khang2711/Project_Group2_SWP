@@ -169,24 +169,25 @@ public class UserController extends HttpServlet {
         String idText = request.getParameter("userId");
 
         try {
-            int roleId = Integer.parseInt(
-                    request.getParameter("roleId")
-            );
-
             Integer cinemaId = parseCinemaId(
                     request.getParameter("cinemaId")
             );
 
             if (idText == null || idText.trim().isEmpty()) {
+                int roleId = Integer.parseInt(
+                        request.getParameter("roleId")
+                );
                 createUser(request, response, roleId, cinemaId);
                 return;
             }
 
             int userId = Integer.parseInt(idText);
 
-            userService.updateRoleAndCinema(
+            userService.updateUserInfo(
                     userId,
-                    roleId,
+                    request.getParameter("fullName"),
+                    request.getParameter("email"),
+                    request.getParameter("phone"),
                     cinemaId
             );
 
@@ -261,6 +262,28 @@ public class UserController extends HttpServlet {
                 int userId = Integer.parseInt(idText);
                 User managedUser =
                         userService.getUserById(userId);
+
+                if (managedUser != null) {
+                    String fullName = request.getParameter("fullName");
+                    String email = request.getParameter("email");
+                    String phone = request.getParameter("phone");
+                    String cinemaIdText = request.getParameter("cinemaId");
+
+                    if (fullName != null) {
+                        managedUser.setFullName(fullName);
+                    }
+                    if (email != null) {
+                        managedUser.setEmail(email);
+                    }
+                    if (phone != null) {
+                        managedUser.setPhone(phone);
+                    }
+                    if (cinemaIdText != null) {
+                        managedUser.setCinemaId(
+                                parseCinemaIdSafe(cinemaIdText)
+                        );
+                    }
+                }
 
                 request.setAttribute(
                         "managedUser",
@@ -394,5 +417,13 @@ public class UserController extends HttpServlet {
                 "cinemas",
                 userService.getActiveCinemas()
         );
+
+        User managedUser = (User) request.getAttribute("managedUser");
+        if (managedUser != null && managedUser.getUserId() > 0) {
+            request.setAttribute(
+                    "managedRoleName",
+                    userService.getRoleName(managedUser.getRoleId())
+            );
+        }
     }
 }
