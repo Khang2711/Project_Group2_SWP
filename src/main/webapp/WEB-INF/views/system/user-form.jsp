@@ -113,9 +113,10 @@
 
     <c:choose>
         <c:when test="${isEdit}">
-            <h1>Phân quyền tài khoản</h1>
+            <h1>Chỉnh sửa thông tin tài khoản</h1>
             <p class="user-form-note">
-                Admin chỉ được thay đổi vai trò và rạp áp dụng.
+                Admin có thể chỉnh sửa họ tên, email, số điện thoại và rạp làm việc.
+                Vai trò hiện tại sẽ được giữ nguyên.
             </p>
         </c:when>
 
@@ -145,67 +146,31 @@
 
         <div class="user-form-group">
             <label for="fullName">Họ tên *</label>
-
-            <c:choose>
-                <c:when test="${isEdit}">
-                    <input type="text"
-                           id="fullName"
-                           value="${fn:escapeXml(requestScope.managedUser.fullName)}"
-                           readonly>
-                </c:when>
-
-                <c:otherwise>
-                    <input type="text"
-                           id="fullName"
-                           name="fullName"
-                           maxlength="100"
-                           value="${fn:escapeXml(requestScope.managedUser.fullName)}"
-                           required>
-                </c:otherwise>
-            </c:choose>
+            <input type="text"
+                   id="fullName"
+                   name="fullName"
+                   maxlength="100"
+                   value="${fn:escapeXml(requestScope.managedUser.fullName)}"
+                   required>
         </div>
 
         <div class="user-form-group">
             <label for="email">Email *</label>
-
-            <c:choose>
-                <c:when test="${isEdit}">
-                    <input type="email"
-                           id="email"
-                           value="${fn:escapeXml(requestScope.managedUser.email)}"
-                           readonly>
-                </c:when>
-
-                <c:otherwise>
-                    <input type="email"
-                           id="email"
-                           name="email"
-                           maxlength="100"
-                           value="${fn:escapeXml(requestScope.managedUser.email)}"
-                           required>
-                </c:otherwise>
-            </c:choose>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   maxlength="100"
+                   value="${fn:escapeXml(requestScope.managedUser.email)}"
+                   required>
         </div>
 
         <div class="user-form-group">
             <label for="phone">Số điện thoại</label>
-
-            <c:choose>
-                <c:when test="${isEdit}">
-                    <input type="text"
-                           id="phone"
-                           value="${fn:escapeXml(requestScope.managedUser.phone)}"
-                           readonly>
-                </c:when>
-
-                <c:otherwise>
-                    <input type="text"
-                           id="phone"
-                           name="phone"
-                           maxlength="20"
-                           value="${fn:escapeXml(requestScope.managedUser.phone)}">
-                </c:otherwise>
-            </c:choose>
+            <input type="text"
+                   id="phone"
+                   name="phone"
+                   maxlength="20"
+                   value="${fn:escapeXml(requestScope.managedUser.phone)}">
         </div>
 
         <div class="user-form-group">
@@ -236,33 +201,46 @@
             </c:choose>
         </div>
 
-        <div class="user-form-group">
-            <label for="roleId">Vai trò *</label>
+        <c:choose>
+            <c:when test="${isEdit}">
+                <div class="user-form-group">
+                    <label for="roleName">Vai trò</label>
+                    <input type="text"
+                           id="roleName"
+                           value="${fn:escapeXml(requestScope.managedRoleName)}"
+                           readonly>
+                    <span class="user-form-help">
+                        Không thể thay đổi vai trò của tài khoản đã tạo.
+                    </span>
+                </div>
+            </c:when>
 
-            <select id="roleId"
-                    name="roleId"
-                    required>
-
-                <option value="">-- Chọn vai trò --</option>
-
-                <c:forEach var="role" items="${roles}">
-                    <c:choose>
-                        <c:when test="${not empty requestScope.managedUser
-                                        and requestScope.managedUser.roleId == role.roleId}">
-                            <option value="${role.roleId}" selected>
-                                <c:out value="${role.roleName}" />
-                            </option>
-                        </c:when>
-
-                        <c:otherwise>
-                            <option value="${role.roleId}">
-                                <c:out value="${role.roleName}" />
-                            </option>
-                        </c:otherwise>
-                    </c:choose>
-                </c:forEach>
-            </select>
-        </div>
+            <c:otherwise>
+                <div class="user-form-group">
+                    <label for="roleId">Vai trò *</label>
+                    <select id="roleId"
+                            name="roleId"
+                            required>
+                        <option value="">-- Chọn vai trò --</option>
+                        <c:forEach var="role" items="${roles}">
+                            <c:choose>
+                                <c:when test="${not empty requestScope.managedUser
+                                                and requestScope.managedUser.roleId == role.roleId}">
+                                    <option value="${role.roleId}" selected>
+                                        <c:out value="${role.roleName}" />
+                                    </option>
+                                </c:when>
+                                <c:otherwise>
+                                    <option value="${role.roleId}">
+                                        <c:out value="${role.roleName}" />
+                                    </option>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                    </select>
+                </div>
+            </c:otherwise>
+        </c:choose>
 
         <div class="user-form-group">
             <label for="cinemaId">Rạp áp dụng</label>
@@ -291,7 +269,7 @@
             </select>
 
             <span class="user-form-help">
-                Bắt buộc chọn rạp khi vai trò là STAFF hoặc CINEMA_MANAGER.
+                Bắt buộc chọn rạp cho tài khoản STAFF hoặc CINEMA_MANAGER.
             </span>
         </div>
 
@@ -309,7 +287,7 @@
                     class="user-form-button">
                 <c:choose>
                     <c:when test="${isEdit}">
-                        Lưu vai trò / rạp
+                        Lưu thay đổi
                     </c:when>
 
                     <c:otherwise>
