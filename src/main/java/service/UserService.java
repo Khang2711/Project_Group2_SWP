@@ -81,8 +81,10 @@ public class UserService {
         saveProfileByRole(userId, user.getRoleId(), cinemaId);
     }
 
-    public void updateRoleAndCinema(int userId,
-            int roleId,
+    public void updateUserInfo(int userId,
+            String fullName,
+            String email,
+            String phone,
             Integer cinemaId) throws SQLException {
 
         User currentUser = userRepository.findById(userId);
@@ -99,14 +101,33 @@ public class UserService {
             );
         }
 
-        validateRoleAndCinema(roleId, cinemaId);
+        currentUser.setFullName(fullName);
+        currentUser.setEmail(email);
+        currentUser.setPhone(phone);
+        validateUserInfo(currentUser);
 
-        currentUser.setRoleId(roleId);
-        currentUser.setPasswordHash(null);
+        User sameEmail = userRepository.findByEmail(currentUser.getEmail());
+        if (sameEmail != null && sameEmail.getUserId() != userId) {
+            throw new IllegalArgumentException(
+                    "Email đã được sử dụng bởi tài khoản khác."
+            );
+        }
 
-        userRepository.update(currentUser);
+        // Keep the existing role unchanged; only validate the cinema assignment.
+        validateRoleAndCinema(currentUser.getRoleId(), cinemaId);
+        currentUser.setCinemaId(cinemaId);
 
-        saveProfileByRole(userId, roleId, cinemaId);
+        if (!userRepository.updateProfile(currentUser)) {
+            throw new IllegalArgumentException(
+                    "Không thể cập nhật tài khoản. Vui lòng thử lại."
+            );
+        }
+
+        saveProfileByRole(
+                userId,
+                currentUser.getRoleId(),
+                cinemaId
+        );
     }
 
     public void deactivateUser(int userId, int currentUserId)
@@ -150,6 +171,19 @@ public class UserService {
             String password,
             Integer cinemaId) throws SQLException {
 
+        validateUserInfo(user);
+
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Vui lòng nhập mật khẩu."
+            );
+        }
+
+        validateRoleAndCinema(user.getRoleId(), cinemaId);
+    }
+
+    private void validateUserInfo(User user) {
+
         if (user.getFullName() == null
                 || user.getFullName().trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -192,14 +226,6 @@ public class UserService {
                 );
             }
         }
-
-        if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Vui lòng nhập mật khẩu."
-            );
-        }
-
-        validateRoleAndCinema(user.getRoleId(), cinemaId);
     }
 
     private void validateRoleAndCinema(int roleId, Integer cinemaId)
