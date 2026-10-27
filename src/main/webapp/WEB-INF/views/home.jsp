@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
@@ -21,8 +22,16 @@
                     <div class="carousel-slide">
 
                         <!-- Ảnh phủ toàn bộ carousel -->
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, "http://") or fn:startsWith(movie.posterUrl, "https://")}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
+                        </c:choose>
                         <c:if test="${not empty movie.posterUrl}">
-                            <img src="${movie.posterUrl}"
+                            <img src="<c:out value='${posterSrc}' />"
                                  alt="${movie.title}"
                                  class="carousel-background-image">
                         </c:if>
@@ -317,9 +326,17 @@
 
 
                         <!-- Có poster -->
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, "http://") or fn:startsWith(movie.posterUrl, "https://")}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
+                        </c:choose>
                         <c:if test="${not empty movie.posterUrl}">
 
-                            <img src="${movie.posterUrl}"
+                            <img src="<c:out value='${posterSrc}' />"
                                  alt="${movie.title}">
 
                         </c:if>
@@ -452,9 +469,17 @@
                        class="coming-poster">
 
 
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, "http://") or fn:startsWith(movie.posterUrl, "https://")}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
+                        </c:choose>
                         <c:if test="${not empty movie.posterUrl}">
 
-                            <img src="${movie.posterUrl}"
+                            <img src="<c:out value='${posterSrc}' />"
                                  alt="${movie.title}">
 
                         </c:if>
