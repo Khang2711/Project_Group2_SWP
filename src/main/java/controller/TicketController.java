@@ -18,10 +18,17 @@ import model.Showtime;
 import model.Ticket;
 import model.User;
 import service.TicketService;
-
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 @WebServlet(urlPatterns = {
     "/user/tickets",
-    "/user/ticket-detail"
+    "/user/ticket-detail",
+            "/user/ticket-qr"
+
 })
 public class TicketController extends HttpServlet {
 
@@ -66,7 +73,15 @@ public class TicketController extends HttpServlet {
 
                     break;
 
+case "/user/ticket-qr":
 
+    showTicketQr(
+            request,
+            response
+    );
+
+    break;
+                    
                 default:
 
                     response.sendError(
@@ -302,6 +317,122 @@ public class TicketController extends HttpServlet {
         );
     }
 
+    private void showTicketQr(
+        HttpServletRequest request,
+        HttpServletResponse response
+) throws IOException,
+        SQLException,
+        ServletException {
+
+    int customerId
+            = getCurrentCustomerId(
+                    request
+            );
+
+    int ticketId
+            = parsePositiveInt(
+                    request.getParameter("id"),
+                    "Vé không hợp lệ."
+            );
+
+
+    // Chỉ lấy vé thuộc customer đang đăng nhập.
+    Ticket ticket
+            = ticketService
+                    .getTicketDetail(
+                            ticketId,
+                            customerId
+                    );
+
+
+    String ticketCode
+            = ticket.getTicketCode();
+
+
+    if (ticketCode == null
+            || ticketCode.trim().isEmpty()) {
+
+        response.sendError(
+                HttpServletResponse.SC_NOT_FOUND
+        );
+
+        return;
+    }
+
+
+    try {
+
+        int size = 260;
+
+
+        // QR chứa đúng ticket_code để staff có thể quét.
+        BitMatrix matrix
+                = new QRCodeWriter()
+                        .encode(
+                                ticketCode,
+                                BarcodeFormat.QR_CODE,
+                                size,
+                                size
+                        );
+
+
+        BufferedImage image
+                = new BufferedImage(
+                        size,
+                        size,
+                        BufferedImage.TYPE_INT_RGB
+                );
+
+
+        for (int y = 0; y < size; y++) {
+
+            for (int x = 0; x < size; x++) {
+
+                if (matrix.get(x, y)) {
+
+                    image.setRGB(
+                            x,
+                            y,
+                            0x000000
+                    );
+
+                } else {
+
+                    image.setRGB(
+                            x,
+                            y,
+                            0xFFFFFF
+                    );
+                }
+            }
+        }
+
+
+        response.setContentType(
+                "image/png"
+        );
+
+        response.setHeader(
+                "Cache-Control",
+                "private, max-age=300"
+        );
+
+
+        ImageIO.write(
+                image,
+                "PNG",
+                response.getOutputStream()
+        );
+
+
+    } catch (WriterException e) {
+
+        throw new ServletException(
+                "Không thể tạo QR code cho vé.",
+                e
+        );
+    }
+}
 
     private int getCurrentCustomerId(
             HttpServletRequest request
