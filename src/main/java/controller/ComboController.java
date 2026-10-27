@@ -1,13 +1,11 @@
 package controller;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -22,12 +20,8 @@ import model.FoodItem;
 import model.User;
 import service.ComboService;
 import service.FoodService;
-import util.ComboImageStorage;
+import util.SharedImagePath;
 
-@MultipartConfig(
-        maxFileSize = 5L * 1024 * 1024,
-        maxRequestSize = 8L * 1024 * 1024
-)
 @WebServlet(urlPatterns = {
     "/admin/combos",
     "/admin/combo-form",
@@ -124,7 +118,6 @@ public class ComboController extends HttpServlet {
         combo.setCinemaId(manager.getCinemaId());
         List<ComboItem> items = new ArrayList<>();
         String existingImageUrl = null;
-        String uploadedImageUrl = null;
 
         try {
             combo.setComboName(request.getParameter("comboName"));
@@ -155,28 +148,17 @@ public class ComboController extends HttpServlet {
                 throw new IllegalArgumentException("Combo phải có ít nhất một món.");
             }
 
-            Part imagePart = request.getPart("comboImage");
-            if (imagePart != null && imagePart.getSize() > 0) {
-                try {
-                    uploadedImageUrl = ComboImageStorage.saveComboImage(imagePart);
-                } catch (IOException e) {
-                    throw new IllegalStateException(
-                            "Không thể lưu ảnh combo. Vui lòng thử lại.", e);
-                }
-                if (uploadedImageUrl != null) {
-                    combo.setImageUrl(uploadedImageUrl);
-                }
-            }
+            String imageUrl = request.getParameter("comboImageUrl");
+            imageUrl = SharedImagePath.validate(imageUrl, "combos", existingImageUrl);
+            combo.setImageUrl(imageUrl);
 
             comboService.saveCombo(combo, items);
             response.sendRedirect(request.getContextPath() + "/admin/combos?saved=1");
         } catch (NumberFormatException e) {
-            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
             combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", "Mã combo, giá bán hoặc số lượng không hợp lệ.");
             forwardForm(request, response, manager, combo, items);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
             combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", e.getMessage());
             forwardForm(request, response, manager, combo, items);
