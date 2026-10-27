@@ -599,7 +599,9 @@
         if (!file) {
             return;
         }
-        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        var validType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
+        var validExtension = /\\.(jpe?g|png|gif)$/i.test(file.name);
+        if (!validType && !validExtension) {
             alert('Vui lòng chọn ảnh JPG, PNG hoặc GIF.');
             this.value = '';
             return;
