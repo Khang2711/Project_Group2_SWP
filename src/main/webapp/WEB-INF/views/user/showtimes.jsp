@@ -28,7 +28,6 @@
     <div class="showtimes-movie">
 
         <div class="showtimes-poster">
-            <c:choose>
                 <c:choose>
                     <c:when test="${fn:startsWith(movie.posterUrl, "http://") or fn:startsWith(movie.posterUrl, "https://")}">
                         <c:set var="posterSrc" value="${movie.posterUrl}" />
@@ -37,6 +36,7 @@
                         <c:url var="posterSrc" value="/${movie.posterUrl}" />
                     </c:otherwise>
                 </c:choose>
+            <c:choose>
                 <c:when test="${not empty movie.posterUrl}">
                     <img src="<c:out value='${posterSrc}' />" alt="${movie.title}">
                 </c:when>
