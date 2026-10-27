@@ -49,7 +49,7 @@ public final class ProjectImageStorage {
         if (submittedName == null || submittedName.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng chọn tệp ảnh hợp lệ.");
         }
-        submittedName = submittedName.replace('\\\\', '/');
+        submittedName = submittedName.replace('\\', '/');
         submittedName = submittedName.substring(submittedName.lastIndexOf('/') + 1);
 
         int dotIndex = submittedName.lastIndexOf('.');
@@ -113,7 +113,7 @@ public final class ProjectImageStorage {
         if (imagePath == null) {
             return null;
         }
-        String normalized = imagePath.trim().replace('\\\\', '/');
+        String normalized = imagePath.trim().replace('\\', '/');
         if (normalized.startsWith("/")) {
             normalized = normalized.substring(1);
         }
