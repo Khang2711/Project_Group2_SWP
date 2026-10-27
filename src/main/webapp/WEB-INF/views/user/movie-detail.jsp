@@ -1,6 +1,7 @@
 
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
@@ -24,8 +25,16 @@
         <div class="detail-poster">
 
             <c:choose>
+                <c:choose>
+                    <c:when test="${fn:startsWith(movie.posterUrl, "http://") or fn:startsWith(movie.posterUrl, "https://")}">
+                        <c:set var="posterSrc" value="${movie.posterUrl}" />
+                    </c:when>
+                    <c:otherwise>
+                        <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                    </c:otherwise>
+                </c:choose>
                 <c:when test="${not empty movie.posterUrl}">
-                    <img src="${movie.posterUrl}"
+                    <img src="<c:out value='${posterSrc}' />"
                          alt="<c:out value='${movie.title}' />">
                 </c:when>
 
