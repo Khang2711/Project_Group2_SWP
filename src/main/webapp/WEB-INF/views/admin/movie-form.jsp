@@ -397,15 +397,16 @@
                     <div class="form-group">
 
                         <label>
-                            Poster URL
+                            Đường dẫn poster trong project
                         </label>
 
                         <input class="form-control"
                                type="text"
                                name="posterUrl"
                                maxlength="500"
-                               placeholder="https://..."
+                               placeholder="assets/images/movies/ten-phim.jpg"
                                value="<c:out value='${movie.posterUrl}' />">
+                        <small>Thêm ảnh vào src/main/webapp/assets/images/movies/ rồi commit lên GitHub. Ứng dụng chỉ lưu đường dẫn, không tự upload file.</small>
 
                     </div>
 
