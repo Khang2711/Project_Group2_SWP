@@ -287,21 +287,21 @@
 
 
             <c:if test="${ticket.status eq 'USED'
-                         and not empty ticket.checkedInAt}">
+                          and not empty ticket.checkedInAt}">
 
-                <div class="ticket-checkin-note">
+                  <div class="ticket-checkin-note">
 
-                    Đã check-in lúc
+                      Đã check-in lúc
 
-                    <strong>
+                      <strong>
 
-                        <fmt:formatDate
-                            value="${ticket.checkedInAt}"
-                            pattern="dd/MM/yyyy HH:mm" />
+                          <fmt:formatDate
+                              value="${ticket.checkedInAt}"
+                              pattern="dd/MM/yyyy HH:mm" />
 
-                    </strong>
+                      </strong>
 
-                </div>
+                  </div>
 
             </c:if>
 
@@ -310,6 +310,18 @@
 
 
         <aside class="cinema-ticket-stub">
+
+
+            <span>
+                QR VÉ
+            </span>
+
+
+            <img
+                src="${ctx}/user/ticket-qr?id=${ticket.ticketId}"
+                alt="QR code vé"
+                class="cinema-ticket-qr"
+                />
 
 
             <span>
