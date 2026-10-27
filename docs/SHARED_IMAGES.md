@@ -4,7 +4,7 @@ This branch uses **project-managed static assets** so team members can pull the 
 
 ## Workflow
 
-1. Add JPG, PNG, GIF, or WEBP images to `src/main/webapp/assets/images/movies/`, `.../food/`, or `.../combos/`.
+1. Add JPG, PNG, GIF, or WEBP images to `src/main/webapp/assets/images/movies/`, `src/main/webapp/assets/images/food/`, or `src/main/webapp/assets/images/combos/`.
 2. Commit/push the image files to GitHub and let teammates pull them.
 3. On the Movie / Food Item / Combo form, enter the project-relative path, **without a leading slash**, e.g. `assets/images/movies/avatar.jpg`.
 4. Save the record. SQL Server stores the relative path in `poster_url` or `image_url`. Team members must also have the corresponding database rows / image paths (Git does not synchronize SQL Server).
