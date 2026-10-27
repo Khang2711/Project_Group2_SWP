@@ -61,12 +61,11 @@
                 <div class="field full">
                     <label for="comboImageUrl">Đường dẫn ảnh combo</label>
                     <input id="comboImageUrl" name="comboImageUrl" type="text" maxlength="500"
-                           list="comboImageUrlOptions" placeholder="assets/images/food/ten-anh.png"
+                           list="comboImageUrlOptions" placeholder="assets/images/combos/ten-anh.png"
                            value="<c:out value='${combo.imageUrl}' />">
                     <datalist id="comboImageUrlOptions">
-                        <option value="assets/images/food/combo-couple.png"></option>
                     </datalist>
-                    <p class="image-help">Chọn ảnh đã được commit trong src/main/webapp/assets/images/food/. File ảnh mới phải được thêm vào Git trước; website không tự upload ảnh lên GitHub.</p>
+                    <p class="image-help">Chọn ảnh đã được commit trong src/main/webapp/assets/images/combos/. File ảnh mới phải được thêm vào Git trước; website không tự upload ảnh lên GitHub.</p>
                     <c:if test="${not empty combo.imageUrl}">
                         <c:set var="currentImagePath" value="${fn:trim(combo.imageUrl)}" />
                         <c:choose>
