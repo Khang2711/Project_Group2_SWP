@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import model.FoodItem;
 import model.User;
 import service.FoodService;
-import util.FoodImageStorage;
+import util.ProjectImageStorage;
 
 @MultipartConfig(
         maxFileSize = 5L * 1024 * 1024,
@@ -142,7 +142,7 @@ public class FoodController extends HttpServlet {
             Part imagePart = request.getPart("foodImage");
             if (imagePart != null && imagePart.getSize() > 0) {
                 try {
-                    uploadedImageUrl = FoodImageStorage.saveFoodImage(imagePart);
+                    uploadedImageUrl = ProjectImageStorage.saveImage(imagePart, "food", getServletContext());
                 } catch (IOException e) {
                     throw new IllegalStateException(
                             "Không thể lưu ảnh sản phẩm. Vui lòng thử lại.", e);
@@ -155,14 +155,14 @@ public class FoodController extends HttpServlet {
             foodService.saveItem(item);
             response.sendRedirect(request.getContextPath() + "/admin/food-items?saved=1");
         } catch (NumberFormatException e) {
-            FoodImageStorage.deleteUploadedImage(uploadedImageUrl);
+            ProjectImageStorage.deleteUploadedImage(uploadedImageUrl, getServletContext());
             item.setImageUrl(existingImageUrl);
             request.setAttribute("error", "Mã sản phẩm hoặc giá bán không hợp lệ.");
             request.setAttribute("foodItem", item);
             request.getRequestDispatcher("/WEB-INF/views/admin/food-item-form.jsp")
                     .forward(request, response);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            FoodImageStorage.deleteUploadedImage(uploadedImageUrl);
+            ProjectImageStorage.deleteUploadedImage(uploadedImageUrl, getServletContext());
             item.setImageUrl(existingImageUrl);
             request.setAttribute("error", e.getMessage());
             request.setAttribute("foodItem", item);
