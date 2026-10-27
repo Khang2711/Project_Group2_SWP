@@ -30,7 +30,7 @@ public class ProjectImageServlet extends HttpServlet {
         }
 
         String relativePath = pathInfo.substring(1);
-        if (relativePath.contains("..") || relativePath.contains("\\\\")
+        if (relativePath.contains("..") || relativePath.contains("\\")
                 || !relativePath.matches("[A-Za-z0-9._/-]+")) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
