@@ -17,15 +17,6 @@
     <div class="movies-tabs">
 
         <c:choose>
-            <c:when test="${type == 'now'}">
-                <a href="${ctx}/user/movies?type=now" class="movies-tab active">PHIM ĐANG CHIẾU</a>
-            </c:when>
-            <c:otherwise>
-                <a href="${ctx}/user/movies?type=now" class="movies-tab">PHIM ĐANG CHIẾU</a>
-            </c:otherwise>
-        </c:choose>
-
-        <c:choose>
             <c:when test="${type == 'coming'}">
                 <a href="${ctx}/user/movies?type=coming" class="movies-tab active">PHIM SẮP CHIẾU</a>
             </c:when>
@@ -95,6 +86,7 @@
                                         <c:url var="posterSrc" value="/${movie.posterUrl}" />
                                     </c:otherwise>
                                 </c:choose>
+        <c:choose>
                                 <c:when test="${not empty movie.posterUrl}">
                                     <img src="<c:out value='${posterSrc}' />" alt="${movie.title}">
                                 </c:when>
