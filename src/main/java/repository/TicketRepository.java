@@ -96,6 +96,76 @@ public class TicketRepository {
 
         return tickets;
     }
+    
+    // UC-15: chỉ hiển thị vé đã được phát hành cho customer.
+public List<Ticket> findIssuedTicketsByCustomerId(int customerId)
+        throws SQLException {
+
+    List<Ticket> tickets = new ArrayList<>();
+
+    String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
+            + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
+            + "FROM Ticket t "
+            + "JOIN Booking b ON b.booking_id = t.booking_id "
+            + "JOIN Showtime st ON st.showtime_id = t.showtime_id "
+            + "WHERE b.customer_id = ? "
+            + "AND b.status = 'CONFIRMED' "
+            + "AND t.status IN ('VALID', 'USED') "
+            + "AND t.ticket_code IS NOT NULL "
+            + "ORDER BY st.start_time DESC, t.ticket_id DESC";
+
+    try (
+            Connection connection = getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)
+    ) {
+
+        ps.setInt(1, customerId);
+
+        try (ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                tickets.add(mapTicket(rs));
+            }
+        }
+    }
+
+    return tickets;
+}
+
+
+public Ticket findIssuedTicketByIdAndCustomerId(
+        int ticketId,
+        int customerId
+) throws SQLException {
+
+    String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
+            + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
+            + "FROM Ticket t "
+            + "JOIN Booking b ON b.booking_id = t.booking_id "
+            + "WHERE t.ticket_id = ? "
+            + "AND b.customer_id = ? "
+            + "AND b.status = 'CONFIRMED' "
+            + "AND t.status IN ('VALID', 'USED') "
+            + "AND t.ticket_code IS NOT NULL";
+
+    try (
+            Connection connection = getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql)
+    ) {
+
+        ps.setInt(1, ticketId);
+        ps.setInt(2, customerId);
+
+        try (ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return mapTicket(rs);
+            }
+        }
+    }
+
+    return null;
+}
 
     // UC-25: bán vé tại quầy.
     public int findCounterStaffCinema(
@@ -359,6 +429,42 @@ public class TicketRepository {
             return ps.executeUpdate() == 1;
         }
     }
+    
+    private Ticket mapTicket(ResultSet rs)
+        throws SQLException {
+
+    Ticket ticket = new Ticket();
+
+    ticket.setTicketId(
+            rs.getInt("ticket_id")
+    );
+
+    ticket.setBookingId(
+            rs.getInt("booking_id")
+    );
+
+    ticket.setSeatId(
+            rs.getInt("seat_id")
+    );
+
+    ticket.setTicketCode(
+            rs.getString("ticket_code")
+    );
+
+    ticket.setTicketPrice(
+            rs.getBigDecimal("ticket_price")
+    );
+
+    ticket.setStatus(
+            rs.getString("status")
+    );
+
+    ticket.setCheckedInAt(
+            rs.getTimestamp("checked_in_at")
+    );
+
+    return ticket;
+}
 
     private Connection getConnection() throws SQLException {
 

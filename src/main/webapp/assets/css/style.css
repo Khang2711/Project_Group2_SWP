@@ -4788,3 +4788,402 @@ END CSS ADMIN
     }
 }
 
+/* ==================================================
+   UC-15 MY TICKETS
+   ================================================== */
+
+.ticket-page,
+.ticket-detail-page {
+    width: 100%;
+}
+
+.ticket-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+.ticket-card {
+    display: grid;
+
+    grid-template-columns:
+        minmax(260px, 1.35fr)
+        minmax(330px, 1fr)
+        minmax(190px, 0.8fr)
+        auto;
+
+    align-items: center;
+
+    gap: 22px;
+
+    padding: 22px 24px;
+
+    background-color: #18181c;
+
+    border: 1px solid #303038;
+    border-radius: 10px;
+}
+
+.ticket-card:hover {
+    border-color: #4a4a54;
+}
+
+.ticket-card-main {
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+}
+
+.ticket-card-icon,
+.ticket-empty-icon {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background-color: #25252b;
+
+    border: 1px solid #404049;
+    border-radius: 8px;
+}
+
+.ticket-card-icon {
+    width: 48px;
+    height: 48px;
+
+    font-size: 22px;
+}
+
+.ticket-label,
+.ticket-card-meta span,
+.ticket-card-code span,
+.cinema-ticket-grid span,
+.cinema-ticket-stub > span {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #85858d;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.ticket-card-info h2 {
+    margin-bottom: 5px;
+
+    font-size: 18px;
+}
+
+.ticket-card-info p {
+    color: #a0a0a7;
+
+    font-size: 13px;
+}
+
+.ticket-card-meta {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 18px;
+}
+
+.ticket-card-meta strong {
+    font-size: 13px;
+}
+
+
+/* Status */
+
+.ticket-status {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: bold;
+
+    white-space: nowrap;
+}
+
+.ticket-status-valid {
+    color: #52da88;
+    background-color: #123222;
+
+    border: 1px solid #245a3b;
+}
+
+.ticket-status-used {
+    color: #b5b5bd;
+    background-color: #29292f;
+
+    border: 1px solid #484852;
+}
+
+
+/* Code */
+
+.ticket-card-code {
+    min-width: 0;
+}
+
+.ticket-card-code strong {
+
+    display: block;
+
+    max-width: 220px;
+
+    overflow: hidden;
+
+    color: #ff5661;
+
+    font-size: 12px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ticket-card-action {
+    text-align: right;
+}
+
+
+/* Empty */
+
+.ticket-empty {
+    padding: 70px 20px;
+
+    background-color: #18181c;
+
+    border: 1px solid #303038;
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+.ticket-empty-icon {
+
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 18px;
+
+    font-size: 26px;
+}
+
+.ticket-empty h2 {
+    margin-bottom: 8px;
+}
+
+.ticket-empty p {
+    margin-bottom: 24px;
+
+    color: #9999a0;
+}
+
+
+/* ==================================================
+   TICKET DETAIL
+   ================================================== */
+
+.cinema-ticket {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        300px;
+
+    max-width: 1050px;
+
+    margin: 0 auto;
+
+    overflow: hidden;
+
+    background-color: #18181c;
+
+    border: 1px solid #35353d;
+    border-radius: 12px;
+}
+
+.cinema-ticket-main {
+    padding: 30px;
+}
+
+.cinema-ticket-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding-bottom: 24px;
+
+    border-bottom: 1px solid #303038;
+}
+
+.cinema-ticket-top h2 {
+    margin-top: 4px;
+
+    font-size: 28px;
+}
+
+.cinema-ticket-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(130px, 1fr));
+
+    gap: 24px;
+
+    margin-top: 26px;
+}
+
+.cinema-ticket-grid strong {
+    display: block;
+
+    font-size: 14px;
+}
+
+.cinema-ticket-price {
+    color: #ff4652;
+}
+
+.ticket-checkin-note {
+
+    margin-top: 25px;
+    padding: 12px 14px;
+
+    color: #b7b7be;
+    background-color: #222228;
+
+    border-left: 3px solid #6a6a75;
+
+    font-size: 13px;
+}
+
+
+/* Ticket right side */
+
+.cinema-ticket-stub {
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: 32px 26px;
+
+    background-color: #111114;
+
+    border-left:
+        1px dashed #55555f;
+
+    text-align: center;
+}
+
+.cinema-ticket-stub::before,
+.cinema-ticket-stub::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: -13px;
+
+    width: 26px;
+    height: 26px;
+
+    background-color: #0d0d10;
+
+    border-radius: 50%;
+}
+
+.cinema-ticket-stub::before {
+    top: -13px;
+}
+
+.cinema-ticket-stub::after {
+    bottom: -13px;
+}
+
+.cinema-ticket-code {
+
+    display: block;
+
+    margin: 12px 0 18px;
+    padding: 14px 10px;
+
+    color: #ffffff;
+    background-color: #202026;
+
+    border: 1px solid #3a3a43;
+    border-radius: 7px;
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+}
+
+.cinema-ticket-stub small {
+    color: #85858d;
+
+    line-height: 1.5;
+}
+
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+
+    .ticket-card {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-card-action {
+        text-align: left;
+    }
+}
+
+@media (max-width: 760px) {
+
+    .ticket-card-meta,
+    .cinema-ticket-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+    .cinema-ticket {
+        grid-template-columns: 1fr;
+    }
+
+    .cinema-ticket-stub {
+
+        border-top:
+            1px dashed #55555f;
+
+        border-left: none;
+    }
+
+    .cinema-ticket-stub::before,
+    .cinema-ticket-stub::after {
+
+        display: none;
+    }
+
+    .cinema-ticket-top {
+        flex-direction: column;
+    }
+}

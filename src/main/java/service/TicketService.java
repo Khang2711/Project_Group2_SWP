@@ -8,10 +8,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import model.Booking;
+import model.Movie;
+import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import repository.BookingRepository;
+import repository.MovieRepository;
 import repository.PaymentRepository;
+import repository.SeatRepository;
+import repository.ShowtimeRepository;
 import repository.TicketRepository;
 
 public class TicketService {
@@ -24,6 +29,132 @@ public class TicketService {
 
     private final PaymentRepository paymentRepository
             = new PaymentRepository();
+    
+    private final ShowtimeRepository showtimeRepository
+        = new ShowtimeRepository();
+
+private final MovieRepository movieRepository
+        = new MovieRepository();
+
+private final SeatRepository seatRepository
+        = new SeatRepository();
+    
+    // UC-15: danh sách vé đã được phát hành của customer.
+public List<Ticket> getTicketsByCustomer(int customerId)
+        throws SQLException {
+
+    if (customerId <= 0) {
+
+        throw new IllegalArgumentException(
+                "Khách hàng không hợp lệ."
+        );
+    }
+
+    return ticketRepository
+            .findIssuedTicketsByCustomerId(
+                    customerId
+            );
+}
+
+
+public Ticket getTicketDetail(
+        int ticketId,
+        int customerId
+) throws SQLException {
+
+    if (ticketId <= 0
+            || customerId <= 0) {
+
+        throw new IllegalArgumentException(
+                "Vé không hợp lệ."
+        );
+    }
+
+    Ticket ticket
+            = ticketRepository
+                    .findIssuedTicketByIdAndCustomerId(
+                            ticketId,
+                            customerId
+                    );
+
+    if (ticket == null) {
+
+        throw new IllegalArgumentException(
+                "Không tìm thấy vé của bạn."
+        );
+    }
+
+    return ticket;
+}
+
+
+public Booking getBookingForTicket(
+        Ticket ticket,
+        int customerId
+) throws SQLException {
+
+    if (ticket == null
+            || customerId <= 0) {
+
+        return null;
+    }
+
+    return bookingRepository
+            .findByIdAndCustomerId(
+                    ticket.getBookingId(),
+                    customerId
+            );
+}
+
+
+public Showtime getShowtimeForBooking(
+        Booking booking
+) {
+
+    if (booking == null) {
+        return null;
+    }
+
+    return showtimeRepository
+            .getById(
+                    booking.getShowtimeId()
+            );
+}
+
+
+public Movie getMovieForShowtime(
+        Showtime showtime
+) {
+
+    if (showtime == null) {
+        return null;
+    }
+
+    return movieRepository
+            .getByIdAnyStatus(
+                    showtime.getMovieId()
+            );
+}
+
+
+public Seat getSeatForTicket(
+        Ticket ticket,
+        Showtime showtime
+) {
+
+    if (ticket == null
+            || showtime == null) {
+
+        return null;
+    }
+
+    return seatRepository
+            .findByIdAndRoom(
+                    ticket.getSeatId(),
+                    showtime.getRoomId()
+            );
+}
+
 
     // UC-25: bán vé tiền mặt tại quầy.
     public Booking sellCounterCashTickets(
