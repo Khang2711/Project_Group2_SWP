@@ -36,7 +36,7 @@
     <c:if test="${not empty error}"><div class="notice"><c:out value="${error}" /></div></c:if>
 
     <div class="form-card">
-        <form method="post" enctype="multipart/form-data" action="${pageContext.request.contextPath}/admin/combo-form">
+        <form method="post" action="${pageContext.request.contextPath}/admin/combo-form">
             <input type="hidden" name="id" value="${combo.comboId}">
             <div class="form-grid">
                 <div class="field full">
@@ -59,10 +59,14 @@
                     <textarea id="description" name="description" maxlength="255"><c:out value="${combo.description}" /></textarea>
                 </div>
                 <div class="field full">
-                    <label for="comboImage">Ảnh combo (JPG, PNG hoặc GIF; tối đa 5 MB)</label>
-                    <input id="comboImage" name="comboImage" type="file"
-                           accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif">
-                    <p class="image-help">Chọn ảnh từ máy tính. Nếu đang sửa combo, để trống sẽ giữ ảnh hiện tại.</p>
+                    <label for="comboImageUrl">Đường dẫn ảnh combo</label>
+                    <input id="comboImageUrl" name="comboImageUrl" type="text" maxlength="500"
+                           list="comboImageUrlOptions" placeholder="assets/images/food/ten-anh.png"
+                           value="<c:out value='${combo.imageUrl}' />">
+                    <datalist id="comboImageUrlOptions">
+                        <option value="assets/images/food/combo-couple.png"></option>
+                    </datalist>
+                    <p class="image-help">Chọn ảnh đã được commit trong src/main/webapp/assets/images/food/. File ảnh mới phải được thêm vào Git trước; website không tự upload ảnh lên GitHub.</p>
                     <c:if test="${not empty combo.imageUrl}">
                         <c:set var="currentImagePath" value="${fn:trim(combo.imageUrl)}" />
                         <c:choose>
