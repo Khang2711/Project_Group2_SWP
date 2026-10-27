@@ -213,6 +213,67 @@ VALUES
  107,'T18','2026-10-15','2027-02-28',
  'https://placehold.co/600x900/18181c/ff1f2d?text=Shadow+Room',NULL,'ACTIVE'),
 
+
+(N'Dragon''s Gate',
+ N'Một chiến binh trẻ phải bảo vệ cánh cổng cổ xưa nối hai thế giới trước khi đội quân bóng tối tràn qua.',
+ 128,'T13','2026-09-01','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Dragon%27s+Gate',NULL,'ACTIVE'),
+
+(N'Echoes of Saigon',
+ N'Một phóng viên trẻ lần theo cuốn băng cũ và khám phá câu chuyện về tình thân, ký ức và những bí mật của Sài Gòn.',
+ 114,'T13','2026-09-05','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Echoes+of+Saigon',NULL,'ACTIVE'),
+
+(N'Ocean of Stars',
+ N'Phi hành đoàn nghiên cứu đại dương trên hành tinh xa xôi phát hiện một sinh vật có thể thay đổi tương lai nhân loại.',
+ 121,'T13','2026-09-10','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Ocean+of+Stars',NULL,'ACTIVE'),
+
+(N'The Silent Witness',
+ N'Một nhân chứng duy nhất của vụ án mất tích nhiều năm bỗng xuất hiện, khiến cuộc điều tra tưởng đã khép lại bắt đầu lại.',
+ 109,'T16','2026-09-15','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=The+Silent+Witness',NULL,'ACTIVE'),
+
+(N'Final Lap',
+ N'Tay đua trẻ trở lại đường đua sau thất bại lớn và phải học cách tin tưởng đồng đội để giành cơ hội cuối cùng.',
+ 105,'T13','2026-09-20','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Final+Lap',NULL,'ACTIVE'),
+
+(N'Little Chef''s Dream',
+ N'Cậu bé mê nấu ăn tham gia cuộc thi ẩm thực của thành phố và cùng gia đình tìm lại niềm vui sau những ngày khó khăn.',
+ 99,'P','2026-09-25','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Little+Chef%27s+Dream',NULL,'ACTIVE'),
+
+(N'Haunted Hostel 13',
+ N'Nhóm sinh viên làm thêm tại một nhà trọ cũ phát hiện căn phòng số 13 luôn có khách dù đã bị khóa suốt nhiều năm.',
+ 103,'T18','2026-10-01','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Haunted+Hostel+13',NULL,'ACTIVE'),
+
+(N'Code Red: Cyber Siege',
+ N'Đội chuyên gia an ninh mạng chạy đua để ngăn một cuộc tấn công làm tê liệt hệ thống giao thông của thành phố.',
+ 126,'T16','2026-10-03','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Code+Red+Cyber+Siege',NULL,'ACTIVE'),
+
+(N'Under the Same Sky',
+ N'Hai người bạn thời thơ ấu gặp lại nhau sau nhiều năm và cùng quyết định theo đuổi ước mơ từng bỏ dở.',
+ 111,'T13','2026-10-05','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Under+the+Same+Sky',NULL,'ACTIVE'),
+
+(N'Jungle Quest',
+ N'Gia đình lạc vào khu rừng nhiệt đới bí ẩn và phải hợp tác với những người bạn bất ngờ để tìm đường về nhà.',
+ 97,'P','2026-10-08','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Jungle+Quest',NULL,'ACTIVE'),
+
+(N'The Perfect Crime',
+ N'Một thám tử sắp nghỉ hưu nhận vụ án cuối cùng, nơi mọi bằng chứng đều hoàn hảo đến mức đáng ngờ.',
+ 119,'T16','2026-10-12','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=The+Perfect+Crime',NULL,'ACTIVE'),
+
+(N'Summer on the Mekong',
+ N'Chuyến du lịch dọc sông Mekong của ba người bạn biến thành hành trình hài hước giúp họ hiểu nhau và trưởng thành.',
+ 101,'P','2026-10-18','2027-12-31',
+ 'https://placehold.co/600x900/18181c/ff1f2d?text=Summer+on+the+Mekong',NULL,'ACTIVE'),
+
 -- Coming soon: giữ status ACTIVE vì trang khách hiện chỉ lấy phim ACTIVE.
 -- Các phim này có release_date trong tương lai và chưa seed suất chiếu,
 -- nên MovieService sẽ xếp vào nhóm "Sắp chiếu · Chưa mở lịch".
@@ -279,6 +340,30 @@ VALUES
 (N'The Lantern Keeper',N'Family'),
 (N'Shadow Room',N'Horror'),
 (N'Shadow Room',N'Thriller'),
+(N'Dragon''s Gate',N'Action'),
+(N'Dragon''s Gate',N'Adventure'),
+(N'Echoes of Saigon',N'Drama'),
+(N'Echoes of Saigon',N'Romance'),
+(N'Ocean of Stars',N'Sci-Fi'),
+(N'Ocean of Stars',N'Adventure'),
+(N'The Silent Witness',N'Thriller'),
+(N'The Silent Witness',N'Drama'),
+(N'Final Lap',N'Action'),
+(N'Final Lap',N'Drama'),
+(N'Little Chef''s Dream',N'Comedy'),
+(N'Little Chef''s Dream',N'Family'),
+(N'Haunted Hostel 13',N'Horror'),
+(N'Haunted Hostel 13',N'Thriller'),
+(N'Code Red: Cyber Siege',N'Action'),
+(N'Code Red: Cyber Siege',N'Sci-Fi'),
+(N'Under the Same Sky',N'Romance'),
+(N'Under the Same Sky',N'Drama'),
+(N'Jungle Quest',N'Adventure'),
+(N'Jungle Quest',N'Family'),
+(N'The Perfect Crime',N'Thriller'),
+(N'The Perfect Crime',N'Drama'),
+(N'Summer on the Mekong',N'Romance'),
+(N'Summer on the Mekong',N'Comedy'),
 (N'Beyond the Red Moon',N'Sci-Fi'),
 (N'Beyond the Red Moon',N'Adventure'),
 (N'Summer Letter 2027',N'Romance'),
@@ -310,6 +395,18 @@ VALUES
 (N'Laughing at 8PM'),
 (N'The Lantern Keeper'),
 (N'Shadow Room'),
+(N'Dragon''s Gate'),
+(N'Echoes of Saigon'),
+(N'Ocean of Stars'),
+(N'The Silent Witness'),
+(N'Final Lap'),
+(N'Little Chef''s Dream'),
+(N'Haunted Hostel 13'),
+(N'Code Red: Cyber Siege'),
+(N'Under the Same Sky'),
+(N'Jungle Quest'),
+(N'The Perfect Crime'),
+(N'Summer on the Mekong'),
 (N'Beyond the Red Moon'),
 (N'Summer Letter 2027'),
 (N'Tiny Heroes: City Rescue');
@@ -427,90 +524,115 @@ WHERE NOT EXISTS (
 );
 GO
 
-/* 09B. DENSE SHOWTIMES - MANY TIME SLOTS FOR THE SAME MOVIE/DAY */
-DECLARE @DenseDate TABLE (show_date DATE PRIMARY KEY);
-
-INSERT INTO @DenseDate(show_date)
-VALUES
-('2026-10-16'),
-('2026-10-17'),
-('2026-10-18'),
-('2026-10-23'),
-('2026-10-24'),
-('2026-10-26');
-
-DECLARE @DenseSlot TABLE (
-    cinema_name NVARCHAR(100),
-    room_name NVARCHAR(100),
-    movie_title NVARCHAR(255),
-    start_minute INT
+/* 09B. DYNAMIC TEST SHOWTIMES
+   - 20 phim đang chiếu, mỗi phim có nhiều suất trong 7 ngày tới.
+   - 4 phòng x 5 khung giờ/ngày = tối đa 20 suất/ngày.
+   - Mỗi phim được luân phiên qua các phòng/khung giờ.
+   - Không tạo suất mới nếu bị chồng giờ với suất đã có trong phòng.
+*/
+DECLARE @CurrentTestMovies TABLE (
+    slot_no INT PRIMARY KEY,
+    title NVARCHAR(255) NOT NULL
 );
 
-/*
-    5 time slots per room:
-    09:00, 12:00, 15:00, 18:00, 21:00.
-
-    Several movies repeat multiple times in the same cinema on the same day
-    so the booking UI can demonstrate realistic time-slot selection.
-*/
-INSERT INTO @DenseSlot(cinema_name,room_name,movie_title,start_minute)
+INSERT INTO @CurrentTestMovies(slot_no,title)
 VALUES
--- F-Cinema Ninh Kiều - Room 1
-(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',540),
-(N'F-Cinema Ninh Kiều',N'Room 1',N'Mekong Rush',720),
-(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',900),
-(N'F-Cinema Ninh Kiều',N'Room 1',N'Mekong Rush',1080),
-(N'F-Cinema Ninh Kiều',N'Room 1',N'The Last Horizon',1260),
+(1,N'The Last Horizon'),
+(2,N'Robot Adventures'),
+(3,N'Can Tho After Rain'),
+(4,N'Midnight Signal'),
+(5,N'Mekong Rush'),
+(6,N'Laughing at 8PM'),
+(7,N'The Lantern Keeper'),
+(8,N'Shadow Room'),
+(9,N'Dragon''s Gate'),
+(10,N'Echoes of Saigon'),
+(11,N'Ocean of Stars'),
+(12,N'The Silent Witness'),
+(13,N'Final Lap'),
+(14,N'Little Chef''s Dream'),
+(15,N'Haunted Hostel 13'),
+(16,N'Code Red: Cyber Siege'),
+(17,N'Under the Same Sky'),
+(18,N'Jungle Quest'),
+(19,N'The Perfect Crime'),
+(20,N'Summer on the Mekong');
 
--- F-Cinema Ninh Kiều - Room 2
-(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',540),
-(N'F-Cinema Ninh Kiều',N'Room 2',N'Laughing at 8PM',720),
-(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',900),
-(N'F-Cinema Ninh Kiều',N'Room 2',N'Midnight Signal',1080),
-(N'F-Cinema Ninh Kiều',N'Room 2',N'Robot Adventures',1260),
+DECLARE @TestRoomSlots TABLE (
+    slot_no INT PRIMARY KEY,
+    cinema_name NVARCHAR(100) NOT NULL,
+    room_name NVARCHAR(100) NOT NULL,
+    start_minute INT NOT NULL
+);
 
--- F-Cinema Cái Răng - Room 1
-(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',540),
-(N'F-Cinema Cái Răng',N'Room 1',N'The Last Horizon',720),
-(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',900),
-(N'F-Cinema Cái Răng',N'Room 1',N'The Lantern Keeper',1080),
-(N'F-Cinema Cái Răng',N'Room 1',N'Can Tho After Rain',1260),
+INSERT INTO @TestRoomSlots(slot_no,cinema_name,room_name,start_minute)
+VALUES
+(1,N'F-Cinema Ninh Kiều',N'Room 1',540),
+(2,N'F-Cinema Ninh Kiều',N'Room 1',720),
+(3,N'F-Cinema Ninh Kiều',N'Room 1',900),
+(4,N'F-Cinema Ninh Kiều',N'Room 1',1080),
+(5,N'F-Cinema Ninh Kiều',N'Room 1',1260),
+(6,N'F-Cinema Ninh Kiều',N'Room 2',540),
+(7,N'F-Cinema Ninh Kiều',N'Room 2',720),
+(8,N'F-Cinema Ninh Kiều',N'Room 2',900),
+(9,N'F-Cinema Ninh Kiều',N'Room 2',1080),
+(10,N'F-Cinema Ninh Kiều',N'Room 2',1260),
+(11,N'F-Cinema Cái Răng',N'Room 1',540),
+(12,N'F-Cinema Cái Răng',N'Room 1',720),
+(13,N'F-Cinema Cái Răng',N'Room 1',900),
+(14,N'F-Cinema Cái Răng',N'Room 1',1080),
+(15,N'F-Cinema Cái Răng',N'Room 1',1260),
+(16,N'F-Cinema Cái Răng',N'Room 2',540),
+(17,N'F-Cinema Cái Răng',N'Room 2',720),
+(18,N'F-Cinema Cái Răng',N'Room 2',900),
+(19,N'F-Cinema Cái Răng',N'Room 2',1080),
+(20,N'F-Cinema Cái Răng',N'Room 2',1260);
 
--- F-Cinema Cái Răng - Room 2
-(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',540),
-(N'F-Cinema Cái Răng',N'Room 2',N'Shadow Room',720),
-(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',900),
-(N'F-Cinema Cái Răng',N'Room 2',N'Mekong Rush',1080),
-(N'F-Cinema Cái Răng',N'Room 2',N'Midnight Signal',1260);
+DECLARE @TestShowDates TABLE (
+    day_offset INT PRIMARY KEY,
+    show_date DATE NOT NULL
+);
+
+INSERT INTO @TestShowDates(day_offset,show_date)
+SELECT n.day_offset,
+       DATEADD(DAY,n.day_offset,CAST(SYSDATETIME() AS DATE))
+FROM (VALUES (0),(1),(2),(3),(4),(5),(6)) n(day_offset);
 
 INSERT INTO dbo.Showtime(movie_id,room_id,start_time,end_time,status)
 SELECT
-    m.movie_id,
-    r.room_id,
-    x.start_time,
-    DATEADD(MINUTE,m.duration_minutes,x.start_time),
+    movie.movie_id,
+    room.room_id,
+    timeslot.start_time,
+    timeslot.end_time,
     'ACTIVE'
-FROM @DenseDate d
-CROSS JOIN @DenseSlot s
-JOIN dbo.Cinema c
-  ON c.cinema_name=s.cinema_name
-JOIN dbo.Room r
-  ON r.cinema_id=c.cinema_id
- AND r.room_name=s.room_name
-JOIN dbo.Movie m
-  ON m.title=s.movie_title
+FROM @TestShowDates d
+CROSS JOIN @TestRoomSlots slot
+JOIN dbo.Cinema cinema
+  ON cinema.cinema_name=slot.cinema_name
+JOIN dbo.Room room
+  ON room.cinema_id=cinema.cinema_id
+ AND room.room_name=slot.room_name
+JOIN @CurrentTestMovies testMovie
+  ON testMovie.slot_no=((slot.slot_no+d.day_offset-1)%20)+1
+JOIN dbo.Movie movie
+  ON movie.title=testMovie.title
 CROSS APPLY (
     SELECT DATEADD(
         MINUTE,
-        s.start_minute,
+        slot.start_minute,
         CAST(d.show_date AS DATETIME2)
     ) AS start_time
-) x
+) startValue
+CROSS APPLY (
+    SELECT startValue.start_time AS start_time,
+           DATEADD(MINUTE,movie.duration_minutes,startValue.start_time) AS end_time
+) timeslot
 WHERE NOT EXISTS (
     SELECT 1
-    FROM dbo.Showtime st
-    WHERE st.room_id=r.room_id
-      AND st.start_time=x.start_time
+    FROM dbo.Showtime existing
+    WHERE existing.room_id=room.room_id
+      AND timeslot.start_time < existing.end_time
+      AND timeslot.end_time > existing.start_time
 );
 GO
 

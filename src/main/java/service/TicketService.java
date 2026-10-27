@@ -156,10 +156,13 @@ public Seat getSeatForTicket(
 }
 
 
-    // UC-25: chỉ xử lý bán vé tiền mặt tại quầy.
-    public Booking sellCounterCashTickets(int staffId, int cinemaId,
-            int showtimeId, String email, String[] seatValues)
-            throws SQLException {
+    // UC-25: bán vé tiền mặt tại quầy.
+    public Booking sellCounterCashTickets(
+            int staffId,
+            int cinemaId,
+            int showtimeId,
+            String email,
+            String[] seatValues) throws SQLException {
 
         if (staffId <= 0 || cinemaId <= 0 || showtimeId <= 0) {
             throw new IllegalArgumentException(
@@ -196,38 +199,43 @@ public Seat getSeatForTicket(
             seatIds.add(seatId);
         }
 
-        // Kiểm tra ghế theo cùng thứ tự để giảm nguy cơ khóa chéo giữa các đơn.
+        // Kiểm tra ghế theo cùng thứ tự để giảm nguy cơ khóa chéo.
         Collections.sort(seatIds);
 
         Connection connection = new DBContext().getConnection();
 
         if (connection == null) {
-            throw new SQLException("Không thể kết nối database.");
+            throw new SQLException(
+                    "Không thể kết nối database.");
         }
 
         try (Connection conn = connection) {
-            // Lưu Booking, Ticket và Payment trong cùng một transaction.
+
+            // Booking, Ticket và Payment phải được lưu cùng nhau.
             conn.setAutoCommit(false);
 
             try {
                 int staffCinemaId
-                        = ticketRepository.findCounterStaffCinema(conn, staffId);
+                        = ticketRepository.findCounterStaffCinema(
+                                conn, staffId);
 
                 if (staffCinemaId != cinemaId) {
                     throw new IllegalArgumentException(
                             "Nhân viên không thuộc rạp này.");
                 }
 
-                int customerId = ticketRepository.findCounterCustomerId(
-                        conn, email.trim());
+                int customerId
+                        = ticketRepository.findCounterCustomerId(
+                                conn, email.trim());
 
                 if (customerId <= 0) {
                     throw new IllegalArgumentException(
                             "Không tìm thấy tài khoản khách hàng đang hoạt động.");
                 }
 
-                Showtime showtime = ticketRepository.findCounterShowtime(
-                        conn, showtimeId, cinemaId);
+                Showtime showtime
+                        = ticketRepository.findCounterShowtime(
+                                conn, showtimeId, cinemaId);
 
                 if (showtime == null) {
                     throw new IllegalArgumentException(
@@ -238,6 +246,7 @@ public Seat getSeatForTicket(
                 BigDecimal total = BigDecimal.ZERO;
 
                 for (int seatId : seatIds) {
+
                     if (ticketRepository.isCounterSeatSold(
                             conn, showtimeId, seatId)) {
 
@@ -245,9 +254,13 @@ public Seat getSeatForTicket(
                                 "Có ghế vừa được bán. Vui lòng chọn lại.");
                     }
 
-                    // Giá lấy lại từ DB, không nhận giá hoặc tổng tiền từ trình duyệt.
-                    BigDecimal price = ticketRepository.findCounterSeatPrice(
-                            conn, seatId, showtime.getRoomId(), cinemaId);
+                    // Lấy giá từ database khi xác nhận bán vé.
+                    BigDecimal price
+                            = ticketRepository.findCounterSeatPrice(
+                                    conn,
+                                    seatId,
+                                    showtime.getRoomId(),
+                                    cinemaId);
 
                     if (price == null || price.signum() < 0) {
                         throw new IllegalArgumentException(
@@ -267,6 +280,10 @@ public Seat getSeatForTicket(
                 Booking booking = new Booking();
 
                 booking.setCustomerId(customerId);
+
+                // ID nhân viên được controller lấy từ session.
+                booking.setStaffId(staffId);
+
                 booking.setShowtimeId(showtimeId);
                 booking.setPromotionId(null);
                 booking.setSubtotal(total);
@@ -274,16 +291,21 @@ public Seat getSeatForTicket(
                 booking.setTotalAmount(total);
                 booking.setStatus("CONFIRMED");
 
-                int bookingId = bookingRepository.insert(conn, booking);
+                int bookingId
+                        = bookingRepository.insert(conn, booking);
+
                 booking.setBookingId(bookingId);
 
                 for (Ticket ticket : tickets) {
+
                     ticket.setBookingId(bookingId);
 
                     ticket.setTicketCode(
-                            "COUNTER-" + bookingId + "-" + ticket.getSeatId());
+                            "COUNTER-" + bookingId
+                            + "-" + ticket.getSeatId());
 
-                    ticketRepository.insert(conn, ticket, showtimeId);
+                    ticketRepository.insert(
+                            conn, ticket, showtimeId);
                 }
 
                 paymentRepository.insertCounterCashPayment(
@@ -294,7 +316,8 @@ public Seat getSeatForTicket(
                 return booking;
 
             } catch (SQLException | RuntimeException e) {
-                // Nếu một phần bị lỗi thì hủy toàn bộ đơn vừa tạo.
+
+                // Có lỗi thì hủy toàn bộ thay đổi của đơn đang tạo.
                 conn.rollback();
                 throw e;
             }

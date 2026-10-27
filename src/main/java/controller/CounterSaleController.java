@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,8 +29,10 @@ import model.Showtime;
 import model.Ticket;
 import model.User;
 import service.BookingService;
+import service.DashboardService;
 import service.FoodOrderService;
 import service.MovieService;
+import service.RoomService;
 import service.SeatService;
 import service.ShowtimeService;
 import service.TicketService;
@@ -45,6 +48,8 @@ public class CounterSaleController extends HttpServlet {
     private SeatService seatService;
     private BookingService bookingService;
     private TicketService ticketService;
+    private DashboardService dashboardService;
+    private RoomService roomService;
 
     @Override
     public void init() {
@@ -54,6 +59,8 @@ public class CounterSaleController extends HttpServlet {
         seatService = new SeatService();
         bookingService = new BookingService();
         ticketService = new TicketService();
+        dashboardService = new DashboardService();
+        roomService = new RoomService();
     }
 
     @Override
@@ -65,13 +72,13 @@ public class CounterSaleController extends HttpServlet {
             return;
         }
 
+        response.setHeader("Cache-Control", "no-store");
+
         String path = request.getServletPath();
 
         switch (path) {
             case "/staff/counter":
-                request.getRequestDispatcher(
-                        "/WEB-INF/views/staff/counter.jsp"
-                ).forward(request, response);
+                showCounter(request, response);
                 break;
 
             case "/staff/ticket-sale":
@@ -93,6 +100,10 @@ public class CounterSaleController extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+
+        if (!requireStaff(request, response)) {
+            return;
+        }
 
         if ("/staff/food-sale".equals(request.getServletPath())) {
             createFoodOrder(request, response);
@@ -122,6 +133,62 @@ public class CounterSaleController extends HttpServlet {
         }
 
         return true;
+    }
+
+    private void showCounter(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        User user = (User) session.getAttribute("user");
+
+        LocalDate today = LocalDate.now(
+                ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        LocalDate fromDate = today.withDayOfMonth(1);
+        LocalDate toDate = today;
+
+        request.setAttribute("fromDate", fromDate.toString());
+        request.setAttribute("toDate", toDate.toString());
+
+        try {
+            String fromValue = request.getParameter("fromDate");
+            String toValue = request.getParameter("toDate");
+
+            if (fromValue != null) {
+                fromDate = dashboardService.parseDate(
+                        fromValue, "Ngày bắt đầu");
+
+                request.setAttribute("fromDate", fromDate.toString());
+            }
+
+            if (toValue != null) {
+                toDate = dashboardService.parseDate(
+                        toValue, "Ngày kết thúc");
+
+                request.setAttribute("toDate", toDate.toString());
+            }
+
+            // Chỉ dùng ID tài khoản trong session để đọc báo cáo cá nhân.
+            Map<String, Object> report
+                    = dashboardService.getStaffSalesReport(
+                            user.getUserId(), fromDate, toDate);
+
+            request.setAttribute("staffReport", report);
+
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("reportError", e.getMessage());
+
+        } catch (SQLException e) {
+            log("Cannot load staff sales report.", e);
+
+            request.setAttribute("reportError",
+                    "Không thể tải lịch sử và thống kê. Vui lòng thử lại.");
+        }
+
+        request.getRequestDispatcher(
+                "/WEB-INF/views/staff/counter.jsp"
+        ).forward(request, response);
     }
 
     private void showTicketSale(HttpServletRequest request,
@@ -404,17 +471,26 @@ public class CounterSaleController extends HttpServlet {
         Booking saved
                 = (Booking) session.getAttribute("counterLastBooking");
 
-        if (saved == null) {
+        String bookingValue = request.getParameter("bookingId");
+
+        if (bookingValue == null && saved == null) {
             return;
         }
 
         try {
             User user = (User) session.getAttribute("user");
+            int bookingId;
 
-            // Dùng ID của đơn đã lưu trong session, không lấy từ URL.
-            Booking booking = bookingService.getBookingDetail(
-                    saved.getBookingId(),
-                    saved.getCustomerId());
+            if (bookingValue != null) {
+                bookingId = parsePositiveInt(
+                        bookingValue, "Mã đơn vé không hợp lệ.");
+            } else {
+                bookingId = saved.getBookingId();
+            }
+
+            // Kiểm tra người bán cả khi mở đơn bằng URL hoặc từ session.
+            Booking booking = dashboardService.getStaffBooking(
+                    user.getUserId(), bookingId);
 
             Showtime showtime
                     = bookingService.getShowtimeForBooking(booking);
@@ -426,15 +502,15 @@ public class CounterSaleController extends HttpServlet {
                         "Đơn vé không còn được xác nhận.");
             }
 
-            Room room = showtimeService.getActiveRoomById()
-                    .get(showtime.getRoomId());
+            int cinemaId
+                    = foodOrderService.getStaffCinema(user.getUserId());
 
-            if (room == null
-                    || user.getCinemaId() == null
-                    || room.getCinemaId() != user.getCinemaId()) {
+            Room room = roomService.getRoom(
+                    showtime.getRoomId(), cinemaId);
 
+            if (room == null) {
                 throw new IllegalArgumentException(
-                        "Đơn vé không thuộc rạp của nhân viên.");
+                        "Không tìm thấy phòng chiếu của đơn vé.");
             }
 
             Movie movie
@@ -474,14 +550,14 @@ public class CounterSaleController extends HttpServlet {
             request.setAttribute("printedTickets", tickets);
             request.setAttribute("printedSeats", seats);
 
-        } catch (SQLException | IllegalArgumentException e) {
-            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("printError", e.getMessage());
 
-            // Lỗi tải bản in không làm thay đổi đơn đã thanh toán.
-            request.setAttribute(
-                    "printError",
-                    "Chưa tải được bản in đơn #" + saved.getBookingId()
-                    + ". Vui lòng tải lại trang; "
+        } catch (SQLException | IllegalStateException e) {
+            log("Cannot load counter ticket receipt.", e);
+
+            request.setAttribute("printError",
+                    "Chưa tải được bản in. Vui lòng tải lại trang; "
                     + "không tạo lại đơn đã thanh toán.");
         }
     }
@@ -522,9 +598,19 @@ public class CounterSaleController extends HttpServlet {
                 FoodOrder order
                         = foodOrderService.getOrderById(orderId);
 
-                if (order == null || order.getCinemaId() != cinemaId) {
+                if (order == null
+                        || order.getCinemaId() != cinemaId
+                        || order.getStaffId() != user.getUserId()) {
+
                     throw new IllegalArgumentException(
-                            "Không tìm thấy đơn hàng tại rạp của bạn.");
+                            "Không tìm thấy đơn bắp nước/combo do bạn bán.");
+                }
+
+                if (!"PAID".equals(order.getPaymentStatus())
+                        || !"COMPLETED".equals(order.getOrderStatus())) {
+
+                    throw new IllegalArgumentException(
+                            "Đơn hàng chưa hoàn tất thanh toán.");
                 }
 
                 request.setAttribute(
