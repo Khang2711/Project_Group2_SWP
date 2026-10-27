@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
@@ -166,6 +167,25 @@
         margin-top: 7px;
         color: #777;
         font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .poster-preview {
+        margin-top: 12px;
+        padding: 10px;
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid #35353a;
+        border-radius: 8px;
+        background: #1c1c1f;
+    }
+
+    .poster-preview img {
+        display: block;
+        max-width: 180px;
+        max-height: 270px;
+        object-fit: contain;
+        border-radius: 5px;
     }
 
     .movie-form-footer {
@@ -271,7 +291,7 @@
 
     <div class="movie-form-card">
 
-        <form method="post"
+        <form method="post" enctype="multipart/form-data"
               action="${pageContext.request.contextPath}/admin/movie-form">
 
             <div class="movie-form-body">
@@ -394,18 +414,46 @@
                         Hình ảnh & Trailer
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group full">
 
-                        <label>
-                            Poster URL
+                        <label for="moviePoster">
+                            Poster phim (JPG, PNG hoặc GIF; tối đa 5 MB)
                         </label>
 
                         <input class="form-control"
-                               type="text"
-                               name="posterUrl"
-                               maxlength="500"
-                               placeholder="https://..."
-                               value="<c:out value='${movie.posterUrl}' />">
+                               id="moviePoster"
+                               type="file"
+                               name="moviePoster"
+                               accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif">
+
+                        <div class="help-text">
+                            Chọn ảnh từ máy tính. Khi sửa phim, để trống sẽ giữ poster hiện tại.
+                            Ảnh mới được lưu vào assets/images/movies để có thể push lên GitHub.
+                        </div>
+
+                        <c:if test="${not empty movie.posterUrl}">
+                            <c:set var="posterPath" value="${fn:trim(movie.posterUrl)}" />
+                            <c:choose>
+                                <c:when test="${fn:startsWith(posterPath, 'http://') or fn:startsWith(posterPath, 'https://')}">
+                                    <c:set var="posterPreviewSrc" value="${posterPath}" />
+                                </c:when>
+                                <c:when test="${fn:startsWith(posterPath, '/')}">
+                                    <c:url var="posterPreviewSrc" value="${posterPath}" />
+                                </c:when>
+                                <c:otherwise>
+                                    <c:url var="posterPreviewSrc" value="/${posterPath}" />
+                                </c:otherwise>
+                            </c:choose>
+                        </c:if>
+
+                        <div class="poster-preview"
+                             id="posterPreviewBox"
+                             style="${empty movie.posterUrl ? 'display:none;' : ''}">
+                            <img id="posterPreview"
+                                 src="<c:out value='${posterPreviewSrc}' />"
+                                 alt="Poster phim hiện tại"
+                                 onerror="this.style.display='none';">
+                        </div>
 
                     </div>
 
@@ -537,5 +585,32 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    var input = document.getElementById('moviePoster');
+    var preview = document.getElementById('posterPreview');
+    var previewBox = document.getElementById('posterPreviewBox');
+    if (!input || !preview || !previewBox) {
+        return;
+    }
+    input.addEventListener('change', function () {
+        var file = this.files && this.files.length ? this.files[0] : null;
+        if (!file) {
+            return;
+        }
+        var validType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
+        var validExtension = /\\.(jpe?g|png|gif)$/i.test(file.name);
+        if (!validType && !validExtension) {
+            alert('Vui lòng chọn ảnh JPG, PNG hoặc GIF.');
+            this.value = '';
+            return;
+        }
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        previewBox.style.display = 'block';
+    });
+})();
+</script>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

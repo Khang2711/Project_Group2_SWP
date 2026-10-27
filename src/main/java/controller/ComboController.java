@@ -22,7 +22,7 @@ import model.FoodItem;
 import model.User;
 import service.ComboService;
 import service.FoodService;
-import util.ComboImageStorage;
+import util.ProjectImageStorage;
 
 @MultipartConfig(
         maxFileSize = 5L * 1024 * 1024,
@@ -158,7 +158,7 @@ public class ComboController extends HttpServlet {
             Part imagePart = request.getPart("comboImage");
             if (imagePart != null && imagePart.getSize() > 0) {
                 try {
-                    uploadedImageUrl = ComboImageStorage.saveComboImage(imagePart);
+                    uploadedImageUrl = ProjectImageStorage.saveImage(imagePart, "combo", getServletContext());
                 } catch (IOException e) {
                     throw new IllegalStateException(
                             "Không thể lưu ảnh combo. Vui lòng thử lại.", e);
@@ -171,12 +171,12 @@ public class ComboController extends HttpServlet {
             comboService.saveCombo(combo, items);
             response.sendRedirect(request.getContextPath() + "/admin/combos?saved=1");
         } catch (NumberFormatException e) {
-            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
+            ProjectImageStorage.deleteUploadedImage(uploadedImageUrl, getServletContext());
             combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", "Mã combo, giá bán hoặc số lượng không hợp lệ.");
             forwardForm(request, response, manager, combo, items);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            ComboImageStorage.deleteUploadedImage(uploadedImageUrl);
+            ProjectImageStorage.deleteUploadedImage(uploadedImageUrl, getServletContext());
             combo.setImageUrl(existingImageUrl);
             request.setAttribute("error", e.getMessage());
             forwardForm(request, response, manager, combo, items);

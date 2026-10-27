@@ -1,11 +1,13 @@
 package controller;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -14,18 +16,22 @@ import java.util.Map;
 import model.Movie;
 import service.CinemaService;
 import service.MovieService;
-import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import model.Genre;
 import model.Room;
 import model.Showtime;
 import model.User;
+import util.ProjectImageStorage;
 
 /**
  * Handles movie-related requests.
  *
  * @author Kiet
  */
+@MultipartConfig(
+        maxFileSize = 5L * 1024 * 1024,
+        maxRequestSize = 8L * 1024 * 1024
+)
 @WebServlet(urlPatterns = {
     "/user/movies",
     "/user/movie-detail",
@@ -291,6 +297,7 @@ public class MovieController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
         String path = request.getServletPath();
 
         // ==========================
@@ -378,10 +385,35 @@ public class MovieController extends HttpServlet {
             return;
         }
 
-        String id
-                = request.getParameter("id");
+        String id = request.getParameter("id");
+        String existingPosterUrl = null;
+        String uploadedPosterUrl = null;
 
         try {
+            // Lấy poster hiện tại từ DB để khi sửa mà không chọn ảnh mới,
+            // poster cũ vẫn được giữ nguyên.
+            if (id != null && !id.trim().isEmpty()) {
+                int existingMovieId = Integer.parseInt(id);
+                Movie existingMovie = movieService.getMovieForManager(
+                        existingMovieId, manager.getCinemaId());
+                if (existingMovie == null) {
+                    throw new IllegalArgumentException("Không tìm thấy phim trong rạp này.");
+                }
+                existingPosterUrl = existingMovie.getPosterUrl();
+            }
+
+            Part posterPart = request.getPart("moviePoster");
+            if (posterPart != null && posterPart.getSize() > 0) {
+                try {
+                    uploadedPosterUrl = ProjectImageStorage.saveImage(
+                            posterPart, "movies", getServletContext());
+                } catch (IOException e) {
+                    throw new IllegalStateException(
+                            "Không thể lưu poster phim. Vui lòng thử lại.", e);
+                }
+            }
+            String posterUrl = uploadedPosterUrl != null
+                    ? uploadedPosterUrl : existingPosterUrl;
 
             // THÊM PHIM
             if (id == null
@@ -395,7 +427,7 @@ public class MovieController extends HttpServlet {
                         request.getParameter("ageRating"),
                         request.getParameter("releaseDate"),
                         request.getParameter("endDate"),
-                        request.getParameter("posterUrl"),
+                        posterUrl,
                         request.getParameter("trailerUrl"),
                         request.getParameter("status"),
                         request.getParameterValues("genreId")
@@ -416,7 +448,7 @@ public class MovieController extends HttpServlet {
                         request.getParameter("ageRating"),
                         request.getParameter("releaseDate"),
                         request.getParameter("endDate"),
-                        request.getParameter("posterUrl"),
+                        posterUrl,
                         request.getParameter("trailerUrl"),
                         request.getParameter("status"),
                         request.getParameterValues("genreId")
@@ -430,6 +462,8 @@ public class MovieController extends HttpServlet {
 
         } catch (NumberFormatException e) {
 
+            ProjectImageStorage.deleteUploadedImage(uploadedPosterUrl, getServletContext());
+            request.setAttribute("existingPosterUrl", existingPosterUrl);
             request.setAttribute(
                     "error",
                     "Mã phim không hợp lệ."
@@ -441,8 +475,10 @@ public class MovieController extends HttpServlet {
                     manager
             );
 
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
 
+            ProjectImageStorage.deleteUploadedImage(uploadedPosterUrl, getServletContext());
+            request.setAttribute("existingPosterUrl", existingPosterUrl);
             request.setAttribute(
                     "error",
                     e.getMessage()
@@ -636,9 +672,7 @@ public class MovieController extends HttpServlet {
         }
 
         movie.setPosterUrl(
-                request.getParameter(
-                        "posterUrl"
-                )
+                (String) request.getAttribute("existingPosterUrl")
         );
 
         movie.setTrailerUrl(

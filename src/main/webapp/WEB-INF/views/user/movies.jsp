@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
@@ -47,6 +48,20 @@
             <datalist id="movieOptions">
 
                 <c:forEach var="movie" items="${nowShowingMovies}">
+                    <c:if test="${not empty movie.posterUrl}">
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                                <c:url var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
+                        </c:choose>
+                    </c:if>
+
 
                     <option value="${movie.title}"></option>
 
@@ -74,6 +89,20 @@
             <div class="movies-grid">
 
                 <c:forEach var="movie" items="${movies}">
+                    <c:if test="${not empty movie.posterUrl}">
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                                <c:url var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
+                        </c:choose>
+                    </c:if>
+
 
                     <article class="movies-card">
 
@@ -87,7 +116,7 @@
                             <c:choose>
 
                                 <c:when test="${not empty movie.posterUrl}">
-                                    <img src="${movie.posterUrl}" alt="${movie.title}">
+                                    <img src="<c:out value='${posterSrc}' />" alt="${movie.title}">
                                 </c:when>
 
                                 <c:otherwise>
