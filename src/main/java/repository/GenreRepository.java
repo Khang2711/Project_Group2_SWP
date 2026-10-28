@@ -3,6 +3,7 @@ package repository;
 import db.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Genre;
@@ -222,5 +223,47 @@ public class GenreRepository extends DBContext {
         }
 
         return false;
+    }
+    /**
+     * Deletes a genre only when no movie references it.
+     * The NOT EXISTS guard and the foreign key both protect against concurrent links.
+     */
+    public DeleteResult deleteIfUnused(int genreId) {
+        if (conn == null) {
+            return DeleteResult.ERROR;
+        }
+
+        String deleteSql = "DELETE FROM Genre "
+                + "WHERE genre_id = ? "
+                + "AND NOT EXISTS (SELECT 1 FROM Movie_Genre WHERE genre_id = ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+            ps.setInt(1, genreId);
+            ps.setInt(2, genreId);
+
+            if (ps.executeUpdate() > 0) {
+                return DeleteResult.DELETED;
+            }
+
+            // No row deleted: distinguish an existing, referenced genre from a missing ID.
+            String existsSql = "SELECT 1 FROM Genre WHERE genre_id = ?";
+            try (PreparedStatement check = conn.prepareStatement(existsSql)) {
+                check.setInt(1, genreId);
+                try (ResultSet rs = check.executeQuery()) {
+                    return rs.next() ? DeleteResult.IN_USE : DeleteResult.NOT_FOUND;
+                }
+            }
+        } catch (SQLException e) {
+            // SQL Server error 547: a foreign key blocked deletion (including a race).
+            if (e.getErrorCode() == 547) {
+                return DeleteResult.IN_USE;
+            }
+            e.printStackTrace();
+            return DeleteResult.ERROR;
+        }
+    }
+
+    public enum DeleteResult {
+        DELETED, IN_USE, NOT_FOUND, ERROR
     }
 }
