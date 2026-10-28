@@ -54,7 +54,13 @@
         font-weight: bold;
     }
 
-    /* VIEW BUTTON */
+    .add-showtime-button:hover {
+        background: #e4143d;
+    }
+
+    /* =====================================================
+       VIEW SWITCHER
+       ===================================================== */
 
     .view-switcher {
         display: flex;
@@ -92,7 +98,9 @@
         color: white;
     }
 
-    /* NAVIGATION */
+    /* =====================================================
+       CALENDAR NAVIGATION
+       ===================================================== */
 
     .calendar-navigation {
         display: none;
@@ -142,6 +150,7 @@
     .arrow-button {
         width: 38px;
         padding: 0;
+
         font-size: 20px;
     }
 
@@ -150,28 +159,36 @@
         font-weight: bold;
     }
 
-    /* MESSAGE */
+    /* =====================================================
+       MESSAGE
+       ===================================================== */
 
     .message-success,
     .message-error {
         margin-bottom: 17px;
+
         padding: 13px 15px;
+
         border-radius: 6px;
     }
 
     .message-success {
         background: #163725;
         color: #75e7a3;
+
         border: 1px solid #28583b;
     }
 
     .message-error {
         background: #36191f;
         color: #ffb9c1;
+
         border: 1px solid #71343e;
     }
 
-    /* LIST */
+    /* =====================================================
+       LIST VIEW
+       ===================================================== */
 
     .showtime-table-wrap {
         overflow-x: auto;
@@ -184,6 +201,7 @@
 
     .showtime-table {
         width: 100%;
+
         border-collapse: collapse;
     }
 
@@ -200,6 +218,10 @@
     .showtime-table th {
         background: #202027;
         color: #aaa;
+    }
+
+    .showtime-table tbody tr:hover {
+        background: #1d1d22;
     }
 
     .status-active {
@@ -238,6 +260,10 @@
         text-decoration: none;
     }
 
+    .edit-button:hover {
+        border-color: #ff1744;
+    }
+
     .delete-button {
         background: transparent;
         color: #ff637d;
@@ -245,13 +271,20 @@
         border: 1px solid #71323c;
     }
 
+    .delete-button:hover {
+        background: #35191f;
+    }
+
     .empty-showtime {
         padding: 40px;
+
         text-align: center;
         color: #888;
     }
 
-    /* CALENDAR */
+    /* =====================================================
+       CALENDAR
+       ===================================================== */
 
     #calendarView {
         display: none;
@@ -266,7 +299,9 @@
         border-radius: 9px;
     }
 
-    /* DAY + WEEK */
+    /* =====================================================
+       DAY + WEEK
+       ===================================================== */
 
     .time-calendar {
         max-height: 680px;
@@ -288,6 +323,7 @@
 
     .day-header {
         grid-template-columns: 70px 1fr;
+
         min-width: 700px;
     }
 
@@ -346,6 +382,7 @@
 
     .day-body {
         grid-template-columns: 70px 1fr;
+
         min-width: 700px;
     }
 
@@ -400,7 +437,9 @@
         background-color: #19171c;
     }
 
-    /* EVENT */
+    /* =====================================================
+       CALENDAR EVENT
+       ===================================================== */
 
     .calendar-event {
         position: absolute;
@@ -429,6 +468,7 @@
 
     .calendar-event:hover {
         z-index: 10;
+
         background: #48242f;
     }
 
@@ -473,10 +513,13 @@
         text-overflow: ellipsis;
     }
 
-    /* MONTH */
+    /* =====================================================
+       MONTH VIEW
+       ===================================================== */
 
     .month-week-header {
         display: grid;
+
         grid-template-columns: repeat(7, 1fr);
 
         background: #202027;
@@ -497,6 +540,7 @@
 
     .month-grid {
         display: grid;
+
         grid-template-columns: repeat(7, 1fr);
     }
 
@@ -541,8 +585,7 @@
         font-weight: bold;
     }
 
-    .month-day.today
-    .month-day-number {
+    .month-day.today .month-day-number {
         background: #ff1744;
         color: white;
     }
@@ -590,10 +633,45 @@
         font-size: 10px;
     }
 
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 850px) {
+
+        .showtime-header {
+            flex-direction: column;
+        }
+
+        .showtime-header-right {
+            justify-content: flex-start;
+        }
+
+        .calendar-navigation {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .month-day {
+            min-height: 90px;
+            padding: 4px;
+        }
+
+        .month-event {
+            padding: 4px;
+            font-size: 8px;
+        }
+
+    }
+
 </style>
 
 
 <section class="showtime-page">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
     <div class="showtime-header">
 
@@ -617,25 +695,33 @@
                 <button type="button"
                         class="view-button active"
                         data-view="list">
+
                     Danh sách
+
                 </button>
 
                 <button type="button"
                         class="view-button"
                         data-view="day">
+
                     Ngày
+
                 </button>
 
                 <button type="button"
                         class="view-button"
                         data-view="week">
+
                     Tuần
+
                 </button>
 
                 <button type="button"
                         class="view-button"
                         data-view="month">
+
                     Tháng
+
                 </button>
 
             </div>
@@ -653,10 +739,14 @@
     </div>
 
 
+    <!-- =====================================================
+         MESSAGE
+         ===================================================== -->
+
     <c:if test="${param.saved eq '1'}">
 
         <div class="message-success">
-            Lưu lịch chiếu thành công.
+            ✓ Lưu lịch chiếu thành công.
         </div>
 
     </c:if>
@@ -665,7 +755,7 @@
     <c:if test="${param.deleted eq '1'}">
 
         <div class="message-success">
-            Xử lý lịch chiếu thành công.
+            ✓ Xử lý lịch chiếu thành công.
         </div>
 
     </c:if>
@@ -674,11 +764,18 @@
     <c:if test="${not empty error}">
 
         <div class="message-error">
+
+            ⚠
             <c:out value="${error}" />
+
         </div>
 
     </c:if>
 
+
+    <!-- =====================================================
+         CALENDAR NAVIGATION
+         ===================================================== -->
 
     <div id="calendarNavigation"
          class="calendar-navigation">
@@ -688,22 +785,29 @@
             <button type="button"
                     id="previousButton"
                     class="nav-button arrow-button">
+
                 ‹
+
             </button>
 
             <button type="button"
                     id="todayButton"
                     class="nav-button">
+
                 Hôm nay
+
             </button>
 
             <button type="button"
                     id="nextButton"
                     class="nav-button arrow-button">
+
                 ›
+
             </button>
 
         </div>
+
 
         <div id="calendarTitle"
              class="calendar-title">
@@ -712,6 +816,10 @@
     </div>
 
 
+    <!-- =====================================================
+         LIST VIEW
+         ===================================================== -->
+
     <div id="listView">
 
         <div class="showtime-table-wrap">
@@ -719,7 +827,9 @@
             <c:if test="${empty showtimes}">
 
                 <div class="empty-showtime">
+
                     Chưa có lịch chiếu nào.
+
                 </div>
 
             </c:if>
@@ -727,18 +837,28 @@
 
             <c:if test="${not empty showtimes}">
 
-                <table class="showtime-table">
+                <table class="showtime-table"
+                       data-paginate="true"
+                       data-page-size="10">
 
                     <thead>
 
                         <tr>
+
                             <th>ID</th>
+
                             <th>Phim</th>
+
                             <th>Phòng</th>
+
                             <th>Bắt đầu</th>
+
                             <th>Kết thúc</th>
+
                             <th>Trạng thái</th>
+
                             <th>Thao tác</th>
+
                         </tr>
 
                     </thead>
@@ -752,15 +872,21 @@
                             <tr>
 
                                 <td>
+
                                     ${showtime.showtimeId}
+
                                 </td>
 
                                 <td>
+
                                     <c:out value="${movieById[showtime.movieId].title}" />
+
                                 </td>
 
                                 <td>
+
                                     <c:out value="${roomById[showtime.roomId].roomName}" />
+
                                 </td>
 
                                 <td>
@@ -784,15 +910,20 @@
                                     <c:if test="${showtime.status eq 'ACTIVE'}">
 
                                         <span class="status-active">
+
                                             ACTIVE
+
                                         </span>
 
                                     </c:if>
 
+
                                     <c:if test="${showtime.status ne 'ACTIVE'}">
 
                                         <span class="status-inactive">
+
                                             INACTIVE
+
                                         </span>
 
                                     </c:if>
@@ -805,7 +936,9 @@
 
                                         <a class="edit-button"
                                            href="${pageContext.request.contextPath}/admin/showtime-form?id=${showtime.showtimeId}">
+
                                             Sửa
+
                                         </a>
 
 
@@ -823,7 +956,9 @@
 
                                             <button type="submit"
                                                     class="delete-button">
+
                                                 Xóa
+
                                             </button>
 
                                         </form>
@@ -847,6 +982,10 @@
     </div>
 
 
+    <!-- =====================================================
+         CALENDAR VIEW
+         ===================================================== -->
+
     <div id="calendarView">
 
         <div id="calendarContent"
@@ -856,7 +995,11 @@
     </div>
 
 
-    <div style="display:none">
+    <!-- =====================================================
+         DATA FOR JAVASCRIPT
+         ===================================================== -->
+
+    <div style="display:none;">
 
         <c:forEach items="${showtimes}"
                    var="showtime">
@@ -883,13 +1026,21 @@
 
 
             <div class="showtime-data-item"
+
                  data-id="${showtime.showtimeId}"
+
                  data-movie="${fn:escapeXml(movieById[showtime.movieId].title)}"
+
                  data-room="${fn:escapeXml(roomById[showtime.roomId].roomName)}"
+
                  data-start-date="${eventStartDate}"
+
                  data-start-time="${eventStartTime}"
+
                  data-end-date="${eventEndDate}"
+
                  data-end-time="${eventEndTime}"
+
                  data-status="${showtime.status}">
             </div>
 
@@ -905,7 +1056,10 @@
     var contextPath =
             "${pageContext.request.contextPath}";
 
-    var HOUR_HEIGHT = 64;
+
+    var HOUR_HEIGHT =
+            64;
+
 
     var DAY_HEIGHT =
             24 * HOUR_HEIGHT;
@@ -1001,6 +1155,10 @@
     );
 
 
+    /* =====================================================
+       DATE UTILS
+       ===================================================== */
+
     function pad(number) {
 
         return String(number)
@@ -1056,6 +1214,7 @@
     function weekdayName(date) {
 
         var names = [
+
             "Chủ nhật",
             "Thứ 2",
             "Thứ 3",
@@ -1063,6 +1222,7 @@
             "Thứ 5",
             "Thứ 6",
             "Thứ 7"
+
         ];
 
 
@@ -1089,6 +1249,10 @@
         return element.innerHTML;
     }
 
+
+    /* =====================================================
+       SHOWTIME UTILS
+       ===================================================== */
 
     function eventsForDate(date) {
 
@@ -1122,7 +1286,8 @@
                 value.split(":");
 
 
-        return Number(parts[0]) * 60
+        return Number(parts[0])
+                * 60
                 + Number(parts[1]);
     }
 
@@ -1135,7 +1300,8 @@
                 );
 
 
-        return minutes / 60
+        return minutes
+                / 60
                 * HOUR_HEIGHT;
     }
 
@@ -1151,8 +1317,10 @@
         var end;
 
 
-        if (showtime.endDate
-                === showtime.startDate) {
+        if (
+                showtime.endDate
+                === showtime.startDate
+        ) {
 
             end =
                     minutesFromTime(
@@ -1175,7 +1343,8 @@
 
         return Math.max(
                 32,
-                duration / 60
+                duration
+                / 60
                 * HOUR_HEIGHT
         );
     }
@@ -1189,9 +1358,14 @@
     }
 
 
+    /* =====================================================
+       CREATE TIME GRID
+       ===================================================== */
+
     function createTimeLabels() {
 
-        var html = "";
+        var html =
+                "";
 
 
         for (
@@ -1204,12 +1378,16 @@
                     '<div class="time-label" '
                     + 'style="top:'
                     + (hour * HOUR_HEIGHT)
-                    + 'px">'
+                    + 'px">';
 
-                    + pad(hour)
-                    + ':00'
 
-                    + '</div>';
+            html +=
+                    pad(hour)
+                    + ":00";
+
+
+            html +=
+                    '</div>';
         }
 
 
@@ -1221,7 +1399,8 @@
             showtime) {
 
         var inactiveClass =
-                showtime.status === "ACTIVE"
+                showtime.status
+                === "ACTIVE"
                         ? ""
                         : " inactive";
 
@@ -1238,7 +1417,8 @@
                 );
 
 
-        var html = "";
+        var html =
+                "";
 
 
         html +=
@@ -1311,12 +1491,20 @@
     }
 
 
+    /* =====================================================
+       DAY VIEW
+       ===================================================== */
+
     function renderDay() {
 
         calendarTitle.textContent =
-                weekdayName(currentDate)
+                weekdayName(
+                        currentDate
+                )
                 + ", "
-                + formatDate(currentDate);
+                + formatDate(
+                        currentDate
+                );
 
 
         var events =
@@ -1326,13 +1514,16 @@
 
 
         var isToday =
-                dateKey(currentDate)
+                dateKey(
+                        currentDate
+                )
                 === dateKey(
                         new Date()
                 );
 
 
-        var eventsHtml = "";
+        var eventsHtml =
+                "";
 
 
         events.forEach(
@@ -1346,7 +1537,8 @@
         );
 
 
-        var html = "";
+        var html =
+                "";
 
 
         html +=
@@ -1363,13 +1555,19 @@
 
         html +=
                 '<div class="time-header-day'
-                + (isToday ? " today" : "")
+                + (
+                        isToday
+                                ? " today"
+                                : ""
+                )
                 + '">';
 
 
         html +=
                 '<div class="header-weekday">'
-                + weekdayName(currentDate)
+                + weekdayName(
+                        currentDate
+                )
                 + '</div>';
 
 
@@ -1382,6 +1580,7 @@
         html +=
                 '</div>';
 
+
         html +=
                 '</div>';
 
@@ -1393,8 +1592,10 @@
         html +=
                 '<div class="time-label-column">';
 
+
         html +=
                 createTimeLabels();
+
 
         html +=
                 '</div>';
@@ -1402,9 +1603,11 @@
 
         html +=
                 '<div class="calendar-day-column'
-                + (isToday
-                        ? " today-column"
-                        : "")
+                + (
+                        isToday
+                                ? " today-column"
+                                : ""
+                )
                 + '">';
 
 
@@ -1415,8 +1618,10 @@
         html +=
                 '</div>';
 
+
         html +=
                 '</div>';
+
 
         html +=
                 '</div>';
@@ -1432,10 +1637,16 @@
     }
 
 
+    /* =====================================================
+       WEEK VIEW
+       ===================================================== */
+
     function getMonday(date) {
 
         var result =
-                new Date(date);
+                new Date(
+                        date
+                );
 
 
         var day =
@@ -1487,9 +1698,13 @@
 
 
         calendarTitle.textContent =
-                formatDate(monday)
+                formatDate(
+                        monday
+                )
                 + " - "
-                + formatDate(sunday);
+                + formatDate(
+                        sunday
+                );
 
 
         var headerHtml =
@@ -1508,7 +1723,8 @@
                 );
 
 
-        var weekEvents = [];
+        var weekEvents =
+                [];
 
 
         for (
@@ -1530,7 +1746,9 @@
 
 
             var key =
-                    dateKey(day);
+                    dateKey(
+                            day
+                    );
 
 
             var events =
@@ -1546,20 +1764,25 @@
 
 
             var isToday =
-                    key === todayKey;
+                    key
+                    === todayKey;
 
 
             headerHtml +=
                     '<div class="time-header-day'
-                    + (isToday
-                            ? " today"
-                            : "")
+                    + (
+                            isToday
+                                    ? " today"
+                                    : ""
+                    )
                     + '">';
 
 
             headerHtml +=
                     '<div class="header-weekday">'
-                    + weekdayName(day)
+                    + weekdayName(
+                            day
+                    )
                     + '</div>';
 
 
@@ -1573,7 +1796,8 @@
                     '</div>';
 
 
-            var eventsHtml = "";
+            var eventsHtml =
+                    "";
 
 
             events.forEach(
@@ -1589,9 +1813,11 @@
 
             bodyHtml +=
                     '<div class="calendar-day-column'
-                    + (isToday
-                            ? " today-column"
-                            : "")
+                    + (
+                            isToday
+                                    ? " today-column"
+                                    : ""
+                    )
                     + '">';
 
 
@@ -1604,7 +1830,8 @@
         }
 
 
-        var html = "";
+        var html =
+                "";
 
 
         html +=
@@ -1649,11 +1876,18 @@
     }
 
 
+    /* =====================================================
+       MONTH VIEW
+       ===================================================== */
+
     function renderMonth() {
 
         calendarTitle.textContent =
                 "Tháng "
-                + (currentDate.getMonth() + 1)
+                + (
+                        currentDate.getMonth()
+                        + 1
+                )
                 + "/"
                 + currentDate.getFullYear();
 
@@ -1672,7 +1906,9 @@
 
 
         if (offset < 0) {
-            offset = 6;
+
+            offset =
+                    6;
         }
 
 
@@ -1689,6 +1925,7 @@
 
 
         var weekdayNames = [
+
             "Thứ 2",
             "Thứ 3",
             "Thứ 4",
@@ -1696,6 +1933,7 @@
             "Thứ 6",
             "Thứ 7",
             "Chủ nhật"
+
         ];
 
 
@@ -1764,7 +2002,8 @@
 
 
             var isToday =
-                    key === todayKey;
+                    key
+                    === todayKey;
 
 
             var classes =
@@ -1772,12 +2011,14 @@
 
 
             if (otherMonth) {
+
                 classes +=
                         " other-month";
             }
 
 
             if (isToday) {
+
                 classes +=
                         " today";
             }
@@ -1822,7 +2063,9 @@
 
                         html +=
                                 '<a href="'
-                                + editUrl(showtime)
+                                + editUrl(
+                                        showtime
+                                )
                                 + '" ';
 
 
@@ -1850,7 +2093,10 @@
             );
 
 
-            if (events.length > 3) {
+            if (
+                    events.length
+                    > 3
+            ) {
 
                 html +=
                         '<div class="more-events">';
@@ -1858,7 +2104,10 @@
 
                 html +=
                         "+"
-                        + (events.length - 3)
+                        + (
+                                events.length
+                                - 3
+                        )
                         + " suất khác";
 
 
@@ -1909,6 +2158,10 @@
     }
 
 
+    /* =====================================================
+       AUTO SCROLL
+       ===================================================== */
+
     function scrollToUsefulTime(
             events) {
 
@@ -1926,10 +2179,14 @@
                     }
 
 
-                    var hour = 8;
+                    var hour =
+                            8;
 
 
-                    if (events.length > 0) {
+                    if (
+                            events.length
+                            > 0
+                    ) {
 
                         var earliest =
                                 24 * 60;
@@ -1944,7 +2201,10 @@
                                             );
 
 
-                                    if (value < earliest) {
+                                    if (
+                                            value
+                                            < earliest
+                                    ) {
 
                                         earliest =
                                                 value;
@@ -1973,9 +2233,16 @@
     }
 
 
+    /* =====================================================
+       CHANGE VIEW
+       ===================================================== */
+
     function renderCurrentView() {
 
-        if (currentView === "day") {
+        if (
+                currentView
+                === "day"
+        ) {
 
             renderDay();
 
@@ -1983,7 +2250,10 @@
         }
 
 
-        if (currentView === "week") {
+        if (
+                currentView
+                === "week"
+        ) {
 
             renderWeek();
 
@@ -1991,7 +2261,10 @@
         }
 
 
-        if (currentView === "month") {
+        if (
+                currentView
+                === "month"
+        ) {
 
             renderMonth();
         }
@@ -2026,7 +2299,10 @@
         );
 
 
-        if (view === "list") {
+        if (
+                view
+                === "list"
+        ) {
 
             listView.style.display =
                     "block";
@@ -2082,6 +2358,10 @@
     );
 
 
+    /* =====================================================
+       PREVIOUS
+       ===================================================== */
+
     document.getElementById(
             "previousButton"
     ).addEventListener(
@@ -2120,7 +2400,8 @@
                     currentDate =
                             new Date(
                                     currentDate.getFullYear(),
-                                    currentDate.getMonth() - 1,
+                                    currentDate.getMonth()
+                                    - 1,
                                     1
                             );
                 }
@@ -2130,6 +2411,10 @@
             }
     );
 
+
+    /* =====================================================
+       NEXT
+       ===================================================== */
 
     document.getElementById(
             "nextButton"
@@ -2169,7 +2454,8 @@
                     currentDate =
                             new Date(
                                     currentDate.getFullYear(),
-                                    currentDate.getMonth() + 1,
+                                    currentDate.getMonth()
+                                    + 1,
                                     1
                             );
                 }
@@ -2179,6 +2465,10 @@
             }
     );
 
+
+    /* =====================================================
+       TODAY
+       ===================================================== */
 
     document.getElementById(
             "todayButton"
@@ -2203,6 +2493,10 @@
     );
 
 </script>
+
+
+<!-- PHÂN TRANG CHỈ ÁP DỤNG CHO TABLE DANH SÁCH -->
+<%@ include file="/WEB-INF/include/table-pagination.jsp" %>
 
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

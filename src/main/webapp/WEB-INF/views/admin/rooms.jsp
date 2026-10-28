@@ -26,65 +26,57 @@
     .page-header h1 {
         margin: 0 0 8px;
         font-size: 32px;
-        font-weight: 700;
     }
 
     .page-header p {
         color: #999;
         margin: 0;
-        font-size: 15px;
     }
-
-    /* ==========================
-       BUTTON THÊM PHÒNG
-       ========================== */
 
     .btn-primary {
         display: inline-block;
+
         background: #ff1744;
         color: white;
+
         padding: 11px 19px;
+
         border-radius: 7px;
+
         text-decoration: none;
         font-weight: 600;
-        transition: 0.2s;
     }
-
-    .btn-primary:hover {
-        background: #e3133b;
-        transform: translateY(-1px);
-    }
-
-    /* ==========================
-       MESSAGE
-       ========================== */
 
     .success-message {
         padding: 13px 16px;
         margin-bottom: 22px;
+
         border: 1px solid #225c3c;
+
         background: #13291e;
         color: #70d99a;
+
         border-radius: 7px;
     }
 
     .error-message {
         padding: 13px 16px;
         margin-bottom: 22px;
+
         border: 1px solid #6b2935;
+
         background: #32181d;
         color: #ff8095;
+
         border-radius: 7px;
     }
 
-    /* ==========================
-       TABLE CARD
-       ========================== */
-
     .table-card {
         background: #151517;
+
         border: 1px solid #29292d;
         border-radius: 11px;
+
         overflow: hidden;
     }
 
@@ -95,37 +87,29 @@
 
     .admin-table th {
         padding: 15px 17px;
-        text-align: left;
+
         background: #1d1d20;
         color: #999;
+
+        text-align: left;
+
         font-size: 13px;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+
         border-bottom: 1px solid #303034;
     }
 
     .admin-table td {
         padding: 17px;
-        border-bottom: 1px solid #28282c;
-        color: #ddd;
-        vertical-align: middle;
-    }
 
-    .admin-table tbody tr {
-        transition: 0.2s;
+        border-bottom: 1px solid #28282c;
+
+        color: #ddd;
     }
 
     .admin-table tbody tr:hover {
         background: #1c1c1f;
     }
-
-    .admin-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* ==========================
-       ROOM INFO
-       ========================== */
 
     .room-id {
         color: #777;
@@ -138,25 +122,24 @@
 
     .room-type {
         display: inline-block;
+
         padding: 5px 9px;
+
         background: #29292d;
+
         border-radius: 5px;
+
         color: #ddd;
         font-size: 12px;
     }
 
-    .capacity {
-        color: #ddd;
-    }
-
-    /* ==========================
-       STATUS
-       ========================== */
-
     .badge {
         display: inline-block;
+
         padding: 5px 10px;
+
         border-radius: 20px;
+
         font-size: 12px;
         font-weight: 600;
     }
@@ -173,10 +156,6 @@
         border: 1px solid #3b3b40;
     }
 
-    /* ==========================
-       ACTION
-       ========================== */
-
     .action-group {
         display: flex;
         align-items: center;
@@ -184,76 +163,50 @@
         flex-wrap: wrap;
     }
 
-    .btn-edit {
+    .btn-edit,
+    .btn-seat {
         display: inline-block;
+
         padding: 7px 12px;
-        color: #ff4265;
-        background: transparent;
-        border: 1px solid #ff1744;
+
         border-radius: 5px;
+
         text-decoration: none;
+
         font-size: 13px;
-        font-weight: 600;
-        transition: 0.2s;
     }
 
-    .btn-edit:hover {
-        background: #ff1744;
-        color: white;
+    .btn-edit {
+        color: #ff4265;
+        border: 1px solid #ff1744;
     }
 
     .btn-seat {
-        display: inline-block;
-        padding: 7px 12px;
         color: #ddd;
-        background: transparent;
         border: 1px solid #444;
-        border-radius: 5px;
-        text-decoration: none;
-        font-size: 13px;
-        transition: 0.2s;
-    }
-
-    .btn-seat:hover {
-        border-color: #ff1744;
-        color: #ff4265;
     }
 
     .delete-form {
         margin: 0;
-        display: inline;
     }
 
     .btn-delete {
         padding: 7px 12px;
+
         color: #ff6b81;
         background: transparent;
+
         border: 1px solid #5d3038;
         border-radius: 5px;
-        font-size: 13px;
+
         cursor: pointer;
-        transition: 0.2s;
     }
-
-    .btn-delete:hover {
-        background: #ff1744;
-        border-color: #ff1744;
-        color: white;
-    }
-
-    /* ==========================
-       EMPTY
-       ========================== */
 
     .empty {
         text-align: center;
         padding: 45px !important;
         color: #888 !important;
     }
-
-    /* ==========================
-       RESPONSIVE
-       ========================== */
 
     @media (max-width: 900px) {
 
@@ -265,19 +218,11 @@
             min-width: 850px;
         }
 
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
     }
 
 </style>
 
 <div class="admin-page">
-
-    <!-- ==========================
-         HEADER
-         ========================== -->
 
     <div class="page-header">
 
@@ -288,8 +233,7 @@
             </h1>
 
             <p>
-                Quản lý phòng chiếu
-                và sơ đồ ghế của rạp.
+                Quản lý phòng chiếu và sơ đồ ghế của rạp.
             </p>
 
         </div>
@@ -303,38 +247,21 @@
 
     </div>
 
-    <!-- ==========================
-         THÊM / SỬA THÀNH CÔNG
-         ========================== -->
-
     <c:if test="${param.saved == '1'}">
 
         <div class="success-message">
-
-            ✓ Lưu thông tin phòng
-            thành công.
-
+            ✓ Lưu thông tin phòng thành công.
         </div>
 
     </c:if>
-
-    <!-- ==========================
-         XÓA THÀNH CÔNG
-         ========================== -->
 
     <c:if test="${param.deleted == '1'}">
 
         <div class="success-message">
-
             ✓ Xóa phòng thành công.
-
         </div>
 
     </c:if>
-
-    <!-- ==========================
-         LỖI KHI XÓA
-         ========================== -->
 
     <c:if test="${not empty error}">
 
@@ -347,41 +274,22 @@
 
     </c:if>
 
-    <!-- ==========================
-         TABLE
-         ========================== -->
-
     <div class="table-card">
 
-        <table class="admin-table">
+        <table class="admin-table"
+               data-paginate="true"
+               data-page-size="10">
 
             <thead>
 
                 <tr>
 
-                    <th>
-                        ID
-                    </th>
-
-                    <th>
-                        Tên phòng
-                    </th>
-
-                    <th>
-                        Loại phòng
-                    </th>
-
-                    <th>
-                        Sức chứa
-                    </th>
-
-                    <th>
-                        Trạng thái
-                    </th>
-
-                    <th>
-                        Thao tác
-                    </th>
+                    <th>ID</th>
+                    <th>Tên phòng</th>
+                    <th>Loại phòng</th>
+                    <th>Sức chứa</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
 
                 </tr>
 
@@ -389,100 +297,74 @@
 
             <tbody>
 
-                <!-- ==========================
-                     DANH SÁCH PHÒNG
-                     ========================== -->
-
                 <c:forEach var="room"
                            items="${rooms}">
 
                     <tr>
 
-                        <!-- ID -->
                         <td class="room-id">
 
                             #<c:out value="${room.roomId}" />
 
                         </td>
 
-                        <!-- TÊN PHÒNG -->
                         <td class="room-name">
 
                             <c:out value="${room.roomName}" />
 
                         </td>
 
-                        <!-- LOẠI PHÒNG -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty room.roomType}">
 
-                                <c:when test="${not empty room.roomType}">
+                                <span class="room-type">
 
-                                    <span class="room-type">
+                                    <c:out value="${room.roomType}" />
 
-                                        <c:out value="${room.roomType}" />
+                                </span>
 
-                                    </span>
+                            </c:if>
 
-                                </c:when>
-
-                                <c:otherwise>
-
-                                    -
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            <c:if test="${empty room.roomType}">
+                                -
+                            </c:if>
 
                         </td>
 
-                        <!-- SỨC CHỨA -->
-                        <td class="capacity">
+                        <td>
 
                             <c:out value="${room.capacity}" />
                             ghế
 
                         </td>
 
-                        <!-- TRẠNG THÁI -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${room.status == 'ACTIVE'}">
 
-                                <c:when test="${room.status == 'ACTIVE'}">
+                                <span class="badge active">
+                                    ACTIVE
+                                </span>
 
-                                    <span class="badge active">
+                            </c:if>
 
-                                        ACTIVE
+                            <c:if test="${room.status != 'ACTIVE'}">
 
-                                    </span>
+                                <span class="badge inactive">
 
-                                </c:when>
+                                    <c:out value="${room.status}" />
 
-                                <c:otherwise>
+                                </span>
 
-                                    <span class="badge inactive">
-
-                                        <c:out value="${room.status}" />
-
-                                    </span>
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
-
-                        <!-- ==========================
-                             THAO TÁC
-                             ========================== -->
 
                         <td>
 
                             <div class="action-group">
 
-                                <!-- SỬA -->
                                 <a class="btn-edit"
                                    href="${pageContext.request.contextPath}/admin/room-form?id=${room.roomId}">
 
@@ -490,7 +372,6 @@
 
                                 </a>
 
-                                <!-- QUẢN LÝ GHẾ -->
                                 <a class="btn-seat"
                                    href="${pageContext.request.contextPath}/admin/seats?roomId=${room.roomId}">
 
@@ -498,7 +379,6 @@
 
                                 </a>
 
-                                <!-- XÓA -->
                                 <form class="delete-form"
                                       method="post"
                                       action="${pageContext.request.contextPath}/admin/rooms">
@@ -529,10 +409,6 @@
 
                 </c:forEach>
 
-                <!-- ==========================
-                     KHÔNG CÓ PHÒNG
-                     ========================== -->
-
                 <c:if test="${empty rooms}">
 
                     <tr>
@@ -555,5 +431,7 @@
     </div>
 
 </div>
+
+<%@ include file="/WEB-INF/include/table-pagination.jsp" %>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

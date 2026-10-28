@@ -38,63 +38,77 @@
 
     .btn-add {
         padding: 11px 18px;
+
         background: #ff1744;
         color: white;
+
         border-radius: 7px;
+
         text-decoration: none;
         font-weight: 600;
-        white-space: nowrap;
     }
 
     .success-message {
         margin-bottom: 20px;
         padding: 13px 16px;
+
         background: #13291e;
         border: 1px solid #225c3c;
         border-radius: 7px;
+
         color: #70d99a;
     }
 
     .error-message {
         margin-bottom: 20px;
         padding: 13px 16px;
+
         background: #32181d;
         border: 1px solid #6b2935;
         border-radius: 7px;
+
         color: #ff8095;
     }
 
     .table-card {
         background: #151517;
+
         border: 1px solid #29292d;
         border-radius: 11px;
+
         overflow-x: auto;
     }
 
-    table {
+    .pricing-table {
         width: 100%;
         min-width: 1300px;
+
         border-collapse: collapse;
     }
 
-    th {
+    .pricing-table th {
         padding: 14px 13px;
-        text-align: left;
+
         background: #1d1d20;
         color: #999;
+
+        text-align: left;
+
         font-size: 11px;
         text-transform: uppercase;
     }
 
-    td {
+    .pricing-table td {
         padding: 16px 13px;
+
         border-top: 1px solid #29292d;
+
         color: #ddd;
-        vertical-align: middle;
+
         font-size: 13px;
     }
 
-    tbody tr:hover {
+    .pricing-table tbody tr:hover {
         background: #1c1c1f;
     }
 
@@ -106,15 +120,18 @@
         color: white;
         font-weight: 700;
         font-size: 15px;
-        white-space: nowrap;
     }
 
     .tag {
         display: inline-block;
+
         padding: 5px 8px;
+
         border-radius: 5px;
+
         background: #29292e;
         color: #ddd;
+
         font-size: 11px;
         font-weight: 600;
     }
@@ -136,8 +153,11 @@
 
     .badge {
         display: inline-block;
+
         padding: 5px 9px;
+
         border-radius: 15px;
+
         font-size: 11px;
         font-weight: 600;
     }
@@ -154,30 +174,37 @@
 
     .actions {
         display: flex;
-        align-items: center;
         gap: 7px;
+        align-items: center;
     }
 
     .btn-edit {
         padding: 7px 11px;
+
         color: #ff4265;
+
         border: 1px solid #ff1744;
         border-radius: 5px;
+
         text-decoration: none;
     }
 
     .btn-delete {
         padding: 7px 11px;
+
         color: #ff6b81;
         background: transparent;
+
         border: 1px solid #5d3038;
         border-radius: 5px;
+
         cursor: pointer;
     }
 
     .empty {
         text-align: center;
         color: #888;
+
         padding: 45px !important;
     }
 
@@ -194,8 +221,8 @@
             </h1>
 
             <p>
-                Thiết lập giá theo phim, phòng,
-                ghế, ngày và khung giờ.
+                Thiết lập giá theo phim, phòng, ghế,
+                ngày và khung giờ.
             </p>
 
         </div>
@@ -212,7 +239,9 @@
     <c:if test="${param.saved == '1'}">
 
         <div class="success-message">
+
             ✓ Lưu quy tắc giá thành công.
+
         </div>
 
     </c:if>
@@ -220,7 +249,9 @@
     <c:if test="${param.deleted == '1'}">
 
         <div class="success-message">
+
             ✓ Xóa quy tắc giá thành công.
+
         </div>
 
     </c:if>
@@ -238,7 +269,9 @@
 
     <div class="table-card">
 
-        <table>
+        <table class="pricing-table"
+               data-paginate="true"
+               data-page-size="10">
 
             <thead>
 
@@ -265,57 +298,45 @@
 
                     <tr>
 
-                        <!-- MOVIE -->
-
                         <td>
 
-                            <c:choose>
+                            <c:if test="${empty pricing.movieId}">
 
-                                <c:when test="${empty pricing.movieId}">
+                                <span class="muted">
+                                    Tất cả phim
+                                </span>
 
-                                    <span class="muted">
-                                        Tất cả phim
-                                    </span>
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${not empty pricing.movieId}">
 
-                                <c:otherwise>
+                                <c:out value="${pricing.movieTitle}" />
 
-                                    <c:out value="${pricing.movieTitle}" />
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
 
-                        <!-- ROOM -->
-
                         <td>
 
-                            <c:choose>
+                            <c:if test="${empty pricing.roomType}">
 
-                                <c:when test="${empty pricing.roomType}">
+                                <span class="muted">
+                                    Tất cả
+                                </span>
 
-                                    <span class="muted">
-                                        Tất cả
-                                    </span>
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${not empty pricing.roomType}">
 
-                                <c:otherwise>
+                                <span class="tag">
 
-                                    <span class="tag">
-                                        ${pricing.roomType}
-                                    </span>
+                                    <c:out value="${pricing.roomType}" />
 
-                                </c:otherwise>
+                                </span>
 
-                            </c:choose>
+                            </c:if>
 
                         </td>
-
-                        <!-- SEAT -->
 
                         <td>
 
@@ -327,85 +348,75 @@
                                     ? 'tag-couple'
                                     : ''}">
 
-                                ${pricing.seatType}
+                                <c:out value="${pricing.seatType}" />
 
                             </span>
 
                         </td>
 
-                        <!-- DAY -->
-
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty pricing.specialDate}">
 
-                                <c:when test="${not empty pricing.specialDate}">
+                                <span class="tag tag-special">
 
-                                    <span class="tag tag-special">
+                                    <fmt:formatDate
+                                        value="${pricing.specialDate}"
+                                        pattern="dd/MM/yyyy" />
 
-                                        <fmt:formatDate
-                                            value="${pricing.specialDate}"
-                                            pattern="dd/MM/yyyy" />
+                                </span>
 
-                                    </span>
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${empty pricing.specialDate
+                                          and pricing.dayType == 'WEEKDAY'}">
 
-                                <c:when test="${pricing.dayType == 'WEEKDAY'}">
+                                Thứ 2 - Thứ 6
 
-                                    Thứ 2 - Thứ 6
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${empty pricing.specialDate
+                                          and pricing.dayType == 'WEEKEND'}">
 
-                                <c:when test="${pricing.dayType == 'WEEKEND'}">
+                                Thứ 7 - CN
 
-                                    Thứ 7 - CN
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${empty pricing.specialDate
+                                          and pricing.dayType != 'WEEKDAY'
+                                          and pricing.dayType != 'WEEKEND'}">
 
-                                <c:otherwise>
+                                Tất cả ngày
 
-                                    Tất cả ngày
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
 
-                        <!-- TIME -->
-
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty pricing.startTime}">
 
-                                <c:when test="${not empty pricing.startTime}">
+                                <fmt:formatDate
+                                    value="${pricing.startTime}"
+                                    pattern="HH:mm" />
 
-                                    <fmt:formatDate
-                                        value="${pricing.startTime}"
-                                        pattern="HH:mm" />
+                                -
 
-                                    -
+                                <fmt:formatDate
+                                    value="${pricing.endTime}"
+                                    pattern="HH:mm" />
 
-                                    <fmt:formatDate
-                                        value="${pricing.endTime}"
-                                        pattern="HH:mm" />
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${empty pricing.startTime}">
 
-                                <c:otherwise>
+                                <span class="muted">
+                                    Cả ngày
+                                </span>
 
-                                    <span class="muted">
-                                        Cả ngày
-                                    </span>
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
-
-                        <!-- PRICE -->
 
                         <td class="price">
 
@@ -417,8 +428,6 @@
 
                         </td>
 
-                        <!-- EFFECTIVE DATE -->
-
                         <td>
 
                             <fmt:formatDate
@@ -427,53 +436,41 @@
 
                             →
 
-                            <c:choose>
+                            <c:if test="${not empty pricing.endDate}">
 
-                                <c:when test="${not empty pricing.endDate}">
+                                <fmt:formatDate
+                                    value="${pricing.endDate}"
+                                    pattern="dd/MM/yyyy" />
 
-                                    <fmt:formatDate
-                                        value="${pricing.endDate}"
-                                        pattern="dd/MM/yyyy" />
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${empty pricing.endDate}">
 
-                                <c:otherwise>
+                                Không giới hạn
 
-                                    Không giới hạn
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
-
-                        <!-- STATUS -->
 
                         <td>
 
-                            <c:choose>
+                            <c:if test="${pricing.status == 'ACTIVE'}">
 
-                                <c:when test="${pricing.status == 'ACTIVE'}">
+                                <span class="badge active">
+                                    ACTIVE
+                                </span>
 
-                                    <span class="badge active">
-                                        ACTIVE
-                                    </span>
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${pricing.status != 'ACTIVE'}">
 
-                                <c:otherwise>
+                                <span class="badge inactive">
+                                    INACTIVE
+                                </span>
 
-                                    <span class="badge inactive">
-                                        INACTIVE
-                                    </span>
-
-                                </c:otherwise>
-
-                            </c:choose>
+                            </c:if>
 
                         </td>
-
-                        <!-- ACTION -->
 
                         <td>
 
@@ -537,5 +534,7 @@
     </div>
 
 </div>
+
+<%@ include file="/WEB-INF/include/table-pagination.jsp" %>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

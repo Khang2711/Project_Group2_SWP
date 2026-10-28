@@ -1,10 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<%@ taglib prefix="c"
+           uri="jakarta.tags.core" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <style>
+
     .movie-page {
         max-width: 1240px;
         margin: 0 auto;
@@ -40,12 +43,6 @@
         text-decoration: none;
         border-radius: 7px;
         font-weight: 600;
-        transition: 0.2s;
-    }
-
-    .btn-add:hover {
-        background: #e3133b;
-        transform: translateY(-1px);
     }
 
     .success-message {
@@ -85,7 +82,6 @@
         text-align: left;
         font-size: 13px;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
         border-bottom: 1px solid #303034;
     }
 
@@ -93,19 +89,10 @@
         padding: 17px;
         border-bottom: 1px solid #28282c;
         color: #ddd;
-        vertical-align: middle;
-    }
-
-    .movie-table tbody tr {
-        transition: 0.2s;
     }
 
     .movie-table tbody tr:hover {
         background: #1c1c1f;
-    }
-
-    .movie-table tbody tr:last-child td {
-        border-bottom: none;
     }
 
     .movie-title {
@@ -149,12 +136,11 @@
 
     .action-group {
         display: flex;
-        align-items: center;
         gap: 8px;
+        align-items: center;
     }
 
     .btn-edit {
-        display: inline-block;
         padding: 7px 13px;
         border: 1px solid #ff1744;
         color: #ff4265;
@@ -162,18 +148,10 @@
         text-decoration: none;
         border-radius: 5px;
         font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .btn-edit:hover {
-        background: #ff1744;
-        color: white;
     }
 
     .delete-form {
         margin: 0;
-        display: inline;
     }
 
     .btn-delete {
@@ -182,15 +160,7 @@
         background: transparent;
         color: #ff6b81;
         border-radius: 5px;
-        font-size: 13px;
         cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .btn-delete:hover {
-        background: #ff1744;
-        border-color: #ff1744;
-        color: white;
     }
 
     .empty-row {
@@ -209,11 +179,8 @@
             min-width: 900px;
         }
 
-        .movie-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
     }
+
 </style>
 
 <div class="movie-page">
@@ -221,21 +188,26 @@
     <div class="movie-header">
 
         <div>
-            <h1>Quản lý phim</h1>
+
+            <h1>
+                Quản lý phim
+            </h1>
 
             <p>
                 Quản lý danh sách phim đang được áp dụng tại rạp.
             </p>
+
         </div>
 
         <a class="btn-add"
            href="${pageContext.request.contextPath}/admin/movie-form">
+
             + Thêm phim
+
         </a>
 
     </div>
 
-    <!-- Thông báo thêm / sửa thành công -->
     <c:if test="${param.saved == '1'}">
 
         <div class="success-message">
@@ -244,7 +216,6 @@
 
     </c:if>
 
-    <!-- Thông báo xóa thành công -->
     <c:if test="${param.deleted == '1'}">
 
         <div class="success-message">
@@ -253,22 +224,27 @@
 
     </c:if>
 
-    <!-- Thông báo lỗi -->
     <c:if test="${not empty error}">
 
         <div class="error-message">
-            ⚠ <c:out value="${error}" />
+
+            ⚠
+            <c:out value="${error}" />
+
         </div>
 
     </c:if>
 
     <div class="movie-card">
 
-        <table class="movie-table">
+        <table class="movie-table"
+               data-paginate="true"
+               data-page-size="10">
 
             <thead>
 
                 <tr>
+
                     <th>ID</th>
                     <th>Tên phim</th>
                     <th>Thời lượng</th>
@@ -277,6 +253,7 @@
                     <th>Ngày kết thúc</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
+
                 </tr>
 
             </thead>
@@ -288,114 +265,104 @@
 
                     <tr>
 
-                        <!-- ID -->
                         <td class="movie-id">
+
                             #<c:out value="${movie.movieId}" />
+
                         </td>
 
-                        <!-- Tên phim -->
                         <td class="movie-title">
+
                             <c:out value="${movie.title}" />
+
                         </td>
 
-                        <!-- Thời lượng -->
                         <td>
+
                             <c:out value="${movie.durationMinutes}" />
                             phút
+
                         </td>
 
-                        <!-- Phân loại độ tuổi -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty movie.ageRating}">
 
-                                <c:when test="${not empty movie.ageRating}">
+                                <span class="age-badge">
 
-                                    <span class="age-badge">
-                                        <c:out value="${movie.ageRating}" />
-                                    </span>
+                                    <c:out value="${movie.ageRating}" />
 
-                                </c:when>
+                                </span>
 
-                                <c:otherwise>
-                                    -
-                                </c:otherwise>
+                            </c:if>
 
-                            </c:choose>
+                            <c:if test="${empty movie.ageRating}">
+                                -
+                            </c:if>
 
                         </td>
 
-                        <!-- Ngày phát hành -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty movie.releaseDate}">
 
-                                <c:when test="${not empty movie.releaseDate}">
-                                    <c:out value="${movie.releaseDate}" />
-                                </c:when>
+                                <c:out value="${movie.releaseDate}" />
 
-                                <c:otherwise>
-                                    -
-                                </c:otherwise>
+                            </c:if>
 
-                            </c:choose>
+                            <c:if test="${empty movie.releaseDate}">
+                                -
+                            </c:if>
 
                         </td>
 
-                        <!-- Ngày kết thúc -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${not empty movie.endDate}">
 
-                                <c:when test="${not empty movie.endDate}">
-                                    <c:out value="${movie.endDate}" />
-                                </c:when>
+                                <c:out value="${movie.endDate}" />
 
-                                <c:otherwise>
-                                    -
-                                </c:otherwise>
+                            </c:if>
 
-                            </c:choose>
+                            <c:if test="${empty movie.endDate}">
+                                -
+                            </c:if>
 
                         </td>
 
-                        <!-- Trạng thái -->
                         <td>
 
-                            <c:choose>
+                            <c:if test="${movie.status == 'ACTIVE'}">
 
-                                <c:when test="${movie.status == 'ACTIVE'}">
+                                <span class="badge badge-active">
+                                    ACTIVE
+                                </span>
 
-                                    <span class="badge badge-active">
-                                        ACTIVE
-                                    </span>
+                            </c:if>
 
-                                </c:when>
+                            <c:if test="${movie.status != 'ACTIVE'}">
 
-                                <c:otherwise>
+                                <span class="badge badge-inactive">
 
-                                    <span class="badge badge-inactive">
-                                        <c:out value="${movie.status}" />
-                                    </span>
+                                    <c:out value="${movie.status}" />
 
-                                </c:otherwise>
+                                </span>
 
-                            </c:choose>
+                            </c:if>
 
                         </td>
 
-                        <!-- Thao tác -->
                         <td>
 
                             <div class="action-group">
 
-                                <!-- Sửa phim -->
                                 <a class="btn-edit"
                                    href="${pageContext.request.contextPath}/admin/movie-form?id=${movie.movieId}">
+
                                     Sửa
+
                                 </a>
 
-                                <!-- Xóa phim khỏi rạp -->
                                 <form class="delete-form"
                                       method="post"
                                       action="${pageContext.request.contextPath}/admin/movies">
@@ -407,7 +374,9 @@
                                     <button type="submit"
                                             class="btn-delete"
                                             onclick="return confirm('Bạn có chắc muốn xóa phim này khỏi rạp?');">
+
                                         Xóa
+
                                     </button>
 
                                 </form>
@@ -420,14 +389,15 @@
 
                 </c:forEach>
 
-                <!-- Không có dữ liệu -->
                 <c:if test="${empty movies}">
 
                     <tr>
 
                         <td colspan="8"
                             class="empty-row">
+
                             Chưa có phim nào tại rạp.
+
                         </td>
 
                     </tr>
@@ -441,5 +411,7 @@
     </div>
 
 </div>
+
+<%@ include file="/WEB-INF/include/table-pagination.jsp" %>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
