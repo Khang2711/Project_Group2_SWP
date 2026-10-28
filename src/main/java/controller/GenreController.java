@@ -136,6 +136,27 @@ public class GenreController extends HttpServlet {
                     return;
                 }
 
+                String action = request.getParameter("action");
+
+                if ("delete".equals(action)) {
+                    String deleteError = genreService.deleteGenre(genreId);
+
+                    if (deleteError != null) {
+                        request.setAttribute("error", deleteError);
+                        request.setAttribute("genres", genreService.getAllGenres());
+                        view = "/WEB-INF/views/admin/genres.jsp";
+                        break;
+                    }
+
+                    response.sendRedirect(request.getContextPath() + "/admin/genres?deleted=1");
+                    return;
+                }
+
+                if (action != null && !"status".equals(action)) {
+                    response.sendError(400, "Thao tác không hợp lệ.");
+                    return;
+                }
+
                 String newStatus = request.getParameter("status");
 
                 String statusError = genreService.updateStatus(genreId, newStatus);
