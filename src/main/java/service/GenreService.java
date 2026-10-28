@@ -125,6 +125,28 @@ public class GenreService {
     }
 
     /**
+     * Permanently deletes a genre when it has no linked movies.
+     *
+     * @return an error message, or null if deleted
+     */
+    public String deleteGenre(int genreId) {
+        if (genreId <= 0) {
+            return "Mã thể loại không hợp lệ.";
+        }
+
+        switch (genreRepository.deleteIfUnused(genreId)) {
+            case DELETED:
+                return null;
+            case IN_USE:
+                return "Không thể xóa thể loại vì đang có phim hoặc dữ liệu liên quan.";
+            case NOT_FOUND:
+                return "Không tìm thấy thể loại.";
+            default:
+                return "Không thể xóa thể loại. Vui lòng thử lại.";
+        }
+    }
+
+    /**
      * Validates genre information before saving.
      *
      * @param genre the genre to validate
