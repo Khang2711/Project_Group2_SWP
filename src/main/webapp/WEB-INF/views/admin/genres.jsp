@@ -34,6 +34,12 @@
         </div>
     </c:if>
 
+    <c:if test="${param.deleted == '1'}">
+        <div class="genres-success-message">
+            Đã xóa vĩnh viễn thể loại phim.
+        </div>
+    </c:if>
+
     <!-- Error message -->
     <c:if test="${not empty error}">
         <div class="genres-error-message">
@@ -160,6 +166,20 @@
 
                                     </c:choose>
 
+                                </form>
+
+                                <!-- Permanently delete only when no movies reference this genre -->
+                                <form method="post"
+                                      class="genres-status-form"
+                                      action="${pageContext.request.contextPath}/admin/genres"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa vĩnh viễn thể loại này? Thao tác không thể hoàn tác.');">
+
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="${genre.genreId}">
+
+                                    <button type="submit" class="genres-btn-delete">
+                                        Xóa
+                                    </button>
                                 </form>
 
                             </div>
