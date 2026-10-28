@@ -4595,6 +4595,25 @@ END CSS ADMIN
     background: #183323;
 }
 
+/* Permanent delete (separate from status changes) */
+.genres-btn-delete {
+    padding: 8px 13px;
+    border: 1px solid #8b1f32;
+    border-radius: 5px;
+    background: #451922;
+    color: #ffb3c2;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.genres-btn-delete:hover {
+    background: #c11236;
+    border-color: #c11236;
+    color: #fff;
+}
+
 /* Empty list */
 .genres-empty {
     padding: 45px !important;
