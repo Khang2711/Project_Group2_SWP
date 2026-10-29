@@ -13,9 +13,9 @@ public class GenreRepository extends DBContext {
 
         List<Genre> genres = new ArrayList<>();
 
-        String sql = "SELECT genre_id, genre_name, description, status "
-                + "FROM Genre "
-                + "WHERE status = ? "
+        String sql = "SELECT genre_id, genre_name, description, status\n"
+                + "FROM Genre\n"
+                + "WHERE status = ?\n"
                 + "ORDER BY genre_name";
 
         try {
@@ -51,8 +51,8 @@ public class GenreRepository extends DBContext {
 
         List<Genre> genres = new ArrayList<>();
 
-        String sql = "SELECT genre_id, genre_name, description, status "
-                + "FROM Genre "
+        String sql = "SELECT genre_id, genre_name, description, status\n"
+                + "FROM Genre\n"
                 + "ORDER BY genre_id ASC";
 
         try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
@@ -82,8 +82,8 @@ public class GenreRepository extends DBContext {
      */
     public Genre getById(int genreId) {
 
-        String sql = "SELECT * "
-                + "FROM Genre "
+        String sql = "SELECT *\n"
+                + "FROM Genre\n"
                 + "WHERE genre_id = ?";
 
         try {
@@ -118,9 +118,9 @@ public class GenreRepository extends DBContext {
      */
     public boolean existsByName(String genreName) {
 
-        String sql = "SELECT genre_id "
-                + "FROM Genre "
-                + "WHERE LOWER(genre_name) = LOWER(?)";
+        String sql = "SELECT genre_id\n"
+                + "FROM Genre\n"
+                + "WHERE LOWER(genre_name) = LOWER(?)\n";
 
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -145,8 +145,8 @@ public class GenreRepository extends DBContext {
      */
     public boolean insert(Genre genre) {
 
-        String sql = "INSERT INTO Genre "
-                + "(genre_name, description, status) "
+        String sql = "INSERT INTO Genre\n"
+                + "(genre_name, description, status)\n"
                 + "VALUES (?, ?, ?)";
 
         try {
@@ -173,10 +173,8 @@ public class GenreRepository extends DBContext {
      */
     public boolean update(Genre genre) {
 
-        String sql = "UPDATE Genre "
-                + "SET genre_name = ?, "
-                + "description = ?, "
-                + "status = ? "
+        String sql = "Update Genre\n"
+                + "SET genre_name = ?, description = ?, status = ?,\n"
                 + "WHERE genre_id = ?";
 
         try {
@@ -205,8 +203,8 @@ public class GenreRepository extends DBContext {
      */
     public boolean updateStatus(int genreId, String status) {
 
-        String sql = "UPDATE Genre "
-                + "SET status = ? "
+        String sql = "UPDATE Genre\n"
+                + "SET status = ?\n"
                 + "WHERE genre_id = ?";
 
         try {
@@ -214,6 +212,59 @@ public class GenreRepository extends DBContext {
 
             ps.setString(1, status);
             ps.setInt(2, genreId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks whether a genre is currently assigned to any movie.
+     *
+     * @param genreId the ID of the genre to check
+     * @return true if the genre is used by at least one movie, otherwise false
+     * @throws IllegalStateException if the database query fails
+     */
+    public boolean isUsedByMovie(int genreId) {
+
+        String sql = "SELECT movie_id \n"
+                + "FROM Movie_Genre \n"
+                + "WHERE genre_id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, genreId);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException(
+                    "Không thể kiểm tra ràng buộc thể loại."
+            );
+        }
+    }
+
+    /**
+     * Permanently deletes a genre from the database.
+     *
+     * @param genreId the ID of the genre to delete
+     * @return true if the genre is deleted successfully, otherwise false
+     */
+    public boolean delete(int genreId) {
+
+        String sql = "DELETE FROM Genre\n"
+                + "WHERE genre_id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, genreId);
 
             return ps.executeUpdate() > 0;
 

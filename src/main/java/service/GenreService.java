@@ -125,6 +125,30 @@ public class GenreService {
     }
 
     /**
+     * Deletes a genre if it is not associated with any movie.
+     *
+     * @param genreId the ID of the genre to delete
+     * @return an error message if deletion fails, or null if successful
+     */
+    public String deleteGenre(int genreId) {
+        try {
+
+            if (genreRepository.isUsedByMovie(genreId)) {
+                return "Không thể xóa vì thể loại đang được phim sử dụng.";
+            }
+
+        } catch (IllegalStateException e) {
+            return e.getMessage();
+        }
+
+        if (!genreRepository.delete(genreId)) {
+            return "Không thể xóa thể loại. Vui lòng kiểm tra ràng buộc dữ liệu.";
+        }
+
+        return null;
+    }
+
+    /**
      * Validates genre information before saving.
      *
      * @param genre the genre to validate
