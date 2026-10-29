@@ -304,7 +304,7 @@ public class MovieService {
     public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
 
         Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
-        List<Genre> allGenres = genreRepository.getAllActive();
+        List<Genre> allGenres = genreRepository.getAll();
 
         for (Movie movie : movies) {
 

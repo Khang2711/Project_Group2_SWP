@@ -34,6 +34,12 @@
         </div>
     </c:if>
 
+    <c:if test="${param.deleted == '1'}">
+        <div class="genres-success-message">
+            Xóa thể loại thành công.
+        </div>
+    </c:if>
+
     <!-- Error message -->
     <c:if test="${not empty error}">
         <div class="genres-error-message">
@@ -160,6 +166,25 @@
 
                                     </c:choose>
 
+                                </form>
+
+                                <form method="post"
+                                      class="genres-status-form"
+                                      action="${pageContext.request.contextPath}/admin/genres"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn thể loại này?');">
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="delete">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="${genre.genreId}">
+
+                                    <button type="submit"
+                                            class="genres-btn-delete">
+                                        Xóa
+                                    </button>
                                 </form>
 
                             </div>
