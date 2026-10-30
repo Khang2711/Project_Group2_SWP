@@ -239,8 +239,23 @@
 
         <header class="site-header">
             <div class="header-container">
+                <c:set var="logoPath" value="/home" />
 
-                <a href="${pageContext.request.contextPath}/home"
+                <c:choose>
+                    <c:when test="${sessionScope.roleName eq 'STAFF'}">
+                        <c:set var="logoPath" value="/staff/counter" />
+                    </c:when>
+
+                    <c:when test="${sessionScope.roleName eq 'CINEMA_MANAGER'}">
+                        <c:set var="logoPath" value="/admin/dashboard" />
+                    </c:when>
+
+                    <c:when test="${sessionScope.roleName eq 'ADMIN'}">
+                        <c:set var="logoPath" value="/system/users" />
+                    </c:when>
+                </c:choose>
+
+                <a href="${pageContext.request.contextPath}${logoPath}"
                    class="logo">
 
                     <span class="logo-box">F</span>

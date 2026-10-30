@@ -74,12 +74,10 @@ public class MovieController extends HttpServlet {
 
                 keyword = keyword.trim();
 
-                int page = parsePage(request.getParameter("page"));
-                int pageSize = 8;
-
                 List<Movie> filteredMovies = movieService.getMoviesForList(type, keyword);
 
                 int totalMovies = filteredMovies.size();
+                
                 LocalDate date = parseDate(
                         request.getParameter("date")
                 );
@@ -95,20 +93,7 @@ public class MovieController extends HttpServlet {
                                 cinemaId
                         );
 
-                int totalPages = (int) Math.ceil((double) totalMovies / pageSize);
-
-                if (page > totalPages && totalPages > 0) {
-                    page = totalPages;
-                }
-
-                int start = (page - 1) * pageSize;
-                int end = Math.min(start + pageSize, totalMovies);
-
-                List<Movie> movies = new java.util.ArrayList<>();
-
-                if (start < totalMovies) {
-                    movies.addAll(filteredMovies.subList(start, end));
-                }
+                List<Movie> movies = filteredMovies;
 
                 Map<Integer, List<Genre>> genresByMovie = movieService.getGenresByMovie(movies);
 
@@ -116,8 +101,6 @@ public class MovieController extends HttpServlet {
                 request.setAttribute("genresByMovie", genresByMovie);
                 request.setAttribute("type", type);
                 request.setAttribute("keyword", keyword);
-                request.setAttribute("currentPage", page);
-                request.setAttribute("totalPages", totalPages);
                 request.setAttribute("totalMovies", totalMovies);
                 request.setAttribute("nowShowingMovies", movieService.getNowShowingMovies());
 
@@ -137,13 +120,13 @@ public class MovieController extends HttpServlet {
                         scheduleByDate
                 );
 
-                request.setAttribute("priceByMovie",movieService.getMinPriceByMovie(scheduleByDate));
+                request.setAttribute("priceByMovie", movieService.getMinPriceByMovie(scheduleByDate));
                 request.setAttribute("roomById", roomById);
                 request.setAttribute("cinemaById", cinemaService.getCinemaById());
-                request.setAttribute("resultCount",resultCount);
-                request.setAttribute("keyword",keyword);
-                request.setAttribute("date",date == null ? "" : date.toString());
-                request.setAttribute( "cinemaId", cinemaId);
+                request.setAttribute("resultCount", resultCount);
+                request.setAttribute("keyword", keyword);
+                request.setAttribute("date", date == null ? "" : date.toString());
+                request.setAttribute("cinemaId", cinemaId);
 
                 view = "/WEB-INF/views/user/movies.jsp";
 
@@ -541,32 +524,6 @@ public class MovieController extends HttpServlet {
         } catch (NumberFormatException e) {
 
             return null;
-        }
-    }
-
-    /**
-     * Parses the page number from the request.
-     *
-     * @param value the page parameter
-     * @return a valid page number starting from 1
-     */
-    private int parsePage(String value) {
-
-        if (value == null || value.trim().isEmpty()) {
-            return 1;
-        }
-
-        try {
-            int page = Integer.parseInt(value.trim());
-
-            if (page < 1) {
-                return 1;
-            }
-
-            return page;
-
-        } catch (NumberFormatException e) {
-            return 1;
         }
     }
 

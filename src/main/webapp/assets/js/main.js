@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 showSlide(currentIndex + 1);
 
-            }, 3000);
+            }, 5000);
         }
     }
 

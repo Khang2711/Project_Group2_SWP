@@ -162,10 +162,33 @@ public class AuthController extends HttpServlet {
             String homePath = getHomePath(roleName);
 
             if (homePath != null) {
+
+                // Get saved URL before creating a new session
+                HttpSession oldSession = request.getSession(false);
+                String redirectAfterLogin = null;
+
+                if (oldSession != null) {
+                    redirectAfterLogin
+                            = (String) oldSession.getAttribute("redirectAfterLogin");
+                }
+
                 startSession(request, user, roleName);
 
-                response.sendRedirect(
-                        request.getContextPath() + homePath);
+                // Continue booking after customer login
+                if ("CUSTOMER".equals(roleName)
+                        && redirectAfterLogin != null) {
+
+                    response.sendRedirect(
+                            request.getContextPath() + redirectAfterLogin
+                    );
+
+                } else {
+
+                    response.sendRedirect(
+                            request.getContextPath() + homePath
+                    );
+                }
+
                 return;
             }
 
