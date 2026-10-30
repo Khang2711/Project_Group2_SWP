@@ -74,7 +74,7 @@
     }
 
     .menu-column {
-        width: 55px;
+        width: 100px;
         text-align: center !important;
     }
 
@@ -99,7 +99,7 @@
     }
 
     .menu-cell {
-        width: 55px;
+        width: 100px;
         text-align: center;
         position: relative;
     }
@@ -163,21 +163,6 @@
 
     .menu-content form {
         margin: 0;
-    }
-
-    .pagination {
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .pagination a {
-        margin: 0 12px;
-        color: white;
-        text-decoration: none;
-    }
-
-    .pagination a:hover {
-        text-decoration: underline;
     }
 
     .detail-modal {
@@ -246,7 +231,6 @@
 <div class="movie-page-title">
     <h1>Quản lý khuyến mãi</h1>
     <div class="title-line"></div>
-    <p>Quản lý mã khuyến mãi của hệ thống.</p>
 </div>
 
 <div class="promo-tools">
@@ -268,9 +252,7 @@
         <div>
             <label for="filter">Tình trạng</label>
 
-            <select id="filter"
-                    name="filter">
-
+            <select id="filter" name="filter">
                 <option value="ALL"
                         ${filter eq 'ALL' ? 'selected' : ''}>
                     Tất cả
@@ -295,24 +277,19 @@
                         ${filter eq 'INACTIVE' ? 'selected' : ''}>
                     Vô hiệu hóa
                 </option>
-
             </select>
         </div>
 
-        <button type="submit"
-                class="small-button">
+        <button type="submit" class="small-button">
             Lọc
         </button>
 
-        <a href="${ctx}/admin/promotions"
-           class="small-button">
+        <a href="${ctx}/admin/promotions" class="small-button">
             Xóa lọc
         </a>
-
     </form>
 
-    <a href="${ctx}/admin/promotion-form"
-       class="login-button">
+    <a href="${ctx}/admin/promotion-form" class="login-button">
         Thêm khuyến mãi
     </a>
 
@@ -320,9 +297,7 @@
 
 <p>
     Tổng số:
-    <strong>
-        <c:out value="${totalRecords}" />
-    </strong>
+    <strong><c:out value="${totalRecords}" /></strong>
     khuyến mãi
 </p>
 
@@ -332,7 +307,9 @@
 
 <c:if test="${not empty promotions}">
 
-    <table class="promo-table">
+    <table class="promo-table"
+           data-paginate="true"
+           data-page-size="10">
 
         <thead>
             <tr>
@@ -341,20 +318,17 @@
                 <th>Ưu đãi</th>
                 <th>Thời hạn</th>
                 <th>Trạng thái</th>
-                <th class="menu-column"></th>
+                <th class="menu-column">Thao tác</th>
             </tr>
         </thead>
 
         <tbody>
-
-            <c:forEach var="promotion"
-                       items="${promotions}">
+            <c:forEach var="promotion" items="${promotions}">
 
                 <c:set var="displayStatus"
                        value="${displayStatuses[promotion.promotionId]}" />
 
                 <tr>
-
                     <td class="id-column">
                         <c:out value="${promotion.promotionId}" />
                     </td>
@@ -366,98 +340,59 @@
                     </td>
 
                     <td>
-
                         <c:choose>
-
                             <c:when test="${promotion.discountType eq 'PERCENT'}">
-
                                 Giảm
-
                                 <fmt:formatNumber
                                     value="${promotion.discountValue}"
                                     maxFractionDigits="2" />%
-
                             </c:when>
 
                             <c:otherwise>
-
                                 Giảm
-
                                 <fmt:formatNumber
                                     value="${promotion.discountValue}"
                                     groupingUsed="true"
                                     maxFractionDigits="0" />
-
                                 VNĐ
-
                             </c:otherwise>
-
                         </c:choose>
-
                     </td>
 
                     <td>
-
-                        <fmt:formatDate
-                            value="${promotion.startDate}"
-                            pattern="dd/MM/yyyy" />
-
+                        <fmt:formatDate value="${promotion.startDate}"
+                                        pattern="dd/MM/yyyy" />
                         -
-
-                        <fmt:formatDate
-                            value="${promotion.endDate}"
-                            pattern="dd/MM/yyyy" />
-
+                        <fmt:formatDate value="${promotion.endDate}"
+                                        pattern="dd/MM/yyyy" />
                     </td>
 
                     <td>
-
                         <c:choose>
-
                             <c:when test="${displayStatus eq 'AVAILABLE'}">
-
-                                <span class="status-active">
-                                    ACTIVE
-                                </span>
-
+                                <span class="status-active">ACTIVE</span>
                             </c:when>
 
                             <c:when test="${displayStatus eq 'UPCOMING'}">
-
-                                <span class="status-upcoming">
-                                    UPCOMING
-                                </span>
-
+                                <span class="status-upcoming">UPCOMING</span>
                             </c:when>
 
                             <c:when test="${displayStatus eq 'EXPIRED'}">
-
-                                <span class="status-expired">
-                                    EXPIRED
-                                </span>
-
+                                <span class="status-expired">EXPIRED</span>
                             </c:when>
 
                             <c:otherwise>
-
-                                <span class="status-inactive">
-                                    INACTIVE
-                                </span>
-
+                                <span class="status-inactive">INACTIVE</span>
                             </c:otherwise>
-
                         </c:choose>
-
                     </td>
 
                     <td class="menu-cell">
-
                         <details class="action-menu">
 
                             <summary>...</summary>
 
                             <div class="menu-content">
-
                                 <button type="button"
                                         onclick="openDetail(${promotion.promotionId})">
                                     Xem chi tiết
@@ -468,7 +403,6 @@
                                 </a>
 
                                 <c:if test="${promotion.status eq 'ACTIVE'}">
-
                                     <form action="${ctx}/admin/promotions"
                                           method="post"
                                           onsubmit="return confirm('Bạn có chắc muốn vô hiệu hóa mã này?');">
@@ -484,13 +418,10 @@
                                         <button type="submit">
                                             Vô hiệu hóa
                                         </button>
-
                                     </form>
-
                                 </c:if>
 
                                 <c:if test="${promotion.status eq 'INACTIVE'}">
-
                                     <form action="${ctx}/admin/promotions"
                                           method="post">
 
@@ -505,94 +436,26 @@
                                         <button type="submit">
                                             Kích hoạt
                                         </button>
-
                                     </form>
-
                                 </c:if>
-
                             </div>
 
                         </details>
-
                     </td>
-
                 </tr>
 
             </c:forEach>
-
         </tbody>
-
     </table>
 
 </c:if>
 
-<c:if test="${totalPages > 1}">
+<c:forEach var="promotion" items="${promotions}">
 
-    <div class="pagination">
-
-        <c:if test="${currentPage > 1}">
-
-            <c:url var="previousUrl"
-                   value="/admin/promotions">
-
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="filter"
-                         value="${filter}" />
-
-                <c:param name="page"
-                         value="${currentPage - 1}" />
-
-            </c:url>
-
-            <a href="${previousUrl}">
-                ← Trang trước
-            </a>
-
-        </c:if>
-
-        <strong>
-            Trang ${currentPage} / ${totalPages}
-        </strong>
-
-        <c:if test="${currentPage < totalPages}">
-
-            <c:url var="nextUrl"
-                   value="/admin/promotions">
-
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="filter"
-                         value="${filter}" />
-
-                <c:param name="page"
-                         value="${currentPage + 1}" />
-
-            </c:url>
-
-            <a href="${nextUrl}">
-                Trang sau →
-            </a>
-
-        </c:if>
-
-    </div>
-
-</c:if>
-
-
-<c:forEach var="promotion"
-           items="${promotions}">
-
-    <div id="detail-${promotion.promotionId}"
-         class="detail-modal">
-
+    <div id="detail-${promotion.promotionId}" class="detail-modal">
         <div class="detail-box">
 
             <div class="detail-header">
-
                 <h3>Chi tiết khuyến mãi</h3>
 
                 <button type="button"
@@ -600,12 +463,10 @@
                         onclick="closeDetail(${promotion.promotionId})">
                     ×
                 </button>
-
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">ID</div>
-
                 <div class="detail-value">
                     <c:out value="${promotion.promotionId}" />
                 </div>
@@ -613,7 +474,6 @@
 
             <div class="detail-row">
                 <div class="detail-label">Promo Code</div>
-
                 <div class="detail-value">
                     <strong>
                         <c:out value="${promotion.promoCode}" />
@@ -623,11 +483,8 @@
 
             <div class="detail-row">
                 <div class="detail-label">Mô tả</div>
-
                 <div class="detail-value">
-
                     <c:choose>
-
                         <c:when test="${not empty promotion.description}">
                             <c:out value="${promotion.description}" />
                         </c:when>
@@ -635,19 +492,14 @@
                         <c:otherwise>
                             -
                         </c:otherwise>
-
                     </c:choose>
-
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Loại giảm</div>
-
                 <div class="detail-value">
-
                     <c:choose>
-
                         <c:when test="${promotion.discountType eq 'PERCENT'}">
                             Phần trăm
                         </c:when>
@@ -655,148 +507,111 @@
                         <c:otherwise>
                             Số tiền cố định
                         </c:otherwise>
-
                     </c:choose>
-
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Giá trị giảm</div>
-
                 <div class="detail-value">
-
                     <c:choose>
-
                         <c:when test="${promotion.discountType eq 'PERCENT'}">
-
                             <fmt:formatNumber
                                 value="${promotion.discountValue}"
                                 maxFractionDigits="2" />%
-
                         </c:when>
 
                         <c:otherwise>
-
                             <fmt:formatNumber
                                 value="${promotion.discountValue}"
                                 groupingUsed="true"
                                 maxFractionDigits="0" />
-
                             VNĐ
-
                         </c:otherwise>
-
                     </c:choose>
-
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Đơn hàng tối thiểu</div>
-
                 <div class="detail-value">
-
                     <fmt:formatNumber
                         value="${promotion.minOrderAmount}"
                         groupingUsed="true"
                         maxFractionDigits="0" />
-
                     VNĐ
-
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Giảm tối đa</div>
-
                 <div class="detail-value">
-
                     <c:choose>
-
                         <c:when test="${promotion.maxDiscountAmount != null}">
-
                             <fmt:formatNumber
                                 value="${promotion.maxDiscountAmount}"
                                 groupingUsed="true"
                                 maxFractionDigits="0" />
-
                             VNĐ
-
                         </c:when>
 
                         <c:otherwise>
                             Không giới hạn
                         </c:otherwise>
-
                     </c:choose>
-
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Giới hạn sử dụng</div>
-
                 <div class="detail-value">
-
                     <c:choose>
-
                         <c:when test="${promotion.usageLimit != null}">
-
-                            <c:out value="${promotion.usageLimit}" />
-                            lần
-
+                            <c:out value="${promotion.usageLimit}" /> lần
                         </c:when>
 
                         <c:otherwise>
                             Không giới hạn
                         </c:otherwise>
-
                     </c:choose>
+                </div>
+            </div>
 
+            <div class="detail-row">
+                <div class="detail-label">Số lượt đã dùng</div>
+                <div class="detail-value">
+                    <c:out value="${promotion.usedCount}" /> lần
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Ngày bắt đầu</div>
-
                 <div class="detail-value">
-
-                    <fmt:formatDate
-                        value="${promotion.startDate}"
-                        pattern="dd/MM/yyyy" />
-
+                    <fmt:formatDate value="${promotion.startDate}"
+                                    pattern="dd/MM/yyyy" />
                 </div>
             </div>
 
             <div class="detail-row">
                 <div class="detail-label">Ngày kết thúc</div>
-
                 <div class="detail-value">
-
-                    <fmt:formatDate
-                        value="${promotion.endDate}"
-                        pattern="dd/MM/yyyy" />
-
+                    <fmt:formatDate value="${promotion.endDate}"
+                                    pattern="dd/MM/yyyy" />
                 </div>
             </div>
 
             <div class="detail-footer">
-
                 <button type="button"
                         class="small-button"
                         onclick="closeDetail(${promotion.promotionId})">
                     Đóng
                 </button>
-
             </div>
 
         </div>
-
     </div>
 
 </c:forEach>
-
 
 <script>
     function openDetail(id) {
@@ -825,28 +640,20 @@
         }
     }
 
-    // Only keep one ... menu open at a time
     var menus = document.querySelectorAll(".action-menu");
 
     for (var i = 0; i < menus.length; i++) {
-
         menus[i].addEventListener("toggle", function () {
-
             if (this.open) {
-
                 for (var j = 0; j < menus.length; j++) {
-
                     if (menus[j] !== this) {
                         menus[j].removeAttribute("open");
                     }
-
                 }
-
             }
-
         });
-
     }
 </script>
 
+<%@ include file="/WEB-INF/include/table-pagination.jsp" %>
 <%@ include file="/WEB-INF/include/footer.jsp" %>
