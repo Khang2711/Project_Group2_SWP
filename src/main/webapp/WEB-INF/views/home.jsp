@@ -200,12 +200,15 @@
                 <c:forEach var="movie" items="${nowShowingMovies}">
                     <c:if test="${not empty movie.posterUrl}">
                         <c:choose>
+                            <%-- External image URL --%>
                             <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
                                 <c:set var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            <%-- Internal path starting with / --%>
                             <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
                                 <c:url var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            <%-- Internal path without / --%>
                             <c:otherwise>
                                 <c:url var="posterSrc" value="/${movie.posterUrl}" />
                             </c:otherwise>
@@ -326,19 +329,19 @@
             <c:forEach var="movie"
                        items="${nowShowingMovies}"
                        end="3">
-                    <c:if test="${not empty movie.posterUrl}">
-                        <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
-                                <c:set var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
-                                <c:url var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:otherwise>
-                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
-                            </c:otherwise>
-                        </c:choose>
-                    </c:if>
+                <c:if test="${not empty movie.posterUrl}">
+                    <c:choose>
+                        <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                            <c:set var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
+                        <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                            <c:url var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
 
 
                 <article class="home-movie-card">
@@ -486,19 +489,19 @@
             <c:forEach var="movie"
                        items="${comingSoonMovies}"
                        end="3">
-                    <c:if test="${not empty movie.posterUrl}">
-                        <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
-                                <c:set var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
-                                <c:url var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:otherwise>
-                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
-                            </c:otherwise>
-                        </c:choose>
-                    </c:if>
+                <c:if test="${not empty movie.posterUrl}">
+                    <c:choose>
+                        <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                            <c:set var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
+                        <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                            <c:url var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
 
 
                 <article class="coming-movie-card">
