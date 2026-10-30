@@ -13,18 +13,24 @@ import model.Promotion;
 public class PromotionRepository {
 
     public List<Promotion> getAll() {
+
         List<Promotion> list = new ArrayList<>();
 
         String sql = "SELECT promotion_id, promo_code, description, discount_type, "
                 + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status "
-                + "FROM Promotion ORDER BY promotion_id DESC";
+                + "start_date, end_date, usage_limit, status, "
+                // Mỗi đơn đã xác nhận dùng mã được tính là một lượt.
+                + "(SELECT COUNT(*) FROM dbo.Booking b "
+                + "WHERE b.promotion_id = p.promotion_id "
+                + "AND b.status = 'CONFIRMED') AS used_count "
+                + "FROM Promotion p ORDER BY promotion_id DESC";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 list.add(mapPromotion(rs));
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -32,13 +38,21 @@ public class PromotionRepository {
         return list;
     }
 
-    public List<Promotion> getPaged(String keyword, String filter, int page, int pageSize) {
+    public List<Promotion> getPaged(
+            String keyword,
+            String filter,
+            int page,
+            int pageSize) {
+
         List<Promotion> list = new ArrayList<>();
 
         String sql = "SELECT promotion_id, promo_code, description, discount_type, "
                 + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status "
-                + "FROM Promotion WHERE 1 = 1 ";
+                + "start_date, end_date, usage_limit, status, "
+                + "(SELECT COUNT(*) FROM dbo.Booking b "
+                + "WHERE b.promotion_id = p.promotion_id "
+                + "AND b.status = 'CONFIRMED') AS used_count "
+                + "FROM Promotion p WHERE 1 = 1 ";
 
         if (keyword != null && !keyword.isEmpty()) {
             sql += "AND promo_code LIKE ? ";
@@ -47,7 +61,6 @@ public class PromotionRepository {
         sql += getFilterCondition(filter);
         sql += "ORDER BY promotion_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
-        // Calculate how many rows are skipped before the current page
         int offset = (page - 1) * pageSize;
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
@@ -75,6 +88,7 @@ public class PromotionRepository {
     }
 
     public int countFiltered(String keyword, String filter) {
+
         String sql = "SELECT COUNT(*) FROM Promotion WHERE 1 = 1 ";
 
         if (keyword != null && !keyword.isEmpty()) {
@@ -103,6 +117,7 @@ public class PromotionRepository {
     }
 
     private String getFilterCondition(String filter) {
+
         if ("AVAILABLE".equals(filter)) {
             return "AND status = 'ACTIVE' "
                     + "AND start_date <= SYSDATETIME() "
@@ -127,10 +142,14 @@ public class PromotionRepository {
     }
 
     public Promotion getById(int promotionId) {
+
         String sql = "SELECT promotion_id, promo_code, description, discount_type, "
                 + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status "
-                + "FROM Promotion WHERE promotion_id = ?";
+                + "start_date, end_date, usage_limit, status, "
+                + "(SELECT COUNT(*) FROM dbo.Booking b "
+                + "WHERE b.promotion_id = p.promotion_id "
+                + "AND b.status = 'CONFIRMED') AS used_count "
+                + "FROM Promotion p WHERE promotion_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -150,10 +169,14 @@ public class PromotionRepository {
     }
 
     public Promotion getByCode(String promoCode) {
+
         String sql = "SELECT promotion_id, promo_code, description, discount_type, "
                 + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status "
-                + "FROM Promotion WHERE promo_code = ?";
+                + "start_date, end_date, usage_limit, status, "
+                + "(SELECT COUNT(*) FROM dbo.Booking b "
+                + "WHERE b.promotion_id = p.promotion_id "
+                + "AND b.status = 'CONFIRMED') AS used_count "
+                + "FROM Promotion p WHERE promo_code = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -173,6 +196,7 @@ public class PromotionRepository {
     }
 
     public int countUsageByPromotionId(int promotionId) {
+
         String sql = "SELECT COUNT(*) FROM Booking "
                 + "WHERE promotion_id = ? AND status = 'CONFIRMED'";
 
@@ -194,6 +218,7 @@ public class PromotionRepository {
     }
 
     public boolean existsByCode(String promoCode) {
+
         String sql = "SELECT 1 FROM Promotion WHERE promo_code = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
@@ -212,6 +237,7 @@ public class PromotionRepository {
     }
 
     public boolean existsByCodeExceptId(String promoCode, int promotionId) {
+
         String sql = "SELECT 1 FROM Promotion "
                 + "WHERE promo_code = ? AND promotion_id <> ?";
 
@@ -232,6 +258,7 @@ public class PromotionRepository {
     }
 
     public boolean insert(Promotion promotion) {
+
         String sql = "INSERT INTO Promotion "
                 + "(promo_code, description, discount_type, discount_value, "
                 + "min_order_amount, max_discount_amount, start_date, end_date, "
@@ -252,6 +279,7 @@ public class PromotionRepository {
     }
 
     public boolean update(Promotion promotion) {
+
         String sql = "UPDATE Promotion SET "
                 + "promo_code = ?, description = ?, discount_type = ?, "
                 + "discount_value = ?, min_order_amount = ?, "
@@ -274,6 +302,7 @@ public class PromotionRepository {
     }
 
     public boolean updateStatus(int promotionId, String status) {
+
         String sql = "UPDATE Promotion SET status = ? WHERE promotion_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
@@ -290,8 +319,9 @@ public class PromotionRepository {
         return false;
     }
 
-    private void setPromotionData(PreparedStatement ps, Promotion promotion)
-            throws SQLException {
+    private void setPromotionData(
+            PreparedStatement ps,
+            Promotion promotion) throws SQLException {
 
         ps.setString(1, promotion.getPromoCode());
         ps.setString(2, promotion.getDescription());
@@ -318,6 +348,7 @@ public class PromotionRepository {
     }
 
     private Promotion mapPromotion(ResultSet rs) throws SQLException {
+
         Promotion promotion = new Promotion();
 
         promotion.setPromotionId(rs.getInt("promotion_id"));
@@ -338,6 +369,7 @@ public class PromotionRepository {
             promotion.setUsageLimit(usageLimit);
         }
 
+        promotion.setUsedCount(rs.getInt("used_count"));
         promotion.setStatus(rs.getString("status"));
 
         return promotion;

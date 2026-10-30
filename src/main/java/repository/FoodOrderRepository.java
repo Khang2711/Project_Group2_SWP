@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,10 +38,24 @@ public class FoodOrderRepository {
     public int insert(Connection connection, FoodOrder foodOrder)
             throws SQLException {
 
+        if (foodOrder.getBookingId() != null) {
+
+            if (foodOrder.getBookingId() <= 0
+                    || !isBookingAvailableForFood(
+                            connection,
+                            foodOrder.getBookingId(),
+                            foodOrder.getStaffId(),
+                            foodOrder.getCinemaId())) {
+
+                throw new IllegalArgumentException(
+                        "Đơn vé không hợp lệ hoặc không phải do bạn bán tại rạp này.");
+            }
+        }
+
         String sql = "INSERT INTO Food_Order "
                 + "(staff_id, cinema_id, subtotal, total_amount, "
-                + "payment_method, payment_status, order_status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "payment_method, payment_status, order_status, booking_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(
                 sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -91,8 +106,7 @@ public class FoodOrderRepository {
                 FoodOrderItemRepository itemRepository
                         = new FoodOrderItemRepository();
 
-                // Lưu đơn và các sản phẩm trong cùng transaction.
-                // Nếu một dòng bị lỗi thì hủy toàn bộ đơn.
+                // Lưu đơn và sản phẩm cùng nhau; lỗi một phần thì hủy toàn bộ.
                 for (FoodOrderItem item : items) {
 
                     item.setFoodOrderId(foodOrderId);
@@ -141,7 +155,7 @@ public class FoodOrderRepository {
 
         String sql = "SELECT food_order_id, staff_id, cinema_id, "
                 + "subtotal, total_amount, payment_method, "
-                + "payment_status, order_status, created_at "
+                + "payment_status, order_status, created_at, booking_id "
                 + "FROM Food_Order WHERE food_order_id = ?";
 
         try (Connection connection = new DBContext().getConnection()) {
@@ -168,6 +182,89 @@ public class FoodOrderRepository {
         }
 
         return null;
+    }
+
+    public boolean isBookingAvailableForFood(
+            int bookingId,
+            int staffId,
+            int cinemaId) throws SQLException {
+
+        try (Connection connection = openConnection()) {
+
+            return isBookingAvailableForFood(
+                    connection,
+                    bookingId,
+                    staffId,
+                    cinemaId
+            );
+        }
+    }
+
+    private boolean isBookingAvailableForFood(
+            Connection connection,
+            int bookingId,
+            int staffId,
+            int cinemaId) throws SQLException {
+
+        String sql = "SELECT 1 FROM dbo.Booking b "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "WHERE b.booking_id = ? AND b.staff_id = ? "
+                + "AND r.cinema_id = ? AND b.status = 'CONFIRMED'";
+
+        try (PreparedStatement statement
+                = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, bookingId);
+            statement.setInt(2, staffId);
+            statement.setInt(3, cinemaId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
+
+    public List<FoodOrder> findCompletedByBooking(
+            int bookingId,
+            int staffId,
+            int cinemaId) throws SQLException {
+
+        List<FoodOrder> orders = new ArrayList<>();
+
+        String sql = "SELECT o.food_order_id, o.staff_id, o.cinema_id, "
+                + "o.booking_id, o.subtotal, o.total_amount, "
+                + "o.payment_method, o.payment_status, o.order_status, "
+                + "o.created_at "
+                + "FROM dbo.Food_Order o "
+                + "JOIN dbo.Booking b ON b.booking_id = o.booking_id "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "WHERE o.booking_id = ? "
+                + "AND o.staff_id = ? AND b.staff_id = ? "
+                + "AND o.cinema_id = ? AND r.cinema_id = ? "
+                + "AND o.payment_status = 'PAID' "
+                + "AND o.order_status = 'COMPLETED' "
+                + "ORDER BY o.food_order_id";
+
+        try (Connection connection = openConnection(); PreparedStatement statement
+                = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, bookingId);
+            statement.setInt(2, staffId);
+            statement.setInt(3, staffId);
+            statement.setInt(4, cinemaId);
+            statement.setInt(5, cinemaId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    orders.add(mapFoodOrder(resultSet));
+                }
+            }
+        }
+
+        return orders;
     }
 
     public List<FoodItem> findFoodsForCounter(int cinemaId)
@@ -310,7 +407,8 @@ public class FoodOrderRepository {
     }
 
     public Map<Integer, String> findReceiptNames(
-            int orderId, int cinemaId) throws SQLException {
+            int orderId,
+            int cinemaId) throws SQLException {
 
         Map<Integer, String> names = new HashMap<>();
 
@@ -334,7 +432,8 @@ public class FoodOrderRepository {
 
                     names.put(
                             resultSet.getInt("food_order_item_id"),
-                            resultSet.getString("product_name"));
+                            resultSet.getString("product_name")
+                    );
                 }
             }
         }
@@ -364,6 +463,13 @@ public class FoodOrderRepository {
         statement.setString(5, foodOrder.getPaymentMethod());
         statement.setString(6, foodOrder.getPaymentStatus());
         statement.setString(7, foodOrder.getOrderStatus());
+
+        if (foodOrder.getBookingId() == null) {
+            statement.setNull(8, Types.INTEGER);
+
+        } else {
+            statement.setInt(8, foodOrder.getBookingId());
+        }
     }
 
     private FoodOrder mapFoodOrder(ResultSet resultSet)
@@ -379,6 +485,15 @@ public class FoodOrderRepository {
 
         foodOrder.setCinemaId(
                 resultSet.getInt("cinema_id"));
+
+        int bookingId = resultSet.getInt("booking_id");
+
+        if (resultSet.wasNull()) {
+            foodOrder.setBookingId(null);
+
+        } else {
+            foodOrder.setBookingId(bookingId);
+        }
 
         foodOrder.setSubtotal(
                 resultSet.getBigDecimal("subtotal"));
