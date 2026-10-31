@@ -137,6 +137,18 @@ public Movie getMovieForShowtime(
 }
 
 
+public boolean isShowtimeExpired(Showtime showtime) {
+
+    if (showtime == null
+            || showtime.getEndTime() == null) {
+
+        return false;
+    }
+
+    return showtime.getEndTime().getTime()
+            <= System.currentTimeMillis();
+}
+
 public Seat getSeatForTicket(
         Ticket ticket,
         Showtime showtime

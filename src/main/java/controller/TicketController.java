@@ -24,10 +24,11 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+
 @WebServlet(urlPatterns = {
     "/user/tickets",
     "/user/ticket-detail",
-            "/user/ticket-qr"
+    "/user/ticket-qr"
 
 })
 public class TicketController extends HttpServlet {
@@ -63,7 +64,6 @@ public class TicketController extends HttpServlet {
 
                     break;
 
-
                 case "/user/ticket-detail":
 
                     showTicketDetail(
@@ -73,15 +73,15 @@ public class TicketController extends HttpServlet {
 
                     break;
 
-case "/user/ticket-qr":
+                case "/user/ticket-qr":
 
-    showTicketQr(
-            request,
-            response
-    );
+                    showTicketQr(
+                            request,
+                            response
+                    );
 
-    break;
-                    
+                    break;
+
                 default:
 
                     response.sendError(
@@ -109,7 +109,6 @@ case "/user/ticket-qr":
         }
     }
 
-
     private void showTickets(
             HttpServletRequest request,
             HttpServletResponse response
@@ -136,7 +135,8 @@ case "/user/ticket-qr":
 
         Map<Integer, Seat> seatMap
                 = new LinkedHashMap<>();
-
+        Map<Integer, Boolean> expiredMap
+                = new LinkedHashMap<>();
 
         for (Ticket ticket : tickets) {
 
@@ -151,7 +151,6 @@ case "/user/ticket-qr":
                 continue;
             }
 
-
             Showtime showtime
                     = ticketService
                             .getShowtimeForBooking(
@@ -162,12 +161,15 @@ case "/user/ticket-qr":
                 continue;
             }
 
-
             showtimeMap.put(
                     ticket.getTicketId(),
                     showtime
             );
 
+            expiredMap.put(
+                    ticket.getTicketId(),
+                    ticketService.isShowtimeExpired(showtime)
+            );
 
             Movie movie
                     = ticketService
@@ -182,7 +184,6 @@ case "/user/ticket-qr":
                         movie
                 );
             }
-
 
             Seat seat
                     = ticketService
@@ -199,7 +200,6 @@ case "/user/ticket-qr":
                 );
             }
         }
-
 
         request.setAttribute(
                 "tickets",
@@ -220,7 +220,10 @@ case "/user/ticket-qr":
                 "seatMap",
                 seatMap
         );
-
+        request.setAttribute(
+                "expiredMap",
+                expiredMap
+        );
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/tickets.jsp"
@@ -229,7 +232,6 @@ case "/user/ticket-qr":
                 response
         );
     }
-
 
     private void showTicketDetail(
             HttpServletRequest request,
@@ -249,14 +251,12 @@ case "/user/ticket-qr":
                         "Vé không hợp lệ."
                 );
 
-
         Ticket ticket
                 = ticketService
                         .getTicketDetail(
                                 ticketId,
                                 customerId
                         );
-
 
         Booking booking
                 = ticketService
@@ -265,13 +265,11 @@ case "/user/ticket-qr":
                                 customerId
                         );
 
-
         Showtime showtime
                 = ticketService
                         .getShowtimeForBooking(
                                 booking
                         );
-
 
         Movie movie
                 = ticketService
@@ -279,6 +277,9 @@ case "/user/ticket-qr":
                                 showtime
                         );
 
+        boolean ticketExpired
+                = ticketService
+                        .isShowtimeExpired(showtime);
 
         Seat seat
                 = ticketService
@@ -286,7 +287,6 @@ case "/user/ticket-qr":
                                 ticket,
                                 showtime
                         );
-
 
         request.setAttribute(
                 "ticket",
@@ -308,6 +308,10 @@ case "/user/ticket-qr":
                 seat
         );
 
+        request.setAttribute(
+                "ticketExpired",
+                ticketExpired
+        );
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/ticket-detail.jsp"
@@ -318,121 +322,140 @@ case "/user/ticket-qr":
     }
 
     private void showTicketQr(
-        HttpServletRequest request,
-        HttpServletResponse response
-) throws IOException,
-        SQLException,
-        ServletException {
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException,
+            SQLException,
+            ServletException {
 
-    int customerId
-            = getCurrentCustomerId(
-                    request
-            );
-
-    int ticketId
-            = parsePositiveInt(
-                    request.getParameter("id"),
-                    "Vé không hợp lệ."
-            );
-
-
-    // Chỉ lấy vé thuộc customer đang đăng nhập.
-    Ticket ticket
-            = ticketService
-                    .getTicketDetail(
-                            ticketId,
-                            customerId
-                    );
-
-
-    String ticketCode
-            = ticket.getTicketCode();
-
-
-    if (ticketCode == null
-            || ticketCode.trim().isEmpty()) {
-
-        response.sendError(
-                HttpServletResponse.SC_NOT_FOUND
-        );
-
-        return;
-    }
-
-
-    try {
-
-        int size = 260;
-
-
-        // QR chứa đúng ticket_code để staff có thể quét.
-        BitMatrix matrix
-                = new QRCodeWriter()
-                        .encode(
-                                ticketCode,
-                                BarcodeFormat.QR_CODE,
-                                size,
-                                size
-                        );
-
-
-        BufferedImage image
-                = new BufferedImage(
-                        size,
-                        size,
-                        BufferedImage.TYPE_INT_RGB
+        int customerId
+                = getCurrentCustomerId(
+                        request
                 );
 
+        int ticketId
+                = parsePositiveInt(
+                        request.getParameter("id"),
+                        "Vé không hợp lệ."
+                );
 
-        for (int y = 0; y < size; y++) {
+        // Chỉ lấy vé thuộc customer đang đăng nhập.
+        Ticket ticket
+                = ticketService
+                        .getTicketDetail(
+                                ticketId,
+                                customerId
+                        );
 
-            for (int x = 0; x < size; x++) {
+        Booking booking
+                = ticketService
+                        .getBookingForTicket(
+                                ticket,
+                                customerId
+                        );
 
-                if (matrix.get(x, y)) {
+        Showtime showtime
+                = ticketService
+                        .getShowtimeForBooking(
+                                booking
+                        );
 
-                    image.setRGB(
-                            x,
-                            y,
-                            0x000000
-                    );
+        boolean expired
+                = ticketService
+                        .isShowtimeExpired(showtime);
 
-                } else {
+        if (expired
+                || "USED".equalsIgnoreCase(
+                        ticket.getStatus()
+                )) {
 
-                    image.setRGB(
-                            x,
-                            y,
-                            0xFFFFFF
-                    );
-                }
-            }
+            response.sendError(
+                    HttpServletResponse.SC_GONE
+            );
+
+            return;
         }
 
+        String ticketCode
+                = ticket.getTicketCode();
 
-        response.setContentType(
-                "image/png"
-        );
+        if (ticketCode == null
+                || ticketCode.trim().isEmpty()) {
 
-        response.setHeader(
-                "Cache-Control",
-                "private, max-age=300"
-        );
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND
+            );
 
+            return;
+        }
 
-        ImageIO.write(
-                image,
-                "PNG",
-                response.getOutputStream()
-        );
+        try {
 
+            int size = 260;
 
-    } catch (WriterException e) {
+            // QR chứa đúng ticket_code để staff có thể quét.
+            BitMatrix matrix
+                    = new QRCodeWriter()
+                            .encode(
+                                    ticketCode,
+                                    BarcodeFormat.QR_CODE,
+                                    size,
+                                    size
+                            );
 
-        throw new ServletException(
-                "Không thể tạo QR code cho vé.",
-                e
-        );
+            BufferedImage image
+                    = new BufferedImage(
+                            size,
+                            size,
+                            BufferedImage.TYPE_INT_RGB
+                    );
+
+            for (int y = 0; y < size; y++) {
+
+                for (int x = 0; x < size; x++) {
+
+                    if (matrix.get(x, y)) {
+
+                        image.setRGB(
+                                x,
+                                y,
+                                0x000000
+                        );
+
+                    } else {
+
+                        image.setRGB(
+                                x,
+                                y,
+                                0xFFFFFF
+                        );
+                    }
+                }
+            }
+
+            response.setContentType(
+                    "image/png"
+            );
+
+            response.setHeader(
+                    "Cache-Control",
+                    "private, max-age=300"
+            );
+
+            ImageIO.write(
+                    image,
+                    "PNG",
+                    response.getOutputStream()
+            );
+
+        } catch (WriterException e) {
+
+            throw new ServletException(
+                    "Không thể tạo QR code cho vé.",
+                    e
+            );
+        }
     }
-}
 
     private int getCurrentCustomerId(
             HttpServletRequest request
@@ -441,16 +464,13 @@ case "/user/ticket-qr":
         HttpSession session
                 = request.getSession(false);
 
-
         if (session == null
-                || !(session.getAttribute("user")
-                instanceof User)) {
+                || !(session.getAttribute("user") instanceof User)) {
 
             throw new IllegalArgumentException(
                     "Vui lòng đăng nhập lại."
             );
         }
-
 
         User user
                 = (User) session
@@ -458,7 +478,6 @@ case "/user/ticket-qr":
 
         return user.getUserId();
     }
-
 
     private int parsePositiveInt(
             String value,
@@ -472,11 +491,9 @@ case "/user/ticket-qr":
                             value
                     );
 
-
             if (number <= 0) {
                 throw new NumberFormatException();
             }
-
 
             return number;
 

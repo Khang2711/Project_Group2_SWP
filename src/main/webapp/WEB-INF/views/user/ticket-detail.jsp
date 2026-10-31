@@ -89,6 +89,19 @@
                     </c:when>
 
 
+                    <c:when test="${ticketExpired}">
+
+                        <span class="
+                              ticket-status
+                              ticket-status-expired">
+
+                            Hết hiệu lực
+
+                        </span>
+
+                    </c:when>
+
+
                     <c:otherwise>
 
                         <span class="
@@ -312,16 +325,54 @@
         <aside class="cinema-ticket-stub">
 
 
-            <span>
-                QR VÉ
-            </span>
+            <c:choose>
+
+                <c:when test="${ticketExpired}">
+
+                    <span>
+                        TRẠNG THÁI VÉ
+                    </span>
+
+                    <div class="ticket-expired-message">
+
+                        Vé đã hết hiệu lực vì
+                        suất chiếu đã kết thúc.
+
+                    </div>
+
+                </c:when>
 
 
-            <img
-                src="${ctx}/user/ticket-qr?id=${ticket.ticketId}"
-                alt="QR code vé"
-                class="cinema-ticket-qr"
-                />
+                <c:when test="${ticket.status eq 'USED'}">
+
+                    <span>
+                        TRẠNG THÁI VÉ
+                    </span>
+
+                    <div class="ticket-used-message">
+
+                        Vé này đã được sử dụng.
+
+                    </div>
+
+                </c:when>
+
+
+                <c:otherwise>
+
+                    <span>
+                        QR VÉ
+                    </span>
+
+                    <img
+                        src="${ctx}/user/ticket-qr?id=${ticket.ticketId}"
+                        alt="QR code vé"
+                        class="cinema-ticket-qr"
+                        />
+
+                </c:otherwise>
+
+            </c:choose>
 
 
             <span>
