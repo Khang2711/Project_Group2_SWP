@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 showSlide(currentIndex + 1);
 
-            }, 3000);
+            }, 5000);
         }
     }
 
@@ -302,3 +302,20 @@ function displayDate(dateValue, dateDisplay) {
         dateDisplay.value = day + "/" + month + "/" + year;
     }
 }
+
+window.addEventListener("pageshow", function (event) {
+    if (!document.querySelector(".profile-page")) {
+        return;
+    }
+
+    const navigation =
+            performance.getEntriesByType("navigation")[0];
+
+    const isHistoryNavigation =
+            navigation && navigation.type === "back_forward";
+
+    if (event.persisted || isHistoryNavigation) {
+        window.location.replace(
+                window.location.pathname + window.location.search);
+    }
+});

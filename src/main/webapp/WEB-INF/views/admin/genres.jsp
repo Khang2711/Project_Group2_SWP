@@ -50,7 +50,9 @@
     <!-- Genre list -->
     <div class="genres-card">
 
-        <table class="genres-table">
+        <table class="genres-table"
+               data-paginate="true" 
+               data-page-size="10">
 
             <thead>
                 <tr>
@@ -211,5 +213,7 @@
     </div>
 
 </div>
+
+<%@include file="/WEB-INF/include/table-pagination.jsp" %>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

@@ -86,7 +86,9 @@
 
         <c:when test="${not empty movies}">
 
-            <div class="movies-grid">
+            <div class="movies-grid"
+                 data-paginate="true"
+                 data-page-size="12">
 
                 <c:forEach var="movie" items="${movies}">
                     <c:if test="${not empty movie.posterUrl}">
@@ -232,39 +234,8 @@
 
     </c:choose>
 
-    <!-- PAGINATION -->
-    <c:if test="${totalPages > 1}">
-
-        <div class="movies-pagination">
-
-            <c:if test="${currentPage > 1}">
-                <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${currentPage - 1}" class="pagination-arrow">‹</a>
-            </c:if>
-
-            <c:forEach begin="1" end="${totalPages}" var="pageNumber">
-
-                <c:choose>
-
-                    <c:when test="${pageNumber == currentPage}">
-                        <span class="pagination-number active">${pageNumber}</span>
-                    </c:when>
-
-                    <c:otherwise>
-                        <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${pageNumber}" class="pagination-number">${pageNumber}</a>
-                    </c:otherwise>
-
-                </c:choose>
-
-            </c:forEach>
-
-            <c:if test="${currentPage < totalPages}">
-                <a href="${ctx}/user/movies?type=${type}&keyword=${keyword}&page=${currentPage + 1}" class="pagination-arrow">›</a>
-            </c:if>
-
-        </div>
-
-    </c:if>
-
 </section>
+
+<%@include file="/WEB-INF/include/table-pagination.jsp" %>       
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
