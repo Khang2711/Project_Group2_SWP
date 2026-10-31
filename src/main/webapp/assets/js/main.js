@@ -302,3 +302,22 @@ function displayDate(dateValue, dateDisplay) {
         dateDisplay.value = day + "/" + month + "/" + year;
     }
 }
+
+window.addEventListener("pageshow", function (event) {
+
+    const navigation =
+            performance.getEntriesByType("navigation")[0];
+
+    const isHistoryNavigation =
+            navigation && navigation.type === "back_forward";
+
+    if (!event.persisted && !isHistoryNavigation) {
+        return;
+    }
+    const accountMenu = document.getElementById("accountMenu");
+
+    if (!accountMenu) {
+        return;
+    }
+    window.location.reload();
+});
