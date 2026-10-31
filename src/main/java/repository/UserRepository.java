@@ -23,9 +23,7 @@ public class UserRepository {
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
                 + "ORDER BY u.user_id";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet resultSet = statement.executeQuery()) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql); ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 users.add(mapUser(resultSet));
@@ -44,8 +42,7 @@ public class UserRepository {
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
                 + "WHERE u.user_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
 
@@ -68,8 +65,7 @@ public class UserRepository {
                 + "LEFT JOIN dbo.Staff s ON u.user_id = s.staff_id "
                 + "WHERE u.email = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, email);
 
@@ -89,10 +85,9 @@ public class UserRepository {
                 + "avatar_url, status) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(
-                        sql,
-                        Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(
+                sql,
+                Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, user.getRoleId());
             statement.setString(2, user.getFullName());
@@ -114,21 +109,106 @@ public class UserRepository {
         throw new SQLException("Cannot get created user id.");
     }
 
-    public boolean updateProfile(User user) throws SQLException {
+    public boolean update(User user) throws SQLException {
+        if (user.getPasswordHash() == null) {
+            return updateWithoutPassword(user);
+        }
+
         String sql = "UPDATE dbo.[User] "
-                + "SET full_name = ?, email = ?, phone = ?, "
+                + "SET role_id = ?, full_name = ?, email = ?, phone = ?, "
+                + "password_hash = ?, updated_at = SYSDATETIME() "
+                + "WHERE user_id = ?";
+
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, user.getRoleId());
+            statement.setString(2, user.getFullName());
+            statement.setString(3, user.getEmail());
+            statement.setString(4, user.getPhone());
+            statement.setString(5, user.getPasswordHash());
+            statement.setInt(6, user.getUserId());
+
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    private boolean updateWithoutPassword(User user) throws SQLException {
+        String sql = "UPDATE dbo.[User] "
+                + "SET role_id = ?, full_name = ?, email = ?, phone = ?, "
                 + "updated_at = SYSDATETIME() "
                 + "WHERE user_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, user.getFullName());
-            statement.setString(2, user.getEmail());
-            statement.setString(3, user.getPhone());
-            statement.setInt(4, user.getUserId());
+            statement.setInt(1, user.getRoleId());
+            statement.setString(2, user.getFullName());
+            statement.setString(3, user.getEmail());
+            statement.setString(4, user.getPhone());
+            statement.setInt(5, user.getUserId());
 
             return statement.executeUpdate() > 0;
+        }
+    }
+
+    public User findProfileById(int userId) throws SQLException {
+        String sql = "SELECT u.*, NULL AS staff_cinema_id FROM dbo.[User] u "
+                + "JOIN dbo.[Role] r ON u.role_id = r.role_id "
+                + "WHERE u.user_id = ? AND u.status = 'ACTIVE' "
+                + "AND u.email_verified = 1 AND r.role_name = 'CUSTOMER' "
+                + "AND r.status = 'ACTIVE'";
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next() ? mapUser(resultSet) : null;
+                }
+            }
+        }
+    }
+
+    public boolean isProfileEmailUsed(String email, int userId) throws SQLException {
+        String sql = "SELECT user_id FROM dbo.[User] WHERE email = ? AND user_id <> ?";
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, email);
+                statement.setInt(2, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return resultSet.next();
+                }
+            }
+        }
+    }
+
+    // Update only the fields owned by Profile, in one atomic statement.
+    public boolean updateProfile(User user, String originalEmail,
+            String originalPasswordHash) throws SQLException {
+        String sql = "UPDATE dbo.[User] "
+                + "SET full_name = ?, phone = ?, avatar_url = ?, "
+                + "password_hash = COALESCE(?, password_hash), "
+                + "updated_at = SYSDATETIME() "
+                + "WHERE user_id = ? AND email = ? AND password_hash = ? "
+                + "AND role_id = ? AND status = 'ACTIVE' AND email_verified = 1";
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, user.getFullName());
+                statement.setString(2, user.getPhone());
+                statement.setString(3, user.getAvatarUrl());
+                statement.setString(4, user.getPasswordHash());
+                statement.setInt(5, user.getUserId());
+                statement.setString(6, originalEmail);
+                statement.setString(7, originalPasswordHash);
+                statement.setInt(8, user.getRoleId());
+                return statement.executeUpdate() == 1;
+            }
         }
     }
 
@@ -139,8 +219,7 @@ public class UserRepository {
                 + "SET password_hash = ?, updated_at = SYSDATETIME() "
                 + "WHERE user_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, passwordHash);
             statement.setInt(2, userId);
@@ -154,8 +233,7 @@ public class UserRepository {
                 + "SET email_verified = 1, updated_at = SYSDATETIME() "
                 + "WHERE user_id = ? AND status = 'ACTIVE'";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
             return statement.executeUpdate() > 0;
@@ -169,8 +247,7 @@ public class UserRepository {
                 + "SET status = ?, updated_at = SYSDATETIME() "
                 + "WHERE user_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, status);
             statement.setInt(2, userId);
@@ -187,8 +264,7 @@ public class UserRepository {
                     + "SET cinema_id = ? "
                     + "WHERE staff_id = ?";
 
-            try (Connection connection = new DBContext().getConnection();
-                    PreparedStatement statement
+            try (Connection connection = new DBContext().getConnection(); PreparedStatement statement
                     = connection.prepareStatement(sql)) {
 
                 statement.setInt(1, cinemaId);
@@ -202,8 +278,7 @@ public class UserRepository {
         String sql = "INSERT INTO dbo.Staff(staff_id, cinema_id) "
                 + "VALUES (?, ?)";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
             statement.setInt(2, cinemaId);
@@ -218,8 +293,7 @@ public class UserRepository {
 
         String sql = "INSERT INTO dbo.Customer(customer_id) VALUES (?)";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
             statement.executeUpdate();
@@ -229,8 +303,7 @@ public class UserRepository {
     private boolean hasStaff(int userId) throws SQLException {
         String sql = "SELECT staff_id FROM dbo.Staff WHERE staff_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
 
@@ -245,8 +318,7 @@ public class UserRepository {
                 + "FROM dbo.Customer "
                 + "WHERE customer_id = ?";
 
-        try (Connection connection = new DBContext().getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = new DBContext().getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, userId);
 
@@ -287,8 +359,8 @@ public class UserRepository {
                 + "(role_id, full_name, email, password_hash, phone, status, email_verified) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        String customerSql =
-                "INSERT INTO dbo.Customer (customer_id) VALUES (?)";
+        String customerSql
+                = "INSERT INTO dbo.Customer (customer_id) VALUES (?)";
 
         try (Connection connection = new DBContext().getConnection()) {
             if (connection == null) {
@@ -300,8 +372,8 @@ public class UserRepository {
             try {
                 int userId;
 
-                try (PreparedStatement statement =
-                        connection.prepareStatement(
+                try (PreparedStatement statement
+                        = connection.prepareStatement(
                                 userSql, Statement.RETURN_GENERATED_KEYS)) {
 
                     statement.setInt(1, user.getRoleId());
@@ -316,8 +388,8 @@ public class UserRepository {
                         throw new SQLException("Cannot insert user.");
                     }
 
-                    try (ResultSet generatedKeys =
-                            statement.getGeneratedKeys()) {
+                    try (ResultSet generatedKeys
+                            = statement.getGeneratedKeys()) {
 
                         if (!generatedKeys.next()) {
                             throw new SQLException(
@@ -329,8 +401,8 @@ public class UserRepository {
                     }
                 }
 
-                try (PreparedStatement statement =
-                        connection.prepareStatement(customerSql)) {
+                try (PreparedStatement statement
+                        = connection.prepareStatement(customerSql)) {
 
                     statement.setInt(1, userId);
 
