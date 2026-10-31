@@ -11,7 +11,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import model.User;
 import service.MovieService;
 import service.RoomService;
@@ -81,45 +83,116 @@ public class ShowtimeBulkController
                             )
                     );
 
+            int roomId =
+                    Integer.parseInt(
+                            request.getParameter(
+                                    "roomId"
+                            )
+                    );
+
+            String startClockText =
+                    request.getParameter(
+                            "startClock"
+                    );
+
+            if (startClockText == null
+                    || startClockText
+                            .trim()
+                            .isEmpty()) {
+
+                throw new IllegalArgumentException(
+                        "Giờ bắt đầu không được để trống."
+                );
+            }
+
+            LocalTime startClock;
+
+            try {
+
+                startClock =
+                        LocalTime.parse(
+                                startClockText.trim()
+                        );
+
+            } catch (Exception e) {
+
+                throw new IllegalArgumentException(
+                        "Giờ bắt đầu không hợp lệ."
+                );
+            }
+
             String status =
                     request.getParameter(
                             "status"
                     );
 
-            String[] roomValues =
-                    request.getParameterValues(
-                            "bulkRoomId"
+            if (status == null
+                    || status.trim().isEmpty()) {
+
+                status =
+                        "ACTIVE";
+            }
+
+            String dateMode =
+                    request.getParameter(
+                            "dateMode"
                     );
 
-            String[] dateValues =
-                    request.getParameterValues(
-                            "bulkDate"
-                    );
+            if (dateMode == null
+                    || dateMode.trim().isEmpty()) {
 
-            String[] timeValues =
-                    request.getParameterValues(
-                            "bulkTime"
-                    );
+                dateMode =
+                        "specific";
+            }
 
-            if (roomValues == null
-                    || dateValues == null
-                    || timeValues == null
-                    || roomValues.length == 0) {
+            Set<LocalDate> selectedDates =
+                    new LinkedHashSet<>();
+
+            if ("specific".equals(
+                    dateMode)) {
+
+                loadSpecificDates(
+                        request,
+                        selectedDates
+                );
+
+            } else if ("range".equals(
+                    dateMode)) {
+
+                loadRangeDates(
+                        request,
+                        selectedDates
+                );
+
+            } else {
 
                 throw new IllegalArgumentException(
-                        "Vui lòng thêm ít nhất một ca chiếu."
+                        "Cách chọn ngày không hợp lệ."
                 );
             }
 
-            if (roomValues.length
-                    != dateValues.length
-                    || roomValues.length
-                    != timeValues.length) {
+            if (selectedDates.isEmpty()) {
 
                 throw new IllegalArgumentException(
-                        "Dữ liệu các ca chiếu không hợp lệ."
+                        "Vui lòng chọn ít nhất một ngày chiếu."
                 );
             }
+
+            if (selectedDates.size() > 50) {
+
+                throw new IllegalArgumentException(
+                        "Mỗi lần chỉ được tạo tối đa 50 lịch chiếu."
+                );
+            }
+
+            List<LocalDate> sortedDates =
+                    new ArrayList<>(
+                            selectedDates
+                    );
+
+            sortedDates.sort(
+                    LocalDate::compareTo
+            );
 
             List<Integer> roomIds =
                     new ArrayList<>();
@@ -127,54 +200,8 @@ public class ShowtimeBulkController
             List<LocalDateTime> startTimes =
                     new ArrayList<>();
 
-            for (int i = 0;
-                    i < roomValues.length;
-                    i++) {
-
-                if (roomValues[i] == null
-                        || roomValues[i].trim().isEmpty()) {
-
-                    throw new IllegalArgumentException(
-                            "Ca "
-                            + (i + 1)
-                            + ": chưa chọn phòng chiếu."
-                    );
-                }
-
-                if (dateValues[i] == null
-                        || dateValues[i].trim().isEmpty()) {
-
-                    throw new IllegalArgumentException(
-                            "Ca "
-                            + (i + 1)
-                            + ": chưa chọn ngày chiếu."
-                    );
-                }
-
-                if (timeValues[i] == null
-                        || timeValues[i].trim().isEmpty()) {
-
-                    throw new IllegalArgumentException(
-                            "Ca "
-                            + (i + 1)
-                            + ": chưa chọn giờ bắt đầu."
-                    );
-                }
-
-                int roomId =
-                        Integer.parseInt(
-                                roomValues[i]
-                        );
-
-                LocalDate date =
-                        LocalDate.parse(
-                                dateValues[i]
-                        );
-
-                LocalTime time =
-                        LocalTime.parse(
-                                timeValues[i]
-                        );
+            for (LocalDate date
+                    : sortedDates) {
 
                 roomIds.add(
                         roomId
@@ -183,7 +210,7 @@ public class ShowtimeBulkController
                 startTimes.add(
                         LocalDateTime.of(
                                 date,
-                                time
+                                startClock
                         )
                 );
             }
@@ -211,13 +238,226 @@ public class ShowtimeBulkController
                     "Phim hoặc phòng chiếu không hợp lệ."
             );
 
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
 
             forwardWithError(
                     request,
                     response,
                     manager,
                     e.getMessage()
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            forwardWithError(
+                    request,
+                    response,
+                    manager,
+                    "Không thể tạo loạt lịch chiếu."
+            );
+        }
+    }
+
+    /*
+     * =====================================================
+     * CHỌN TỪNG NGÀY
+     * =====================================================
+     */
+    private void loadSpecificDates(
+            HttpServletRequest request,
+            Set<LocalDate> selectedDates) {
+
+        String[] values =
+                request.getParameterValues(
+                        "selectedDate"
+                );
+
+        if (values == null
+                || values.length == 0) {
+
+            throw new IllegalArgumentException(
+                    "Vui lòng chọn ít nhất một ngày chiếu."
+            );
+        }
+
+        for (String value
+                : values) {
+
+            if (value == null
+                    || value.trim().isEmpty()) {
+
+                continue;
+            }
+
+            try {
+
+                selectedDates.add(
+                        LocalDate.parse(
+                                value.trim()
+                        )
+                );
+
+            } catch (Exception e) {
+
+                throw new IllegalArgumentException(
+                        "Có ngày chiếu không hợp lệ."
+                );
+            }
+        }
+    }
+
+    /*
+     * =====================================================
+     * CHỌN KHOẢNG NGÀY
+     * =====================================================
+     */
+    private void loadRangeDates(
+            HttpServletRequest request,
+            Set<LocalDate> selectedDates) {
+
+        String startText =
+                request.getParameter(
+                        "rangeStart"
+                );
+
+        String endText =
+                request.getParameter(
+                        "rangeEnd"
+                );
+
+        if (startText == null
+                || startText.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Ngày bắt đầu không được để trống."
+            );
+        }
+
+        if (endText == null
+                || endText.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Ngày kết thúc không được để trống."
+            );
+        }
+
+        LocalDate startDate;
+        LocalDate endDate;
+
+        try {
+
+            startDate =
+                    LocalDate.parse(
+                            startText.trim()
+                    );
+
+            endDate =
+                    LocalDate.parse(
+                            endText.trim()
+                    );
+
+        } catch (Exception e) {
+
+            throw new IllegalArgumentException(
+                    "Khoảng ngày không hợp lệ."
+            );
+        }
+
+        if (endDate.isBefore(
+                startDate)) {
+
+            throw new IllegalArgumentException(
+                    "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu."
+            );
+        }
+
+        if (endDate.isAfter(
+                startDate.plusYears(1))) {
+
+            throw new IllegalArgumentException(
+                    "Khoảng ngày tối đa là 1 năm."
+            );
+        }
+
+        String[] weekdayValues =
+                request.getParameterValues(
+                        "weekday"
+                );
+
+        if (weekdayValues == null
+                || weekdayValues.length == 0) {
+
+            throw new IllegalArgumentException(
+                    "Vui lòng chọn ít nhất một thứ trong tuần."
+            );
+        }
+
+        Set<Integer> weekdays =
+                new LinkedHashSet<>();
+
+        for (String value
+                : weekdayValues) {
+
+            try {
+
+                int weekday =
+                        Integer.parseInt(
+                                value
+                        );
+
+                if (weekday >= 1
+                        && weekday <= 7) {
+
+                    weekdays.add(
+                            weekday
+                    );
+                }
+
+            } catch (NumberFormatException e) {
+
+                throw new IllegalArgumentException(
+                        "Thứ trong tuần không hợp lệ."
+                );
+            }
+        }
+
+        LocalDate current =
+                startDate;
+
+        while (!current.isAfter(
+                endDate)) {
+
+            int dayOfWeek =
+                    current
+                            .getDayOfWeek()
+                            .getValue();
+
+            if (weekdays.contains(
+                    dayOfWeek)) {
+
+                selectedDates.add(
+                        current
+                );
+
+                if (selectedDates.size() > 50) {
+
+                    throw new IllegalArgumentException(
+                            "Khoảng ngày tạo ra hơn 50 lịch chiếu. "
+                            + "Vui lòng thu hẹp khoảng ngày."
+                    );
+                }
+            }
+
+            current =
+                    current.plusDays(1);
+        }
+
+        if (selectedDates.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Không có ngày nào phù hợp với các thứ đã chọn."
             );
         }
     }
@@ -272,8 +512,9 @@ public class ShowtimeBulkController
                 request.getSession(false);
 
         if (session == null
-                || session.getAttribute("user")
-                == null) {
+                || session.getAttribute(
+                        "user"
+                ) == null) {
 
             response.sendRedirect(
                     request.getContextPath()
