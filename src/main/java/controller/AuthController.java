@@ -49,19 +49,17 @@ public class AuthController extends HttpServlet {
 
         switch (path) {
             case "/auth/login":
-                HttpSession currentSession = request.getSession(false);
-
-                if (currentSession != null
-                        && currentSession.getAttribute("user") != null) {
-
-                    currentSession.invalidate();
+                if (redirectLoggedInUser(request, response)) {
+                    return;
                 }
 
                 showLogin(request, response);
                 break;
 
             case "/auth/logout":
-                logout(request, response);
+                response.setHeader("Allow", "POST");
+                response.sendError(
+                        HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                 break;
 
             case "/auth/register":
