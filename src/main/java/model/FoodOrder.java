@@ -8,6 +8,7 @@ public class FoodOrder {
     private int foodOrderId;
     private int staffId;
     private int cinemaId;
+    private Integer bookingId;
     private BigDecimal subtotal;
     private BigDecimal totalAmount;
     private String paymentMethod;
@@ -62,6 +63,15 @@ public class FoodOrder {
 
     public void setCinemaId(int cinemaId) {
         this.cinemaId = cinemaId;
+    }
+
+    // Để trống khi khách chỉ mua bắp nước/combo.
+    public Integer getBookingId() {
+        return bookingId;
+    }
+
+    public void setBookingId(Integer bookingId) {
+        this.bookingId = bookingId;
     }
 
     public BigDecimal getSubtotal() {

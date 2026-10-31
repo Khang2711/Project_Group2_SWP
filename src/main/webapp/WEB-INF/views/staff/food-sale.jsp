@@ -8,7 +8,8 @@
 <fmt:setLocale value="vi_VN" />
 
 <c:set var="receiptMode"
-       value="${param.orderId ne null or not empty completedOrder}" />
+       value="${not isCounterDraftSale
+                and (param.orderId ne null or not empty completedOrder)}" />
 
 <style>
     .food-sale-page {
@@ -214,10 +215,6 @@
         margin-bottom: 20px;
     }
 
-    .food-sale-page .receipt-heading h2 {
-        margin: 5px 0 15px;
-    }
-
     .food-sale-page .receipt-heading p {
         margin: 7px 0;
     }
@@ -270,7 +267,7 @@
         }
     }
 
-    /* Khi in chỉ giữ phần hóa đơn đã lưu. */
+    /* Chỉ in hóa đơn đã lưu, không in danh mục và giỏ hàng. */
     @media print {
         @page {
             size: A4;
@@ -296,20 +293,14 @@
             display: none !important;
         }
 
-        main.page-container {
+        main.page-container,
+        .food-sale-page {
             display: block !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
             min-height: 0 !important;
-        }
-
-        .food-sale-page {
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
         }
 
         .food-sale-page > :not(#foodReceipt) {
@@ -357,13 +348,13 @@
             display: table-header-group;
         }
 
-        #foodReceipt tr {
+        #foodReceipt tr,
+        #foodReceipt .total-row {
             break-inside: avoid;
         }
 
         #foodReceipt .total-row {
             font-size: 18px;
-            break-inside: avoid;
         }
 
         #foodReceipt .receipt-actions {
@@ -380,16 +371,22 @@
                href="${ctx}/staff/counter?tab=food">
                 ← Quay lại lịch sử bắp nước/combo
             </a>
-
             <h1>HÓA ĐƠN BẮP NƯỚC / COMBO</h1>
+        </c:when>
+
+        <c:when test="${isCounterDraftSale}">
+            <a class="back-link"
+               href="${ctx}/staff/ticket-sale?step=extras">
+                ← Quay lại đơn vé
+            </a>
+            <h1>CHỌN BẮP NƯỚC KÈM VÉ</h1>
         </c:when>
 
         <c:otherwise>
             <a class="back-link" href="${ctx}/staff/counter">
                 ← Quay lại quầy
             </a>
-
-            <h1>BÁN FOOD / COMBO</h1>
+            <h1>BÁN BẮP NƯỚC / COMBO</h1>
         </c:otherwise>
     </c:choose>
 
@@ -405,39 +402,93 @@
         </div>
     </c:if>
 
-    <%-- Chỉ hiện danh mục và giỏ hàng khi đang bán đơn mới. --%>
-    <c:if test="${not receiptMode}">
-
+    <c:if test="${isCounterDraftSale and canSellFood}">
         <section class="sale-section">
+            <h2>Đơn vé đang chuẩn bị</h2>
 
+            <p>
+                Phim:
+                <strong><c:out value="${draftMovie.title}" /></strong>
+            </p>
+
+            <p>
+                Suất:
+                <fmt:formatDate value="${draftShowtime.startTime}"
+                                pattern="dd/MM/yyyy HH:mm" />
+
+                · Phòng:
+                <c:out value="${draftRoom.roomName}" />
+            </p>
+
+            <p>
+                Khách hàng:
+                <c:out value="${draftEmail}" />
+            </p>
+
+            <p>
+                Tiền vé:
+                <fmt:formatNumber value="${draftTicketTotal}"
+                                  pattern="#,##0" /> đ
+            </p>
+
+            <p>Chọn món rồi tiếp tục để xem tổng tiền vé và bắp nước.</p>
+
+            <form method="post" action="${ctx}/staff/ticket-sale">
+                <input type="hidden" name="action" value="skipFood" />
+                <input type="hidden"
+                       name="saleToken"
+                       value="${sessionScope.counterSaleToken}" />
+
+                <button type="submit" class="sale-button">
+                    Không mua bắp nước, tiếp tục
+                </button>
+            </form>
+        </section>
+    </c:if>
+
+    <c:if test="${not empty linkedBooking}">
+        <section class="sale-section">
+            <h2>
+                Đơn vé liên quan
+                #<c:out value="${linkedBooking.bookingId}" />
+            </h2>
+
+            <p>
+                <c:out value="${linkedMovie.title}" />
+                ·
+                <fmt:formatDate value="${linkedShowtime.startTime}"
+                                pattern="dd/MM/yyyy HH:mm" />
+            </p>
+
+            <a href="${ctx}/staff/ticket-sale?bookingId=${linkedBooking.bookingId}#purchaseSummary">
+                Xem vé và tổng thanh toán
+            </a>
+        </section>
+    </c:if>
+
+    <c:if test="${not receiptMode}">
+        <section class="sale-section">
             <h2>1. Chọn sản phẩm</h2>
             <h3>Món ăn / Nước uống</h3>
 
             <c:choose>
                 <c:when test="${not empty foodItems}">
-
                     <div class="product-list">
-
                         <c:forEach var="item" items="${foodItems}">
-
                             <div class="product-card">
-
                                 <div class="product-image">
-
                                     <span>Chưa có ảnh</span>
 
                                     <c:set var="imagePath"
                                            value="${fn:trim(item.imageUrl)}" />
 
                                     <c:if test="${not empty imagePath}">
-
                                         <c:choose>
                                             <c:when test="${fn:startsWith(imagePath, 'http://')
                                                             or fn:startsWith(imagePath, 'https://')
                                                             or fn:startsWith(imagePath, '/')}">
-
-                                                    <c:url var="imageSrc"
-                                                           value="${imagePath}" />
+                                                <c:url var="imageSrc"
+                                                       value="${imagePath}" />
                                             </c:when>
 
                                             <c:otherwise>
@@ -449,9 +500,8 @@
                                         <img src="<c:out value='${imageSrc}' />"
                                              alt="<c:out value='${item.itemName}' />"
                                              loading="lazy"
-                                             onerror="this.style.display='none';">
+                                             onerror="this.style.display='none';" />
                                     </c:if>
-
                                 </div>
 
                                 <strong class="product-name">
@@ -463,10 +513,8 @@
                                 </p>
 
                                 <p class="product-price">
-                                    <fmt:formatNumber
-                                        value="${item.price}"
-                                        pattern="#,###" />
-                                    VNĐ
+                                    <fmt:formatNumber value="${item.price}"
+                                                      pattern="#,##0" /> đ
                                 </p>
 
                                 <button type="button"
@@ -479,13 +527,9 @@
                                         ${canSellFood ? '' : 'disabled'}>
                                     + Thêm vào đơn
                                 </button>
-
                             </div>
-
                         </c:forEach>
-
                     </div>
-
                 </c:when>
 
                 <c:otherwise>
@@ -499,29 +543,22 @@
 
             <c:choose>
                 <c:when test="${not empty combos}">
-
                     <div class="product-list">
-
                         <c:forEach var="combo" items="${combos}">
-
                             <div class="product-card">
-
                                 <div class="product-image">
-
                                     <span>Chưa có ảnh</span>
 
                                     <c:set var="imagePath"
                                            value="${fn:trim(combo.imageUrl)}" />
 
                                     <c:if test="${not empty imagePath}">
-
                                         <c:choose>
                                             <c:when test="${fn:startsWith(imagePath, 'http://')
                                                             or fn:startsWith(imagePath, 'https://')
                                                             or fn:startsWith(imagePath, '/')}">
-
-                                                    <c:url var="imageSrc"
-                                                           value="${imagePath}" />
+                                                <c:url var="imageSrc"
+                                                       value="${imagePath}" />
                                             </c:when>
 
                                             <c:otherwise>
@@ -533,9 +570,8 @@
                                         <img src="<c:out value='${imageSrc}' />"
                                              alt="<c:out value='${combo.comboName}' />"
                                              loading="lazy"
-                                             onerror="this.style.display='none';">
+                                             onerror="this.style.display='none';" />
                                     </c:if>
-
                                 </div>
 
                                 <strong class="product-name">
@@ -547,10 +583,8 @@
                                 </p>
 
                                 <p class="product-price">
-                                    <fmt:formatNumber
-                                        value="${combo.comboPrice}"
-                                        pattern="#,###" />
-                                    VNĐ
+                                    <fmt:formatNumber value="${combo.comboPrice}"
+                                                      pattern="#,##0" /> đ
                                 </p>
 
                                 <button type="button"
@@ -563,13 +597,9 @@
                                         ${canSellFood ? '' : 'disabled'}>
                                     + Thêm vào đơn
                                 </button>
-
                             </div>
-
                         </c:forEach>
-
                     </div>
-
                 </c:when>
 
                 <c:otherwise>
@@ -578,29 +608,49 @@
                     </p>
                 </c:otherwise>
             </c:choose>
-
         </section>
 
         <section class="sale-section">
-
             <h2>2. Đơn hàng tại quầy</h2>
 
-            <form action="${ctx}/staff/food-sale"
+            <form id="foodOrderForm"
+                  data-draft="${isCounterDraftSale eq true}"
+                  data-can-sell="${canSellFood eq true}"
+                  action="${ctx}/staff/food-sale"
                   method="post"
                   onsubmit="return checkOrder();">
 
-                <input type="hidden"
-                       name="saleToken"
-                       value="<c:out value='${sessionScope.foodSaleToken}' />">
+                <c:choose>
+                    <c:when test="${isCounterDraftSale}">
+                        <input type="hidden"
+                               name="action"
+                               value="counterDraft" />
 
-                <input type="hidden"
-                       name="paymentMethod"
-                       value="CASH">
+                        <input type="hidden"
+                               name="saleToken"
+                               value="${sessionScope.counterSaleToken}" />
+                    </c:when>
+
+                    <c:otherwise>
+                        <input type="hidden"
+                               name="saleToken"
+                               value="${sessionScope.foodSaleToken}" />
+
+                        <input type="hidden"
+                               name="paymentMethod"
+                               value="CASH" />
+
+                        <c:if test="${not empty linkedBooking}">
+                            <input type="hidden"
+                                   name="bookingId"
+                                   value="${linkedBooking.bookingId}" />
+                        </c:if>
+                    </c:otherwise>
+                </c:choose>
 
                 <div id="hiddenItems"></div>
 
                 <div class="table-wrap">
-
                     <table>
                         <thead>
                             <tr>
@@ -608,7 +658,7 @@
                                 <th>Số lượng</th>
                                 <th>Đơn giá</th>
                                 <th>Thành tiền</th>
-                                <th></th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
 
@@ -620,51 +670,47 @@
                             </tr>
                         </tbody>
                     </table>
-
                 </div>
 
                 <p class="total-row">
-                    Tạm tính:
-                    <strong id="totalText">0 VNĐ</strong>
+                    Tạm tính bắp nước:
+                    <strong id="totalText">0 đ</strong>
                 </p>
 
-                <p>
-                    Phương thức thanh toán:
-                    <strong>Tiền mặt</strong>
-                </p>
+                <%-- Mua kèm vé thì xác nhận thu tiền ở trang tổng đơn. --%>
+                <c:if test="${not isCounterDraftSale}">
+                    <p>
+                        Phương thức thanh toán:
+                        <strong>Tiền mặt</strong>
+                    </p>
 
-                <label class="cash-confirm">
-                    <input type="checkbox"
-                           id="cashReceived"
-                           name="cashReceived"
-                           value="yes"
-                           required>
+                    <label class="cash-confirm">
+                        <input type="checkbox"
+                               id="cashReceived"
+                               name="cashReceived"
+                               value="yes"
+                               required
+                               autocomplete="off" />
 
-                    Tôi xác nhận đã thu đủ tiền mặt của khách.
-                </label>
+                        Tôi xác nhận đã thu đủ tiền mặt của khách.
+                    </label>
+                </c:if>
 
                 <button type="submit"
                         id="payButton"
                         class="pay-button"
                         disabled>
-                    Thanh toán
+                    ${isCounterDraftSale ? 'Tiếp tục thanh toán' : 'Xác nhận thanh toán'}
                 </button>
-
             </form>
-
         </section>
-
     </c:if>
 
     <c:if test="${not empty completedOrder}">
-
         <section class="sale-section" id="foodReceipt">
-
             <div class="receipt-heading">
-
                 <p class="receipt-brand">F-CINEMA</p>
-
-                <h2>HÓA ĐƠN FOOD / COMBO</h2>
+                <h2>HÓA ĐƠN BẮP NƯỚC / COMBO</h2>
 
                 <p>
                     Mã đơn:
@@ -675,9 +721,8 @@
 
                 <p>
                     Thời gian:
-                    <fmt:formatDate
-                        value="${completedOrder.createdAt}"
-                        pattern="dd/MM/yyyy HH:mm" />
+                    <fmt:formatDate value="${completedOrder.createdAt}"
+                                    pattern="dd/MM/yyyy HH:mm" />
                 </p>
 
                 <p>
@@ -688,6 +733,13 @@
                     <c:out value="${completedOrder.staffId}" />
                 </p>
 
+                <c:if test="${not empty completedOrder.bookingId}">
+                    <p>
+                        Đơn vé liên quan:
+                        #<c:out value="${completedOrder.bookingId}" />
+                    </p>
+                </c:if>
+
                 <p>
                     Thanh toán:
                     <c:out value="${completedOrder.paymentMethod}" />
@@ -695,11 +747,9 @@
                     · Trạng thái:
                     <c:out value="${completedOrder.paymentStatus}" />
                 </p>
-
             </div>
 
             <div class="table-wrap">
-
                 <table>
                     <thead>
                         <tr>
@@ -711,13 +761,11 @@
                     </thead>
 
                     <tbody>
-
                         <c:forEach var="item" items="${completedItems}">
                             <tr>
                                 <td>
-                                    <c:out
-                                        value="${receiptNames[item.foodOrderItemId]}"
-                                        default="Sản phẩm" />
+                                    <c:out value="${receiptNames[item.foodOrderItemId]}"
+                                           default="Sản phẩm" />
                                 </td>
 
                                 <td>
@@ -725,38 +773,29 @@
                                 </td>
 
                                 <td>
-                                    <fmt:formatNumber
-                                        value="${item.unitPrice}"
-                                        pattern="#,###" />
-                                    VNĐ
+                                    <fmt:formatNumber value="${item.unitPrice}"
+                                                      pattern="#,##0" /> đ
                                 </td>
 
                                 <td>
-                                    <fmt:formatNumber
-                                        value="${item.lineTotal}"
-                                        pattern="#,###" />
-                                    VNĐ
+                                    <fmt:formatNumber value="${item.lineTotal}"
+                                                      pattern="#,##0" /> đ
                                 </td>
                             </tr>
                         </c:forEach>
-
                     </tbody>
                 </table>
-
             </div>
 
             <p class="total-row">
-                Tổng thanh toán:
+                Tổng thanh toán bắp nước:
                 <strong>
-                    <fmt:formatNumber
-                        value="${completedOrder.totalAmount}"
-                        pattern="#,###" />
-                    VNĐ
+                    <fmt:formatNumber value="${completedOrder.totalAmount}"
+                                      pattern="#,##0" /> đ
                 </strong>
             </p>
 
             <div class="receipt-actions">
-
                 <button type="button"
                         class="pay-button"
                         onclick="window.print();">
@@ -770,11 +809,8 @@
                 <a href="${ctx}/staff/food-sale">
                     Bán đơn mới
                 </a>
-
             </div>
-
         </section>
-
     </c:if>
 
     <c:if test="${receiptMode and empty completedOrder and empty error}">
@@ -788,11 +824,28 @@
 
 <c:if test="${not receiptMode}">
 
+    <%-- Giữ món đã chọn bằng dữ liệu HTML, không ghép tên vào JavaScript. --%>
+    <div id="savedDraftItems" hidden>
+        <c:forEach var="item" items="${draftFoodItems}">
+            <span data-type="${not empty item.foodItemId ? 'FOOD' : 'COMBO'}"
+                  data-id="${not empty item.foodItemId ? item.foodItemId : item.comboId}"
+                  data-quantity="${item.quantity}"></span>
+        </c:forEach>
+    </div>
+
     <script>
         var cart = [];
         var submitting = false;
 
+        var orderForm = document.getElementById("foodOrderForm");
+        var draftMode = orderForm.getAttribute("data-draft") === "true";
+        var canSell = orderForm.getAttribute("data-can-sell") === "true";
+
         function addItem(button) {
+            if (!canSell || submitting) {
+                return;
+            }
+
             var type = button.getAttribute("data-type");
             var id = button.getAttribute("data-id");
             var price = Number(button.getAttribute("data-price"));
@@ -804,6 +857,11 @@
 
             for (var i = 0; i < cart.length; i++) {
                 if (cart[i].type === type && cart[i].id === id) {
+                    if (cart[i].quantity >= 2147483647) {
+                        alert("Số lượng vượt giới hạn cho phép.");
+                        return;
+                    }
+
                     cart[i].quantity++;
                     renderCart();
                     return;
@@ -850,8 +908,12 @@
             body.innerHTML = "";
             hidden.innerHTML = "";
 
-            // Thay đổi giỏ hàng thì cần xác nhận lại số tiền đã thu.
-            document.getElementById("cashReceived").checked = false;
+            // Đổi giỏ hàng thì phải xác nhận lại số tiền đã thu.
+            var cash = document.getElementById("cashReceived");
+
+            if (cash !== null) {
+                cash.checked = false;
+            }
 
             if (cart.length === 0) {
                 body.innerHTML =
@@ -885,23 +947,24 @@
                         + '</button>'
                         + '</td>';
 
-                // Hiển thị tên như văn bản, không hiểu thành HTML.
+                // Dùng textContent để tên sản phẩm không bị hiểu thành HTML.
                 row.cells[0].textContent = item.name;
-                row.cells[2].textContent = formatMoney(item.price) + " VNĐ";
-                row.cells[3].textContent = formatMoney(lineTotal) + " VNĐ";
+                row.cells[2].textContent = formatMoney(item.price) + " đ";
+                row.cells[3].textContent = formatMoney(lineTotal) + " đ";
 
                 body.appendChild(row);
 
+                // Chỉ gửi loại, ID và số lượng; server tự lấy giá.
                 addHiddenInput(hidden, "itemType", item.type);
                 addHiddenInput(hidden, "itemId", item.id);
                 addHiddenInput(hidden, "quantity", item.quantity);
             }
 
             document.getElementById("totalText").textContent
-                    = formatMoney(total) + " VNĐ";
+                    = formatMoney(total) + " đ";
 
             document.getElementById("payButton").disabled
-                    = cart.length === 0 || submitting;
+                    = cart.length === 0 || submitting || !canSell;
         }
 
         function addHiddenInput(container, name, value) {
@@ -919,7 +982,7 @@
         }
 
         function checkOrder() {
-            if (submitting) {
+            if (submitting || !canSell) {
                 return false;
             }
 
@@ -928,12 +991,17 @@
                 return false;
             }
 
-            if (!document.getElementById("cashReceived").checked) {
+            // Mua kèm vé chưa thu tiền tại bước chọn món.
+            if (!draftMode
+                    && !document.getElementById("cashReceived").checked) {
+
                 alert("Vui lòng xác nhận đã thu đủ tiền mặt.");
                 return false;
             }
 
-            if (!confirm("Xác nhận thanh toán đơn food/combo này?")) {
+            if (!draftMode
+                    && !confirm("Xác nhận đã thu tiền và thanh toán đơn bắp nước/combo này?")) {
+
                 return false;
             }
 
@@ -942,8 +1010,38 @@
 
             return true;
         }
-    </script>
 
+        function restoreDraftItems() {
+            var saved = document.querySelectorAll("#savedDraftItems span");
+            var products = document.querySelectorAll(
+                    ".product-card button[data-type]");
+
+            // Tìm lại sản phẩm đã chọn trong danh mục hiện tại.
+            for (var i = 0; i < saved.length; i++) {
+                for (var j = 0; j < products.length; j++) {
+                    if (saved[i].getAttribute("data-type")
+                            === products[j].getAttribute("data-type")
+                            && saved[i].getAttribute("data-id")
+                            === products[j].getAttribute("data-id")) {
+
+                        cart.push({
+                            type: products[j].getAttribute("data-type"),
+                            id: products[j].getAttribute("data-id"),
+                            name: products[j].getAttribute("data-name"),
+                            price: Number(products[j].getAttribute("data-price")),
+                            quantity: Number(saved[i].getAttribute("data-quantity"))
+                        });
+
+                        break;
+                    }
+                }
+            }
+
+            renderCart();
+        }
+
+        restoreDraftItems();
+    </script>
 </c:if>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

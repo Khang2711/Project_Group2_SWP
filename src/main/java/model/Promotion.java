@@ -15,6 +15,7 @@ public class Promotion {
     private Timestamp startDate;
     private Timestamp endDate;
     private Integer usageLimit;
+    private int usedCount;
     private String status;
 
     public Promotion() {
@@ -117,6 +118,14 @@ public class Promotion {
 
     public void setUsageLimit(Integer usageLimit) {
         this.usageLimit = usageLimit;
+    }
+
+    public int getUsedCount() {
+        return usedCount;
+    }
+
+    public void setUsedCount(int usedCount) {
+        this.usedCount = usedCount;
     }
 
     public String getStatus() {

@@ -107,37 +107,37 @@
 
         var tables =
                 document.querySelectorAll(
-                        'table[data-paginate="true"]'
-                );
+                        'table[data-paginate="true"], .movies-grid[data-paginate="true"]'
+                        );
 
 
         tables.forEach(
                 function (table) {
 
-                    var tbody =
-                            table.tBodies[0];
+                    var dataRows;
 
+                    if (table.tagName === "TABLE") {
 
-                    if (!tbody) {
-                        return;
+                        var tbody = table.tBodies[0];
+
+                        if (!tbody) {
+                            return;
+                        }
+
+                        var rows = Array.from(tbody.rows);
+
+                        dataRows = rows.filter(
+                                function (row) {
+                                    return !row.querySelector("td[colspan]");
+                                }
+                        );
+
+                    } else {
+
+                        dataRows = Array.from(
+                                table.querySelectorAll(".movies-card")
+                                );
                     }
-
-
-                    var rows =
-                            Array.from(
-                                    tbody.rows
-                            );
-
-
-                    var dataRows =
-                            rows.filter(
-                                    function (row) {
-
-                                        return !row.querySelector(
-                                                "td[colspan]"
-                                        );
-                                    }
-                            );
 
 
                     if (dataRows.length === 0) {
@@ -149,7 +149,7 @@
                             parseInt(
                                     table.dataset.pageSize || "10",
                                     10
-                            );
+                                    );
 
 
                     var currentPage =
@@ -161,7 +161,7 @@
                                     ".movie-card, "
                                     + ".table-card, "
                                     + ".showtime-table-wrap"
-                            );
+                                    );
 
 
                     if (!wrapper) {
@@ -172,7 +172,7 @@
                     var pagination =
                             document.createElement(
                                     "div"
-                            );
+                                    );
 
 
                     pagination.className =
@@ -182,7 +182,7 @@
                     var left =
                             document.createElement(
                                     "div"
-                            );
+                                    );
 
 
                     left.className =
@@ -192,7 +192,7 @@
                     var sizeLabel =
                             document.createElement(
                                     "span"
-                            );
+                                    );
 
 
                     /*
@@ -206,7 +206,7 @@
                     var sizeSelect =
                             document.createElement(
                                     "select"
-                            );
+                                    );
 
 
                     sizeSelect.className =
@@ -219,7 +219,7 @@
                                 var option =
                                         document.createElement(
                                                 "option"
-                                        );
+                                                );
 
 
                                 option.value =
@@ -237,7 +237,7 @@
                                 if (
                                         size
                                         === pageSize
-                                ) {
+                                        ) {
 
                                     option.selected =
                                             true;
@@ -246,7 +246,7 @@
 
                                 sizeSelect.appendChild(
                                         option
-                                );
+                                        );
                             }
                     );
 
@@ -254,28 +254,28 @@
                     var info =
                             document.createElement(
                                     "span"
-                            );
+                                    );
 
 
                     left.appendChild(
                             sizeLabel
-                    );
+                            );
 
 
                     left.appendChild(
                             sizeSelect
-                    );
+                            );
 
 
                     left.appendChild(
                             info
-                    );
+                            );
 
 
                     var controls =
                             document.createElement(
                                     "div"
-                            );
+                                    );
 
 
                     controls.className =
@@ -284,18 +284,18 @@
 
                     pagination.appendChild(
                             left
-                    );
+                            );
 
 
                     pagination.appendChild(
                             controls
-                    );
+                            );
 
 
                     wrapper.insertAdjacentElement(
                             "afterend",
                             pagination
-                    );
+                            );
 
 
                     function totalPages() {
@@ -305,8 +305,8 @@
                                 Math.ceil(
                                         dataRows.length
                                         / pageSize
-                                )
-                        );
+                                        )
+                                );
                     }
 
 
@@ -319,7 +319,7 @@
                         var button =
                                 document.createElement(
                                         "button"
-                                );
+                                        );
 
 
                         button.type =
@@ -338,7 +338,7 @@
 
                             button.classList.add(
                                     "active"
-                            );
+                                    );
                         }
 
 
@@ -373,7 +373,7 @@
                         var dots =
                                 document.createElement(
                                         "span"
-                                );
+                                        );
 
 
                         dots.className =
@@ -386,7 +386,7 @@
 
                         controls.appendChild(
                                 dots
-                        );
+                                );
                     }
 
 
@@ -409,8 +409,8 @@
                                         currentPage - 1,
                                         false,
                                         currentPage === 1
-                                )
-                        );
+                                        )
+                                );
 
 
                         if (pages <= 7) {
@@ -419,7 +419,7 @@
                                     var i = 1;
                                     i <= pages;
                                     i++
-                            ) {
+                                    ) {
 
                                 controls.appendChild(
                                         createButton(
@@ -427,8 +427,8 @@
                                                 i,
                                                 i === currentPage,
                                                 false
-                                        )
-                                );
+                                                )
+                                        );
                             }
 
                         } else {
@@ -439,22 +439,22 @@
                                             1,
                                             currentPage === 1,
                                             false
-                                    )
-                            );
+                                            )
+                                    );
 
 
                             var start =
                                     Math.max(
                                             2,
                                             currentPage - 1
-                                    );
+                                            );
 
 
                             var end =
                                     Math.min(
                                             pages - 1,
                                             currentPage + 1
-                                    );
+                                            );
 
 
                             if (currentPage <= 3) {
@@ -467,7 +467,7 @@
                             if (
                                     currentPage
                                     >= pages - 2
-                            ) {
+                                    ) {
 
                                 start =
                                         pages - 3;
@@ -487,7 +487,7 @@
                                     var page = start;
                                     page <= end;
                                     page++
-                            ) {
+                                    ) {
 
                                 controls.appendChild(
                                         createButton(
@@ -495,15 +495,15 @@
                                                 page,
                                                 page === currentPage,
                                                 false
-                                        )
-                                );
+                                                )
+                                        );
                             }
 
 
                             if (
                                     end
                                     < pages - 1
-                            ) {
+                                    ) {
 
                                 addDots();
                             }
@@ -515,8 +515,8 @@
                                             pages,
                                             currentPage === pages,
                                             false
-                                    )
-                            );
+                                            )
+                                    );
                         }
 
 
@@ -529,8 +529,8 @@
                                         currentPage + 1,
                                         false,
                                         currentPage === pages
-                                )
-                        );
+                                        )
+                                );
                     }
 
 
@@ -543,7 +543,7 @@
                         if (
                                 currentPage
                                 > pages
-                        ) {
+                                ) {
 
                             currentPage =
                                     pages;
@@ -560,7 +560,7 @@
                                         startIndex
                                         + pageSize,
                                         dataRows.length
-                                );
+                                        );
 
 
                         dataRows.forEach(
@@ -569,8 +569,8 @@
                                     row.style.display =
                                             index >= startIndex
                                             && index < endIndex
-                                                    ? ""
-                                                    : "none";
+                                            ? ""
+                                            : "none";
                                 }
                         );
 
@@ -585,8 +585,8 @@
 
                         pagination.style.display =
                                 dataRows.length > pageSize
-                                        ? "flex"
-                                        : "none";
+                                ? "flex"
+                                : "none";
 
 
                         renderButtons();
@@ -601,7 +601,7 @@
                                         parseInt(
                                                 sizeSelect.value,
                                                 10
-                                        );
+                                                );
 
 
                                 currentPage =

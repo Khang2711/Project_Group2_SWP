@@ -25,11 +25,11 @@ public class AuthFilter implements Filter {
             FilterChain chain)
             throws IOException, ServletException {
 
-        HttpServletRequest request =
-                (HttpServletRequest) servletRequest;
+        HttpServletRequest request
+                = (HttpServletRequest) servletRequest;
 
-        HttpServletResponse response =
-                (HttpServletResponse) servletResponse;
+        HttpServletResponse response
+                = (HttpServletResponse) servletResponse;
 
         String path = request.getServletPath();
 
@@ -48,6 +48,23 @@ public class AuthFilter implements Filter {
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("user") == null) {
+
+            // Save selected showtime before login
+            if ("/user/select-seats".equals(path)
+                    && "GET".equals(request.getMethod())) {
+
+                String showtimeId = request.getParameter("showtimeId");
+
+                if (showtimeId != null
+                        && showtimeId.matches("[1-9][0-9]*")) {
+
+                    request.getSession(true).setAttribute(
+                            "redirectAfterLogin",
+                            "/user/select-seats?showtimeId=" + showtimeId
+                    );
+                }
+            }
+
             response.sendRedirect(
                     request.getContextPath() + "/auth/login"
             );
