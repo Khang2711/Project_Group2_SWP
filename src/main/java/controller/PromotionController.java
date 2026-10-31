@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import model.Promotion;
+import model.User;
 import service.PromotionService;
 
 @WebServlet(urlPatterns = {
@@ -79,10 +81,39 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    private Integer getCurrentCinemaId(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            return null;
+        }
+
+        Object sessionUser = session.getAttribute("user");
+
+        if (!(sessionUser instanceof User)) {
+            return null;
+        }
+
+        User user = (User) sessionUser;
+
+        return user.getCinemaId();
+    }
+
     private void showPromotionList(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
+
+        Integer cinemaId = getCurrentCinemaId(request);
+
+        if (cinemaId == null || cinemaId <= 0) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản chưa được phân công rạp."
+            );
+            return;
+        }
 
         String keyword = request.getParameter("keyword");
         String filter = request.getParameter("filter");
@@ -107,7 +138,7 @@ public class PromotionController extends HttpServlet {
         }
 
         List<Promotion> allPromotions
-                = promotionService.getAllPromotions();
+                = promotionService.getAllPromotions(cinemaId);
 
         List<Promotion> promotions = new ArrayList<>();
 
@@ -115,11 +146,9 @@ public class PromotionController extends HttpServlet {
 
         String searchText = keyword.toUpperCase(Locale.ROOT);
 
-        // Lọc trước, sau đó file phân trang chung chia các dòng trên giao diện.
         for (Promotion promotion : allPromotions) {
 
-            String status
-                    = promotionService.getDisplayStatus(promotion);
+            String status = promotionService.getDisplayStatus(promotion);
 
             String code = promotion.getPromoCode();
 
@@ -134,6 +163,7 @@ public class PromotionController extends HttpServlet {
                     || filter.equals(status);
 
             if (matchesKeyword && matchesFilter) {
+
                 promotions.add(promotion);
 
                 displayStatuses.put(
@@ -159,15 +189,31 @@ public class PromotionController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        Integer cinemaId = getCurrentCinemaId(request);
+
+        if (cinemaId == null || cinemaId <= 0) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản chưa được phân công rạp."
+            );
+            return;
+        }
+
         String idParam = request.getParameter("id");
 
         if (idParam != null && !idParam.trim().isEmpty()) {
 
             try {
-                int promotionId = Integer.parseInt(idParam);
+                int promotionId = parsePositiveInt(
+                        idParam,
+                        "Mã khuyến mãi không hợp lệ."
+                );
 
                 Promotion promotion
-                        = promotionService.getPromotionById(promotionId);
+                        = promotionService.getPromotionById(
+                                promotionId,
+                                cinemaId
+                        );
 
                 if (promotion == null) {
                     response.sendRedirect(
@@ -178,7 +224,7 @@ public class PromotionController extends HttpServlet {
 
                 request.setAttribute("promotion", promotion);
 
-            } catch (NumberFormatException e) {
+            } catch (IllegalArgumentException e) {
                 response.sendRedirect(
                         request.getContextPath() + "/admin/promotions"
                 );
@@ -196,25 +242,49 @@ public class PromotionController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        Integer cinemaId = getCurrentCinemaId(request);
+
+        if (cinemaId == null || cinemaId <= 0) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản chưa được phân công rạp."
+            );
+            return;
+        }
+
         try {
             Promotion promotion = buildPromotionFromRequest(request);
+
+            promotion.setCinemaId(cinemaId);
 
             String idParam = request.getParameter("promotionId");
 
             String error;
 
             if (idParam == null || idParam.trim().isEmpty()) {
-                error = promotionService.createPromotion(promotion);
+
+                error = promotionService.createPromotion(
+                        promotion,
+                        cinemaId
+                );
 
             } else {
-                int promotionId = Integer.parseInt(idParam);
+
+                int promotionId = parsePositiveInt(
+                        idParam,
+                        "Mã khuyến mãi không hợp lệ."
+                );
 
                 promotion.setPromotionId(promotionId);
 
-                error = promotionService.updatePromotion(promotion);
+                error = promotionService.updatePromotion(
+                        promotion,
+                        cinemaId
+                );
             }
 
             if (error != null) {
+
                 request.setAttribute("error", error);
                 request.setAttribute("promotion", promotion);
 
@@ -230,6 +300,7 @@ public class PromotionController extends HttpServlet {
             );
 
         } catch (IllegalArgumentException e) {
+
             request.setAttribute("error", e.getMessage());
 
             request.getRequestDispatcher(
@@ -243,33 +314,60 @@ public class PromotionController extends HttpServlet {
             HttpServletResponse response)
             throws IOException {
 
+        Integer cinemaId = getCurrentCinemaId(request);
+
+        if (cinemaId == null || cinemaId <= 0) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Tài khoản chưa được phân công rạp."
+            );
+            return;
+        }
+
         String idParam = request.getParameter("promotionId");
         String status = request.getParameter("status");
 
-        if (idParam != null && status != null) {
+        try {
+            int promotionId = parsePositiveInt(
+                    idParam,
+                    "Mã khuyến mãi không hợp lệ."
+            );
 
-            try {
-                int promotionId = Integer.parseInt(idParam);
+            String error = promotionService.updateStatus(
+                    promotionId,
+                    status,
+                    cinemaId
+            );
 
-                promotionService.updateStatus(promotionId, status);
-
-            } catch (NumberFormatException e) {
-                response.sendRedirect(
-                        request.getContextPath() + "/admin/promotions"
+            if (error != null) {
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        error
                 );
                 return;
             }
-        }
 
-        response.sendRedirect(
-                request.getContextPath() + "/admin/promotions"
-        );
+            response.sendRedirect(
+                    request.getContextPath() + "/admin/promotions"
+            );
+
+        } catch (IllegalArgumentException e) {
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    e.getMessage()
+            );
+        }
     }
 
     private void showApplyPromo(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
+
+        request.setAttribute(
+                "showtimeId",
+                request.getParameter("showtimeId")
+        );
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/apply-promo.jsp"
@@ -290,6 +388,21 @@ public class PromotionController extends HttpServlet {
                 );
             }
 
+            int showtimeId = parsePositiveInt(
+                    request.getParameter("showtimeId"),
+                    "Suất chiếu không hợp lệ."
+            );
+
+            int cinemaId = promotionService.getCinemaIdByShowtimeId(
+                    showtimeId
+            );
+
+            if (cinemaId <= 0) {
+                throw new IllegalArgumentException(
+                        "Không xác định được rạp của suất chiếu."
+                );
+            }
+
             BigDecimal orderAmount = parseBigDecimal(
                     request.getParameter("orderAmount"),
                     "Giá trị đơn hàng không hợp lệ."
@@ -301,8 +414,10 @@ public class PromotionController extends HttpServlet {
                 );
             }
 
-            Promotion promotion
-                    = promotionService.getPromotionByCode(promoCode);
+            Promotion promotion = promotionService.getPromotionByCode(
+                    promoCode,
+                    cinemaId
+            );
 
             String error = promotionService.validateApplyPromotion(
                     promotion,
@@ -313,6 +428,7 @@ public class PromotionController extends HttpServlet {
                 request.setAttribute("error", error);
                 request.setAttribute("promoCode", promoCode);
                 request.setAttribute("orderAmount", orderAmount);
+                request.setAttribute("showtimeId", showtimeId);
 
                 showApplyPromo(request, response);
                 return;
@@ -324,8 +440,7 @@ public class PromotionController extends HttpServlet {
                             orderAmount
                     );
 
-            BigDecimal finalAmount
-                    = orderAmount.subtract(discountAmount);
+            BigDecimal finalAmount = orderAmount.subtract(discountAmount);
 
             request.setAttribute(
                     "success",
@@ -337,10 +452,12 @@ public class PromotionController extends HttpServlet {
             request.setAttribute("discountAmount", discountAmount);
             request.setAttribute("finalAmount", finalAmount);
             request.setAttribute("appliedPromotion", promotion);
+            request.setAttribute("showtimeId", showtimeId);
 
             showApplyPromo(request, response);
 
         } catch (IllegalArgumentException e) {
+
             request.setAttribute("error", e.getMessage());
 
             request.setAttribute(
@@ -351,6 +468,11 @@ public class PromotionController extends HttpServlet {
             request.setAttribute(
                     "orderAmount",
                     request.getParameter("orderAmount")
+            );
+
+            request.setAttribute(
+                    "showtimeId",
+                    request.getParameter("showtimeId")
             );
 
             showApplyPromo(request, response);
@@ -373,14 +495,10 @@ public class PromotionController extends HttpServlet {
                 )
         );
 
-        String minOrderAmount
-                = request.getParameter("minOrderAmount");
+        String minOrderAmount = request.getParameter("minOrderAmount");
 
-        if (minOrderAmount == null
-                || minOrderAmount.trim().isEmpty()) {
-
+        if (minOrderAmount == null || minOrderAmount.trim().isEmpty()) {
             promotion.setMinOrderAmount(BigDecimal.ZERO);
-
         } else {
             promotion.setMinOrderAmount(
                     parseBigDecimal(
@@ -437,6 +555,26 @@ public class PromotionController extends HttpServlet {
         promotion.setStatus(request.getParameter("status"));
 
         return promotion;
+    }
+
+    private int parsePositiveInt(String value, String errorMessage) {
+
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        try {
+            int number = Integer.parseInt(value.trim());
+
+            if (number <= 0) {
+                throw new NumberFormatException();
+            }
+
+            return number;
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(errorMessage);
+        }
     }
 
     private BigDecimal parseBigDecimal(

@@ -29,7 +29,13 @@ public class BookingRepository {
         try (PreparedStatement ps = connection.prepareStatement(
                 sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, booking.getCustomerId());
+            // Khách mua tại quầy có thể không có customer_id.
+            if (booking.getCustomerId() == null) {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(1, booking.getCustomerId());
+            }
+
             ps.setInt(2, booking.getShowtimeId());
 
             if (booking.getPromotionId() == null) {
@@ -58,8 +64,7 @@ public class BookingRepository {
             }
         }
 
-        throw new SQLException(
-                "Cannot get booking_id after insert.");
+        throw new SQLException("Cannot get booking_id after insert.");
     }
 
     public BigDecimal findSeatPrice(
@@ -320,7 +325,13 @@ public class BookingRepository {
         Booking booking = new Booking();
 
         booking.setBookingId(rs.getInt("booking_id"));
-        booking.setCustomerId(rs.getInt("customer_id"));
+        int customerId = rs.getInt("customer_id");
+
+        if (rs.wasNull()) {
+            booking.setCustomerId(null);
+        } else {
+            booking.setCustomerId(customerId);
+        }
         booking.setShowtimeId(rs.getInt("showtime_id"));
 
         int promotionId = rs.getInt("promotion_id");

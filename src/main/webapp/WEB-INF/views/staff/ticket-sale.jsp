@@ -355,10 +355,7 @@
                 <c:out value="${draftRoom.roomName}" />
             </p>
 
-            <p>
-                Khách hàng:
-                <c:out value="${draftEmail}" />
-            </p>
+
 
             <p>
                 Ghế:
@@ -920,7 +917,7 @@
                     <div class="counter-card counter-summary"
                          style="margin-top:22px;">
                         <div>
-                            <h2>3. Thông tin khách hàng</h2>
+                            <h2>3. Xác nhận đơn tại quầy</h2>
 
                             <p>
                                 Đã chọn:
@@ -931,23 +928,6 @@
                                 Tạm tính tiền vé:
                                 <strong id="ticketTotal"
                                         class="counter-total">0 đ</strong>
-                            </p>
-                        </div>
-
-                        <div class="counter-field">
-                            <label for="customerEmail">
-                                Email tài khoản khách hàng
-                            </label>
-
-                            <input type="email"
-                                   id="customerEmail"
-                                   name="customerEmail"
-                                   maxlength="100"
-                                   required
-                                   value="<c:out value='${param.customerEmail}' />" />
-
-                            <p class="counter-note">
-                                Thanh toán tại quầy bằng tiền mặt.
                             </p>
                         </div>
 

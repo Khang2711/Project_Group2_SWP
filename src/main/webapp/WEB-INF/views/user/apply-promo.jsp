@@ -164,7 +164,9 @@
                        required />
 
             </div>
-
+            <input type="hidden"
+                   name="showtimeId"
+                   value="${showtimeId}">
             <div class="promo-field">
 
                 <label for="orderAmount">

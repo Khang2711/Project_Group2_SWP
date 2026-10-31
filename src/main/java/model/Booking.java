@@ -3,24 +3,26 @@ package model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-/** Model cho bảng Booking. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ. */
+/**
+ * Model cho bảng Booking. Chỉ chứa dữ liệu, chưa có xử lý nghiệp vụ.
+ */
 public class Booking {
 
-    private int bookingId; // booking_id
-    private int customerId; // customer_id
-    private Integer staffId; // NULL nếu đơn chưa có thông tin nhân viên bán
-    private int showtimeId; // showtime_id
-    private Integer promotionId; // promotion_id
-    private Timestamp bookingTime; // booking_time
-    private BigDecimal subtotal; // subtotal
-    private BigDecimal discountAmount; // discount_amount
-    private BigDecimal totalAmount; // total_amount
-    private String status; // status
+    private int bookingId;
+    private Integer customerId; // NULL nếu khách mua trực tiếp tại quầy
+    private Integer staffId;
+    private int showtimeId;
+    private Integer promotionId;
+    private Timestamp bookingTime;
+    private BigDecimal subtotal;
+    private BigDecimal discountAmount;
+    private BigDecimal totalAmount;
+    private String status;
 
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int showtimeId,
+    public Booking(int bookingId, Integer customerId, int showtimeId,
             Integer promotionId, Timestamp bookingTime,
             BigDecimal subtotal, BigDecimal discountAmount,
             BigDecimal totalAmount, String status) {
@@ -44,11 +46,11 @@ public class Booking {
         this.bookingId = bookingId;
     }
 
-    public int getCustomerId() {
+    public Integer getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(Integer customerId) {
         this.customerId = customerId;
     }
 

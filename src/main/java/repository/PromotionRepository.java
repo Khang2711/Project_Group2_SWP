@@ -12,23 +12,33 @@ import model.Promotion;
 
 public class PromotionRepository {
 
-    public List<Promotion> getAll() {
-
-        List<Promotion> list = new ArrayList<>();
-
-        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
-                + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status, "
-                // Mỗi đơn đã xác nhận dùng mã được tính là một lượt.
+    private String getSelectSql() {
+        return "SELECT p.promotion_id, p.cinema_id, p.promo_code, "
+                + "p.description, p.discount_type, p.discount_value, "
+                + "p.min_order_amount, p.max_discount_amount, "
+                + "p.start_date, p.end_date, p.usage_limit, p.status, "
                 + "(SELECT COUNT(*) FROM dbo.Booking b "
                 + "WHERE b.promotion_id = p.promotion_id "
                 + "AND b.status = 'CONFIRMED') AS used_count "
-                + "FROM Promotion p ORDER BY promotion_id DESC";
+                + "FROM dbo.Promotion p ";
+    }
 
-        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+    public List<Promotion> getAll(int cinemaId) {
 
-            while (rs.next()) {
-                list.add(mapPromotion(rs));
+        List<Promotion> list = new ArrayList<>();
+
+        String sql = getSelectSql()
+                + "WHERE p.cinema_id = ? "
+                + "ORDER BY p.promotion_id DESC";
+
+        try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, cinemaId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapPromotion(rs));
+                }
             }
 
         } catch (SQLException e) {
@@ -42,24 +52,21 @@ public class PromotionRepository {
             String keyword,
             String filter,
             int page,
-            int pageSize) {
+            int pageSize,
+            int cinemaId) {
 
         List<Promotion> list = new ArrayList<>();
 
-        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
-                + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status, "
-                + "(SELECT COUNT(*) FROM dbo.Booking b "
-                + "WHERE b.promotion_id = p.promotion_id "
-                + "AND b.status = 'CONFIRMED') AS used_count "
-                + "FROM Promotion p WHERE 1 = 1 ";
+        String sql = getSelectSql()
+                + "WHERE p.cinema_id = ? ";
 
-        if (keyword != null && !keyword.isEmpty()) {
-            sql += "AND promo_code LIKE ? ";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += "AND p.promo_code LIKE ? ";
         }
 
         sql += getFilterCondition(filter);
-        sql += "ORDER BY promotion_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        sql += "ORDER BY p.promotion_id DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         int offset = (page - 1) * pageSize;
 
@@ -67,8 +74,10 @@ public class PromotionRepository {
 
             int index = 1;
 
-            if (keyword != null && !keyword.isEmpty()) {
-                ps.setString(index++, "%" + keyword + "%");
+            ps.setInt(index++, cinemaId);
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(index++, "%" + keyword.trim() + "%");
             }
 
             ps.setInt(index++, offset);
@@ -87,20 +96,26 @@ public class PromotionRepository {
         return list;
     }
 
-    public int countFiltered(String keyword, String filter) {
+    public int countFiltered(
+            String keyword,
+            String filter,
+            int cinemaId) {
 
-        String sql = "SELECT COUNT(*) FROM Promotion WHERE 1 = 1 ";
+        String sql = "SELECT COUNT(*) FROM dbo.Promotion p "
+                + "WHERE p.cinema_id = ? ";
 
-        if (keyword != null && !keyword.isEmpty()) {
-            sql += "AND promo_code LIKE ? ";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += "AND p.promo_code LIKE ? ";
         }
 
         sql += getFilterCondition(filter);
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            if (keyword != null && !keyword.isEmpty()) {
-                ps.setString(1, "%" + keyword + "%");
+            ps.setInt(1, cinemaId);
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(2, "%" + keyword.trim() + "%");
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -119,41 +134,38 @@ public class PromotionRepository {
     private String getFilterCondition(String filter) {
 
         if ("AVAILABLE".equals(filter)) {
-            return "AND status = 'ACTIVE' "
-                    + "AND start_date <= SYSDATETIME() "
-                    + "AND end_date >= SYSDATETIME() ";
+            return "AND p.status = 'ACTIVE' "
+                    + "AND p.start_date <= SYSDATETIME() "
+                    + "AND p.end_date >= SYSDATETIME() ";
         }
 
         if ("UPCOMING".equals(filter)) {
-            return "AND status = 'ACTIVE' "
-                    + "AND start_date > SYSDATETIME() ";
+            return "AND p.status = 'ACTIVE' "
+                    + "AND p.start_date > SYSDATETIME() ";
         }
 
         if ("EXPIRED".equals(filter)) {
-            return "AND status = 'ACTIVE' "
-                    + "AND end_date < SYSDATETIME() ";
+            return "AND p.status = 'ACTIVE' "
+                    + "AND p.end_date < SYSDATETIME() ";
         }
 
         if ("INACTIVE".equals(filter)) {
-            return "AND status = 'INACTIVE' ";
+            return "AND p.status = 'INACTIVE' ";
         }
 
         return "";
     }
 
-    public Promotion getById(int promotionId) {
+    public Promotion getById(int promotionId, int cinemaId) {
 
-        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
-                + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status, "
-                + "(SELECT COUNT(*) FROM dbo.Booking b "
-                + "WHERE b.promotion_id = p.promotion_id "
-                + "AND b.status = 'CONFIRMED') AS used_count "
-                + "FROM Promotion p WHERE promotion_id = ?";
+        String sql = getSelectSql()
+                + "WHERE p.promotion_id = ? "
+                + "AND p.cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, promotionId);
+            ps.setInt(2, cinemaId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -168,19 +180,16 @@ public class PromotionRepository {
         return null;
     }
 
-    public Promotion getByCode(String promoCode) {
+    public Promotion getByCode(String promoCode, int cinemaId) {
 
-        String sql = "SELECT promotion_id, promo_code, description, discount_type, "
-                + "discount_value, min_order_amount, max_discount_amount, "
-                + "start_date, end_date, usage_limit, status, "
-                + "(SELECT COUNT(*) FROM dbo.Booking b "
-                + "WHERE b.promotion_id = p.promotion_id "
-                + "AND b.status = 'CONFIRMED') AS used_count "
-                + "FROM Promotion p WHERE promo_code = ?";
+        String sql = getSelectSql()
+                + "WHERE p.promo_code = ? "
+                + "AND p.cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, promoCode);
+            ps.setInt(2, cinemaId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -197,8 +206,9 @@ public class PromotionRepository {
 
     public int countUsageByPromotionId(int promotionId) {
 
-        String sql = "SELECT COUNT(*) FROM Booking "
-                + "WHERE promotion_id = ? AND status = 'CONFIRMED'";
+        String sql = "SELECT COUNT(*) FROM dbo.Booking "
+                + "WHERE promotion_id = ? "
+                + "AND status = 'CONFIRMED'";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -217,13 +227,15 @@ public class PromotionRepository {
         return 0;
     }
 
-    public boolean existsByCode(String promoCode) {
+    public boolean existsByCode(String promoCode, int cinemaId) {
 
-        String sql = "SELECT 1 FROM Promotion WHERE promo_code = ?";
+        String sql = "SELECT 1 FROM dbo.Promotion "
+                + "WHERE promo_code = ? AND cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, promoCode);
+            ps.setInt(2, cinemaId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
@@ -236,15 +248,21 @@ public class PromotionRepository {
         return false;
     }
 
-    public boolean existsByCodeExceptId(String promoCode, int promotionId) {
+    public boolean existsByCodeExceptId(
+            String promoCode,
+            int promotionId,
+            int cinemaId) {
 
-        String sql = "SELECT 1 FROM Promotion "
-                + "WHERE promo_code = ? AND promotion_id <> ?";
+        String sql = "SELECT 1 FROM dbo.Promotion "
+                + "WHERE promo_code = ? "
+                + "AND promotion_id <> ? "
+                + "AND cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, promoCode);
             ps.setInt(2, promotionId);
+            ps.setInt(3, cinemaId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
@@ -259,15 +277,16 @@ public class PromotionRepository {
 
     public boolean insert(Promotion promotion) {
 
-        String sql = "INSERT INTO Promotion "
-                + "(promo_code, description, discount_type, discount_value, "
-                + "min_order_amount, max_discount_amount, start_date, end_date, "
-                + "usage_limit, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO dbo.Promotion "
+                + "(cinema_id, promo_code, description, discount_type, "
+                + "discount_value, min_order_amount, max_discount_amount, "
+                + "start_date, end_date, usage_limit, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            setPromotionData(ps, promotion);
+            ps.setInt(1, promotion.getCinemaId());
+            setPromotionData(ps, promotion, 2);
 
             return ps.executeUpdate() > 0;
 
@@ -278,19 +297,20 @@ public class PromotionRepository {
         return false;
     }
 
-    public boolean update(Promotion promotion) {
+    public boolean update(Promotion promotion, int cinemaId) {
 
-        String sql = "UPDATE Promotion SET "
+        String sql = "UPDATE dbo.Promotion SET "
                 + "promo_code = ?, description = ?, discount_type = ?, "
                 + "discount_value = ?, min_order_amount = ?, "
                 + "max_discount_amount = ?, start_date = ?, end_date = ?, "
                 + "usage_limit = ?, status = ? "
-                + "WHERE promotion_id = ?";
+                + "WHERE promotion_id = ? AND cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            setPromotionData(ps, promotion);
+            setPromotionData(ps, promotion, 1);
             ps.setInt(11, promotion.getPromotionId());
+            ps.setInt(12, cinemaId);
 
             return ps.executeUpdate() > 0;
 
@@ -301,14 +321,20 @@ public class PromotionRepository {
         return false;
     }
 
-    public boolean updateStatus(int promotionId, String status) {
+    public boolean updateStatus(
+            int promotionId,
+            String status,
+            int cinemaId) {
 
-        String sql = "UPDATE Promotion SET status = ? WHERE promotion_id = ?";
+        String sql = "UPDATE dbo.Promotion "
+                + "SET status = ? "
+                + "WHERE promotion_id = ? AND cinema_id = ?";
 
         try (Connection con = new DBContext().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, status);
             ps.setInt(2, promotionId);
+            ps.setInt(3, cinemaId);
 
             return ps.executeUpdate() > 0;
 
@@ -321,30 +347,33 @@ public class PromotionRepository {
 
     private void setPromotionData(
             PreparedStatement ps,
-            Promotion promotion) throws SQLException {
+            Promotion promotion,
+            int startIndex) throws SQLException {
 
-        ps.setString(1, promotion.getPromoCode());
-        ps.setString(2, promotion.getDescription());
-        ps.setString(3, promotion.getDiscountType());
-        ps.setBigDecimal(4, promotion.getDiscountValue());
-        ps.setBigDecimal(5, promotion.getMinOrderAmount());
+        ps.setString(startIndex, promotion.getPromoCode());
+        ps.setString(startIndex + 1, promotion.getDescription());
+        ps.setString(startIndex + 2, promotion.getDiscountType());
+        ps.setBigDecimal(startIndex + 3, promotion.getDiscountValue());
+        ps.setBigDecimal(startIndex + 4, promotion.getMinOrderAmount());
 
         if (promotion.getMaxDiscountAmount() == null) {
-            ps.setNull(6, Types.DECIMAL);
+            ps.setNull(startIndex + 5, Types.DECIMAL);
         } else {
-            ps.setBigDecimal(6, promotion.getMaxDiscountAmount());
+            ps.setBigDecimal(
+                    startIndex + 5,
+                    promotion.getMaxDiscountAmount());
         }
 
-        ps.setTimestamp(7, promotion.getStartDate());
-        ps.setTimestamp(8, promotion.getEndDate());
+        ps.setTimestamp(startIndex + 6, promotion.getStartDate());
+        ps.setTimestamp(startIndex + 7, promotion.getEndDate());
 
         if (promotion.getUsageLimit() == null) {
-            ps.setNull(9, Types.INTEGER);
+            ps.setNull(startIndex + 8, Types.INTEGER);
         } else {
-            ps.setInt(9, promotion.getUsageLimit());
+            ps.setInt(startIndex + 8, promotion.getUsageLimit());
         }
 
-        ps.setString(10, promotion.getStatus());
+        ps.setString(startIndex + 9, promotion.getStatus());
     }
 
     private Promotion mapPromotion(ResultSet rs) throws SQLException {
@@ -352,6 +381,7 @@ public class PromotionRepository {
         Promotion promotion = new Promotion();
 
         promotion.setPromotionId(rs.getInt("promotion_id"));
+        promotion.setCinemaId(rs.getInt("cinema_id"));
         promotion.setPromoCode(rs.getString("promo_code"));
         promotion.setDescription(rs.getString("description"));
         promotion.setDiscountType(rs.getString("discount_type"));
