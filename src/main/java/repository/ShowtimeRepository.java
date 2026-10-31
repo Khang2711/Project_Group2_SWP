@@ -3,6 +3,7 @@ package repository;
 import db.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -166,6 +167,7 @@ public class ShowtimeRepository extends DBContext {
                     ps.executeQuery();
 
             while (rs.next()) {
+
                 showtimes.add(
                         mapShowtime(rs)
                 );
@@ -226,29 +228,9 @@ public class ShowtimeRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    showtime.getMovieId()
-            );
-
-            ps.setInt(
-                    2,
-                    showtime.getRoomId()
-            );
-
-            ps.setTimestamp(
-                    3,
-                    showtime.getStartTime()
-            );
-
-            ps.setTimestamp(
-                    4,
-                    showtime.getEndTime()
-            );
-
-            ps.setString(
-                    5,
-                    showtime.getStatus()
+            setInsertParameters(
+                    ps,
+                    showtime
             );
 
             return ps.executeUpdate() > 0;
@@ -258,6 +240,86 @@ public class ShowtimeRepository extends DBContext {
         }
 
         return false;
+    }
+
+    /*
+     * Thêm nhiều lịch chiếu trong cùng transaction.
+     *
+     * Nếu bất kỳ dòng nào lỗi thì rollback toàn bộ,
+     * tránh trường hợp chỉ thêm được một nửa danh sách.
+     */
+    public boolean insertBatch(
+            List<Showtime> showtimes) {
+
+        if (showtimes == null
+                || showtimes.isEmpty()) {
+
+            return false;
+        }
+
+        String sql =
+                "INSERT INTO Showtime "
+                + "(movie_id, room_id, "
+                + "start_time, end_time, status) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        boolean oldAutoCommit = true;
+
+        try {
+
+            oldAutoCommit =
+                    conn.getAutoCommit();
+
+            conn.setAutoCommit(false);
+
+            PreparedStatement ps =
+                    conn.prepareStatement(sql);
+
+            for (Showtime showtime
+                    : showtimes) {
+
+                setInsertParameters(
+                        ps,
+                        showtime
+                );
+
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+
+            conn.commit();
+
+            return true;
+
+        } catch (Exception e) {
+
+            try {
+
+                conn.rollback();
+
+            } catch (SQLException rollbackException) {
+
+                rollbackException.printStackTrace();
+            }
+
+            e.printStackTrace();
+
+            return false;
+
+        } finally {
+
+            try {
+
+                conn.setAutoCommit(
+                        oldAutoCommit
+                );
+
+            } catch (SQLException e) {
+
+                e.printStackTrace();
+            }
+        }
     }
 
     public boolean update(
@@ -352,7 +414,10 @@ public class ShowtimeRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(1, roomId);
+            ps.setInt(
+                    1,
+                    roomId
+            );
 
             ps.setTimestamp(
                     2,
@@ -433,8 +498,15 @@ public class ShowtimeRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(1, showtimeId);
-            ps.setInt(2, cinemaId);
+            ps.setInt(
+                    1,
+                    showtimeId
+            );
+
+            ps.setInt(
+                    2,
+                    cinemaId
+            );
 
             return ps.executeUpdate() > 0;
 
@@ -463,8 +535,15 @@ public class ShowtimeRepository extends DBContext {
             PreparedStatement ps =
                     conn.prepareStatement(sql);
 
-            ps.setInt(1, showtimeId);
-            ps.setInt(2, cinemaId);
+            ps.setInt(
+                    1,
+                    showtimeId
+            );
+
+            ps.setInt(
+                    2,
+                    cinemaId
+            );
 
             return ps.executeUpdate() > 0;
 
@@ -475,6 +554,37 @@ public class ShowtimeRepository extends DBContext {
         return false;
     }
 
+    private void setInsertParameters(
+            PreparedStatement ps,
+            Showtime showtime)
+            throws Exception {
+
+        ps.setInt(
+                1,
+                showtime.getMovieId()
+        );
+
+        ps.setInt(
+                2,
+                showtime.getRoomId()
+        );
+
+        ps.setTimestamp(
+                3,
+                showtime.getStartTime()
+        );
+
+        ps.setTimestamp(
+                4,
+                showtime.getEndTime()
+        );
+
+        ps.setString(
+                5,
+                showtime.getStatus()
+        );
+    }
+
     private Showtime mapShowtime(
             ResultSet rs)
             throws Exception {
@@ -483,27 +593,39 @@ public class ShowtimeRepository extends DBContext {
                 new Showtime();
 
         showtime.setShowtimeId(
-                rs.getInt("showtime_id")
+                rs.getInt(
+                        "showtime_id"
+                )
         );
 
         showtime.setMovieId(
-                rs.getInt("movie_id")
+                rs.getInt(
+                        "movie_id"
+                )
         );
 
         showtime.setRoomId(
-                rs.getInt("room_id")
+                rs.getInt(
+                        "room_id"
+                )
         );
 
         showtime.setStartTime(
-                rs.getTimestamp("start_time")
+                rs.getTimestamp(
+                        "start_time"
+                )
         );
 
         showtime.setEndTime(
-                rs.getTimestamp("end_time")
+                rs.getTimestamp(
+                        "end_time"
+                )
         );
 
         showtime.setStatus(
-                rs.getString("status")
+                rs.getString(
+                        "status"
+                )
         );
 
         return showtime;

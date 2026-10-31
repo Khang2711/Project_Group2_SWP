@@ -29,8 +29,9 @@
 <style>
 
     .showtime-form-page {
-        max-width: 760px;
+        max-width: 950px;
         margin: 0 auto;
+        color: #f5f5f5;
     }
 
     .showtime-form-page h1 {
@@ -38,9 +39,35 @@
     }
 
     .form-subtitle {
-        margin-bottom: 24px;
+        margin-bottom: 22px;
         color: #aaa;
         line-height: 1.6;
+    }
+
+    .mode-switcher {
+        display: flex;
+        gap: 7px;
+        margin-bottom: 20px;
+        padding: 4px;
+        width: fit-content;
+        background: #18181d;
+        border: 1px solid #303039;
+        border-radius: 8px;
+    }
+
+    .mode-button {
+        padding: 9px 15px;
+        border: none;
+        border-radius: 5px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .mode-button.active {
+        background: #ff1744;
+        color: white;
     }
 
     .showtime-form-box {
@@ -61,21 +88,15 @@
         font-weight: 600;
     }
 
-    .form-group select,
-    .form-group input {
+    .form-control {
         width: 100%;
         box-sizing: border-box;
-
         padding: 11px 12px;
-
         background: #101014;
         color: white;
-
         border: 1px solid #4a4a54;
         border-radius: 6px;
-
         font-size: 14px;
-
         color-scheme: dark;
     }
 
@@ -94,73 +115,150 @@
 
     .end-preview {
         padding: 14px 15px;
-
         background: #202027;
-
         border: 1px solid #383840;
         border-radius: 6px;
-
         color: #ccc;
-
-        font-size: 15px;
     }
 
     .end-preview strong {
         color: #ff5873;
     }
 
-    .form-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 25px;
-    }
-
-    .save-button {
-        padding: 11px 20px;
-
-        border: none;
-        border-radius: 6px;
-
-        background: #ff1744;
-        color: white;
-
-        cursor: pointer;
-
-        font-weight: bold;
-    }
-
-    .save-button:hover {
-        background: #e8143d;
-    }
-
-    .cancel-button {
-        padding: 11px 20px;
-
-        border-radius: 6px;
-
-        background: #292932;
-        border: 1px solid #444;
-
-        color: white;
-        text-decoration: none;
-    }
-
     .form-error {
         margin-bottom: 20px;
-
         padding: 13px 15px;
-
         background: #36191f;
         color: #ffb9c1;
-
         border: 1px solid #71343e;
         border-radius: 6px;
     }
 
-    @media (max-width: 600px) {
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .save-button,
+    .add-row-button {
+        padding: 11px 18px;
+        border: none;
+        border-radius: 6px;
+        background: #ff1744;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .add-row-button {
+        background: #292932;
+        border: 1px solid #555;
+    }
+
+    .add-row-button:hover {
+        border-color: #ff1744;
+    }
+
+    .cancel-button {
+        padding: 11px 18px;
+        border-radius: 6px;
+        background: #292932;
+        border: 1px solid #444;
+        color: white;
+        text-decoration: none;
+    }
+
+    #bulkPanel {
+        display: none;
+    }
+
+    .bulk-description {
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        background: #202027;
+        border-left: 4px solid #ff1744;
+        border-radius: 6px;
+        color: #bbb;
+        line-height: 1.6;
+    }
+
+    .bulk-table-wrap {
+        overflow-x: auto;
+        border: 1px solid #303039;
+        border-radius: 8px;
+    }
+
+    .bulk-table {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: collapse;
+    }
+
+    .bulk-table th {
+        padding: 12px;
+        background: #202027;
+        color: #999;
+        text-align: left;
+        font-size: 12px;
+    }
+
+    .bulk-table td {
+        padding: 10px;
+        border-top: 1px solid #303039;
+        vertical-align: middle;
+    }
+
+    .bulk-table .form-control {
+        min-width: 140px;
+    }
+
+    .bulk-index {
+        width: 40px;
+        text-align: center;
+        color: #999;
+        font-weight: bold;
+    }
+
+    .remove-row-button {
+        padding: 8px 11px;
+        border: 1px solid #71323c;
+        border-radius: 5px;
+        background: transparent;
+        color: #ff637d;
+        cursor: pointer;
+    }
+
+    .bulk-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .bulk-count {
+        color: #999;
+        font-size: 13px;
+    }
+
+    @media (max-width: 650px) {
 
         .date-time-row {
             grid-template-columns: 1fr;
+        }
+
+        .mode-switcher {
+            width: 100%;
+        }
+
+        .mode-button {
+            flex: 1;
+        }
+
+        .bulk-toolbar {
+            align-items: flex-start;
+            flex-direction: column;
         }
 
     }
@@ -172,12 +270,12 @@
 
     <h1>
 
-        <c:if test="${empty showtime or showtime.showtimeId == 0}">
-            Thêm lịch chiếu
-        </c:if>
-
         <c:if test="${not empty showtime and showtime.showtimeId > 0}">
             Sửa lịch chiếu
+        </c:if>
+
+        <c:if test="${empty showtime or showtime.showtimeId == 0}">
+            Tạo lịch chiếu
         </c:if>
 
     </h1>
@@ -185,9 +283,8 @@
 
     <p class="form-subtitle">
 
-        Chọn phim, phòng, ngày chiếu và giờ bắt đầu.
         Hệ thống tự tính giờ kết thúc dựa trên
-        thời lượng của phim.
+        thời lượng phim và kiểm tra trùng lịch phòng chiếu.
 
     </p>
 
@@ -203,429 +300,972 @@
     </c:if>
 
 
-    <form method="post"
-          action="${pageContext.request.contextPath}/admin/showtime-form"
-          class="showtime-form-box">
+    <c:if test="${empty showtime or showtime.showtimeId == 0}">
 
+        <div class="mode-switcher">
 
-        <c:if test="${not empty showtime and showtime.showtimeId > 0}">
+            <button type="button"
+                    id="singleModeButton"
+                    class="mode-button active">
 
-            <input type="hidden"
-                   name="id"
-                   value="${showtime.showtimeId}">
-
-        </c:if>
-
-
-        <div class="form-group">
-
-            <label for="movieId">
-                Phim
-            </label>
-
-            <select id="movieId"
-                    name="movieId"
-                    required>
-
-                <option value="">
-                    -- Chọn phim --
-                </option>
-
-
-                <c:forEach items="${movies}"
-                           var="movie">
-
-                    <option
-                        value="${movie.movieId}"
-
-                        data-duration="${movie.durationMinutes}"
-
-                        <c:if test="${not empty showtime and showtime.movieId == movie.movieId}">
-                            selected
-                        </c:if>>
-
-                        <c:out value="${movie.title}" />
-
-                        - ${movie.durationMinutes} phút
-
-                        <c:if test="${movie.status ne 'ACTIVE'}">
-                            [INACTIVE]
-                        </c:if>
-
-                    </option>
-
-                </c:forEach>
-
-            </select>
-
-
-            <p class="form-help">
-
-                Thời lượng phim được lấy trực tiếp
-                từ thông tin phim trong database.
-
-            </p>
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="roomId">
-                Phòng chiếu
-            </label>
-
-            <select id="roomId"
-                    name="roomId"
-                    required>
-
-                <option value="">
-                    -- Chọn phòng --
-                </option>
-
-
-                <c:forEach items="${rooms}"
-                           var="room">
-
-                    <option
-                        value="${room.roomId}"
-
-                        <c:if test="${not empty showtime and showtime.roomId == room.roomId}">
-                            selected
-                        </c:if>>
-
-                        <c:out value="${room.roomName}" />
-
-                        - ${room.roomType}
-
-                        <c:if test="${room.status ne 'ACTIVE'}">
-                            [INACTIVE]
-                        </c:if>
-
-                    </option>
-
-                </c:forEach>
-
-            </select>
-
-        </div>
-
-
-        <div class="date-time-row">
-
-
-            <div class="form-group">
-
-                <label for="startDate">
-                    Ngày chiếu
-                </label>
-
-                <input type="date"
-                       id="startDate"
-                       name="startDate"
-                       lang="vi-VN"
-                       value="${startDateValue}"
-                       required>
-
-
-                <p class="form-help">
-
-                    Chọn theo ngày / tháng / năm.
-
-                </p>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="startClock">
-                    Giờ bắt đầu
-                </label>
-
-                <input type="time"
-                       id="startClock"
-                       name="startClock"
-                       value="${startClockValue}"
-                       step="60"
-                       required>
-
-
-                <p class="form-help">
-
-                    Giờ 24h.
-                    Ví dụ: 08:30, 14:00, 19:45.
-
-                </p>
-
-            </div>
-
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label>
-                Thời gian kết thúc
-            </label>
-
-            <div class="end-preview">
-
-                <strong id="endTimePreview">
-
-                    <c:if test="${not empty endTimeValue}">
-                        ${endTimeValue}
-                    </c:if>
-
-                    <c:if test="${empty endTimeValue}">
-                        Chọn phim, ngày và giờ bắt đầu
-                    </c:if>
-
-                </strong>
-
-            </div>
-
-
-            <p class="form-help">
-
-                Hệ thống tự tính:
-
-                <strong>
-                    giờ bắt đầu + thời lượng phim
-                </strong>.
-
-                Bạn không cần nhập giờ kết thúc.
-
-            </p>
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="status">
-                Trạng thái
-            </label>
-
-            <select id="status"
-                    name="status"
-                    required>
-
-
-                <option
-                    value="ACTIVE"
-
-                    <c:if test="${empty showtime
-                                  or empty showtime.status
-                                  or showtime.status eq 'ACTIVE'}">
-                        selected
-                    </c:if>>
-
-                    ACTIVE
-
-                </option>
-
-
-                <option
-                    value="INACTIVE"
-
-                    <c:if test="${not empty showtime
-                                  and showtime.status eq 'INACTIVE'}">
-                        selected
-                    </c:if>>
-
-                    INACTIVE
-
-                </option>
-
-
-            </select>
-
-        </div>
-
-
-        <div class="form-actions">
-
-            <button type="submit"
-                    class="save-button">
-
-                Lưu lịch chiếu
+                Thêm 1 lịch
 
             </button>
 
+            <button type="button"
+                    id="bulkModeButton"
+                    class="mode-button">
 
-            <a href="${pageContext.request.contextPath}/admin/showtimes"
-               class="cancel-button">
+                Thêm một loạt
 
-                Hủy
+            </button>
 
-            </a>
+        </div>
+
+    </c:if>
+
+
+    <!-- ==================================================
+         THÊM / SỬA MỘT LỊCH
+         ================================================== -->
+
+    <div id="singlePanel">
+
+        <form method="post"
+              action="${pageContext.request.contextPath}/admin/showtime-form"
+              class="showtime-form-box">
+
+
+            <c:if test="${not empty showtime and showtime.showtimeId > 0}">
+
+                <input type="hidden"
+                       name="id"
+                       value="${showtime.showtimeId}">
+
+            </c:if>
+
+
+            <div class="form-group">
+
+                <label>
+                    Phim
+                </label>
+
+                <select id="movieId"
+                        name="movieId"
+                        class="form-control"
+                        required>
+
+                    <option value="">
+                        -- Chọn phim --
+                    </option>
+
+                    <c:forEach items="${movies}"
+                               var="movie">
+
+                        <option value="${movie.movieId}"
+                                data-duration="${movie.durationMinutes}"
+
+                                <c:if test="${not empty showtime and showtime.movieId == movie.movieId}">
+                                    selected
+                                </c:if>>
+
+                            <c:out value="${movie.title}" />
+
+                            - ${movie.durationMinutes} phút
+
+                        </option>
+
+                    </c:forEach>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Phòng chiếu
+                </label>
+
+                <select name="roomId"
+                        class="form-control"
+                        required>
+
+                    <option value="">
+                        -- Chọn phòng --
+                    </option>
+
+                    <c:forEach items="${rooms}"
+                               var="room">
+
+                        <option value="${room.roomId}"
+
+                                <c:if test="${not empty showtime and showtime.roomId == room.roomId}">
+                                    selected
+                                </c:if>>
+
+                            <c:out value="${room.roomName}" />
+
+                            <c:if test="${not empty room.roomType}">
+                                - ${room.roomType}
+                            </c:if>
+
+                        </option>
+
+                    </c:forEach>
+
+                </select>
+
+            </div>
+
+
+            <div class="date-time-row">
+
+                <div class="form-group">
+
+                    <label>
+                        Ngày chiếu
+                    </label>
+
+                    <input type="date"
+                           id="startDate"
+                           name="startDate"
+                           class="form-control"
+                           value="${startDateValue}"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Giờ bắt đầu
+                    </label>
+
+                    <input type="time"
+                           id="startClock"
+                           name="startClock"
+                           class="form-control"
+                           value="${startClockValue}"
+                           step="60"
+                           required>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Thời gian kết thúc
+                </label>
+
+                <div class="end-preview">
+
+                    <strong id="endTimePreview">
+
+                        <c:if test="${not empty endTimeValue}">
+                            ${endTimeValue}
+                        </c:if>
+
+                        <c:if test="${empty endTimeValue}">
+                            Chọn phim, ngày và giờ bắt đầu
+                        </c:if>
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Trạng thái
+                </label>
+
+                <select name="status"
+                        class="form-control"
+                        required>
+
+                    <option value="ACTIVE"
+
+                            <c:if test="${empty showtime
+                                          or empty showtime.status
+                                          or showtime.status eq 'ACTIVE'}">
+                                selected
+                            </c:if>>
+
+                        ACTIVE
+
+                    </option>
+
+                    <option value="INACTIVE"
+
+                            <c:if test="${not empty showtime
+                                          and showtime.status eq 'INACTIVE'}">
+                                selected
+                            </c:if>>
+
+                        INACTIVE
+
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button type="submit"
+                        class="save-button">
+
+                    Lưu lịch chiếu
+
+                </button>
+
+                <a href="${pageContext.request.contextPath}/admin/showtimes"
+                   class="cancel-button">
+
+                    Hủy
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- ==================================================
+         THÊM MỘT LOẠT
+         ================================================== -->
+
+    <c:if test="${empty showtime or showtime.showtimeId == 0}">
+
+        <div id="bulkPanel">
+
+            <form method="post"
+                  action="${pageContext.request.contextPath}/admin/showtime-bulk"
+                  class="showtime-form-box">
+
+
+                <div class="bulk-description">
+
+                    Chọn <strong>một bộ phim</strong>,
+                    sau đó thêm nhiều ca chiếu.
+
+                    Mỗi ca có thể chọn
+                    <strong>phòng, ngày và giờ khác nhau</strong>.
+
+                    Nếu một ca bị trùng lịch phòng,
+                    hệ thống sẽ không lưu cả loạt.
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Phim
+                    </label>
+
+                    <select id="bulkMovieId"
+                            name="movieId"
+                            class="form-control"
+                            required>
+
+                        <option value="">
+                            -- Chọn phim --
+                        </option>
+
+                        <c:forEach items="${movies}"
+                                   var="movie">
+
+                            <option value="${movie.movieId}"
+                                    data-duration="${movie.durationMinutes}">
+
+                                <c:out value="${movie.title}" />
+
+                                - ${movie.durationMinutes} phút
+
+                            </option>
+
+                        </c:forEach>
+
+                    </select>
+
+                    <p class="form-help">
+
+                        Tất cả các ca bên dưới sẽ áp dụng
+                        cho bộ phim này.
+
+                    </p>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Trạng thái
+                    </label>
+
+                    <select name="status"
+                            class="form-control">
+
+                        <option value="ACTIVE">
+                            ACTIVE
+                        </option>
+
+                        <option value="INACTIVE">
+                            INACTIVE
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="bulk-table-wrap">
+
+                    <table class="bulk-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>#</th>
+                                <th>Phòng</th>
+                                <th>Ngày chiếu</th>
+                                <th>Giờ bắt đầu</th>
+                                <th>Kết thúc dự kiến</th>
+                                <th></th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="bulkRows">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div class="bulk-toolbar">
+
+                    <button type="button"
+                            id="addBulkRowButton"
+                            class="add-row-button">
+
+                        + Thêm ca chiếu
+
+                    </button>
+
+                    <div class="bulk-count">
+
+                        Tổng:
+                        <strong id="bulkCount">
+                            0
+                        </strong>
+                        ca
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button type="submit"
+                            class="save-button">
+
+                        Tạo tất cả lịch chiếu
+
+                    </button>
+
+                    <a href="${pageContext.request.contextPath}/admin/showtimes"
+                       class="cancel-button">
+
+                        Hủy
+
+                    </a>
+
+                </div>
+
+            </form>
 
         </div>
 
 
-    </form>
+        <template id="bulkRowTemplate">
+
+            <tr class="bulk-row">
+
+                <td class="bulk-index">
+                    1
+                </td>
+
+                <td>
+
+                    <select name="bulkRoomId"
+                            class="form-control"
+                            required>
+
+                        <option value="">
+                            -- Phòng --
+                        </option>
+
+                        <c:forEach items="${rooms}"
+                                   var="room">
+
+                            <option value="${room.roomId}">
+
+                                <c:out value="${room.roomName}" />
+
+                                <c:if test="${not empty room.roomType}">
+                                    - ${room.roomType}
+                                </c:if>
+
+                            </option>
+
+                        </c:forEach>
+
+                    </select>
+
+                </td>
+
+                <td>
+
+                    <input type="date"
+                           name="bulkDate"
+                           class="form-control bulk-date"
+                           required>
+
+                </td>
+
+                <td>
+
+                    <input type="time"
+                           name="bulkTime"
+                           class="form-control bulk-time"
+                           step="60"
+                           required>
+
+                </td>
+
+                <td class="bulk-end">
+                    -
+                </td>
+
+                <td>
+
+                    <button type="button"
+                            class="remove-row-button">
+
+                        Xóa
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        </template>
+
+    </c:if>
 
 </section>
 
 
 <script>
 
-    const movieSelect =
-        document.getElementById(
-            "movieId"
-        );
+    var movieSelect =
+            document.getElementById(
+                    "movieId"
+            );
 
-    const startDateInput =
-        document.getElementById(
-            "startDate"
-        );
+    var startDateInput =
+            document.getElementById(
+                    "startDate"
+            );
 
-    const startClockInput =
-        document.getElementById(
-            "startClock"
-        );
+    var startClockInput =
+            document.getElementById(
+                    "startClock"
+            );
 
-    const endTimePreview =
-        document.getElementById(
-            "endTimePreview"
-        );
+    var endTimePreview =
+            document.getElementById(
+                    "endTimePreview"
+            );
+
+
+    function pad(value) {
+
+        return String(value)
+                .padStart(
+                        2,
+                        "0"
+                );
+    }
 
 
     function updateEndTime() {
 
-        const selectedOption =
-            movieSelect.options[
-                movieSelect.selectedIndex
-            ];
+        if (!movieSelect
+                || !startDateInput
+                || !startClockInput
+                || !endTimePreview) {
 
+            return;
+        }
 
-        const duration =
-            parseInt(
-                selectedOption
-                    ? selectedOption.dataset.duration
-                    : ""
-            );
+        var option =
+                movieSelect.options[
+                        movieSelect.selectedIndex
+                ];
 
-
-        const dateValue =
-            startDateInput.value;
-
-
-        const timeValue =
-            startClockInput.value;
-
+        var duration =
+                parseInt(
+                        option
+                        ? option.dataset.duration
+                        : "",
+                        10
+                );
 
         if (!duration
-                || !dateValue
-                || !timeValue) {
+                || !startDateInput.value
+                || !startClockInput.value) {
 
             endTimePreview.textContent =
-                "Chọn phim, ngày và giờ bắt đầu";
+                    "Chọn phim, ngày và giờ bắt đầu";
 
             return;
         }
 
+        var start =
+                new Date(
+                        startDateInput.value
+                        + "T"
+                        + startClockInput.value
+                );
 
-        const startDate =
-            new Date(
-                dateValue
-                + "T"
-                + timeValue
-            );
-
-
-        if (isNaN(
-                startDate.getTime()
-        )) {
-
-            endTimePreview.textContent =
-                "Ngày hoặc giờ không hợp lệ";
-
-            return;
-        }
-
-
-        const endDate =
-            new Date(
-                startDate.getTime()
-                + duration * 60 * 1000
-            );
-
-
-        const day =
-            String(
-                endDate.getDate()
-            ).padStart(
-                2,
-                "0"
-            );
-
-
-        const month =
-            String(
-                endDate.getMonth() + 1
-            ).padStart(
-                2,
-                "0"
-            );
-
-
-        const year =
-            endDate.getFullYear();
-
-
-        const hour =
-            String(
-                endDate.getHours()
-            ).padStart(
-                2,
-                "0"
-            );
-
-
-        const minute =
-            String(
-                endDate.getMinutes()
-            ).padStart(
-                2,
-                "0"
-            );
-
+        var end =
+                new Date(
+                        start.getTime()
+                        + duration * 60000
+                );
 
         endTimePreview.textContent =
-            day
-            + "/"
-            + month
-            + "/"
-            + year
-            + " "
-            + hour
-            + ":"
-            + minute;
+                pad(end.getDate())
+                + "/"
+                + pad(end.getMonth() + 1)
+                + "/"
+                + end.getFullYear()
+                + " "
+                + pad(end.getHours())
+                + ":"
+                + pad(end.getMinutes());
     }
 
 
-    movieSelect.addEventListener(
-        "change",
-        updateEndTime
-    );
+    if (movieSelect) {
 
+        movieSelect.addEventListener(
+                "change",
+                updateEndTime
+        );
+    }
 
-    startDateInput.addEventListener(
-        "change",
-        updateEndTime
-    );
+    if (startDateInput) {
 
+        startDateInput.addEventListener(
+                "change",
+                updateEndTime
+        );
+    }
 
-    startClockInput.addEventListener(
-        "input",
-        updateEndTime
-    );
+    if (startClockInput) {
 
+        startClockInput.addEventListener(
+                "input",
+                updateEndTime
+        );
+    }
 
     updateEndTime();
+
+
+    /* ==============================================
+       SINGLE / BULK MODE
+       ============================================== */
+
+    var singleButton =
+            document.getElementById(
+                    "singleModeButton"
+            );
+
+    var bulkButton =
+            document.getElementById(
+                    "bulkModeButton"
+            );
+
+    var singlePanel =
+            document.getElementById(
+                    "singlePanel"
+            );
+
+    var bulkPanel =
+            document.getElementById(
+                    "bulkPanel"
+            );
+
+
+    function changeMode(mode) {
+
+        if (!singlePanel
+                || !bulkPanel) {
+
+            return;
+        }
+
+        if (mode === "bulk") {
+
+            singlePanel.style.display =
+                    "none";
+
+            bulkPanel.style.display =
+                    "block";
+
+            singleButton.classList.remove(
+                    "active"
+            );
+
+            bulkButton.classList.add(
+                    "active"
+            );
+
+        } else {
+
+            singlePanel.style.display =
+                    "block";
+
+            bulkPanel.style.display =
+                    "none";
+
+            bulkButton.classList.remove(
+                    "active"
+            );
+
+            singleButton.classList.add(
+                    "active"
+            );
+        }
+    }
+
+
+    if (singleButton) {
+
+        singleButton.addEventListener(
+                "click",
+                function () {
+
+                    changeMode(
+                            "single"
+                    );
+                }
+        );
+    }
+
+
+    if (bulkButton) {
+
+        bulkButton.addEventListener(
+                "click",
+                function () {
+
+                    changeMode(
+                            "bulk"
+                    );
+                }
+        );
+    }
+
+
+    /* ==============================================
+       BULK ROWS
+       ============================================== */
+
+    var bulkRows =
+            document.getElementById(
+                    "bulkRows"
+            );
+
+    var rowTemplate =
+            document.getElementById(
+                    "bulkRowTemplate"
+            );
+
+    var addRowButton =
+            document.getElementById(
+                    "addBulkRowButton"
+            );
+
+    var bulkMovie =
+            document.getElementById(
+                    "bulkMovieId"
+            );
+
+    var bulkCount =
+            document.getElementById(
+                    "bulkCount"
+            );
+
+
+    function updateBulkIndexes() {
+
+        if (!bulkRows) {
+            return;
+        }
+
+        var rows =
+                bulkRows.querySelectorAll(
+                        ".bulk-row"
+                );
+
+        rows.forEach(
+                function (row, index) {
+
+                    row.querySelector(
+                            ".bulk-index"
+                    ).textContent =
+                            index + 1;
+                }
+        );
+
+        if (bulkCount) {
+
+            bulkCount.textContent =
+                    rows.length;
+        }
+    }
+
+
+    function updateBulkEnd(row) {
+
+        if (!bulkMovie
+                || !row) {
+
+            return;
+        }
+
+        var movieOption =
+                bulkMovie.options[
+                        bulkMovie.selectedIndex
+                ];
+
+        var duration =
+                parseInt(
+                        movieOption
+                        ? movieOption.dataset.duration
+                        : "",
+                        10
+                );
+
+        var dateInput =
+                row.querySelector(
+                        ".bulk-date"
+                );
+
+        var timeInput =
+                row.querySelector(
+                        ".bulk-time"
+                );
+
+        var endCell =
+                row.querySelector(
+                        ".bulk-end"
+                );
+
+        if (!duration
+                || !dateInput.value
+                || !timeInput.value) {
+
+            endCell.textContent =
+                    "-";
+
+            return;
+        }
+
+        var start =
+                new Date(
+                        dateInput.value
+                        + "T"
+                        + timeInput.value
+                );
+
+        var end =
+                new Date(
+                        start.getTime()
+                        + duration * 60000
+                );
+
+        endCell.textContent =
+                pad(end.getDate())
+                + "/"
+                + pad(end.getMonth() + 1)
+                + "/"
+                + end.getFullYear()
+                + " "
+                + pad(end.getHours())
+                + ":"
+                + pad(end.getMinutes());
+    }
+
+
+    function updateAllBulkEnds() {
+
+        if (!bulkRows) {
+            return;
+        }
+
+        bulkRows.querySelectorAll(
+                ".bulk-row"
+        ).forEach(
+                function (row) {
+
+                    updateBulkEnd(
+                            row
+                    );
+                }
+        );
+    }
+
+
+    function addBulkRow() {
+
+        if (!bulkRows
+                || !rowTemplate) {
+
+            return;
+        }
+
+        var clone =
+                rowTemplate.content
+                        .cloneNode(true);
+
+        var row =
+                clone.querySelector(
+                        ".bulk-row"
+                );
+
+        row.querySelector(
+                ".bulk-date"
+        ).addEventListener(
+                "change",
+                function () {
+
+                    updateBulkEnd(
+                            row
+                    );
+                }
+        );
+
+        row.querySelector(
+                ".bulk-time"
+        ).addEventListener(
+                "input",
+                function () {
+
+                    updateBulkEnd(
+                            row
+                    );
+                }
+        );
+
+        row.querySelector(
+                ".remove-row-button"
+        ).addEventListener(
+                "click",
+                function () {
+
+                    /*
+                     * Luôn giữ ít nhất 1 dòng.
+                     */
+                    if (bulkRows.children.length <= 1) {
+
+                        row.querySelector(
+                                '[name="bulkRoomId"]'
+                        ).value = "";
+
+                        row.querySelector(
+                                ".bulk-date"
+                        ).value = "";
+
+                        row.querySelector(
+                                ".bulk-time"
+                        ).value = "";
+
+                        updateBulkEnd(
+                                row
+                        );
+
+                        return;
+                    }
+
+                    row.remove();
+
+                    updateBulkIndexes();
+                }
+        );
+
+        bulkRows.appendChild(
+                clone
+        );
+
+        updateBulkIndexes();
+    }
+
+
+    if (addRowButton) {
+
+        addRowButton.addEventListener(
+                "click",
+                addBulkRow
+        );
+
+        /*
+         * Mặc định tạo 3 dòng để Manager
+         * nhập nhanh 3 ca đầu tiên.
+         */
+        addBulkRow();
+        addBulkRow();
+        addBulkRow();
+    }
+
+
+    if (bulkMovie) {
+
+        bulkMovie.addEventListener(
+                "change",
+                updateAllBulkEnds
+        );
+    }
+
+
+    <c:if test="${bulkMode == true or param.mode eq 'bulk'}">
+        changeMode("bulk");
+    </c:if>
 
 </script>
 

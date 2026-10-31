@@ -152,8 +152,7 @@ public class ShowtimeService {
                 LocalDate.now();
 
         if (movie.getReleaseDate() == null
-                || movie
-                        .getReleaseDate()
+                || movie.getReleaseDate()
                         .toLocalDate()
                         .isAfter(today)) {
 
@@ -161,8 +160,7 @@ public class ShowtimeService {
         }
 
         if (movie.getEndDate() != null
-                && movie
-                        .getEndDate()
+                && movie.getEndDate()
                         .toLocalDate()
                         .isBefore(today)) {
 
@@ -171,13 +169,13 @@ public class ShowtimeService {
 
         Room room = null;
 
-        for (Room r
+        for (Room currentRoom
                 : roomRepository.getAllActive()) {
 
-            if (r.getRoomId()
+            if (currentRoom.getRoomId()
                     == showtime.getRoomId()) {
 
-                room = r;
+                room = currentRoom;
                 break;
             }
         }
@@ -209,7 +207,9 @@ public class ShowtimeService {
         }
 
         return showtimeRepository
-                .getByCinemaId(cinemaId);
+                .getByCinemaId(
+                        cinemaId
+                );
     }
 
     public Showtime getShowtimeForManager(
@@ -252,6 +252,140 @@ public class ShowtimeService {
 
             throw new IllegalArgumentException(
                     "Không thể thêm lịch chiếu."
+            );
+        }
+    }
+
+    /*
+     * Tạo nhiều ca cho cùng một phim.
+     */
+    public void createShowtimesBulk(
+            int cinemaId,
+            int movieId,
+            List<Integer> roomIds,
+            List<LocalDateTime> startTimes,
+            String status) {
+
+        if (roomIds == null
+                || startTimes == null
+                || roomIds.isEmpty()
+                || startTimes.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Vui lòng thêm ít nhất một ca chiếu."
+            );
+        }
+
+        if (roomIds.size()
+                != startTimes.size()) {
+
+            throw new IllegalArgumentException(
+                    "Dữ liệu các ca chiếu không hợp lệ."
+            );
+        }
+
+        if (roomIds.size() > 50) {
+
+            throw new IllegalArgumentException(
+                    "Mỗi lần chỉ được tạo tối đa 50 ca chiếu."
+            );
+        }
+
+        List<Showtime> newShowtimes =
+                new ArrayList<>();
+
+        for (int i = 0;
+                i < roomIds.size();
+                i++) {
+
+            try {
+
+                Showtime showtime =
+                        buildShowtime(
+                                0,
+                                cinemaId,
+                                movieId,
+                                roomIds.get(i),
+                                startTimes.get(i),
+                                status,
+                                null
+                        );
+
+                newShowtimes.add(
+                        showtime
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                throw new IllegalArgumentException(
+                        "Ca "
+                        + (i + 1)
+                        + ": "
+                        + e.getMessage()
+                );
+            }
+        }
+
+        /*
+         * buildShowtime kiểm tra với dữ liệu
+         * đang có trong database.
+         *
+         * Đoạn này kiểm tra các ca vừa nhập
+         * có tự đè lên nhau hay không.
+         */
+        if ("ACTIVE".equals(status)) {
+
+            for (int i = 0;
+                    i < newShowtimes.size();
+                    i++) {
+
+                Showtime first =
+                        newShowtimes.get(i);
+
+                for (int j = i + 1;
+                        j < newShowtimes.size();
+                        j++) {
+
+                    Showtime second =
+                            newShowtimes.get(j);
+
+                    if (first.getRoomId()
+                            != second.getRoomId()) {
+
+                        continue;
+                    }
+
+                    boolean overlap =
+                            first.getStartTime()
+                                    .before(
+                                            second.getEndTime()
+                                    )
+                            && first.getEndTime()
+                                    .after(
+                                            second.getStartTime()
+                                    );
+
+                    if (overlap) {
+
+                        throw new IllegalArgumentException(
+                                "Ca "
+                                + (i + 1)
+                                + " và ca "
+                                + (j + 1)
+                                + " bị trùng thời gian trong cùng phòng."
+                        );
+                    }
+                }
+            }
+        }
+
+        if (!showtimeRepository
+                .insertBatch(
+                        newShowtimes
+                )) {
+
+            throw new IllegalArgumentException(
+                    "Không thể tạo loạt lịch chiếu."
             );
         }
     }
@@ -317,16 +451,14 @@ public class ShowtimeService {
             );
         }
 
-        /*
-         * Nếu suất chiếu đã có vé thì giữ lịch sử,
-         * chỉ chuyển sang INACTIVE.
-         */
         if (showtimeRepository.hasTickets(
                 showtimeId)) {
 
-            if (!showtimeRepository.setInactive(
-                    showtimeId,
-                    cinemaId)) {
+            if (!showtimeRepository
+                    .setInactive(
+                            showtimeId,
+                            cinemaId
+                    )) {
 
                 throw new IllegalArgumentException(
                         "Không thể ngừng lịch chiếu."
@@ -441,8 +573,7 @@ public class ShowtimeService {
 
         if (movie.getReleaseDate() != null
                 && showDate.isBefore(
-                        movie
-                                .getReleaseDate()
+                        movie.getReleaseDate()
                                 .toLocalDate()
                 )) {
 
@@ -453,8 +584,7 @@ public class ShowtimeService {
 
         if (movie.getEndDate() != null
                 && showDate.isAfter(
-                        movie
-                                .getEndDate()
+                        movie.getEndDate()
                                 .toLocalDate()
                 )) {
 
