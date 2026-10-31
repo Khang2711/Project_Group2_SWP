@@ -191,6 +191,22 @@ public class TicketService {
 
         try (Connection connection = openConnection()) {
 
+public boolean isShowtimeExpired(Showtime showtime) {
+
+    if (showtime == null
+            || showtime.getEndTime() == null) {
+
+        return false;
+    }
+
+    return showtime.getEndTime().getTime()
+            <= System.currentTimeMillis();
+}
+
+public Seat getSeatForTicket(
+        Ticket ticket,
+        Showtime showtime
+) {
             connection.setAutoCommit(false);
 
             try {
