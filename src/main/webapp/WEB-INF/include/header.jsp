@@ -104,10 +104,19 @@
                 align-items: center;
                 justify-content: center;
                 border-radius: 50%;
+                overflow: hidden;
                 background: #ff1744;
                 color: white;
                 font-size: 13px;
                 font-weight: 700;
+            }
+
+            .account-avatar img {
+                width: 100%;
+                height: 100%;
+                display: block;
+                object-fit: cover;
+                border-radius: 50%;
             }
 
             .account-name {
@@ -232,7 +241,7 @@
             }
         </style>
 
-        <script defer src="${pageContext.request.contextPath}/assets/js/main.js?v=profile-update"></script>
+        <script defer src="${pageContext.request.contextPath}/assets/js/main.js?v=profile-avatar-backfix"></script>
     </head>
 
     <body>
@@ -281,14 +290,25 @@
                                 <span class="account-info">
                                     <span class="account-avatar">
 
-                                        <c:if test="${not empty sessionScope.user.fullName}">
-                                            <c:out value="${fn:substring(sessionScope.user.fullName, 0, 1)}" />
-                                        </c:if>
-
-                                        <c:if test="${empty sessionScope.user.fullName}">
-                                            U
-                                        </c:if>
-
+                                        <c:choose>
+                                            <c:when test="${not empty sessionScope.user.avatarUrl}">
+                                                <c:url var="headerAvatarSrc"
+                                                       value="${sessionScope.user.avatarUrl}" />
+                                                <img src="<c:out value='${headerAvatarSrc}' />"
+                                                     alt="Ảnh đại diện"
+                                                     referrerpolicy="no-referrer">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:choose>
+                                                    <c:when test="${not empty sessionScope.user.fullName}">
+                                                        <c:out value="${fn:substring(sessionScope.user.fullName, 0, 1)}" />
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        U
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </span>
 
                                     <span class="account-name">
