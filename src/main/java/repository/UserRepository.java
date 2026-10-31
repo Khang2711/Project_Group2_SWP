@@ -109,6 +109,26 @@ public class UserRepository {
         throw new SQLException("Cannot get created user id.");
     }
 
+    // Keep the account-management update method used by UserService.
+    public boolean updateProfile(User user) throws SQLException {
+        String sql = "UPDATE dbo.[User] "
+                + "SET full_name = ?, email = ?, phone = ?, "
+                + "updated_at = SYSDATETIME() "
+                + "WHERE user_id = ?";
+
+        try (Connection connection = new DBContext().getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, user.getFullName());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, user.getPhone());
+            statement.setInt(4, user.getUserId());
+
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+
     public boolean update(User user) throws SQLException {
         if (user.getPasswordHash() == null) {
             return updateWithoutPassword(user);
