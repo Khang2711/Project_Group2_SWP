@@ -304,9 +304,6 @@ function displayDate(dateValue, dateDisplay) {
 }
 
 window.addEventListener("pageshow", function (event) {
-    if (!document.querySelector(".profile-page")) {
-        return;
-    }
 
     const navigation =
             performance.getEntriesByType("navigation")[0];
@@ -314,8 +311,13 @@ window.addEventListener("pageshow", function (event) {
     const isHistoryNavigation =
             navigation && navigation.type === "back_forward";
 
-    if (event.persisted || isHistoryNavigation) {
-        window.location.replace(
-                window.location.pathname + window.location.search);
+    if (!event.persisted && !isHistoryNavigation) {
+        return;
     }
+    const accountMenu = document.getElementById("accountMenu");
+
+    if (!accountMenu) {
+        return;
+    }
+    window.location.reload();
 });
