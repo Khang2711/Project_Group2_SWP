@@ -664,6 +664,34 @@
 
     }
 
+
+    .calendar-movie-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    .calendar-movie-filter label {
+        color: #ddd;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .calendar-movie-filter select {
+        min-width: 180px;
+        max-width: 280px;
+        padding: 9px 12px;
+        color: #fff;
+        background: #18181d;
+        border: 1px solid #444;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 850px) {
+        .calendar-movie-filter { margin-left: 0; width: 100%; }
+        .calendar-movie-filter select { flex: 1; min-width: 0; }
+    }
 </style>
 
 
@@ -726,6 +754,11 @@
 
             </div>
 
+
+            <a class="add-showtime-button"
+               href="${pageContext.request.contextPath}/admin/showtime-bulk">
+                + Thêm hàng loạt
+            </a>
 
             <a class="add-showtime-button"
                href="${pageContext.request.contextPath}/admin/showtime-form">
@@ -811,6 +844,18 @@
 
         <div id="calendarTitle"
              class="calendar-title">
+        </div>
+
+        <div class="calendar-movie-filter">
+            <label for="calendarMovieFilter">Lọc theo phim</label>
+            <select id="calendarMovieFilter">
+                <option value="">Tất cả phim</option>
+                <c:forEach items="${movies}" var="movie">
+                    <option value="${movie.movieId}">
+                        <c:out value="${movie.title}" />
+                    </option>
+                </c:forEach>
+            </select>
         </div>
 
     </div>
@@ -1029,6 +1074,8 @@
 
                  data-id="${showtime.showtimeId}"
 
+                 data-movie-id="${showtime.movieId}"
+
                  data-movie="${fn:escapeXml(movieById[showtime.movieId].title)}"
 
                  data-room="${fn:escapeXml(roomById[showtime.roomId].roomName)}"
@@ -1077,6 +1124,9 @@
 
                             id:
                                     item.dataset.id,
+
+                            movieId:
+                                    item.dataset.movieId,
 
                             movie:
                                     item.dataset.movie,
@@ -1137,6 +1187,9 @@
             document.querySelectorAll(
                     ".view-button"
             );
+
+    var calendarMovieFilter =
+            document.getElementById("calendarMovieFilter");
 
 
     var currentView =
@@ -1264,8 +1317,9 @@
                 .filter(
                         function (showtime) {
 
-                            return showtime.startDate
-                                    === key;
+                            return showtime.startDate === key
+                                    && (!calendarMovieFilter.value
+                                        || showtime.movieId === calendarMovieFilter.value);
                         }
                 )
                 .sort(
@@ -2341,6 +2395,12 @@
         renderCurrentView();
     }
 
+
+    calendarMovieFilter.addEventListener("change", function () {
+        if (currentView !== "list") {
+            renderCurrentView();
+        }
+    });
 
     viewButtons.forEach(
             function (button) {
