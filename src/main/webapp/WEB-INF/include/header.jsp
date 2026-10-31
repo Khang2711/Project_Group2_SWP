@@ -450,6 +450,11 @@
                                         Quản lý người dùng
                                     </a>
 
+                                    <a href="${pageContext.request.contextPath}/system/cinemas">
+                                        <span class="menu-icon">★</span>
+                                        Quản lý chi nhánh
+                                    </a>
+
                                     <div class="menu-divider"></div>
 
                                 </c:if>
