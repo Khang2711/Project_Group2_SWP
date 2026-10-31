@@ -3,22 +3,38 @@ package service;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Locale;
 import model.Promotion;
 import repository.PromotionRepository;
+import repository.ShowtimeRepository;
 
 public class PromotionService {
 
-    private final PromotionRepository promotionRepository = new PromotionRepository();
+    private final PromotionRepository promotionRepository
+            = new PromotionRepository();
 
-    public List<Promotion> getAllPromotions() {
-        return promotionRepository.getAll();
+    private final ShowtimeRepository showtimeRepository
+            = new ShowtimeRepository();
+
+    public List<Promotion> getAllPromotions(int cinemaId) {
+
+        if (cinemaId <= 0) {
+            return List.of();
+        }
+
+        return promotionRepository.getAll(cinemaId);
     }
 
     public List<Promotion> getPagedPromotions(
             String keyword,
             String filter,
             int page,
-            int pageSize) {
+            int pageSize,
+            int cinemaId) {
+
+        if (cinemaId <= 0 || pageSize <= 0) {
+            return List.of();
+        }
 
         if (keyword == null) {
             keyword = "";
@@ -30,7 +46,7 @@ public class PromotionService {
             filter = "ALL";
         }
 
-        filter = filter.trim().toUpperCase();
+        filter = filter.trim().toUpperCase(Locale.ROOT);
 
         if (page < 1) {
             page = 1;
@@ -40,11 +56,19 @@ public class PromotionService {
                 keyword,
                 filter,
                 page,
-                pageSize
+                pageSize,
+                cinemaId
         );
     }
 
-    public int countPromotions(String keyword, String filter) {
+    public int countPromotions(
+            String keyword,
+            String filter,
+            int cinemaId) {
+
+        if (cinemaId <= 0) {
+            return 0;
+        }
 
         if (keyword == null) {
             keyword = "";
@@ -56,40 +80,42 @@ public class PromotionService {
             filter = "ALL";
         }
 
-        filter = filter.trim().toUpperCase();
+        filter = filter.trim().toUpperCase(Locale.ROOT);
 
         return promotionRepository.countFiltered(
                 keyword,
-                filter
+                filter,
+                cinemaId
         );
     }
 
     public int getTotalPages(
             String keyword,
             String filter,
-            int pageSize) {
+            int pageSize,
+            int cinemaId) {
+
+        if (pageSize <= 0) {
+            return 0;
+        }
 
         int totalRecords = countPromotions(
                 keyword,
-                filter
+                filter,
+                cinemaId
         );
 
-        // Add pageSize - 1 before division to round up the last page
         return (totalRecords + pageSize - 1) / pageSize;
     }
 
     public String getDisplayStatus(Promotion promotion) {
 
-        if ("INACTIVE".equalsIgnoreCase(
-                promotion.getStatus())) {
+        if ("INACTIVE".equalsIgnoreCase(promotion.getStatus())) {
             return "INACTIVE";
         }
 
-        Timestamp now = new Timestamp(
-                System.currentTimeMillis()
-        );
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        // ACTIVE in database can still be expired or not started yet
         if (promotion.getStartDate() != null
                 && now.before(promotion.getStartDate())) {
             return "UPCOMING";
@@ -103,21 +129,38 @@ public class PromotionService {
         return "AVAILABLE";
     }
 
-    public Promotion getPromotionById(int promotionId) {
-        return promotionRepository.getById(
-                promotionId
-        );
+    public Promotion getPromotionById(int promotionId, int cinemaId) {
+
+        if (promotionId <= 0 || cinemaId <= 0) {
+            return null;
+        }
+
+        return promotionRepository.getById(promotionId, cinemaId);
     }
 
-    public Promotion getPromotionByCode(String promoCode) {
+    public Promotion getPromotionByCode(
+            String promoCode,
+            int cinemaId) {
 
-        if (promoCode == null || promoCode.trim().isEmpty()) {
+        if (promoCode == null
+                || promoCode.trim().isEmpty()
+                || cinemaId <= 0) {
             return null;
         }
 
         return promotionRepository.getByCode(
-                promoCode.trim().toUpperCase()
+                promoCode.trim().toUpperCase(Locale.ROOT),
+                cinemaId
         );
+    }
+
+    public int getCinemaIdByShowtimeId(int showtimeId) {
+
+        if (showtimeId <= 0) {
+            return 0;
+        }
+
+        return showtimeRepository.getCinemaIdByShowtimeId(showtimeId);
     }
 
     public String validateApplyPromotion(
@@ -125,7 +168,7 @@ public class PromotionService {
             BigDecimal orderAmount) {
 
         if (promotion == null) {
-            return "Mã khuyến mãi không tồn tại.";
+            return "Mã khuyến mãi không tồn tại hoặc không thuộc rạp này.";
         }
 
         if (orderAmount == null
@@ -133,14 +176,11 @@ public class PromotionService {
             return "Giá trị đơn hàng không hợp lệ.";
         }
 
-        if (!"ACTIVE".equalsIgnoreCase(
-                promotion.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(promotion.getStatus())) {
             return "Mã khuyến mãi đang bị vô hiệu hóa.";
         }
 
-        Timestamp now = new Timestamp(
-                System.currentTimeMillis()
-        );
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
         if (promotion.getStartDate() != null
                 && now.before(promotion.getStartDate())) {
@@ -155,9 +195,9 @@ public class PromotionService {
         if (promotion.getMinOrderAmount() != null
                 && orderAmount.compareTo(
                         promotion.getMinOrderAmount()) < 0) {
-
             return "Đơn hàng chưa đạt giá trị tối thiểu để áp dụng mã.";
         }
+
         if (promotion.getUsageLimit() != null) {
 
             int usedCount
@@ -183,8 +223,7 @@ public class PromotionService {
 
         BigDecimal discount;
 
-        if ("PERCENT".equalsIgnoreCase(
-                promotion.getDiscountType())) {
+        if ("PERCENT".equalsIgnoreCase(promotion.getDiscountType())) {
 
             discount = orderAmount
                     .multiply(promotion.getDiscountValue())
@@ -202,7 +241,6 @@ public class PromotionService {
         if (promotion.getMaxDiscountAmount() != null
                 && discount.compareTo(
                         promotion.getMaxDiscountAmount()) > 0) {
-
             discount = promotion.getMaxDiscountAmount();
         }
 
@@ -213,60 +251,74 @@ public class PromotionService {
         return discount;
     }
 
-    public String createPromotion(Promotion promotion) {
+    public String createPromotion(
+            Promotion promotion,
+            int cinemaId) {
 
+        if (cinemaId <= 0) {
+            return "Không xác định được rạp của tài khoản.";
+        }
+
+        promotion.setCinemaId(cinemaId);
         preparePromotion(promotion);
 
-        String error = validatePromotion(
-                promotion
-        );
+        String error = validatePromotion(promotion);
 
         if (error != null) {
             return error;
         }
 
         if (promotionRepository.existsByCode(
-                promotion.getPromoCode())) {
-            return "Mã khuyến mãi đã tồn tại.";
+                promotion.getPromoCode(),
+                cinemaId)) {
+            return "Mã khuyến mãi đã tồn tại trong rạp này.";
         }
 
-        if (!promotionRepository.insert(
-                promotion)) {
+        if (!promotionRepository.insert(promotion)) {
             return "Không thể tạo khuyến mãi.";
         }
 
         return null;
     }
 
-    public String updatePromotion(Promotion promotion) {
+    public String updatePromotion(
+            Promotion promotion,
+            int cinemaId) {
 
+        if (cinemaId <= 0) {
+            return "Không xác định được rạp của tài khoản.";
+        }
+
+        if (promotion == null || promotion.getPromotionId() <= 0) {
+            return "Dữ liệu khuyến mãi không hợp lệ.";
+        }
+
+        promotion.setCinemaId(cinemaId);
         preparePromotion(promotion);
 
-        String error = validatePromotion(
-                promotion
-        );
+        String error = validatePromotion(promotion);
 
         if (error != null) {
             return error;
         }
 
-        Promotion oldPromotion
-                = promotionRepository.getById(
-                        promotion.getPromotionId()
-                );
+        Promotion oldPromotion = promotionRepository.getById(
+                promotion.getPromotionId(),
+                cinemaId
+        );
 
         if (oldPromotion == null) {
-            return "Không tìm thấy khuyến mãi.";
+            return "Không tìm thấy khuyến mãi trong rạp của bạn.";
         }
 
         if (promotionRepository.existsByCodeExceptId(
                 promotion.getPromoCode(),
-                promotion.getPromotionId())) {
-            return "Mã khuyến mãi đã tồn tại.";
+                promotion.getPromotionId(),
+                cinemaId)) {
+            return "Mã khuyến mãi đã tồn tại trong rạp này.";
         }
 
-        if (!promotionRepository.update(
-                promotion)) {
+        if (!promotionRepository.update(promotion, cinemaId)) {
             return "Không thể cập nhật khuyến mãi.";
         }
 
@@ -275,25 +327,31 @@ public class PromotionService {
 
     public String updateStatus(
             int promotionId,
-            String status) {
+            String status,
+            int cinemaId) {
 
-        Promotion promotion
-                = promotionRepository.getById(
-                        promotionId
-                );
-
-        if (promotion == null) {
-            return "Không tìm thấy khuyến mãi.";
+        if (cinemaId <= 0) {
+            return "Không xác định được rạp của tài khoản.";
         }
 
-        if (!"ACTIVE".equals(status)
-                && !"INACTIVE".equals(status)) {
+        if (!"ACTIVE".equalsIgnoreCase(status)
+                && !"INACTIVE".equalsIgnoreCase(status)) {
             return "Trạng thái không hợp lệ.";
+        }
+
+        Promotion promotion = promotionRepository.getById(
+                promotionId,
+                cinemaId
+        );
+
+        if (promotion == null) {
+            return "Không tìm thấy khuyến mãi trong rạp của bạn.";
         }
 
         if (!promotionRepository.updateStatus(
                 promotionId,
-                status)) {
+                status.toUpperCase(Locale.ROOT),
+                cinemaId)) {
             return "Không thể cập nhật trạng thái.";
         }
 
@@ -310,7 +368,7 @@ public class PromotionService {
             promotion.setPromoCode(
                     promotion.getPromoCode()
                             .trim()
-                            .toUpperCase()
+                            .toUpperCase(Locale.ROOT)
             );
         }
 
@@ -324,7 +382,7 @@ public class PromotionService {
             promotion.setDiscountType(
                     promotion.getDiscountType()
                             .trim()
-                            .toUpperCase()
+                            .toUpperCase(Locale.ROOT)
             );
         }
 
@@ -332,14 +390,12 @@ public class PromotionService {
             promotion.setStatus(
                     promotion.getStatus()
                             .trim()
-                            .toUpperCase()
+                            .toUpperCase(Locale.ROOT)
             );
         }
 
         if (promotion.getMinOrderAmount() == null) {
-            promotion.setMinOrderAmount(
-                    BigDecimal.ZERO
-            );
+            promotion.setMinOrderAmount(BigDecimal.ZERO);
         }
     }
 
@@ -358,10 +414,8 @@ public class PromotionService {
             return "Mã khuyến mãi không được vượt quá 50 ký tự.";
         }
 
-        if (!"PERCENT".equals(
-                promotion.getDiscountType())
-                && !"FIXED".equals(
-                        promotion.getDiscountType())) {
+        if (!"PERCENT".equals(promotion.getDiscountType())
+                && !"FIXED".equals(promotion.getDiscountType())) {
             return "Loại giảm giá không hợp lệ.";
         }
 
@@ -370,6 +424,7 @@ public class PromotionService {
                         .compareTo(BigDecimal.ZERO) < 0) {
             return "Giá trị giảm không hợp lệ.";
         }
+
         if ("PERCENT".equals(promotion.getDiscountType())
                 && promotion.getDiscountValue()
                         .compareTo(new BigDecimal("100")) > 0) {
@@ -393,8 +448,7 @@ public class PromotionService {
             return "Vui lòng chọn ngày bắt đầu và ngày kết thúc.";
         }
 
-        if (promotion.getEndDate()
-                .before(promotion.getStartDate())) {
+        if (promotion.getEndDate().before(promotion.getStartDate())) {
             return "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.";
         }
 

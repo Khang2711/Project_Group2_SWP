@@ -232,7 +232,8 @@ public class BookingController extends HttpServlet {
 
             promotion = bookingService.getValidPromotion(
                     promoCode,
-                    subtotal);
+                    subtotal,
+                    showtimeId);
 
             discount = bookingService.calculatePromotionDiscount(
                     promotion,

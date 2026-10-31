@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 public class Promotion {
 
     private int promotionId;
+    private int cinemaId;
     private String promoCode;
     private String description;
     private String discountType;
@@ -46,6 +47,14 @@ public class Promotion {
 
     public void setPromotionId(int promotionId) {
         this.promotionId = promotionId;
+    }
+
+    public int getCinemaId() {
+        return cinemaId;
+    }
+
+    public void setCinemaId(int cinemaId) {
+        this.cinemaId = cinemaId;
     }
 
     public String getPromoCode() {

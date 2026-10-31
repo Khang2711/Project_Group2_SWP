@@ -11,6 +11,32 @@ import model.Showtime;
 
 public class ShowtimeRepository extends DBContext {
 
+    public int getCinemaIdByShowtimeId(int showtimeId) {
+
+        String sql = "SELECT r.cinema_id "
+                + "FROM dbo.Showtime s "
+                + "JOIN dbo.Room r ON s.room_id = r.room_id "
+                + "WHERE s.showtime_id = ?";
+
+        try {
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, showtimeId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("cinema_id");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     public List<Showtime> getAll() {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -115,16 +141,13 @@ public class ShowtimeRepository extends DBContext {
 
             ps.setTimestamp(
                     3,
-                    Timestamp.valueOf(
-                            date.atStartOfDay()
-                    )
+                    Timestamp.valueOf(date.atStartOfDay())
             );
 
             ps.setTimestamp(
                     4,
                     Timestamp.valueOf(
-                            date.plusDays(1)
-                                    .atStartOfDay()
+                            date.plusDays(1).atStartOfDay()
                     )
             );
 
@@ -141,34 +164,26 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
-    public List<Showtime> getByCinemaId(
-            int cinemaId) {
+    public List<Showtime> getByCinemaId(int cinemaId) {
 
-        List<Showtime> showtimes =
-                new ArrayList<>();
+        List<Showtime> showtimes = new ArrayList<>();
 
-        String sql =
-                "SELECT s.* "
+        String sql = "SELECT s.* "
                 + "FROM Showtime s "
-                + "JOIN Room r "
-                + "ON s.room_id = r.room_id "
+                + "JOIN Room r ON s.room_id = r.room_id "
                 + "WHERE r.cinema_id = ? "
                 + "ORDER BY s.start_time DESC";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, cinemaId);
 
-            ResultSet rs =
-                    ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                showtimes.add(
-                        mapShowtime(rs)
-                );
+                showtimes.add(mapShowtime(rs));
             }
 
         } catch (Exception e) {
@@ -182,24 +197,20 @@ public class ShowtimeRepository extends DBContext {
             int showtimeId,
             int cinemaId) {
 
-        String sql =
-                "SELECT s.* "
+        String sql = "SELECT s.* "
                 + "FROM Showtime s "
-                + "JOIN Room r "
-                + "ON s.room_id = r.room_id "
+                + "JOIN Room r ON s.room_id = r.room_id "
                 + "WHERE s.showtime_id = ? "
                 + "AND r.cinema_id = ?";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, showtimeId);
             ps.setInt(2, cinemaId);
 
-            ResultSet rs =
-                    ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 return mapShowtime(rs);
@@ -212,44 +223,21 @@ public class ShowtimeRepository extends DBContext {
         return null;
     }
 
-    public boolean insert(
-            Showtime showtime) {
+    public boolean insert(Showtime showtime) {
 
-        String sql =
-                "INSERT INTO Showtime "
-                + "(movie_id, room_id, "
-                + "start_time, end_time, status) "
+        String sql = "INSERT INTO Showtime "
+                + "(movie_id, room_id, start_time, end_time, status) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    showtime.getMovieId()
-            );
-
-            ps.setInt(
-                    2,
-                    showtime.getRoomId()
-            );
-
-            ps.setTimestamp(
-                    3,
-                    showtime.getStartTime()
-            );
-
-            ps.setTimestamp(
-                    4,
-                    showtime.getEndTime()
-            );
-
-            ps.setString(
-                    5,
-                    showtime.getStatus()
-            );
+            ps.setInt(1, showtime.getMovieId());
+            ps.setInt(2, showtime.getRoomId());
+            ps.setTimestamp(3, showtime.getStartTime());
+            ps.setTimestamp(4, showtime.getEndTime());
+            ps.setString(5, showtime.getStatus());
 
             return ps.executeUpdate() > 0;
 
@@ -264,8 +252,7 @@ public class ShowtimeRepository extends DBContext {
             Showtime showtime,
             int cinemaId) {
 
-        String sql =
-                "UPDATE Showtime "
+        String sql = "UPDATE Showtime "
                 + "SET movie_id = ?, "
                 + "room_id = ?, "
                 + "start_time = ?, "
@@ -275,48 +262,19 @@ public class ShowtimeRepository extends DBContext {
                 + "AND room_id IN ("
                 + "SELECT room_id "
                 + "FROM Room "
-                + "WHERE cinema_id = ?"
-                + ")";
+                + "WHERE cinema_id = ?)";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    showtime.getMovieId()
-            );
-
-            ps.setInt(
-                    2,
-                    showtime.getRoomId()
-            );
-
-            ps.setTimestamp(
-                    3,
-                    showtime.getStartTime()
-            );
-
-            ps.setTimestamp(
-                    4,
-                    showtime.getEndTime()
-            );
-
-            ps.setString(
-                    5,
-                    showtime.getStatus()
-            );
-
-            ps.setInt(
-                    6,
-                    showtime.getShowtimeId()
-            );
-
-            ps.setInt(
-                    7,
-                    cinemaId
-            );
+            ps.setInt(1, showtime.getMovieId());
+            ps.setInt(2, showtime.getRoomId());
+            ps.setTimestamp(3, showtime.getStartTime());
+            ps.setTimestamp(4, showtime.getEndTime());
+            ps.setString(5, showtime.getStatus());
+            ps.setInt(6, showtime.getShowtimeId());
+            ps.setInt(7, cinemaId);
 
             return ps.executeUpdate() > 0;
 
@@ -333,8 +291,7 @@ public class ShowtimeRepository extends DBContext {
             Timestamp endTime,
             Integer excludeShowtimeId) {
 
-        String sql =
-                "SELECT TOP 1 showtime_id "
+        String sql = "SELECT TOP 1 showtime_id "
                 + "FROM Showtime "
                 + "WHERE room_id = ? "
                 + "AND status = 'ACTIVE' "
@@ -342,38 +299,22 @@ public class ShowtimeRepository extends DBContext {
                 + "AND end_time > ? ";
 
         if (excludeShowtimeId != null) {
-
-            sql +=
-                    "AND showtime_id <> ?";
+            sql += "AND showtime_id <> ?";
         }
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, roomId);
-
-            ps.setTimestamp(
-                    2,
-                    endTime
-            );
-
-            ps.setTimestamp(
-                    3,
-                    startTime
-            );
+            ps.setTimestamp(2, endTime);
+            ps.setTimestamp(3, startTime);
 
             if (excludeShowtimeId != null) {
-
-                ps.setInt(
-                        4,
-                        excludeShowtimeId
-                );
+                ps.setInt(4, excludeShowtimeId);
             }
 
-            ResultSet rs =
-                    ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             return rs.next();
 
@@ -384,26 +325,19 @@ public class ShowtimeRepository extends DBContext {
         return false;
     }
 
-    public boolean hasTickets(
-            int showtimeId) {
+    public boolean hasTickets(int showtimeId) {
 
-        String sql =
-                "SELECT TOP 1 ticket_id "
+        String sql = "SELECT TOP 1 ticket_id "
                 + "FROM Ticket "
                 + "WHERE showtime_id = ?";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
-            ps.setInt(
-                    1,
-                    showtimeId
-            );
+            ps.setInt(1, showtimeId);
 
-            ResultSet rs =
-                    ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             return rs.next();
 
@@ -418,20 +352,17 @@ public class ShowtimeRepository extends DBContext {
             int showtimeId,
             int cinemaId) {
 
-        String sql =
-                "UPDATE Showtime "
+        String sql = "UPDATE Showtime "
                 + "SET status = 'INACTIVE' "
                 + "WHERE showtime_id = ? "
                 + "AND room_id IN ("
                 + "SELECT room_id "
                 + "FROM Room "
-                + "WHERE cinema_id = ?"
-                + ")";
+                + "WHERE cinema_id = ?)";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, showtimeId);
             ps.setInt(2, cinemaId);
@@ -449,19 +380,16 @@ public class ShowtimeRepository extends DBContext {
             int showtimeId,
             int cinemaId) {
 
-        String sql =
-                "DELETE FROM Showtime "
+        String sql = "DELETE FROM Showtime "
                 + "WHERE showtime_id = ? "
                 + "AND room_id IN ("
                 + "SELECT room_id "
                 + "FROM Room "
-                + "WHERE cinema_id = ?"
-                + ")";
+                + "WHERE cinema_id = ?)";
 
         try {
 
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, showtimeId);
             ps.setInt(2, cinemaId);
@@ -475,12 +403,9 @@ public class ShowtimeRepository extends DBContext {
         return false;
     }
 
-    private Showtime mapShowtime(
-            ResultSet rs)
-            throws Exception {
+    private Showtime mapShowtime(ResultSet rs) throws Exception {
 
-        Showtime showtime =
-                new Showtime();
+        Showtime showtime = new Showtime();
 
         showtime.setShowtimeId(
                 rs.getInt("showtime_id")

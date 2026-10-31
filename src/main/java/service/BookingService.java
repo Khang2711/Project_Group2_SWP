@@ -229,9 +229,10 @@ public class BookingService {
 
     public Promotion getValidPromotion(
             String promoCode,
-            BigDecimal subtotal) {
+            BigDecimal subtotal,
+            int showtimeId) {
 
-        // Bỏ trống mã nghĩa là đặt vé với giá gốc.
+        // Không nhập mã thì tiếp tục đặt vé với giá gốc.
         if (promoCode == null || promoCode.trim().isEmpty()) {
             return null;
         }
@@ -241,12 +242,23 @@ public class BookingService {
                     "Mã khuyến mãi không được vượt quá 50 ký tự.");
         }
 
-        Promotion promotion
-                = promotionService.getPromotionByCode(promoCode);
+        // Lấy rạp thật từ suất chiếu và phòng chiếu.
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+
+        if (cinemaId <= 0) {
+            throw new IllegalArgumentException(
+                    "Không xác định được rạp của suất chiếu.");
+        }
+
+        Promotion promotion = promotionService.getPromotionByCode(
+                promoCode,
+                cinemaId
+        );
 
         String error = promotionService.validateApplyPromotion(
                 promotion,
-                subtotal);
+                subtotal
+        );
 
         if (error != null) {
             throw new IllegalArgumentException(error);
@@ -315,7 +327,8 @@ public class BookingService {
         // Khi xác nhận phải kiểm tra mã lại bằng giá vừa đọc từ database.
         Promotion promotion = getValidPromotion(
                 promoCode,
-                subtotal);
+                subtotal,
+                showtimeId);
 
         BigDecimal discount = calculatePromotionDiscount(
                 promotion,
