@@ -87,6 +87,10 @@
                         var="seat"
                         value="${seatMap[ticket.ticketId]}" />
 
+                    <c:set
+                        var="ticketExpired"
+                        value="${expiredMap[ticket.ticketId]}" />
+
 
                     <article class="ticket-card">
 
@@ -212,6 +216,19 @@
                                                 ticket-status-used">
 
                                             Đã sử dụng
+
+                                        </strong>
+
+                                    </c:when>
+
+
+                                    <c:when test="${ticketExpired}">
+
+                                        <strong class="
+                                                ticket-status
+                                                ticket-status-expired">
+
+                                            Hết hiệu lực
 
                                         </strong>
 
