@@ -557,7 +557,6 @@ public class CounterSaleController extends HttpServlet {
                     request.getParameter("showtimeId"),
                     "Suất chiếu không hợp lệ.");
 
-            String email = request.getParameter("customerEmail");
             String[] seats = request.getParameterValues("seatIds");
 
             // Chỉ kiểm tra và tính tiền, chưa lưu vé hoặc thanh toán.
@@ -565,13 +564,13 @@ public class CounterSaleController extends HttpServlet {
                     user.getUserId(),
                     cinemaId,
                     showtimeId,
-                    email,
+                    null,
                     seats);
 
             // Dùng lại model Booking để giữ đơn chưa thanh toán.
             session.setAttribute("counterDraftBooking", preview);
             session.setAttribute("counterDraftCinema", cinemaId);
-            session.setAttribute("counterDraftEmail", email.trim());
+
             session.setAttribute("counterDraftSeats", seats.clone());
 
             session.setAttribute(
@@ -619,16 +618,13 @@ public class CounterSaleController extends HttpServlet {
         String[] seatValues = (String[]) session.getAttribute(
                 "counterDraftSeats");
 
-        String email = (String) session.getAttribute(
-                "counterDraftEmail");
-
         List<FoodOrderItem> items = getCounterFoods(session);
 
         Booking preview = ticketService.previewCounterTickets(
                 user.getUserId(),
                 cinemaId,
                 showtimeId,
-                email,
+                null,
                 seatValues);
 
         Showtime showtime = bookingService.getShowtimeForBooking(
@@ -705,7 +701,7 @@ public class CounterSaleController extends HttpServlet {
 
         request.setAttribute("counterStep", step);
         request.setAttribute("draftBooking", preview);
-        request.setAttribute("draftEmail", email);
+
         request.setAttribute("draftMovie", movie);
         request.setAttribute("draftShowtime", showtime);
         request.setAttribute("draftRoom", room);
@@ -918,7 +914,7 @@ public class CounterSaleController extends HttpServlet {
                     user.getUserId(),
                     cinemaId,
                     draft.getShowtimeId(),
-                    (String) session.getAttribute("counterDraftEmail"),
+                    null,
                     (String[]) session.getAttribute("counterDraftSeats"),
                     getCounterFoods(session),
                     draft.getTotalAmount(),

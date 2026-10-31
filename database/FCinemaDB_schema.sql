@@ -322,7 +322,7 @@ GO
    ========================================================= */
 CREATE TABLE dbo.Booking (
     booking_id INT IDENTITY(1,1) PRIMARY KEY,
-    customer_id INT NOT NULL,
+  customer_id INT NULL,
     showtime_id INT NOT NULL,
     promotion_id INT NULL,
     subtotal DECIMAL(12,2) NOT NULL,

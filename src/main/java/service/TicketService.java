@@ -292,11 +292,6 @@ public class TicketService {
                     "Thông tin bán vé không hợp lệ.");
         }
 
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Vui lòng nhập email khách hàng.");
-        }
-
         if (seatValues == null || seatValues.length == 0) {
             throw new IllegalArgumentException(
                     "Vui lòng chọn ít nhất một ghế.");
@@ -347,15 +342,6 @@ public class TicketService {
                     "Nhân viên không thuộc rạp này.");
         }
 
-        int customerId
-                = ticketRepository.findCounterCustomerId(
-                        connection, email.trim());
-
-        if (customerId <= 0) {
-            throw new IllegalArgumentException(
-                    "Không tìm thấy tài khoản khách hàng đang hoạt động.");
-        }
-
         Showtime showtime
                 = ticketRepository.findCounterShowtime(
                         connection,
@@ -402,7 +388,7 @@ public class TicketService {
 
         Booking booking = new Booking();
 
-        booking.setCustomerId(customerId);
+        booking.setCustomerId(null);
         booking.setStaffId(staffId);
         booking.setShowtimeId(showtimeId);
         booking.setPromotionId(null);

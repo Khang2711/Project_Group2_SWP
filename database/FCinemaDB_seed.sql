@@ -637,9 +637,90 @@ WHERE NOT EXISTS (
 GO
 
 /* 10. PROMOTION */
-IF NOT EXISTS (SELECT 1 FROM dbo.Promotion WHERE promo_code='WELCOME10')
-    INSERT INTO dbo.Promotion(promo_code,description,discount_type,discount_value,min_order_amount,max_discount_amount,start_date,end_date,usage_limit,status)
-    VALUES('WELCOME10',N'Giảm 10% cho đơn từ 100.000đ','PERCENT',10,100000,50000,'2026-01-01','2026-12-31',1000,'ACTIVE');
+DECLARE @Cinema1Id INT = (
+    SELECT cinema_id
+    FROM dbo.Cinema
+    WHERE cinema_name = N'F-Cinema Ninh Kiều'
+);
+
+DECLARE @Cinema2Id INT = (
+    SELECT cinema_id
+    FROM dbo.Cinema
+    WHERE cinema_name = N'F-Cinema Cái Răng'
+);
+
+IF @Cinema1Id IS NOT NULL
+AND NOT EXISTS (
+    SELECT 1
+    FROM dbo.Promotion
+    WHERE cinema_id = @Cinema1Id
+      AND promo_code = 'WELCOME10'
+)
+BEGIN
+    INSERT INTO dbo.Promotion(
+        cinema_id,
+        promo_code,
+        description,
+        discount_type,
+        discount_value,
+        min_order_amount,
+        max_discount_amount,
+        start_date,
+        end_date,
+        usage_limit,
+        status
+    )
+    VALUES(
+        @Cinema1Id,
+        'WELCOME10',
+        N'Giảm 10% cho đơn từ 100.000đ',
+        'PERCENT',
+        10,
+        100000,
+        50000,
+        '2026-01-01',
+        '2026-12-31',
+        1000,
+        'ACTIVE'
+    );
+END;
+
+IF @Cinema2Id IS NOT NULL
+AND NOT EXISTS (
+    SELECT 1
+    FROM dbo.Promotion
+    WHERE cinema_id = @Cinema2Id
+      AND promo_code = 'WELCOME10'
+)
+BEGIN
+    INSERT INTO dbo.Promotion(
+        cinema_id,
+        promo_code,
+        description,
+        discount_type,
+        discount_value,
+        min_order_amount,
+        max_discount_amount,
+        start_date,
+        end_date,
+        usage_limit,
+        status
+    )
+    VALUES(
+        @Cinema2Id,
+        'WELCOME10',
+        N'Giảm 10% cho đơn từ 100.000đ',
+        'PERCENT',
+        10,
+        100000,
+        50000,
+        '2026-01-01',
+        '2026-12-31',
+        1000,
+        'ACTIVE'
+    );
+END;
+
 GO
 
 /* 11. BOOKING + TICKET + PAYMENT */
@@ -668,8 +749,19 @@ BEGIN
         ORDER BY seat_row,seat_number
     );
 
-    DECLARE @PromoId INT=(SELECT promotion_id FROM dbo.Promotion WHERE promo_code='WELCOME10');
+   DECLARE @ShowtimeCinemaId INT = (
+    SELECT r.cinema_id
+    FROM dbo.Showtime st
+    JOIN dbo.Room r ON r.room_id = st.room_id
+    WHERE st.showtime_id = @ShowtimeId
+);
 
+DECLARE @PromoId INT = (
+    SELECT promotion_id
+    FROM dbo.Promotion
+    WHERE promo_code = 'WELCOME10'
+      AND cinema_id = @ShowtimeCinemaId
+);
     IF NOT EXISTS (
         SELECT 1
         FROM dbo.Booking
