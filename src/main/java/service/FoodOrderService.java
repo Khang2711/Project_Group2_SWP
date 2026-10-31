@@ -1,6 +1,7 @@
 package service;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,19 +78,56 @@ public class FoodOrderService {
                     "Nhân viên không thuộc rạp của đơn hàng.");
         }
 
-        List<FoodItem> foods = getFoodsForCounter(order.getCinemaId());
-        List<Combo> combos = getCombosForCounter(order.getCinemaId());
+        if (order.getBookingId() != null) {
+            validateBookingForFood(
+                    order.getBookingId(),
+                    order.getStaffId(),
+                    order.getCinemaId()
+            );
+        }
+
+        BigDecimal total = calculateSubtotal(
+                order.getCinemaId(), items);
+
+        order.setSubtotal(total);
+        order.setTotalAmount(total);
+        order.setPaymentMethod("CASH");
+        order.setPaymentStatus("PAID");
+        order.setOrderStatus("COMPLETED");
+
+        int orderId = foodOrderRepository.insertWithItems(order, items);
+
+        if (orderId <= 0) {
+            throw new IllegalStateException(
+                    "Không thể lưu đơn food/combo.");
+        }
+
+        return orderId;
+    }
+
+    public BigDecimal calculateSubtotal(
+            int cinemaId,
+            List<FoodOrderItem> items) {
+
+        if (cinemaId <= 0 || items == null || items.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Đơn bắp nước phải có ít nhất một sản phẩm hợp lệ.");
+        }
+
+        List<FoodItem> foods = getFoodsForCounter(cinemaId);
+        List<Combo> combos = getCombosForCounter(cinemaId);
 
         List<String> selectedKeys = new ArrayList<>();
+
         BigDecimal total = BigDecimal.ZERO;
 
         for (FoodOrderItem item : items) {
+
             validateItem(item);
 
             BigDecimal price = null;
             String key;
 
-            // Tìm sản phẩm trong danh sách ACTIVE của đúng rạp.
             if (item.getFoodItemId() != null) {
                 key = "FOOD-" + item.getFoodItemId();
 
@@ -124,14 +162,49 @@ public class FoodOrderService {
                         + "Vui lòng chọn lại.");
             }
 
-            // Giá thanh toán lấy từ database, không lấy từ trình duyệt.
+            // Luôn lấy giá từ database.
             item.setUnitPrice(price);
 
             BigDecimal lineTotal = price.multiply(
-                    BigDecimal.valueOf(item.getQuantity()));
+                    BigDecimal.valueOf(item.getQuantity())
+            );
 
             item.setLineTotal(lineTotal);
             total = total.add(lineTotal);
+        }
+
+        return total;
+    }
+
+    // Lưu bắp nước trong transaction chung với đơn vé.
+    // TicketService sẽ commit sau khi tất cả đều lưu thành công.
+    public int createPaidOrder(
+            Connection connection,
+            FoodOrder order,
+            List<FoodOrderItem> items,
+            BigDecimal expectedTotal) throws SQLException {
+
+        if (connection == null || connection.getAutoCommit()) {
+            throw new SQLException(
+                    "Đơn mua kèm phải được lưu trong transaction chung.");
+        }
+
+        validateOrder(order, items);
+
+        if (getStaffCinema(order.getStaffId()) != order.getCinemaId()) {
+            throw new IllegalArgumentException(
+                    "Nhân viên không thuộc rạp của đơn hàng.");
+        }
+
+        BigDecimal total = calculateSubtotal(
+                order.getCinemaId(), items);
+
+        if (expectedTotal == null
+                || total.compareTo(expectedTotal) != 0) {
+
+            throw new IllegalArgumentException(
+                    "Giá bắp nước/combo đã thay đổi. "
+                    + "Vui lòng kiểm tra lại tổng tiền trước khi xác nhận.");
         }
 
         order.setSubtotal(total);
@@ -140,14 +213,82 @@ public class FoodOrderService {
         order.setPaymentStatus("PAID");
         order.setOrderStatus("COMPLETED");
 
-        int orderId = foodOrderRepository.insertWithItems(order, items);
+        int orderId = foodOrderRepository.insert(
+                connection, order);
 
         if (orderId <= 0) {
-            throw new IllegalStateException(
-                    "Không thể lưu đơn food/combo.");
+            throw new SQLException(
+                    "Không thể lưu đơn bắp nước mua kèm.");
         }
 
+        for (FoodOrderItem item : items) {
+
+            item.setFoodOrderId(orderId);
+
+            int itemId = foodOrderItemRepository.insert(
+                    connection, item);
+
+            if (itemId <= 0) {
+                throw new SQLException(
+                        "Không thể lưu sản phẩm mua kèm.");
+            }
+        }
+
+        order.setFoodOrderId(orderId);
+
         return orderId;
+    }
+
+    public void validateBookingForFood(
+            int bookingId,
+            int staffId,
+            int cinemaId) {
+
+        if (bookingId <= 0 || staffId <= 0 || cinemaId <= 0) {
+            throw new IllegalArgumentException(
+                    "Thông tin đơn vé đi kèm không hợp lệ.");
+        }
+
+        try {
+            boolean valid
+                    = foodOrderRepository.isBookingAvailableForFood(
+                            bookingId, staffId, cinemaId);
+
+            if (!valid) {
+                throw new IllegalArgumentException(
+                        "Chỉ được mua kèm đơn vé đã xác nhận "
+                        + "do bạn bán tại rạp này.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Không thể kiểm tra đơn vé đi kèm.");
+        }
+    }
+
+    public List<FoodOrder> getOrdersByBooking(
+            int bookingId,
+            int staffId) {
+
+        if (bookingId <= 0 || staffId <= 0) {
+            throw new IllegalArgumentException(
+                    "Thông tin đơn vé hoặc nhân viên không hợp lệ.");
+        }
+
+        int cinemaId = getStaffCinema(staffId);
+
+        try {
+            return foodOrderRepository.findCompletedByBooking(
+                    bookingId, staffId, cinemaId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Không thể tải các đơn bắp nước đi kèm.");
+        }
     }
 
     public FoodOrder getOrderById(int orderId) {
@@ -169,10 +310,12 @@ public class FoodOrderService {
     }
 
     public Map<Integer, String> getReceiptNames(
-            int orderId, int cinemaId) {
+            int orderId,
+            int cinemaId) {
 
         try {
-            return foodOrderRepository.findReceiptNames(orderId, cinemaId);
+            return foodOrderRepository.findReceiptNames(
+                    orderId, cinemaId);
 
         } catch (SQLException e) {
             e.printStackTrace();
