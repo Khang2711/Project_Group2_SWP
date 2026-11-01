@@ -31,15 +31,6 @@
         border-left: 5px solid #ff243e;
     }
 
-    .counter-home-eyebrow {
-        display: block;
-        margin-bottom: 9px;
-        color: #ff6472;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1.8px;
-    }
-
     .counter-home-heading h1 {
         margin: 0;
         color: #ffffff;
@@ -66,8 +57,8 @@
         display: flex;
         flex-direction: column;
         min-width: 0;
-        min-height: 278px;
-        padding: 27px 25px 25px;
+        min-height: 250px;
+        padding: 25px 26px 24px;
         overflow: hidden;
         background: linear-gradient(145deg, #25252c 0%, #1d1d23 100%);
         border: 1px solid #41414b;
@@ -86,35 +77,23 @@
     .counter-home-card-top {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: 29px;
-    }
-
-    .counter-home-icon {
-        width: 56px;
-        height: 56px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(255, 36, 62, 0.28);
-        border-radius: 12px;
-        background: rgba(255, 36, 62, 0.10);
-        color: #ff6472;
-        font-size: 27px;
-        font-weight: 700;
+        justify-content: flex-end;
+        margin-bottom: 18px;
     }
 
     .counter-home-index {
-        color: #a2a2ad;
-        font-size: 15px;
-        font-weight: 700;
+        color: #92929d;
+        font-size: 12px;
+        font-weight: 600;
         letter-spacing: 1px;
+        opacity: 0.4;
     }
 
     .counter-home-card h2 {
         margin: 0 0 10px;
         color: #ffffff;
         font-size: 20px;
+        font-weight: 700;
         line-height: 1.35;
     }
 
@@ -125,10 +104,6 @@
         font-size: 14px;
         font-weight: 500;
         line-height: 1.75;
-    }
-
-    .counter-home-card-content {
-        flex: 1;
     }
 
     .counter-home-button,
@@ -400,7 +375,6 @@
     <section class="counter-home">
 
         <div class="counter-home-heading">
-            <span class="counter-home-eyebrow">KHU VỰC NHÂN VIÊN</span>
             <h1>Bán hàng tại quầy</h1>
             <p>Chọn một tác vụ bên dưới để bắt đầu phục vụ khách hàng.</p>
         </div>
@@ -409,7 +383,6 @@
 
             <article class="counter-home-card">
                 <div class="counter-home-card-top">
-                    <span class="counter-home-icon" aria-hidden="true">▤</span>
                     <span class="counter-home-index">01</span>
                 </div>
 
@@ -426,7 +399,6 @@
 
             <article class="counter-home-card">
                 <div class="counter-home-card-top">
-                    <span class="counter-home-icon" aria-hidden="true">✦</span>
                     <span class="counter-home-index">02</span>
                 </div>
 
@@ -443,7 +415,6 @@
 
             <article class="counter-home-card">
                 <div class="counter-home-card-top">
-                    <span class="counter-home-icon" aria-hidden="true">✓</span>
                     <span class="counter-home-index">03</span>
                 </div>
 
