@@ -173,6 +173,21 @@ public class CounterSaleController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        String tab = request.getParameter("tab");
+
+        // Trang Quầy bán hàng chỉ hiển thị các tác vụ.
+        // Chỉ tải báo cáo khi nhân viên mở một mục báo cáo cụ thể.
+        boolean showReport = "statistics".equals(tab)
+                || "tickets".equals(tab)
+                || "food".equals(tab);
+
+        if (!showReport) {
+            request.getRequestDispatcher(
+                    "/WEB-INF/views/staff/counter.jsp"
+            ).forward(request, response);
+            return;
+        }
+
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute("user");
 
