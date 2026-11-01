@@ -297,6 +297,7 @@ GO
    ========================================================= */
 CREATE TABLE dbo.Promotion (
     promotion_id INT IDENTITY(1,1) PRIMARY KEY,
+    cinema_id INT NULL,
     promo_code VARCHAR(50) NOT NULL,
     description NVARCHAR(255) NULL,
     discount_type VARCHAR(20) NOT NULL,
@@ -307,14 +308,22 @@ CREATE TABLE dbo.Promotion (
     end_date DATETIME2 NOT NULL,
     usage_limit INT NULL,
     status VARCHAR(20) NOT NULL CONSTRAINT DF_Promotion_Status DEFAULT ('ACTIVE'),
-    CONSTRAINT UQ_Promotion_Code UNIQUE (promo_code),
     CONSTRAINT CK_Promotion_Value CHECK (discount_value >= 0),
     CONSTRAINT CK_Promotion_MinOrder CHECK (min_order_amount >= 0),
     CONSTRAINT CK_Promotion_MaxDiscount CHECK (max_discount_amount IS NULL OR max_discount_amount >= 0),
     CONSTRAINT CK_Promotion_UsageLimit CHECK (usage_limit IS NULL OR usage_limit >= 0),
     CONSTRAINT CK_Promotion_DateRange CHECK (end_date >= start_date),
-    CONSTRAINT CK_Promotion_Type CHECK (discount_type IN ('PERCENT', 'FIXED'))
+    CONSTRAINT CK_Promotion_Type CHECK (discount_type IN ('PERCENT', 'FIXED')),
+    CONSTRAINT FK_Promotion_Cinema FOREIGN KEY (cinema_id)
+        REFERENCES dbo.Cinema(cinema_id)
 );
+GO
+
+/* A promotion code is unique within each cinema branch.
+   NULL cinema_id is retained for legacy/unassigned promotions. */
+CREATE UNIQUE NONCLUSTERED INDEX UX_Promotion_Cinema_Code
+    ON dbo.Promotion(cinema_id, promo_code)
+    WHERE cinema_id IS NOT NULL;
 GO
 
 /* =========================================================
