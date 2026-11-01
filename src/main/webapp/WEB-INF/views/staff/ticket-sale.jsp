@@ -9,6 +9,14 @@
 <fmt:setLocale value="vi_VN" />
 
 <style>
+    .booking-heading h1 {
+        margin: 0;
+        padding-left: 15px;
+        border-left: 5px solid #ff243e;
+        font-size: 28px;
+        line-height: 1.3;
+    }
+
     .counter-card {
         padding: 22px;
         margin-bottom: 22px;
@@ -293,7 +301,6 @@
 
     <div class="booking-heading">
         <h1>Bán vé tại quầy</h1>
-        <div class="title-line"></div>
     </div>
 
     <div class="ticket-print-actions">

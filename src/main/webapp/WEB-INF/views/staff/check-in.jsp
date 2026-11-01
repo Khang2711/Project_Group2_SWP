@@ -169,7 +169,6 @@
 
     <div class="checkin-heading">
         <h1>Kiểm tra và check-in vé</h1>
-        <div class="title-line"></div>
         <p>Nhập mã vé hoặc quét QR để tra cứu thông tin vé và suất chiếu.</p>
     </div>
 
