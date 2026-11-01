@@ -50,8 +50,9 @@
     .counter-home-heading p {
         max-width: 620px;
         margin: 10px 0 0;
-        color: #b8b8c2;
+        color: #d0d0d8;
         font-size: 15px;
+        font-weight: 500;
         line-height: 1.7;
     }
 
@@ -65,11 +66,11 @@
         display: flex;
         flex-direction: column;
         min-width: 0;
-        min-height: 258px;
-        padding: 24px;
+        min-height: 278px;
+        padding: 27px 25px 25px;
         overflow: hidden;
-        background: linear-gradient(145deg, #1d1d23 0%, #151519 100%);
-        border: 1px solid #363640;
+        background: linear-gradient(145deg, #25252c 0%, #1d1d23 100%);
+        border: 1px solid #41414b;
         border-radius: 12px;
         box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
         transition: transform 0.2s ease, border-color 0.2s ease,
@@ -86,12 +87,12 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 25px;
+        margin-bottom: 29px;
     }
 
     .counter-home-icon {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -99,13 +100,13 @@
         border-radius: 12px;
         background: rgba(255, 36, 62, 0.10);
         color: #ff6472;
-        font-size: 24px;
+        font-size: 27px;
         font-weight: 700;
     }
 
     .counter-home-index {
-        color: #686873;
-        font-size: 13px;
+        color: #a2a2ad;
+        font-size: 15px;
         font-weight: 700;
         letter-spacing: 1px;
     }
@@ -118,10 +119,12 @@
     }
 
     .counter-home-card p {
+        max-width: 300px;
         margin: 0;
-        color: #aeadb8;
+        color: #d0d0d8;
         font-size: 14px;
-        line-height: 1.7;
+        font-weight: 500;
+        line-height: 1.75;
     }
 
     .counter-home-card-content {
@@ -146,9 +149,9 @@
     }
 
     .counter-home-button {
-        width: 100%;
+        width: 86%;
         box-sizing: border-box;
-        margin-top: 22px;
+        margin: 24px auto 0;
         padding: 12px 16px;
         font-size: 14px;
     }
