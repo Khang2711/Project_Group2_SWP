@@ -9,32 +9,28 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import model.Movie;
 import model.Room;
+import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import model.User;
 import service.BookingService;
 import service.CheckInService;
-import service.MovieService;
 import service.ShowtimeService;
 
 @WebServlet(urlPatterns = {"/staff/check-in"})
 public class CheckInController extends HttpServlet {
 
     private CheckInService checkInService;
-    private MovieService movieService;
     private ShowtimeService showtimeService;
     private BookingService bookingService;
 
     @Override
     public void init() {
         checkInService = new CheckInService();
-        movieService = new MovieService();
         showtimeService = new ShowtimeService();
         bookingService = new BookingService();
     }
@@ -84,72 +80,51 @@ public class CheckInController extends HttpServlet {
         request.setAttribute("ticketCode", code);
 
         try {
-            List<Showtime> showtimes
-                    = checkInService.getCheckInShowtimes(user.getUserId());
+            if (code != null && !code.trim().isEmpty()) {
+                Ticket ticket = checkInService.lookupTicket(
+                        code, user.getUserId());
 
-            request.setAttribute("showtimes", showtimes);
+                // Lấy suất chiếu trực tiếp từ thông tin của vé.
+                Showtime showtime = showtimeService.getShowtimeById(
+                        ticket.getShowtimeId());
 
-            Map<Integer, Room> rooms
-                    = showtimeService.getActiveRoomById();
-
-            request.setAttribute("rooms", rooms);
-
-            // Dùng ID phim để lấy tên khi hiển thị danh sách suất chiếu.
-            Map<Integer, String> movieTitles = new HashMap<>();
-
-            for (Movie movie : movieService.getAllMovies()) {
-                movieTitles.put(movie.getMovieId(), movie.getTitle());
-            }
-
-            request.setAttribute("movieTitles", movieTitles);
-
-            String idParam = request.getParameter("showtimeId");
-
-            if (idParam != null && !idParam.trim().isEmpty()) {
-                int showtimeId = parseShowtimeId(idParam);
-                Showtime selected = null;
-
-                for (Showtime showtime : showtimes) {
-                    if (showtime.getShowtimeId() == showtimeId) {
-                        selected = showtime;
-                        break;
-                    }
-                }
-
-                if (selected == null) {
+                if (showtime == null) {
                     throw new IllegalArgumentException(
-                            "Suất chiếu không thuộc rạp hoặc đã hết hiệu lực.");
+                            "Không tìm thấy thông tin suất chiếu của vé.");
                 }
 
-                request.setAttribute("selectedShowtimeId", showtimeId);
-                request.setAttribute("selectedShowtime", selected);
+                Movie movie = bookingService.getMovieForShowtime(showtime);
 
-                if (code != null) {
-                    Ticket ticket = checkInService.lookupTicket(
-                            code, showtimeId, user.getUserId());
+                Map<Integer, Room> rooms
+                        = showtimeService.getActiveRoomById();
 
-                    request.setAttribute("ticket", ticket);
+                Room room = rooms.get(showtime.getRoomId());
 
-                    request.setAttribute(
-                            "seat",
-                            bookingService.getSeatForTicket(ticket, selected));
+                Seat seat = bookingService.getSeatForTicket(
+                        ticket, showtime);
 
-                    String validation
-                            = checkInService.validateCheckIn(ticket);
-
-                    request.setAttribute(
-                            "canCheckIn", validation == null);
-
-                    if (validation != null
-                            && success == null && error == null) {
-
-                        request.setAttribute("error", validation);
-                    }
+                if (movie == null || room == null || seat == null) {
+                    throw new IllegalArgumentException(
+                            "Không thể tải đầy đủ thông tin của vé. "
+                            + "Vui lòng liên hệ quản lý.");
                 }
 
-            } else if (code != null) {
-                throw new IllegalArgumentException(
-                        "Vui lòng chọn suất chiếu.");
+                request.setAttribute("ticket", ticket);
+                request.setAttribute("showtime", showtime);
+                request.setAttribute("movie", movie);
+                request.setAttribute("room", room);
+                request.setAttribute("seat", seat);
+
+                String validation
+                        = checkInService.validateCheckIn(ticket);
+
+                request.setAttribute(
+                        "canCheckIn", validation == null);
+
+                if (validation != null
+                        && success == null && error == null) {
+                    request.setAttribute("error", validation);
+                }
             }
 
         } catch (IllegalArgumentException e) {
@@ -189,10 +164,9 @@ public class CheckInController extends HttpServlet {
         HttpSession session = request.getSession();
 
         String code = request.getParameter("ticketCode");
-        String idParam = request.getParameter("showtimeId");
 
         try {
-            // Mỗi mã xác nhận dùng một lần để tránh gửi lặp yêu cầu.
+            // Mỗi mã xác nhận chỉ được dùng một lần để tránh gửi lặp.
             synchronized (session) {
                 String expected
                         = (String) session.getAttribute("checkInToken");
@@ -208,10 +182,7 @@ public class CheckInController extends HttpServlet {
                 session.removeAttribute("checkInToken");
             }
 
-            checkInService.checkInTicket(
-                    code,
-                    parseShowtimeId(idParam),
-                    user.getUserId());
+            checkInService.checkInTicket(code, user.getUserId());
 
             session.setAttribute(
                     "checkInSuccess", "Check-in vé thành công.");
@@ -230,29 +201,11 @@ public class CheckInController extends HttpServlet {
         // Chuyển sang GET để F5 không thực hiện lại thao tác cập nhật.
         String url = request.getContextPath() + "/staff/check-in";
 
-        if (idParam != null && code != null) {
-            url += "?showtimeId="
-                    + URLEncoder.encode(idParam, "UTF-8")
-                    + "&ticketCode="
-                    + URLEncoder.encode(code, "UTF-8");
+        if (code != null && !code.trim().isEmpty()) {
+            url += "?ticketCode="
+                    + URLEncoder.encode(code.trim(), "UTF-8");
         }
 
         response.sendRedirect(url);
-    }
-
-    private int parseShowtimeId(String value) {
-        try {
-            int id = Integer.parseInt(value);
-
-            if (id <= 0) {
-                throw new NumberFormatException();
-            }
-
-            return id;
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "Suất chiếu không hợp lệ.");
-        }
     }
 }

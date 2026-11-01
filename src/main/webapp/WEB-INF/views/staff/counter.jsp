@@ -6,108 +6,139 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <fmt:setLocale value="vi_VN" />
 
-<c:set var="activeCounterTab" value="statistics" />
+<c:set var="activeCounterTab" value="home" />
 
-<c:if test="${param.tab eq 'tickets' or param.tab eq 'food'}">
+<c:if test="${param.tab eq 'statistics' or param.tab eq 'tickets' or param.tab eq 'food'}">
     <c:set var="activeCounterTab" value="${param.tab}" />
 </c:if>
 
-<c:url var="counterStatisticsUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="statistics" />
-</c:url>
-
-<c:url var="counterTicketsUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="tickets" />
-</c:url>
-
-<c:url var="counterFoodUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="food" />
+<c:url var="counterResetUrl" value="/staff/counter">
+    <c:param name="tab" value="${activeCounterTab}" />
 </c:url>
 
 <style>
     .counter-home {
-        padding-bottom: 30px;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 18px 0 42px;
         color: #eeeeee;
     }
 
     .counter-home-heading {
-        margin-bottom: 18px;
-        padding-bottom: 16px;
+        margin-bottom: 30px;
+        padding: 4px 0 22px 18px;
         border-bottom: 1px solid #303038;
+        border-left: 5px solid #ff243e;
     }
 
     .counter-home-heading h1 {
         margin: 0;
-        padding-left: 14px;
-        border-left: 4px solid #e50914;
         color: #ffffff;
         font-size: 30px;
+        line-height: 1.25;
     }
 
     .counter-home-heading p {
+        max-width: 620px;
         margin: 10px 0 0;
-        color: #b8b8c2;
-        font-size: 14px;
-        line-height: 1.6;
+        color: #d0d0d8;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.7;
     }
 
     .counter-home-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-bottom: 20px;
+        gap: 20px;
     }
 
     .counter-home-card {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+        flex-direction: column;
         min-width: 0;
-        min-height: 76px;
-        padding: 14px 16px;
-        background: #18181c;
-        border: 1px solid #33333d;
-        border-radius: 6px;
+        min-height: 250px;
+        padding: 25px 26px 24px;
+        overflow: hidden;
+        background: linear-gradient(145deg, #25252c 0%, #1d1d23 100%);
+        border: 1px solid #41414b;
+        border-radius: 12px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+        transition: transform 0.2s ease, border-color 0.2s ease,
+                    box-shadow 0.2s ease;
     }
 
     .counter-home-card:hover {
-        border-color: #55555f;
+        transform: translateY(-4px);
+        border-color: #a92d3d;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .counter-home-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-bottom: 18px;
+    }
+
+    .counter-home-index {
+        color: #92929d;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        opacity: 0.4;
     }
 
     .counter-home-card h2 {
-        min-width: 0;
-        margin: 0;
+        margin: 0 0 10px;
         color: #ffffff;
-        font-size: 16px;
-        line-height: 1.4;
-        overflow-wrap: anywhere;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .counter-home-card p {
+        max-width: 300px;
+        margin: 0;
+        color: #d0d0d8;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.75;
     }
 
     .counter-home-button,
     .counter-filter-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         background: #e50914;
         border: 1px solid #e50914;
-        border-radius: 4px;
+        border-radius: 6px;
         color: #ffffff;
-        font-weight: bold;
+        font-weight: 700;
         text-align: center;
         text-decoration: none;
         cursor: pointer;
+        transition: background 0.18s ease, border-color 0.18s ease;
     }
 
     .counter-home-button {
-        display: inline-block;
-        flex-shrink: 0;
-        padding: 9px 12px;
+        width: 86%;
+        box-sizing: border-box;
+        margin: 24px auto 0;
+        padding: 12px 16px;
         font-size: 14px;
-        white-space: nowrap;
+    }
+
+    .counter-home-button span {
+        font-size: 18px;
+        line-height: 1;
+        transition: transform 0.18s ease;
+    }
+
+    .counter-home-button:hover span {
+        transform: translateX(4px);
     }
 
     .counter-filter-button {
@@ -117,38 +148,15 @@
 
     .counter-home-button:hover,
     .counter-filter-button:hover {
-        background: #ff1f2d;
-        border-color: #ff1f2d;
+        background: #ff243e;
+        border-color: #ff243e;
         color: #ffffff;
     }
 
-    .counter-jump-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 18px;
-    }
-
-    .counter-jump-links a,
-    .counter-reset-link {
-        padding: 10px 14px;
-        border: 1px solid #44444d;
-        border-radius: 4px;
-        color: #f2f2f2;
-        font-size: 14px;
-        text-decoration: none;
-    }
-
-    .counter-jump-links a:hover,
-    .counter-reset-link:hover {
-        border-color: #e50914;
-        color: #ff6472;
-    }
-
-    .counter-jump-links a.is-active {
-        background: #e50914;
-        border-color: #e50914;
-        color: #ffffff;
+    .counter-home-button:focus-visible,
+    .counter-filter-button:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 3px;
     }
 
     .counter-report-panel {
@@ -310,21 +318,42 @@
         }
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 950px) {
+        .counter-home-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .counter-home-card:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .counter-home {
+            padding-top: 8px;
+        }
+
         .counter-home-grid {
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 14px;
+        }
+
+        .counter-home-card:last-child {
+            grid-column: auto;
         }
 
         .counter-home-card {
-            min-height: 64px;
-            padding: 12px 16px;
+            min-height: 230px;
         }
     }
 
     @media (max-width: 500px) {
         .counter-home-heading h1 {
             font-size: 25px;
+        }
+
+        .counter-home-heading {
+            margin-bottom: 22px;
         }
 
         .counter-stat-grid {
@@ -341,63 +370,72 @@
     }
 </style>
 
-<section class="counter-home">
+<c:if test="${activeCounterTab eq 'home'}">
 
-    <div class="counter-home-heading">
-        <h1>Bán hàng tại quầy</h1>
-        <p>Chọn tác vụ và theo dõi các đơn do bạn bán.</p>
-    </div>
+    <section class="counter-home">
 
-    <div class="counter-home-grid">
+        <div class="counter-home-heading">
+            <h1>Bán hàng tại quầy</h1>
+            <p>Chọn một tác vụ bên dưới để bắt đầu phục vụ khách hàng.</p>
+        </div>
 
-        <article class="counter-home-card">
-            <h2>Vé tại quầy</h2>
+        <div class="counter-home-grid">
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/ticket-sale">
-                Bán vé
-            </a>
-        </article>
+            <article class="counter-home-card">
+                <div class="counter-home-card-top">
+                    <span class="counter-home-index">01</span>
+                </div>
 
-        <article class="counter-home-card">
-            <h2>Bắp nước/combo</h2>
+                <div class="counter-home-card-content">
+                    <h2>Bán vé tại quầy</h2>
+                    <p>Chọn phim, suất chiếu và ghế ngồi để tạo đơn vé cho khách.</p>
+                </div>
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/food-sale">
-                Bán hàng
-            </a>
-        </article>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/ticket-sale">
+                    Bắt đầu bán vé <span aria-hidden="true">→</span>
+                </a>
+            </article>
 
-        <article class="counter-home-card">
-            <h2>Check-in vé</h2>
+            <article class="counter-home-card">
+                <div class="counter-home-card-top">
+                    <span class="counter-home-index">02</span>
+                </div>
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/check-in">
-                Check-in
-            </a>
-        </article>
+                <div class="counter-home-card-content">
+                    <h2>Bắp nước / combo</h2>
+                    <p>Tiếp nhận món lẻ hoặc combo và xử lý thanh toán tại quầy.</p>
+                </div>
 
-    </div>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/food-sale">
+                    Tạo đơn hàng <span aria-hidden="true">→</span>
+                </a>
+            </article>
 
-    <nav class="counter-jump-links"
-         aria-label="Báo cáo bán hàng cá nhân">
+            <article class="counter-home-card">
+                <div class="counter-home-card-top">
+                    <span class="counter-home-index">03</span>
+                </div>
 
-        <a href="${counterStatisticsUrl}"
-           class="${activeCounterTab eq 'statistics' ? 'is-active' : ''}">
-            Thống kê của tôi
-        </a>
+                <div class="counter-home-card-content">
+                    <h2>Check-in vé</h2>
+                    <p>Tra cứu mã vé hoặc quét QR để xác nhận vé của khách.</p>
+                </div>
 
-        <a href="${counterTicketsUrl}"
-           class="${activeCounterTab eq 'tickets' ? 'is-active' : ''}">
-            Vé đã bán
-        </a>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/check-in">
+                    Kiểm tra vé <span aria-hidden="true">→</span>
+                </a>
+            </article>
 
-        <a href="${counterFoodUrl}"
-           class="${activeCounterTab eq 'food' ? 'is-active' : ''}">
-            Bắp nước/combo đã bán
-        </a>
+        </div>
 
-    </nav>
+    </section>
+
+</c:if>
+
+<c:if test="${activeCounterTab ne 'home'}">
 
     <section class="counter-report-panel">
 
@@ -440,7 +478,7 @@
             </button>
 
             <a class="counter-reset-link"
-               href="${ctx}/staff/counter">
+               href="${counterResetUrl}">
                 Tháng này
             </a>
 
@@ -700,6 +738,6 @@
 
     </c:if>
 
-</section>
+</c:if>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>

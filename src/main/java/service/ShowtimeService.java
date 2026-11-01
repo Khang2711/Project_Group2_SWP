@@ -212,6 +212,15 @@ public class ShowtimeService {
                 );
     }
 
+    public Showtime getShowtimeById(int showtimeId) {
+
+        if (showtimeId <= 0) {
+            return null;
+        }
+
+        return showtimeRepository.getById(showtimeId);
+    }
+
     public Showtime getShowtimeForManager(
             int showtimeId,
             int cinemaId) {
