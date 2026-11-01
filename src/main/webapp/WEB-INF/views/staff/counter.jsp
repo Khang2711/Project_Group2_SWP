@@ -6,11 +6,15 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <fmt:setLocale value="vi_VN" />
 
-<c:set var="activeCounterTab" value="statistics" />
+<c:set var="activeCounterTab" value="home" />
 
-<c:if test="${param.tab eq 'tickets' or param.tab eq 'food'}">
+<c:if test="${param.tab eq 'statistics' or param.tab eq 'tickets' or param.tab eq 'food'}">
     <c:set var="activeCounterTab" value="${param.tab}" />
 </c:if>
+
+<c:url var="counterResetUrl" value="/staff/counter">
+    <c:param name="tab" value="${activeCounterTab}" />
+</c:url>
 
 <style>
     .counter-home {
@@ -294,43 +298,51 @@
     }
 </style>
 
-<section class="counter-home">
+<c:if test="${activeCounterTab eq 'home'}">
 
-    <div class="counter-home-heading">
-        <h1>Bán hàng tại quầy</h1>
-        <p>Chọn tác vụ và theo dõi các đơn do bạn bán.</p>
-    </div>
+    <section class="counter-home">
 
-    <div class="counter-home-grid">
+        <div class="counter-home-heading">
+            <h1>Bán hàng tại quầy</h1>
+            <p>Chọn tác vụ bạn muốn thực hiện.</p>
+        </div>
 
-        <article class="counter-home-card">
-            <h2>Vé tại quầy</h2>
+        <div class="counter-home-grid">
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/ticket-sale">
-                Bán vé
-            </a>
-        </article>
+            <article class="counter-home-card">
+                <h2>Vé tại quầy</h2>
 
-        <article class="counter-home-card">
-            <h2>Bắp nước/combo</h2>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/ticket-sale">
+                    Bán vé
+                </a>
+            </article>
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/food-sale">
-                Bán hàng
-            </a>
-        </article>
+            <article class="counter-home-card">
+                <h2>Bắp nước/combo</h2>
 
-        <article class="counter-home-card">
-            <h2>Check-in vé</h2>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/food-sale">
+                    Bán hàng
+                </a>
+            </article>
 
-            <a class="counter-home-button"
-               href="${ctx}/staff/check-in">
-                Check-in
-            </a>
-        </article>
+            <article class="counter-home-card">
+                <h2>Check-in vé</h2>
 
-    </div>
+                <a class="counter-home-button"
+                   href="${ctx}/staff/check-in">
+                    Check-in
+                </a>
+            </article>
+
+        </div>
+
+    </section>
+
+</c:if>
+
+<c:if test="${activeCounterTab ne 'home'}">
 
     <section class="counter-report-panel">
 
@@ -373,7 +385,7 @@
             </button>
 
             <a class="counter-reset-link"
-               href="${ctx}/staff/counter">
+               href="${counterResetUrl}">
                 Tháng này
             </a>
 
@@ -633,6 +645,6 @@
 
     </c:if>
 
-</section>
+</c:if>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
