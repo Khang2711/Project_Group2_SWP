@@ -235,9 +235,7 @@
 
             <p id="qrMessage"
                class="checkin-note"
-               aria-live="polite">
-                QR cần chứa mã vé của khách hàng. Sau khi quét, hệ thống sẽ tự tra cứu vé.
-            </p>
+               aria-live="polite"></p>
         </div>
     </div>
 
