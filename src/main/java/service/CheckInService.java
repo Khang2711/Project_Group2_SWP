@@ -1,9 +1,7 @@
 package service;
 
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Locale;
-import model.Showtime;
 import model.Ticket;
 import repository.TicketRepository;
 
@@ -45,7 +43,6 @@ public class CheckInService {
 
         if ("USED".equalsIgnoreCase(status)
                 || ticket.getCheckedInAt() != null) {
-
             return "Vé đã được check-in trước đó.";
         }
 
@@ -56,19 +53,8 @@ public class CheckInService {
         return null;
     }
 
-    public List<Showtime> getCheckInShowtimes(int staffId)
+    public Ticket lookupTicket(String ticketCode, int staffId)
             throws SQLException {
-
-        if (staffId <= 0) {
-            throw new IllegalArgumentException(
-                    "Nhân viên không hợp lệ.");
-        }
-
-        return ticketRepository.findCheckInShowtimes(staffId);
-    }
-
-    public Ticket lookupTicket(String ticketCode,
-            int showtimeId, int staffId) throws SQLException {
 
         String error = validateTicketCode(ticketCode);
 
@@ -76,32 +62,31 @@ public class CheckInService {
             throw new IllegalArgumentException(error);
         }
 
-        if (staffId <= 0 || showtimeId <= 0) {
+        if (staffId <= 0) {
             throw new IllegalArgumentException(
-                    "Vui lòng chọn suất chiếu cần check-in.");
+                    "Nhân viên không hợp lệ.");
         }
 
         String normalizedCode
                 = ticketCode.trim().toUpperCase(Locale.ROOT);
 
         Ticket ticket = ticketRepository.findTicketForCheckIn(
-                normalizedCode, showtimeId, staffId);
+                normalizedCode, staffId);
 
         if (ticket == null) {
             throw new IllegalArgumentException(
-                    "Không tìm thấy vé hợp lệ cho rạp và suất đã chọn. "
-                    + "Vé có thể đã hết hiệu lực.");
+                    "Không tìm thấy vé hợp lệ tại rạp của bạn. "
+                    + "Vé có thể không tồn tại hoặc đã hết hiệu lực.");
         }
 
         return ticket;
     }
 
-    public void checkInTicket(String ticketCode,
-            int showtimeId, int staffId) throws SQLException {
+    public void checkInTicket(String ticketCode, int staffId)
+            throws SQLException {
 
-        // Tra cứu lại khi xác nhận, không tin kết quả cũ trên màn hình.
-        Ticket ticket = lookupTicket(
-                ticketCode, showtimeId, staffId);
+        // Tra cứu lại lúc xác nhận để không dùng dữ liệu cũ trên màn hình.
+        Ticket ticket = lookupTicket(ticketCode, staffId);
 
         String error = validateCheckIn(ticket);
 
@@ -109,8 +94,9 @@ public class CheckInService {
             throw new IllegalArgumentException(error);
         }
 
+        // Repository tự lấy showtime_id từ chính vé trong database.
         boolean updated = ticketRepository.markTicketUsed(
-                ticket.getTicketCode(), showtimeId, staffId);
+                ticket.getTicketCode(), staffId);
 
         if (!updated) {
             throw new IllegalArgumentException(

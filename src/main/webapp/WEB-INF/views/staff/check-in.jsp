@@ -45,8 +45,7 @@
         font-weight: bold;
     }
 
-    .checkin-field input,
-    .checkin-field select {
+    .checkin-field input {
         width: 100%;
         box-sizing: border-box;
         padding: 11px;
@@ -56,8 +55,7 @@
         border-radius: 5px;
     }
 
-    .checkin-field input:focus,
-    .checkin-field select:focus {
+    .checkin-field input:focus {
         outline: none;
         border-color: #ff3045;
     }
@@ -172,7 +170,7 @@
     <div class="checkin-heading">
         <h1>Kiểm tra và check-in vé</h1>
         <div class="title-line"></div>
-        <p>Chọn suất chiếu, nhập mã vé hoặc quét QR để tra cứu.</p>
+        <p>Nhập mã vé hoặc quét QR để tra cứu thông tin vé và suất chiếu.</p>
     </div>
 
     <c:if test="${not empty success}">
@@ -193,36 +191,6 @@
         <form id="lookupForm"
               action="${ctx}/staff/check-in"
               method="get">
-
-            <div class="checkin-field">
-                <label for="showtimeId">
-                    Suất chiếu cần check-in
-                </label>
-
-                <select id="showtimeId"
-                        name="showtimeId"
-                        required
-                        onchange="hideTicketResult()">
-
-                    <option value="">-- Chọn suất chiếu --</option>
-
-                    <c:forEach var="showtime" items="${showtimes}">
-                        <option value="${showtime.showtimeId}"
-                                <c:if test="${selectedShowtimeId == showtime.showtimeId}">
-                                    selected
-                                </c:if>>
-
-                            <c:out value="${movieTitles[showtime.movieId]}" />
-
-                            — <fmt:formatDate
-                                value="${showtime.startTime}"
-                                pattern="dd/MM/yyyy HH:mm" />
-
-                            — <c:out value="${rooms[showtime.roomId].roomName}" />
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
 
             <div class="checkin-field">
                 <label for="ticketCode">Mã vé</label>
@@ -268,16 +236,9 @@
             <p id="qrMessage"
                class="checkin-note"
                aria-live="polite">
-                Chọn suất chiếu trước khi mở bộ quét.
-                QR cần chứa mã vé của khách hàng.
+                QR cần chứa mã vé của khách hàng. Sau khi quét, hệ thống sẽ tự tra cứu vé.
             </p>
         </div>
-
-        <c:if test="${empty showtimes}">
-            <p class="checkin-note">
-                Rạp hiện không có suất chiếu đang hoạt động và chưa kết thúc.
-            </p>
-        </c:if>
     </div>
 
     <c:if test="${not empty ticket}">
@@ -297,18 +258,18 @@
 
                 <span>Phim</span>
                 <strong>
-                    <c:out value="${movieTitles[selectedShowtime.movieId]}" />
+                    <c:out value="${movie.title}" />
                 </strong>
 
                 <span>Phòng</span>
                 <strong>
-                    <c:out value="${rooms[selectedShowtime.roomId].roomName}" />
+                    <c:out value="${room.roomName}" />
                 </strong>
 
                 <span>Suất chiếu</span>
                 <strong>
                     <fmt:formatDate
-                        value="${selectedShowtime.startTime}"
+                        value="${showtime.startTime}"
                         pattern="dd/MM/yyyy HH:mm" />
                 </strong>
 
@@ -366,10 +327,6 @@
                       onsubmit="return confirm('Xác nhận cho khách sử dụng vé này?')">
 
                     <input type="hidden"
-                           name="showtimeId"
-                           value="${selectedShowtimeId}" />
-
-                    <input type="hidden"
                            name="ticketCode"
                            value="<c:out value='${ticket.ticketCode}' />" />
 
@@ -420,12 +377,6 @@
 
                           function startQrScanner() {
                               if (qrScanner != null) {
-                                  return;
-                              }
-
-                              if (document.getElementById("showtimeId").value == "") {
-                                  setQrMessage(
-                                          "Vui lòng chọn suất chiếu trước khi quét.");
                                   return;
                               }
 
@@ -489,11 +440,6 @@
                               // Một QR có thể xuất hiện trong nhiều khung hình.
                               // Chỉ xử lý lần đầu để tránh gửi nhiều yêu cầu tra cứu.
                               if (qrHandled || qrStopping || qrScanner == null) {
-                                  return;
-                              }
-
-                              if (document.getElementById("showtimeId").value == "") {
-                                  setQrMessage("Vui lòng chọn suất chiếu.");
                                   return;
                               }
 

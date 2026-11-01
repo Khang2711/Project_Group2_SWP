@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 public class Ticket {
     private int ticketId; // ticket_id
     private int bookingId; // booking_id
+    private int showtimeId; // showtime_id, dùng khi tra cứu vé check-in
     private int seatId; // seat_id
     private String ticketCode; // ticket_code
     private BigDecimal ticketPrice; // ticket_price
@@ -40,6 +41,14 @@ public class Ticket {
 
     public void setBookingId(int bookingId) {
         this.bookingId = bookingId;
+    }
+
+    public int getShowtimeId() {
+        return showtimeId;
+    }
+
+    public void setShowtimeId(int showtimeId) {
+        this.showtimeId = showtimeId;
     }
 
     public int getSeatId() {

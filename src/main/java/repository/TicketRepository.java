@@ -300,55 +300,14 @@ public Ticket findIssuedTicketByIdAndCustomerId(
         }
     }
 
-    // UC-16: tra cứu và check-in vé.
-    public List<Showtime> findCheckInShowtimes(int staffId)
-            throws SQLException {
-
-        List<Showtime> showtimes = new ArrayList<>();
-
-        String sql = "SELECT st.showtime_id, st.movie_id, st.room_id, "
-                + "st.start_time, st.end_time, st.status FROM Showtime st "
-                + "JOIN Room r ON r.room_id = st.room_id "
-                + "JOIN Cinema c ON c.cinema_id = r.cinema_id "
-                + "JOIN Staff sf ON sf.cinema_id = r.cinema_id "
-                + "JOIN [User] u ON u.user_id = sf.staff_id "
-                + "WHERE sf.staff_id = ? AND u.status = 'ACTIVE' "
-                + "AND st.status = 'ACTIVE' AND r.status = 'ACTIVE' "
-                + "AND c.status = 'ACTIVE' "
-                + "AND st.end_time > SYSDATETIME() "
-                + "ORDER BY st.start_time, st.showtime_id";
-
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setInt(1, staffId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Showtime showtime = new Showtime();
-
-                    showtime.setShowtimeId(rs.getInt("showtime_id"));
-                    showtime.setMovieId(rs.getInt("movie_id"));
-                    showtime.setRoomId(rs.getInt("room_id"));
-                    showtime.setStartTime(rs.getTimestamp("start_time"));
-                    showtime.setEndTime(rs.getTimestamp("end_time"));
-                    showtime.setStatus(rs.getString("status"));
-
-                    showtimes.add(showtime);
-                }
-            }
-        }
-
-        return showtimes;
-    }
-
+    // UC-16: tra cứu vé theo mã và rạp của nhân viên.
     public Ticket findTicketForCheckIn(
             String ticketCode,
-            int showtimeId,
             int staffId) throws SQLException {
 
-        String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
-                + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
+        String sql = "SELECT t.ticket_id, t.booking_id, t.showtime_id, "
+                + "t.seat_id, t.ticket_code, t.ticket_price, "
+                + "t.status, t.checked_in_at "
                 + "FROM Ticket t "
                 + "JOIN Booking b ON b.booking_id = t.booking_id "
                 + "AND b.showtime_id = t.showtime_id "
@@ -359,8 +318,8 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 + "JOIN Cinema c ON c.cinema_id = r.cinema_id "
                 + "JOIN Staff sf ON sf.cinema_id = r.cinema_id "
                 + "JOIN [User] u ON u.user_id = sf.staff_id "
-                + "WHERE t.ticket_code = ? AND st.showtime_id = ? "
-                + "AND sf.staff_id = ? AND u.status = 'ACTIVE' "
+                + "WHERE t.ticket_code = ? AND sf.staff_id = ? "
+                + "AND u.status = 'ACTIVE' "
                 + "AND b.status = 'CONFIRMED' AND st.status = 'ACTIVE' "
                 + "AND r.status = 'ACTIVE' AND s.status = 'ACTIVE' "
                 + "AND c.status = 'ACTIVE' "
@@ -370,8 +329,7 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
-            ps.setInt(2, showtimeId);
-            ps.setInt(3, staffId);
+            ps.setInt(2, staffId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -379,6 +337,7 @@ public Ticket findIssuedTicketByIdAndCustomerId(
 
                     ticket.setTicketId(rs.getInt("ticket_id"));
                     ticket.setBookingId(rs.getInt("booking_id"));
+                    ticket.setShowtimeId(rs.getInt("showtime_id"));
                     ticket.setSeatId(rs.getInt("seat_id"));
                     ticket.setTicketCode(rs.getString("ticket_code"));
                     ticket.setTicketPrice(rs.getBigDecimal("ticket_price"));
@@ -395,10 +354,9 @@ public Ticket findIssuedTicketByIdAndCustomerId(
 
     public boolean markTicketUsed(
             String ticketCode,
-            int showtimeId,
             int staffId) throws SQLException {
 
-        // Kiểm tra ngay trong UPDATE để hai lần quét cùng lúc
+        // Điều kiện nằm ngay trong UPDATE để hai lần quét cùng lúc
         // chỉ có một lần đổi vé từ VALID sang USED.
         String sql = "UPDATE t SET status = 'USED', "
                 + "checked_in_at = SYSDATETIME() FROM Ticket t "
@@ -411,8 +369,8 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 + "JOIN Cinema c ON c.cinema_id = r.cinema_id "
                 + "JOIN Staff sf ON sf.cinema_id = r.cinema_id "
                 + "JOIN [User] u ON u.user_id = sf.staff_id "
-                + "WHERE t.ticket_code = ? AND st.showtime_id = ? "
-                + "AND sf.staff_id = ? AND u.status = 'ACTIVE' "
+                + "WHERE t.ticket_code = ? AND sf.staff_id = ? "
+                + "AND u.status = 'ACTIVE' "
                 + "AND t.status = 'VALID' AND t.checked_in_at IS NULL "
                 + "AND b.status = 'CONFIRMED' AND st.status = 'ACTIVE' "
                 + "AND r.status = 'ACTIVE' AND s.status = 'ACTIVE' "
@@ -423,13 +381,12 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
-            ps.setInt(2, showtimeId);
-            ps.setInt(3, staffId);
+            ps.setInt(2, staffId);
 
             return ps.executeUpdate() == 1;
         }
     }
-    
+
     private Ticket mapTicket(ResultSet rs)
         throws SQLException {
 
