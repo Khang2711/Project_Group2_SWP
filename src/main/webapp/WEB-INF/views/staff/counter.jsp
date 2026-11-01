@@ -18,82 +18,149 @@
 
 <style>
     .counter-home {
-        padding-bottom: 30px;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 18px 0 42px;
         color: #eeeeee;
     }
 
     .counter-home-heading {
-        margin-bottom: 18px;
-        padding-bottom: 16px;
+        margin-bottom: 30px;
+        padding: 4px 0 22px 18px;
         border-bottom: 1px solid #303038;
+        border-left: 5px solid #ff243e;
+    }
+
+    .counter-home-eyebrow {
+        display: block;
+        margin-bottom: 9px;
+        color: #ff6472;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
     }
 
     .counter-home-heading h1 {
         margin: 0;
-        padding-left: 14px;
-        border-left: 4px solid #e50914;
         color: #ffffff;
         font-size: 30px;
+        line-height: 1.25;
     }
 
     .counter-home-heading p {
+        max-width: 620px;
         margin: 10px 0 0;
         color: #b8b8c2;
-        font-size: 14px;
-        line-height: 1.6;
+        font-size: 15px;
+        line-height: 1.7;
     }
 
     .counter-home-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-bottom: 20px;
+        gap: 20px;
     }
 
     .counter-home-card {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+        flex-direction: column;
         min-width: 0;
-        min-height: 76px;
-        padding: 14px 16px;
-        background: #18181c;
-        border: 1px solid #33333d;
-        border-radius: 6px;
+        min-height: 258px;
+        padding: 24px;
+        overflow: hidden;
+        background: linear-gradient(145deg, #1d1d23 0%, #151519 100%);
+        border: 1px solid #363640;
+        border-radius: 12px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+        transition: transform 0.2s ease, border-color 0.2s ease,
+                    box-shadow 0.2s ease;
     }
 
     .counter-home-card:hover {
-        border-color: #55555f;
+        transform: translateY(-4px);
+        border-color: #a92d3d;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .counter-home-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+    }
+
+    .counter-home-icon {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 36, 62, 0.28);
+        border-radius: 12px;
+        background: rgba(255, 36, 62, 0.10);
+        color: #ff6472;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .counter-home-index {
+        color: #686873;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
     }
 
     .counter-home-card h2 {
-        min-width: 0;
-        margin: 0;
+        margin: 0 0 10px;
         color: #ffffff;
-        font-size: 16px;
-        line-height: 1.4;
-        overflow-wrap: anywhere;
+        font-size: 20px;
+        line-height: 1.35;
+    }
+
+    .counter-home-card p {
+        margin: 0;
+        color: #aeadb8;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .counter-home-card-content {
+        flex: 1;
     }
 
     .counter-home-button,
     .counter-filter-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         background: #e50914;
         border: 1px solid #e50914;
-        border-radius: 4px;
+        border-radius: 6px;
         color: #ffffff;
-        font-weight: bold;
+        font-weight: 700;
         text-align: center;
         text-decoration: none;
         cursor: pointer;
+        transition: background 0.18s ease, border-color 0.18s ease;
     }
 
     .counter-home-button {
-        display: inline-block;
-        flex-shrink: 0;
-        padding: 9px 12px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 22px;
+        padding: 12px 16px;
         font-size: 14px;
-        white-space: nowrap;
+    }
+
+    .counter-home-button span {
+        font-size: 18px;
+        line-height: 1;
+        transition: transform 0.18s ease;
+    }
+
+    .counter-home-button:hover span {
+        transform: translateX(4px);
     }
 
     .counter-filter-button {
@@ -103,9 +170,15 @@
 
     .counter-home-button:hover,
     .counter-filter-button:hover {
-        background: #ff1f2d;
-        border-color: #ff1f2d;
+        background: #ff243e;
+        border-color: #ff243e;
         color: #ffffff;
+    }
+
+    .counter-home-button:focus-visible,
+    .counter-filter-button:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 3px;
     }
 
     .counter-report-panel {
@@ -267,21 +340,42 @@
         }
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 950px) {
+        .counter-home-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .counter-home-card:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .counter-home {
+            padding-top: 8px;
+        }
+
         .counter-home-grid {
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 14px;
+        }
+
+        .counter-home-card:last-child {
+            grid-column: auto;
         }
 
         .counter-home-card {
-            min-height: 64px;
-            padding: 12px 16px;
+            min-height: 230px;
         }
     }
 
     @media (max-width: 500px) {
         .counter-home-heading h1 {
             font-size: 25px;
+        }
+
+        .counter-home-heading {
+            margin-bottom: 22px;
         }
 
         .counter-stat-grid {
@@ -303,36 +397,61 @@
     <section class="counter-home">
 
         <div class="counter-home-heading">
+            <span class="counter-home-eyebrow">KHU VỰC NHÂN VIÊN</span>
             <h1>Bán hàng tại quầy</h1>
-            <p>Chọn tác vụ bạn muốn thực hiện.</p>
+            <p>Chọn một tác vụ bên dưới để bắt đầu phục vụ khách hàng.</p>
         </div>
 
         <div class="counter-home-grid">
 
             <article class="counter-home-card">
-                <h2>Vé tại quầy</h2>
+                <div class="counter-home-card-top">
+                    <span class="counter-home-icon" aria-hidden="true">▤</span>
+                    <span class="counter-home-index">01</span>
+                </div>
+
+                <div class="counter-home-card-content">
+                    <h2>Bán vé tại quầy</h2>
+                    <p>Chọn phim, suất chiếu và ghế ngồi để tạo đơn vé cho khách.</p>
+                </div>
 
                 <a class="counter-home-button"
                    href="${ctx}/staff/ticket-sale">
-                    Bán vé
+                    Bắt đầu bán vé <span aria-hidden="true">→</span>
                 </a>
             </article>
 
             <article class="counter-home-card">
-                <h2>Bắp nước/combo</h2>
+                <div class="counter-home-card-top">
+                    <span class="counter-home-icon" aria-hidden="true">✦</span>
+                    <span class="counter-home-index">02</span>
+                </div>
+
+                <div class="counter-home-card-content">
+                    <h2>Bắp nước / combo</h2>
+                    <p>Tiếp nhận món lẻ hoặc combo và xử lý thanh toán tại quầy.</p>
+                </div>
 
                 <a class="counter-home-button"
                    href="${ctx}/staff/food-sale">
-                    Bán hàng
+                    Tạo đơn hàng <span aria-hidden="true">→</span>
                 </a>
             </article>
 
             <article class="counter-home-card">
-                <h2>Check-in vé</h2>
+                <div class="counter-home-card-top">
+                    <span class="counter-home-icon" aria-hidden="true">✓</span>
+                    <span class="counter-home-index">03</span>
+                </div>
+
+                <div class="counter-home-card-content">
+                    <h2>Check-in vé</h2>
+                    <p>Tra cứu mã vé hoặc quét QR để xác nhận vé của khách.</p>
+                </div>
 
                 <a class="counter-home-button"
                    href="${ctx}/staff/check-in">
-                    Check-in
+                    Kiểm tra vé <span aria-hidden="true">→</span>
                 </a>
             </article>
 
