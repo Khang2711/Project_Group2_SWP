@@ -12,24 +12,6 @@
     <c:set var="activeCounterTab" value="${param.tab}" />
 </c:if>
 
-<c:url var="counterStatisticsUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="statistics" />
-</c:url>
-
-<c:url var="counterTicketsUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="tickets" />
-</c:url>
-
-<c:url var="counterFoodUrl" value="/staff/counter">
-    <c:param name="fromDate" value="${fromDate}" />
-    <c:param name="toDate" value="${toDate}" />
-    <c:param name="tab" value="food" />
-</c:url>
-
 <style>
     .counter-home {
         padding-bottom: 30px;
@@ -119,35 +101,6 @@
     .counter-filter-button:hover {
         background: #ff1f2d;
         border-color: #ff1f2d;
-        color: #ffffff;
-    }
-
-    .counter-jump-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 18px;
-    }
-
-    .counter-jump-links a,
-    .counter-reset-link {
-        padding: 10px 14px;
-        border: 1px solid #44444d;
-        border-radius: 4px;
-        color: #f2f2f2;
-        font-size: 14px;
-        text-decoration: none;
-    }
-
-    .counter-jump-links a:hover,
-    .counter-reset-link:hover {
-        border-color: #e50914;
-        color: #ff6472;
-    }
-
-    .counter-jump-links a.is-active {
-        background: #e50914;
-        border-color: #e50914;
         color: #ffffff;
     }
 
@@ -378,26 +331,6 @@
         </article>
 
     </div>
-
-    <nav class="counter-jump-links"
-         aria-label="Báo cáo bán hàng cá nhân">
-
-        <a href="${counterStatisticsUrl}"
-           class="${activeCounterTab eq 'statistics' ? 'is-active' : ''}">
-            Thống kê của tôi
-        </a>
-
-        <a href="${counterTicketsUrl}"
-           class="${activeCounterTab eq 'tickets' ? 'is-active' : ''}">
-            Vé đã bán
-        </a>
-
-        <a href="${counterFoodUrl}"
-           class="${activeCounterTab eq 'food' ? 'is-active' : ''}">
-            Bắp nước/combo đã bán
-        </a>
-
-    </nav>
 
     <section class="counter-report-panel">
 
