@@ -2299,6 +2299,8 @@ END CSS ADMIN
     color: #e50914;
     font-size: 13px;
     font-weight: bold;
+    text-align: center;
+    padding: 10px;
 }
 
 .showtimes-movie-info {

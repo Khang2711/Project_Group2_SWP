@@ -52,27 +52,9 @@
                        autocomplete="off">
 
                 <datalist id="movieOptions">
-
                     <c:forEach var="movie" items="${nowShowingMovies}">
-                    <c:if test="${not empty movie.posterUrl}">
-                        <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
-                                <c:set var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
-                                <c:url var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:otherwise>
-                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
-                            </c:otherwise>
-                        </c:choose>
-                    </c:if>
-
-
                         <option value="<c:out value='${movie.title}' />"></option>
-
                     </c:forEach>
-
                 </datalist>
 
             </div>
@@ -171,12 +153,17 @@
                                     <c:choose>
                                         <c:when test="${not empty movie.posterUrl}">
                                             <img src="<c:out value='${posterSrc}' />"
-                                                 alt="<c:out value='${movie.title}' />">
+                                                 alt="<c:out value='${movie.title}' />"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                            <div class="showtimes-no-poster" style="display:none;">
+                                                <c:out value="${movie.title}" />
+                                            </div>
                                         </c:when>
 
                                         <c:otherwise>
                                             <div class="showtimes-no-poster">
-                                                F-CINEMA
+                                                <c:out value="${movie.title}" />
                                             </div>
                                         </c:otherwise>
                                     </c:choose>
@@ -258,7 +245,7 @@
                             </article>
 
                         </c:forEach>
-                            
+
                     </details>
 
                 </c:forEach>
