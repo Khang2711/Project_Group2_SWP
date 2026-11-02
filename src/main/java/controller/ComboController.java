@@ -133,15 +133,21 @@ public class ComboController extends HttpServlet {
 
             String id = request.getParameter("id");
             if (id != null && !id.trim().isEmpty()) {
-                combo.setComboId(Integer.parseInt(id));
-                Combo existingCombo = comboService.getCombo(
-                        combo.getComboId(), manager.getCinemaId());
-                if (existingCombo == null) {
-                    throw new IllegalArgumentException(
-                            "Không tìm thấy combo trong rạp này.");
+                int comboId = Integer.parseInt(id);
+
+                // The add form may submit id=0 from its default Combo model.
+                // Only look up an existing record when the ID is positive.
+                if (comboId > 0) {
+                    combo.setComboId(comboId);
+                    Combo existingCombo = comboService.getCombo(
+                            comboId, manager.getCinemaId());
+                    if (existingCombo == null) {
+                        throw new IllegalArgumentException(
+                                "Không tìm thấy combo trong rạp này.");
+                    }
+                    existingImageUrl = existingCombo.getImageUrl();
+                    combo.setImageUrl(existingImageUrl);
                 }
-                existingImageUrl = existingCombo.getImageUrl();
-                combo.setImageUrl(existingImageUrl);
             }
 
             String price = request.getParameter("comboPrice");
