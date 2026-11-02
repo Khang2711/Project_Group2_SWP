@@ -6,6 +6,10 @@
     - Creating a PENDING booking/ticket does NOT reserve a seat.
     - Only VALID/USED tickets block a seat for a showtime.
     - Booking_Seat and reservation_expired_at are intentionally NOT used.
+
+    Counter-sale compatibility:
+    - Booking.staff_id is NULL for bookings not created by counter staff.
+    - Food_Order.booking_id is NULL for standalone food/combo orders.
 */
 
 IF DB_ID(N'FCinemaDB') IS NULL
@@ -331,7 +335,8 @@ GO
    ========================================================= */
 CREATE TABLE dbo.Booking (
     booking_id INT IDENTITY(1,1) PRIMARY KEY,
-  customer_id INT NULL,
+    customer_id INT NULL,
+    staff_id INT NULL,
     showtime_id INT NOT NULL,
     promotion_id INT NULL,
     subtotal DECIMAL(12,2) NOT NULL,
@@ -346,6 +351,8 @@ CREATE TABLE dbo.Booking (
     CONSTRAINT CK_Booking_Status CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
     CONSTRAINT FK_Booking_Customer FOREIGN KEY (customer_id)
         REFERENCES dbo.Customer(customer_id),
+    CONSTRAINT FK_Booking_Staff FOREIGN KEY (staff_id)
+        REFERENCES dbo.Staff(staff_id),
     CONSTRAINT FK_Booking_Showtime FOREIGN KEY (showtime_id)
         REFERENCES dbo.Showtime(showtime_id),
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id)
@@ -499,12 +506,15 @@ CREATE TABLE dbo.Food_Order (
     payment_status VARCHAR(20) NOT NULL CONSTRAINT DF_FoodOrder_PaymentStatus DEFAULT ('PENDING'),
     order_status VARCHAR(20) NOT NULL CONSTRAINT DF_FoodOrder_Status DEFAULT ('PENDING'),
     created_at DATETIME2 NOT NULL CONSTRAINT DF_FoodOrder_CreatedAt DEFAULT (SYSDATETIME()),
+    booking_id INT NULL,
     CONSTRAINT CK_FoodOrder_Subtotal CHECK (subtotal >= 0),
     CONSTRAINT CK_FoodOrder_Total CHECK (total_amount >= 0),
     CONSTRAINT FK_FoodOrder_Staff FOREIGN KEY (staff_id)
         REFERENCES dbo.Staff(staff_id),
     CONSTRAINT FK_FoodOrder_Cinema FOREIGN KEY (cinema_id)
-        REFERENCES dbo.Cinema(cinema_id)
+        REFERENCES dbo.Cinema(cinema_id),
+    CONSTRAINT FK_FoodOrder_Booking FOREIGN KEY (booking_id)
+        REFERENCES dbo.Booking(booking_id)
 );
 GO
 
@@ -554,6 +564,7 @@ CREATE INDEX IX_Pricing_RuleLookup
 CREATE INDEX IX_Showtime_RoomStartTime ON dbo.Showtime(room_id, start_time);
 CREATE INDEX IX_Showtime_MovieStartTime ON dbo.Showtime(movie_id, start_time);
 CREATE INDEX IX_Booking_CustomerId ON dbo.Booking(customer_id);
+CREATE INDEX IX_Booking_StaffId ON dbo.Booking(staff_id);
 CREATE INDEX IX_Booking_ShowtimeId ON dbo.Booking(showtime_id);
 CREATE INDEX IX_Ticket_ShowtimeSeat ON dbo.Ticket(showtime_id, seat_id);
 CREATE INDEX IX_Payment_BookingId ON dbo.Payment(booking_id);
@@ -561,6 +572,7 @@ CREATE INDEX IX_FoodItem_CinemaId ON dbo.Food_Item(cinema_id);
 CREATE INDEX IX_Combo_CinemaId ON dbo.Combo(cinema_id);
 CREATE INDEX IX_FoodOrder_CinemaCreatedAt ON dbo.Food_Order(cinema_id, created_at);
 CREATE INDEX IX_FoodOrder_StaffId ON dbo.Food_Order(staff_id);
+CREATE INDEX IX_FoodOrder_BookingId ON dbo.Food_Order(booking_id);
 GO
 
 /* =========================================================
