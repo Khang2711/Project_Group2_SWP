@@ -121,16 +121,21 @@ public class FoodController extends HttpServlet {
             String id = request.getParameter("id");
             if (id != null && !id.trim().isEmpty()) {
                 int foodItemId = Integer.parseInt(id);
-                item.setFoodItemId(foodItemId);
 
-                FoodItem existingItem = foodService.getItem(
-                        foodItemId, manager.getCinemaId());
-                if (existingItem == null) {
-                    throw new IllegalArgumentException(
-                            "Không tìm thấy sản phẩm trong rạp này.");
+                // The add form may submit id=0 from its empty FoodItem model.
+                // Only look up an existing record when the ID is positive.
+                if (foodItemId > 0) {
+                    item.setFoodItemId(foodItemId);
+
+                    FoodItem existingItem = foodService.getItem(
+                            foodItemId, manager.getCinemaId());
+                    if (existingItem == null) {
+                        throw new IllegalArgumentException(
+                                "Không tìm thấy sản phẩm trong rạp này.");
+                    }
+                    existingImageUrl = existingItem.getImageUrl();
+                    item.setImageUrl(existingImageUrl);
                 }
-                existingImageUrl = existingItem.getImageUrl();
-                item.setImageUrl(existingImageUrl);
             }
 
             String price = request.getParameter("price");
