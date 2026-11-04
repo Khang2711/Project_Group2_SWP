@@ -873,8 +873,16 @@ select {
     -webkit-line-clamp: 2;
 }
 
-.coming-detail {
+/* Coming soon buttons */
+.coming-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
     margin-top: auto;
+}
+
+.coming-detail,
+.coming-trailer {
     padding: 7px 10px;
     border: 1px solid #4b4d59;
     border-radius: 4px;
@@ -883,7 +891,8 @@ select {
     font-weight: bold;
 }
 
-.coming-detail:hover {
+.coming-detail:hover,
+.coming-trailer:hover {
     border-color: #e50914;
     color: #ff3141;
 }
