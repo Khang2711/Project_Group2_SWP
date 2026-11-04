@@ -174,7 +174,7 @@ public class GenreRepository extends DBContext {
     public boolean update(Genre genre) {
 
         String sql = "Update Genre\n"
-                + "SET genre_name = ?, description = ?, status = ?,\n"
+                + "SET genre_name = ?, description = ?, status = ?\n"
                 + "WHERE genre_id = ?";
 
         try {
