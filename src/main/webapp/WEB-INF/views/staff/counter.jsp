@@ -37,20 +37,6 @@
         line-height: 1.25;
     }
 
-    .counter-home-branch {
-        margin: 12px 0 0;
-        color: #aaa;
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 1.6;
-    }
-
-    .counter-home-branch-error {
-        margin-top: 12px;
-        color: #ffb8c0;
-        font-size: 14px;
-    }
-
     .counter-home-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -381,18 +367,6 @@
         <div class="counter-home-heading">
             <h1>Bán hàng tại quầy</h1>
 
-            <c:if test="${not empty staffCinema}">
-                <p class="counter-home-branch">
-                    Chi nhánh
-                    <strong><c:out value="${staffCinema.cinemaName}" /></strong>
-                </p>
-            </c:if>
-
-            <c:if test="${not empty branchError}">
-                <div class="counter-home-branch-error">
-                    <c:out value="${branchError}" />
-                </div>
-            </c:if>
         </div>
 
         <div class="counter-home-grid">
