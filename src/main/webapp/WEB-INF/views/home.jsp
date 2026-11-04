@@ -40,8 +40,8 @@
                         <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
                                       or fn:startsWith(movie.posterUrl, 'https://')}">
 
-                            <c:set var="posterSrc"
-                                   value="${movie.posterUrl}" />
+                              <c:set var="posterSrc"
+                                     value="${movie.posterUrl}" />
 
                         </c:if>
 
@@ -50,8 +50,8 @@
                                       and not fn:startsWith(movie.posterUrl, 'https://')
                                       and fn:startsWith(movie.posterUrl, '/')}">
 
-                            <c:url var="posterSrc"
-                                   value="${movie.posterUrl}" />
+                              <c:url var="posterSrc"
+                                     value="${movie.posterUrl}" />
 
                         </c:if>
 
@@ -60,8 +60,8 @@
                                       and not fn:startsWith(movie.posterUrl, 'https://')
                                       and not fn:startsWith(movie.posterUrl, '/')}">
 
-                            <c:url var="posterSrc"
-                                   value="/${movie.posterUrl}" />
+                              <c:url var="posterSrc"
+                                     value="/${movie.posterUrl}" />
 
                         </c:if>
 
@@ -472,8 +472,8 @@
                     <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
                                   or fn:startsWith(movie.posterUrl, 'https://')}">
 
-                        <c:set var="posterSrc"
-                               value="${movie.posterUrl}" />
+                          <c:set var="posterSrc"
+                                 value="${movie.posterUrl}" />
 
                     </c:if>
 
@@ -482,8 +482,8 @@
                                   and not fn:startsWith(movie.posterUrl, 'https://')
                                   and fn:startsWith(movie.posterUrl, '/')}">
 
-                        <c:url var="posterSrc"
-                               value="${movie.posterUrl}" />
+                          <c:url var="posterSrc"
+                                 value="${movie.posterUrl}" />
 
                     </c:if>
 
@@ -492,8 +492,8 @@
                                   and not fn:startsWith(movie.posterUrl, 'https://')
                                   and not fn:startsWith(movie.posterUrl, '/')}">
 
-                        <c:url var="posterSrc"
-                               value="/${movie.posterUrl}" />
+                          <c:url var="posterSrc"
+                                 value="/${movie.posterUrl}" />
 
                     </c:if>
 
@@ -702,8 +702,8 @@
                     <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
                                   or fn:startsWith(movie.posterUrl, 'https://')}">
 
-                        <c:set var="posterSrc"
-                               value="${movie.posterUrl}" />
+                          <c:set var="posterSrc"
+                                 value="${movie.posterUrl}" />
 
                     </c:if>
 
@@ -712,8 +712,8 @@
                                   and not fn:startsWith(movie.posterUrl, 'https://')
                                   and fn:startsWith(movie.posterUrl, '/')}">
 
-                        <c:url var="posterSrc"
-                               value="${movie.posterUrl}" />
+                          <c:url var="posterSrc"
+                                 value="${movie.posterUrl}" />
 
                     </c:if>
 
@@ -722,8 +722,8 @@
                                   and not fn:startsWith(movie.posterUrl, 'https://')
                                   and not fn:startsWith(movie.posterUrl, '/')}">
 
-                        <c:url var="posterSrc"
-                               value="/${movie.posterUrl}" />
+                          <c:url var="posterSrc"
+                                 value="/${movie.posterUrl}" />
 
                     </c:if>
 
@@ -818,12 +818,23 @@
                         </p>
 
 
-                        <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
-                           class="coming-detail">
+                        <div class="coming-actions">
 
-                            Xem chi tiết
+                            <a href="${pageContext.request.contextPath}/user/movie-detail?id=${movie.movieId}"
+                               class="coming-detail">
+                                Xem chi tiết
+                            </a>
 
-                        </a>
+                            <c:if test="${not empty movie.trailerUrl}">
+                                <a href="<c:out value='${movie.trailerUrl}' />"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="coming-trailer">
+                                    ▶ Xem trailer
+                                </a>
+                            </c:if>
+
+                        </div>
 
 
                     </div>
