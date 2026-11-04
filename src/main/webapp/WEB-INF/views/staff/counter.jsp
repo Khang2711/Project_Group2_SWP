@@ -38,13 +38,29 @@
         line-height: 1.25;
     }
 
-    .counter-home-heading p {
-        max-width: 620px;
-        margin: 10px 0 0;
-        color: #d0d0d8;
-        font-size: 15px;
+    .counter-home-branch {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 12px;
+        padding: 9px 14px;
+        background: rgba(229, 9, 20, 0.10);
+        border: 1px solid rgba(229, 9, 20, 0.35);
+        border-radius: 6px;
+        color: #f2f2f5;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .counter-home-branch-label {
+        color: #b8b8c2;
         font-weight: 500;
-        line-height: 1.7;
+    }
+
+    .counter-home-branch-error {
+        margin-top: 12px;
+        color: #ffb8c0;
+        font-size: 14px;
     }
 
     .counter-home-grid {
@@ -376,7 +392,19 @@
 
         <div class="counter-home-heading">
             <h1>Bán hàng tại quầy</h1>
-            <p>Chọn một tác vụ bên dưới để bắt đầu phục vụ khách hàng.</p>
+
+            <c:if test="${not empty staffCinema}">
+                <div class="counter-home-branch">
+                    <span class="counter-home-branch-label">Chi nhánh đang làm việc:</span>
+                    <c:out value="${staffCinema.cinemaName}" />
+                </div>
+            </c:if>
+
+            <c:if test="${not empty branchError}">
+                <div class="counter-home-branch-error">
+                    <c:out value="${branchError}" />
+                </div>
+            </c:if>
         </div>
 
         <div class="counter-home-grid">
