@@ -26,9 +26,8 @@
 
     .counter-home-heading {
         margin-bottom: 30px;
-        padding: 4px 0 22px 18px;
+        padding: 4px 0 22px;
         border-bottom: 1px solid #303038;
-        border-left: 5px solid #ff243e;
     }
 
     .counter-home-heading h1 {
