@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import model.Booking;
+import model.Cinema;
 import model.Combo;
 import model.FoodItem;
 import model.FoodOrder;
@@ -30,6 +31,7 @@ import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import model.User;
+import repository.CinemaRepository;
 import service.BookingService;
 import service.DashboardService;
 import service.FoodOrderService;
@@ -54,6 +56,7 @@ public class CounterSaleController extends HttpServlet {
     private TicketService ticketService;
     private DashboardService dashboardService;
     private RoomService roomService;
+    private CinemaRepository cinemaRepository;
 
     @Override
     public void init() {
@@ -65,6 +68,7 @@ public class CounterSaleController extends HttpServlet {
         ticketService = new TicketService();
         dashboardService = new DashboardService();
         roomService = new RoomService();
+        cinemaRepository = new CinemaRepository();
     }
 
     @Override
@@ -182,6 +186,27 @@ public class CounterSaleController extends HttpServlet {
                 || "food".equals(tab);
 
         if (!showReport) {
+            HttpSession session = request.getSession(false);
+            User user = (User) session.getAttribute("user");
+
+            try {
+                int cinemaId = foodOrderService.getStaffCinema(
+                        user.getUserId());
+
+                Cinema cinema = cinemaRepository.findById(cinemaId);
+
+                if (cinema != null) {
+                    request.setAttribute("staffCinema", cinema);
+                } else {
+                    request.setAttribute(
+                            "branchError",
+                            "Không thể tải thông tin chi nhánh của bạn.");
+                }
+
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                request.setAttribute("branchError", e.getMessage());
+            }
+
             request.getRequestDispatcher(
                     "/WEB-INF/views/staff/counter.jsp"
             ).forward(request, response);
