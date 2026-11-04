@@ -39,22 +39,11 @@
     }
 
     .counter-home-branch {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        margin-top: 12px;
-        padding: 9px 14px;
-        background: rgba(229, 9, 20, 0.10);
-        border: 1px solid rgba(229, 9, 20, 0.35);
-        border-radius: 6px;
-        color: #f2f2f5;
+        margin: 12px 0 0;
+        color: #aaa;
         font-size: 14px;
-        font-weight: 600;
-    }
-
-    .counter-home-branch-label {
-        color: #b8b8c2;
-        font-weight: 500;
+        font-weight: 400;
+        line-height: 1.6;
     }
 
     .counter-home-branch-error {
@@ -394,10 +383,10 @@
             <h1>Bán hàng tại quầy</h1>
 
             <c:if test="${not empty staffCinema}">
-                <div class="counter-home-branch">
-                    <span class="counter-home-branch-label">Chi nhánh đang làm việc:</span>
-                    <c:out value="${staffCinema.cinemaName}" />
-                </div>
+                <p class="counter-home-branch">
+                    Chi nhánh
+                    <strong><c:out value="${staffCinema.cinemaName}" /></strong>
+                </p>
             </c:if>
 
             <c:if test="${not empty branchError}">
