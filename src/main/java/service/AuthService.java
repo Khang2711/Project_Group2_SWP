@@ -29,7 +29,7 @@ public class AuthService {
 
         email = email.trim().toLowerCase(Locale.ROOT);
 
-        if (email.length() > 100 || !email.contains("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+        if (email.length() > 100 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new IllegalArgumentException("Email không hợp lệ.");
         }
 
