@@ -37,6 +37,14 @@
         line-height: 1.25;
     }
 
+    .counter-home-branch {
+        margin: 8px 0 0;
+        color: #b8b8c2;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
     .counter-home-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -367,6 +375,11 @@
         <div class="counter-home-heading">
             <h1>Bán hàng tại quầy</h1>
 
+            <c:if test="${not empty staffCinema}">
+                <p class="counter-home-branch">
+                    <c:out value="${staffCinema.cinemaName}" />
+                </p>
+            </c:if>
         </div>
 
         <div class="counter-home-grid">
