@@ -66,8 +66,7 @@
                            inputmode="numeric"
                            placeholder="Gồm đúng 10 chữ số"
                            title="Số điện thoại phải gồm đúng 10 chữ số"
-                           value="<c:out value='${profile.phone}' />"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                           value="<c:out value='${profile.phone}' />">
                 </div>
 
                 <div class="profile-field profile-wide">

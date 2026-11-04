@@ -29,7 +29,7 @@ public class AuthService {
 
         email = email.trim().toLowerCase(Locale.ROOT);
 
-        if (email.length() > 100 || !email.contains("@")) {
+        if (email.length() > 100 || !email.contains("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new IllegalArgumentException("Email không hợp lệ.");
         }
 
@@ -127,13 +127,12 @@ public class AuthService {
             );
         }
 
-
-        String emailPattern =
-                "(?i)^[a-z0-9]+(?:[._+][a-z0-9]+)*@gmail\\.com$";
+        String emailPattern
+                = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
 
         if (email.length() > 100 || !email.matches(emailPattern)) {
             throw new IllegalArgumentException(
-                    "Email phải có dạng ten@gmail.com"
+                    "Email không hợp lệ."
             );
         }
 

@@ -196,6 +196,24 @@
             .account-dropdown .logout-menu {
                 color: #ff718b;
             }
+            .account-dropdown .logout-form {
+                margin: 0;
+            }
+
+            .account-dropdown button.logout-menu {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 13px 17px;
+                border: 0;
+                background: transparent;
+                font: inherit;
+                font-size: 14px;
+                text-align: left;
+                cursor: pointer;
+            }
 
             .account-dropdown .logout-menu:hover {
                 background: #351a20;
@@ -479,12 +497,16 @@
 
                                 </c:if>
 
-                                <a href="${pageContext.request.contextPath}/auth/logout"
-                                   class="logout-menu">
+                                <form action="${pageContext.request.contextPath}/auth/logout"
+                                      method="post"
+                                      class="logout-form">
 
-                                    <span class="menu-icon">↪</span>
-                                    Đăng xuất
-                                </a>
+                                    <button type="submit" class="logout-menu">
+                                        <span class="menu-icon">↪</span>
+                                        Đăng xuất
+                                    </button>
+
+                                </form>
 
                             </div>
 
