@@ -2257,19 +2257,6 @@ END CSS ADMIN
     border-left: 5px solid #e50914;
 }
 
-.showtimes-steps {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #888;
-    font-size: 13px;
-}
-
-.showtimes-steps .active {
-    color: #e50914;
-    font-weight: bold;
-}
-
 /* Movie information */
 
 .showtimes-movie {
