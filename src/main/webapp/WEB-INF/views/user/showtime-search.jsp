@@ -12,13 +12,6 @@
 
     <div class="showtimes-header">
         <h1>TÌM SUẤT CHIẾU</h1>
-        <div class="showtimes-steps">
-            <span class="active">1. Suất chiếu</span>
-            <span>→</span>
-            <span>2. Chọn ghế</span>
-            <span>→</span>
-            <span>3. Thanh toán</span>
-        </div>
     </div>
 
     <%-- Search filters --%>
