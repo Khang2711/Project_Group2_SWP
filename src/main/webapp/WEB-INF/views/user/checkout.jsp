@@ -400,7 +400,7 @@
         var comboTotal = 0;
         var foodTotal = 0;
 
-        form.querySelectorAll(".quantity-value[data-unit-price]").forEach(function (input) {
+        document.querySelectorAll(".quantity-value[data-unit-price]").forEach(function (input) {
             var quantity = Math.max(0, Math.min(20, parseInt(input.value, 10) || 0));
             var lineTotal = (Number(input.dataset.unitPrice) || 0) * quantity;
             if (input.dataset.totalGroup === "combo") comboTotal += lineTotal;
