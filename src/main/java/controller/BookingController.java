@@ -101,12 +101,7 @@ public class BookingController extends HttpServlet {
             }
 
             if ("/user/checkout".equals(path)) {
-                BigDecimal foodTotal = BigDecimal.ZERO;
-        for (model.FoodItem food : checkoutFoods) {
-            Integer quantity = selectedFoodQuantities.get(food.getFoodItemId());
-            if (quantity != null) foodTotal = foodTotal.add(food.getPrice().multiply(BigDecimal.valueOf(quantity)));
-        }
-        String action = request.getParameter("action");
+                String action = request.getParameter("action");
 
                 // Áp hoặc bỏ mã chỉ tính lại tiền, chưa tạo booking.
                 if ("APPLY_PROMO".equals(action)
@@ -223,6 +218,13 @@ public class BookingController extends HttpServlet {
         for (Combo combo : checkoutCombos) {
             Integer quantity = selectedComboQuantities.get(combo.getComboId());
             if (quantity != null) comboTotal = comboTotal.add(combo.getComboPrice().multiply(BigDecimal.valueOf(quantity)));
+        }
+        BigDecimal foodTotal = BigDecimal.ZERO;
+        for (model.FoodItem food : checkoutFoods) {
+            Integer quantity = selectedFoodQuantities.get(food.getFoodItemId());
+            if (quantity != null) {
+                foodTotal = foodTotal.add(food.getPrice().multiply(BigDecimal.valueOf(quantity)));
+            }
         }
         String action = request.getParameter("action");
         String promoCode = request.getParameter("promoCode");
