@@ -39,13 +39,10 @@ public class FoodOrderRepository {
             throws SQLException {
 
         if (foodOrder.getBookingId() != null) {
-
-            if (foodOrder.getBookingId() <= 0
-                    || !isBookingAvailableForFood(
-                            connection,
-                            foodOrder.getBookingId(),
-                            foodOrder.getStaffId(),
-                            foodOrder.getCinemaId())) {
+            boolean validBooking = foodOrder.getStaffId() <= 0
+                    ? isPendingCustomerBookingForFood(connection, foodOrder.getBookingId(), foodOrder.getCinemaId())
+                    : isBookingAvailableForFood(connection, foodOrder.getBookingId(), foodOrder.getStaffId(), foodOrder.getCinemaId());
+            if (foodOrder.getBookingId() <= 0 || !validBooking) {
 
                 throw new IllegalArgumentException(
                         "Đơn vé không hợp lệ hoặc không phải do bạn bán tại rạp này.");
@@ -222,6 +219,16 @@ public class FoodOrderRepository {
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
             }
+        }
+    }
+
+    private boolean isPendingCustomerBookingForFood(Connection connection, int bookingId, int cinemaId) throws SQLException {
+        String sql = "SELECT 1 FROM dbo.Booking b JOIN dbo.Showtime st ON st.showtime_id=b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id=st.room_id WHERE b.booking_id=? AND r.cinema_id=? "
+                + "AND b.status='PENDING' AND b.staff_id IS NULL";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId); ps.setInt(2, cinemaId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
         }
     }
 
@@ -456,7 +463,8 @@ public class FoodOrderRepository {
             PreparedStatement statement,
             FoodOrder foodOrder) throws SQLException {
 
-        statement.setInt(1, foodOrder.getStaffId());
+        if (foodOrder.getStaffId() <= 0) statement.setNull(1, Types.INTEGER);
+        else statement.setInt(1, foodOrder.getStaffId());
         statement.setInt(2, foodOrder.getCinemaId());
         statement.setBigDecimal(3, foodOrder.getSubtotal());
         statement.setBigDecimal(4, foodOrder.getTotalAmount());

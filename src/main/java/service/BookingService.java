@@ -13,12 +13,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import model.Booking;
+import model.FoodOrderItem;
+import model.FoodItem;
+import model.Combo;
 import model.Movie;
 import model.Promotion;
 import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import repository.BookingRepository;
+import repository.ComboRepository;
+import repository.FoodItemRepository;
 import repository.MovieRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
@@ -32,6 +37,9 @@ public class BookingService {
     private final SeatRepository seatRepository;
     private final MovieRepository movieRepository;
     private final PromotionService promotionService;
+    private final ComboRepository comboRepository;
+    private final FoodItemRepository foodItemRepository;
+    private final FoodOrderService foodOrderService;
 
     public BookingService() {
         bookingRepository = new BookingRepository();
@@ -40,6 +48,9 @@ public class BookingService {
         seatRepository = new SeatRepository();
         movieRepository = new MovieRepository();
         promotionService = new PromotionService();
+        comboRepository = new ComboRepository();
+        foodItemRepository = new FoodItemRepository();
+        foodOrderService = new FoodOrderService();
     }
 
     public Showtime getBookableShowtime(int showtimeId) {
@@ -292,11 +303,25 @@ public class BookingService {
                 null);
     }
 
-    public int createPendingBooking(
-            int customerId,
-            int showtimeId,
-            String[] seatValues,
+    public List<Combo> getCombosForCheckout(int showtimeId) {
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+        if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        return comboRepository.findActiveForSale(cinemaId);
+    }
+
+    public List<FoodItem> getFoodItemsForCheckout(int showtimeId) {
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+        if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        return foodItemRepository.findActiveByCinema(cinemaId);
+    }
+
+    public int createPendingBooking(int customerId, int showtimeId, String[] seatValues,
             String promoCode) throws SQLException {
+        return createPendingBooking(customerId, showtimeId, seatValues, promoCode, new ArrayList<FoodOrderItem>());
+    }
+
+    public int createPendingBooking(int customerId, int showtimeId, String[] seatValues,
+            String promoCode, List<FoodOrderItem> comboItems) throws SQLException {
 
         if (customerId <= 0) {
             throw new IllegalArgumentException(
@@ -330,9 +355,9 @@ public class BookingService {
                 subtotal,
                 showtimeId);
 
-        BigDecimal discount = calculatePromotionDiscount(
-                promotion,
-                subtotal);
+        BigDecimal discount = calculatePromotionDiscount(promotion, subtotal);
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+        BigDecimal comboTotal = foodOrderService.calculateOnlineComboTotal(cinemaId, comboItems);
 
         Booking booking = new Booking();
 
@@ -346,7 +371,7 @@ public class BookingService {
 
         booking.setSubtotal(subtotal);
         booking.setDiscountAmount(discount);
-        booking.setTotalAmount(subtotal.subtract(discount));
+        booking.setTotalAmount(subtotal.subtract(discount).add(comboTotal));
         booking.setStatus("PENDING");
 
         // Booking và Ticket vẫn được tạo trong cùng transaction.
@@ -380,6 +405,9 @@ public class BookingService {
                             showtimeId);
                 }
 
+                if (comboTotal.signum() > 0) {
+                    foodOrderService.createPendingOnlineOrder(connection, bookingId, cinemaId, comboItems, comboTotal);
+                }
                 connection.commit();
                 return bookingId;
 

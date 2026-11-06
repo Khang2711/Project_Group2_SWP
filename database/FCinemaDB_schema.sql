@@ -498,7 +498,7 @@ GO
    ========================================================= */
 CREATE TABLE dbo.Food_Order (
     food_order_id INT IDENTITY(1,1) PRIMARY KEY,
-    staff_id INT NOT NULL,
+    staff_id INT NULL,
     cinema_id INT NOT NULL,
     subtotal DECIMAL(12,2) NOT NULL,
     total_amount DECIMAL(12,2) NOT NULL,

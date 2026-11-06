@@ -12,6 +12,8 @@ import model.FoodOrder;
 import model.FoodOrderItem;
 import repository.FoodOrderItemRepository;
 import repository.FoodOrderRepository;
+import repository.ComboRepository;
+import repository.FoodItemRepository;
 
 public class FoodOrderService {
 
@@ -20,6 +22,74 @@ public class FoodOrderService {
 
     private final FoodOrderItemRepository foodOrderItemRepository
             = new FoodOrderItemRepository();
+    private final ComboRepository comboRepository = new ComboRepository();
+    private final FoodItemRepository foodItemRepository = new FoodItemRepository();
+
+    public BigDecimal calculateOnlineComboTotal(int cinemaId, List<FoodOrderItem> items) {
+        if (items == null || items.isEmpty()) return BigDecimal.ZERO;
+        if (cinemaId <= 0) throw new IllegalArgumentException("Rạp của sản phẩm không hợp lệ.");
+
+        List<Combo> availableCombos = comboRepository.findActiveForSale(cinemaId);
+        List<FoodItem> availableFoods = foodItemRepository.findActiveByCinema(cinemaId);
+        List<String> usedItems = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (FoodOrderItem item : items) {
+            if (item == null || item.getQuantity() <= 0 || item.getQuantity() > 20)
+                throw new IllegalArgumentException("Số lượng sản phẩm không hợp lệ.");
+
+            boolean isFood = item.getFoodItemId() != null;
+            boolean isCombo = item.getComboId() != null;
+            if (isFood == isCombo)
+                throw new IllegalArgumentException("Mỗi sản phẩm phải là đồ ăn, nước uống hoặc combo.");
+
+            BigDecimal price = null;
+            String key;
+            if (isFood) {
+                int foodId = item.getFoodItemId();
+                key = "FOOD-" + foodId;
+                for (FoodItem food : availableFoods) {
+                    if (food.getFoodItemId() == foodId) price = food.getPrice();
+                }
+            } else {
+                int comboId = item.getComboId();
+                key = "COMBO-" + comboId;
+                for (Combo combo : availableCombos) {
+                    if (combo.getComboId() == comboId) price = combo.getComboPrice();
+                }
+            }
+
+            if (usedItems.contains(key))
+                throw new IllegalArgumentException("Sản phẩm bị lặp trong đơn hàng.");
+            usedItems.add(key);
+            if (price == null || price.signum() < 0)
+                throw new IllegalArgumentException("Sản phẩm không còn bán tại rạp này.");
+
+            item.setUnitPrice(price);
+            item.setLineTotal(price.multiply(BigDecimal.valueOf(item.getQuantity())));
+            total = total.add(item.getLineTotal());
+        }
+        return total;
+    }
+
+    public int createPendingOnlineOrder(Connection connection, int bookingId, int cinemaId,
+            List<FoodOrderItem> items, BigDecimal total) throws SQLException {
+        if (connection == null || connection.getAutoCommit() || bookingId <= 0
+                || items == null || items.isEmpty() || total == null || total.signum() <= 0)
+            throw new SQLException("Thông tin bắp nước mua online không hợp lệ.");
+        FoodOrder order = new FoodOrder();
+        order.setStaffId(0); order.setCinemaId(cinemaId); order.setBookingId(bookingId);
+        order.setSubtotal(total); order.setTotalAmount(total); order.setPaymentMethod("VNPAY");
+        order.setPaymentStatus("PENDING"); order.setOrderStatus("PENDING");
+        int orderId = foodOrderRepository.insert(connection, order);
+        if (orderId <= 0) throw new SQLException("Không thể tạo đơn combo đi kèm.");
+        for (FoodOrderItem item : items) {
+            item.setFoodOrderId(orderId);
+            if (foodOrderItemRepository.insert(connection, item) <= 0)
+                throw new SQLException("Không thể lưu chi tiết sản phẩm bắp nước.");
+        }
+        return orderId;
+    }
 
     public int getStaffCinema(int staffId) {
 

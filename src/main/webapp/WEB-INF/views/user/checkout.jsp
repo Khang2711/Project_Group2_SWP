@@ -65,9 +65,25 @@
         border: 1px solid #4caf50;
     }
 
-    .uc22-checkout .discount-value {
-        color: #6cdb92;
-    }
+    .uc22-checkout .discount-value { color: #6cdb92; }
+    .uc22-checkout .menu-section { margin-top:24px; }
+    .uc22-checkout .menu-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .uc22-checkout .menu-section-heading h2 { margin:0; }
+    .uc22-checkout .menu-hint { color:#aaa; font-size:13px; margin:5px 0 12px; }
+    .uc22-checkout .combo-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; margin-top:12px; }
+    .uc22-checkout .combo-item { display:flex; align-items:center; gap:12px; padding:13px; border:1px solid #393943; border-radius:12px; background:linear-gradient(145deg,#1d1d23,#141418); min-width:0; transition:border-color .2s,transform .2s; }
+    .uc22-checkout .combo-item:hover { border-color:#e50914; transform:translateY(-2px); }
+    .uc22-checkout .combo-item img { width:88px; height:82px; flex-shrink:0; object-fit:cover; border-radius:9px; background:#292930; }
+    .uc22-checkout .combo-info { flex:1; min-width:0; }
+    .uc22-checkout .combo-info small { display:block; color:#aaa; margin:5px 0 8px; line-height:1.4; }
+    .uc22-checkout .combo-price { display:block; color:#f5c451; white-space:nowrap; }
+    .uc22-checkout .quantity-control { display:flex; align-items:center; gap:5px; flex-shrink:0; padding:4px; border:1px solid #41414b; border-radius:9px; background:#101014; }
+    .uc22-checkout .quantity-btn { width:32px; height:32px; display:grid; place-items:center; border:0; border-radius:7px; background:#303039; color:#fff; font-size:20px; font-weight:700; line-height:1; cursor:pointer; transition:background .15s,transform .15s; }
+    .uc22-checkout .quantity-btn:hover { background:#e50914; transform:scale(1.05); }
+    .uc22-checkout .quantity-btn:active { transform:scale(.94); }
+    .uc22-checkout .quantity-value { width:30px; padding:0; border:0; outline:0; background:transparent; color:#fff; text-align:center; font-weight:700; font-size:15px; -moz-appearance:textfield; }
+    .uc22-checkout .quantity-value::-webkit-inner-spin-button,.uc22-checkout .quantity-value::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .uc22-checkout .menu-empty { padding:16px; color:#aaa; border:1px dashed #484852; border-radius:10px; text-align:center; }
 
     .uc22-checkout .booking-primary-button:disabled {
         background: #55555f;
@@ -146,6 +162,80 @@
 
             </div>
 
+            <div class="menu-section">
+                <div class="menu-section-heading">
+                    <h2>🍿 Combo bắp nước</h2>
+                    <span class="seat-count">Không bắt buộc</span>
+                </div>
+                <p class="menu-hint">Chọn combo tiện lợi để tiết kiệm hơn khi xem phim.</p>
+                <div class="combo-list">
+                    <c:choose><c:when test="${not empty checkoutCombos}">
+                        <c:forEach var="combo" items="${checkoutCombos}">
+                            <div class="combo-item">
+                                <c:set var="comboImagePath" value="${fn:trim(combo.imageUrl)}" />
+                                <c:if test="${not empty comboImagePath}">
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(comboImagePath, 'http://') or fn:startsWith(comboImagePath, 'https://') or fn:startsWith(comboImagePath, '/') }"><c:url var="comboImageSrc" value="${comboImagePath}" /></c:when>
+                                        <c:otherwise><c:url var="comboImageSrc" value="/${comboImagePath}" /></c:otherwise>
+                                    </c:choose>
+                                    <img src="${comboImageSrc}" alt="Combo bắp nước">
+                                </c:if>
+                                <div class="combo-info"><strong><c:out value="${combo.comboName}" /></strong>
+                                    <small><c:out value="${combo.description}" /></small>
+                                    <strong class="combo-price"><fmt:formatNumber value="${combo.comboPrice}" pattern="#,##0.##" /> VNĐ</strong>
+                                </div>
+                                <input type="hidden" name="comboId" value="${combo.comboId}" form="checkoutForm">
+                                <div class="quantity-control">
+                                    <button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button>
+                                    <input class="quantity-value" type="number" name="comboQuantity" form="checkoutForm" data-unit-price="${combo.comboPrice}" data-total-group="combo" min="0" max="20" value="${selectedComboQuantities[combo.comboId] != null ? selectedComboQuantities[combo.comboId] : 0}" aria-label="Số lượng combo">
+                                    <button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </c:when><c:otherwise><p class="menu-empty">Hiện chưa có combo khả dụng tại rạp này.</p></c:otherwise></c:choose>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-heading"><h2>🍟 Đồ ăn riêng</h2><span class="seat-count">Food</span></div>
+                <p class="menu-hint">Chọn món ăn lẻ theo sở thích, không cần mua theo combo.</p>
+                <div class="combo-list">
+                    <c:set var="hasFoodItems" value="false" />
+                    <c:forEach var="food" items="${checkoutFoods}">
+                        <c:if test="${food.itemType eq 'FOOD'}">
+                            <c:set var="hasFoodItems" value="true" />
+                            <div class="combo-item">
+                                <c:if test="${not empty food.imageUrl}"><c:set var="foodImagePath" value="${fn:trim(food.imageUrl)}" /><c:choose><c:when test="${fn:startsWith(foodImagePath, 'http://') or fn:startsWith(foodImagePath, 'https://') or fn:startsWith(foodImagePath, '/') }"><c:url var="foodImageSrc" value="${foodImagePath}" /></c:when><c:otherwise><c:url var="foodImageSrc" value="/${foodImagePath}" /></c:otherwise></c:choose><img src="${foodImageSrc}" alt="Sản phẩm"></c:if>
+                                <div class="combo-info"><strong><c:out value="${food.itemName}" /></strong><small><c:out value="${food.description}" /></small><strong class="combo-price"><fmt:formatNumber value="${food.price}" pattern="#,##0.##" /> VNĐ</strong></div>
+                                <input type="hidden" name="foodItemId" value="${food.foodItemId}" form="checkoutForm">
+                                <div class="quantity-control"><button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button><input class="quantity-value" type="number" name="foodQuantity" form="checkoutForm" data-unit-price="${food.price}" data-total-group="food" min="0" max="20" value="${selectedFoodQuantities[food.foodItemId] != null ? selectedFoodQuantities[food.foodItemId] : 0}" aria-label="Số lượng đồ ăn"><button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button></div>
+                            </div>
+                        </c:if>
+                    </c:forEach>
+                    <c:if test="${not hasFoodItems}"><p class="menu-empty">Hiện chưa có món ăn riêng tại rạp này.</p></c:if>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-heading"><h2>🥤 Nước uống riêng</h2><span class="seat-count">Drink</span></div>
+                <p class="menu-hint">Chọn nước uống riêng hoặc kết hợp cùng đồ ăn.</p>
+                <div class="combo-list">
+                    <c:set var="hasDrinkItems" value="false" />
+                    <c:forEach var="food" items="${checkoutFoods}">
+                        <c:if test="${food.itemType eq 'DRINK'}">
+                            <c:set var="hasDrinkItems" value="true" />
+                            <div class="combo-item">
+                                <c:if test="${not empty food.imageUrl}"><c:set var="foodImagePath" value="${fn:trim(food.imageUrl)}" /><c:choose><c:when test="${fn:startsWith(foodImagePath, 'http://') or fn:startsWith(foodImagePath, 'https://') or fn:startsWith(foodImagePath, '/') }"><c:url var="foodImageSrc" value="${foodImagePath}" /></c:when><c:otherwise><c:url var="foodImageSrc" value="/${foodImagePath}" /></c:otherwise></c:choose><img src="${foodImageSrc}" alt="Sản phẩm"></c:if>
+                                <div class="combo-info"><strong><c:out value="${food.itemName}" /></strong><small><c:out value="${food.description}" /></small><strong class="combo-price"><fmt:formatNumber value="${food.price}" pattern="#,##0.##" /> VNĐ</strong></div>
+                                <input type="hidden" name="foodItemId" value="${food.foodItemId}" form="checkoutForm">
+                                <div class="quantity-control"><button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button><input class="quantity-value" type="number" name="foodQuantity" form="checkoutForm" data-unit-price="${food.price}" data-total-group="food" min="0" max="20" value="${selectedFoodQuantities[food.foodItemId] != null ? selectedFoodQuantities[food.foodItemId] : 0}" aria-label="Số lượng nước uống"><button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button></div>
+                            </div>
+                        </c:if>
+                    </c:forEach>
+                    <c:if test="${not hasDrinkItems}"><p class="menu-empty">Hiện chưa có nước uống riêng tại rạp này.</p></c:if>
+                </div>
+            </div>
+
         </div>
 
         <div class="checkout-summary">
@@ -180,7 +270,7 @@
 
             <form action="${ctx}/user/checkout"
                   method="post"
-                  class="checkout-confirm-form">
+                  id="checkoutForm" class="checkout-confirm-form">
 
                 <input type="hidden"
                        name="showtimeId"
@@ -259,22 +349,18 @@
                 <div class="summary-row">
                     <span>Giảm giá</span>
 
-                    <strong class="discount-value">
-                        - <fmt:formatNumber
-                            value="${discountAmount}"
-                            pattern="#,##0.##" />
-                        VNĐ
+                    <strong class="discount-value" id="discountDisplay">
+                        - <fmt:formatNumber value="${discountAmount}" pattern="#,##0.##" /> VNĐ
                     </strong>
                 </div>
 
+                <div class="summary-row"><span>Combo bắp nước</span><strong id="comboTotalDisplay"><fmt:formatNumber value="${comboTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
+                <div class="summary-row"><span>Đồ ăn &amp; nước uống</span><strong id="foodTotalDisplay"><fmt:formatNumber value="${foodTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
                 <div class="summary-row summary-total">
-                    <span>Tổng sau giảm</span>
+                    <span>Tổng thanh toán</span>
 
-                    <strong>
-                        <fmt:formatNumber
-                            value="${finalAmount}"
-                            pattern="#,##0.##" />
-                        VNĐ
+                    <strong id="finalAmountDisplay">
+                        <fmt:formatNumber value="${finalAmount}" pattern="#,##0.##" /> VNĐ
                     </strong>
                 </div>
 
@@ -303,4 +389,73 @@
 
 </section>
 
+<script>
+(function () {
+    var form = document.getElementById("checkoutForm");
+    if (!form) return;
+
+    var moneyFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
+
+    function updateCheckoutTotal() {
+        var comboTotal = 0;
+        var foodTotal = 0;
+
+        document.querySelectorAll(".quantity-value[data-unit-price]").forEach(function (input) {
+            var quantity = Math.max(0, Math.min(20, parseInt(input.value, 10) || 0));
+            var lineTotal = (Number(input.dataset.unitPrice) || 0) * quantity;
+            if (input.dataset.totalGroup === "combo") comboTotal += lineTotal;
+            if (input.dataset.totalGroup === "food") foodTotal += lineTotal;
+        });
+
+        var comboDisplay = document.getElementById("comboTotalDisplay");
+        var foodDisplay = document.getElementById("foodTotalDisplay");
+        var finalDisplay = document.getElementById("finalAmountDisplay");
+        var discountDisplay = document.getElementById("discountDisplay");
+        var subtotal = Number("${subtotal}") || 0;
+        var discount = Number("${discountAmount}") || 0;
+
+        if (comboDisplay) comboDisplay.textContent = moneyFormat.format(comboTotal) + " VNĐ";
+        if (foodDisplay) foodDisplay.textContent = moneyFormat.format(foodTotal) + " VNĐ";
+        if (finalDisplay) {
+            finalDisplay.textContent = moneyFormat.format(
+                Math.max(0, subtotal - discount + comboTotal + foodTotal)
+            ) + " VNĐ";
+        }
+        if (discountDisplay) {
+            discountDisplay.textContent = "- " + moneyFormat.format(discount) + " VNĐ";
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-quantity-action]");
+        if (!button) return;
+        var control = button.closest(".quantity-control");
+        var input = control ? control.querySelector(".quantity-value") : null;
+        if (!input) return;
+        var current = parseInt(input.value, 10) || 0;
+        input.value = button.dataset.quantityAction === "plus"
+            ? Math.min(20, current + 1)
+            : Math.max(0, current - 1);
+        updateCheckoutTotal();
+    });
+
+    document.addEventListener("input", function (event) {
+        if (!event.target.classList.contains("quantity-value")) return;
+        var value = parseInt(event.target.value, 10);
+        if (isNaN(value)) value = 0;
+        event.target.value = Math.max(0, Math.min(20, value));
+        updateCheckoutTotal();
+    });
+
+    document.addEventListener("change", function (event) {
+        if (!event.target.classList.contains("quantity-value")) return;
+        var value = parseInt(event.target.value, 10);
+        if (isNaN(value)) value = 0;
+        event.target.value = Math.max(0, Math.min(20, value));
+        updateCheckoutTotal();
+    });
+
+    updateCheckoutTotal();
+})();
+</script>
 <%@ include file="/WEB-INF/include/footer.jsp" %>
