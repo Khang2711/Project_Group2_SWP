@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import model.Booking;
 import model.FoodOrderItem;
+import model.FoodItem;
 import model.Combo;
 import model.Movie;
 import model.Promotion;
@@ -22,6 +23,7 @@ import model.Showtime;
 import model.Ticket;
 import repository.BookingRepository;
 import repository.ComboRepository;
+import repository.FoodItemRepository;
 import repository.MovieRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
@@ -36,6 +38,7 @@ public class BookingService {
     private final MovieRepository movieRepository;
     private final PromotionService promotionService;
     private final ComboRepository comboRepository;
+    private final FoodItemRepository foodItemRepository;
     private final FoodOrderService foodOrderService;
 
     public BookingService() {
@@ -46,6 +49,7 @@ public class BookingService {
         movieRepository = new MovieRepository();
         promotionService = new PromotionService();
         comboRepository = new ComboRepository();
+        foodItemRepository = new FoodItemRepository();
         foodOrderService = new FoodOrderService();
     }
 
@@ -303,6 +307,12 @@ public class BookingService {
         int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
         if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
         return comboRepository.findActiveForSale(cinemaId);
+    }
+
+    public List<FoodItem> getFoodItemsForCheckout(int showtimeId) {
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+        if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        return foodItemRepository.findActiveByCinema(cinemaId);
     }
 
     public int createPendingBooking(int customerId, int showtimeId, String[] seatValues,
