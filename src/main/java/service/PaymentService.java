@@ -513,13 +513,14 @@ public class PaymentService {
                     );
                 }
 
-                paymentRepository.failPendingPaymentsForBooking(
-                        connection,
-                        bookingId
-                );
-
+                paymentRepository.failPendingPaymentsForBooking(connection, bookingId);
+                try (java.sql.PreparedStatement foodUpdate = connection.prepareStatement(
+                        "UPDATE dbo.Food_Order SET payment_status='PAID' WHERE booking_id=? "
+                        + "AND payment_method='VNPAY' AND payment_status='PENDING'")) {
+                    foodUpdate.setInt(1, bookingId);
+                    foodUpdate.executeUpdate();
+                }
                 connection.commit();
-
                 return result(
                         "00", "Confirm Success", true, true,
                         true, false, bookingId,
