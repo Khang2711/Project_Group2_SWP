@@ -37,33 +37,21 @@
                     <c:if test="${not empty movie.posterUrl}">
 
 
-                        <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
-                                      or fn:startsWith(movie.posterUrl, 'https://')}">
+                        <c:choose>
+                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') 
+                                            or fn:startsWith(movie.posterUrl, 'https://')}">
+                                <c:set var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
 
-                              <c:set var="posterSrc"
-                                     value="${movie.posterUrl}" />
+                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                                <c:url var="posterSrc" value="${movie.posterUrl}" />
+                            </c:when>
 
-                        </c:if>
+                            <c:otherwise>
+                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                            </c:otherwise>
 
-
-                        <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                      and not fn:startsWith(movie.posterUrl, 'https://')
-                                      and fn:startsWith(movie.posterUrl, '/')}">
-
-                              <c:url var="posterSrc"
-                                     value="${movie.posterUrl}" />
-
-                        </c:if>
-
-
-                        <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                      and not fn:startsWith(movie.posterUrl, 'https://')
-                                      and not fn:startsWith(movie.posterUrl, '/')}">
-
-                              <c:url var="posterSrc"
-                                     value="/${movie.posterUrl}" />
-
-                        </c:if>
+                        </c:choose>
 
 
                     </c:if>
@@ -469,33 +457,21 @@
                 <c:if test="${not empty movie.posterUrl}">
 
 
-                    <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
-                                  or fn:startsWith(movie.posterUrl, 'https://')}">
+                    <c:choose>
+                        <c:when test="${fn:startsWith(movie.posterUrl, 'http://') 
+                                        or fn:startsWith(movie.posterUrl, 'https://')}">
+                            <c:set var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
 
-                          <c:set var="posterSrc"
-                                 value="${movie.posterUrl}" />
+                        <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                            <c:url var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
 
-                    </c:if>
+                        <c:otherwise>
+                            <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                        </c:otherwise>
 
-
-                    <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                  and not fn:startsWith(movie.posterUrl, 'https://')
-                                  and fn:startsWith(movie.posterUrl, '/')}">
-
-                          <c:url var="posterSrc"
-                                 value="${movie.posterUrl}" />
-
-                    </c:if>
-
-
-                    <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                  and not fn:startsWith(movie.posterUrl, 'https://')
-                                  and not fn:startsWith(movie.posterUrl, '/')}">
-
-                          <c:url var="posterSrc"
-                                 value="/${movie.posterUrl}" />
-
-                    </c:if>
+                    </c:choose>
 
 
                 </c:if>
@@ -699,33 +675,22 @@
                 <c:if test="${not empty movie.posterUrl}">
 
 
-                    <c:if test="${fn:startsWith(movie.posterUrl, 'http://')
-                                  or fn:startsWith(movie.posterUrl, 'https://')}">
+                    <c:choose>
+                        
+                        <c:when test="${fn:startsWith(movie.posterUrl, 'http://') 
+                                        or fn:startsWith(movie.posterUrl, 'https://')}">
+                            <c:set var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
 
-                          <c:set var="posterSrc"
-                                 value="${movie.posterUrl}" />
+                        <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                            <c:url var="posterSrc" value="${movie.posterUrl}" />
+                        </c:when>
 
-                    </c:if>
+                        <c:otherwise>
+                            <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                        </c:otherwise>
 
-
-                    <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                  and not fn:startsWith(movie.posterUrl, 'https://')
-                                  and fn:startsWith(movie.posterUrl, '/')}">
-
-                          <c:url var="posterSrc"
-                                 value="${movie.posterUrl}" />
-
-                    </c:if>
-
-
-                    <c:if test="${not fn:startsWith(movie.posterUrl, 'http://')
-                                  and not fn:startsWith(movie.posterUrl, 'https://')
-                                  and not fn:startsWith(movie.posterUrl, '/')}">
-
-                          <c:url var="posterSrc"
-                                 value="/${movie.posterUrl}" />
-
-                    </c:if>
+                    </c:choose>
 
 
                 </c:if>

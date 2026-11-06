@@ -26,15 +26,20 @@
 
                     <c:if test="${not empty movie.posterUrl}">
                         <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                            
+                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') 
+                                            or fn:startsWith(movie.posterUrl, 'https://')}">
                                 <c:set var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            
                             <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
                                 <c:url var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            
                             <c:otherwise>
                                 <c:url var="posterSrc" value="/${movie.posterUrl}" />
                             </c:otherwise>
+                            
                         </c:choose>
                     </c:if>
 

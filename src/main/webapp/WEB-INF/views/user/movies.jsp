@@ -41,30 +41,22 @@
 
         <form action="${ctx}/user/movies" method="get" class="movies-search-form">
 
-            <input type="hidden" name="type" value="${type}">
+            <input type="hidden" 
+                   name="type" 
+                   value="${type}">
 
-            <input type="text" name="keyword" value="${keyword}" class="movies-search-input" placeholder="Tìm tên phim..." list="movieOptions" autocomplete="off">
+            <input type="text" 
+                   name="keyword" 
+                   value="${keyword}" 
+                   class="movies-search-input" 
+                   placeholder="Tìm tên phim..." 
+                   list="movieOptions" 
+                   autocomplete="off">
 
             <datalist id="movieOptions">
 
-                <c:forEach var="movie" items="${nowShowingMovies}">
-                    <c:if test="${not empty movie.posterUrl}">
-                        <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
-                                <c:set var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
-                                <c:url var="posterSrc" value="${movie.posterUrl}" />
-                            </c:when>
-                            <c:otherwise>
-                                <c:url var="posterSrc" value="/${movie.posterUrl}" />
-                            </c:otherwise>
-                        </c:choose>
-                    </c:if>
-
-
-                    <option value="${movie.title}"></option>
-
+                <c:forEach var="movie" items="${movies}">
+                    <option value="<c:out value='${movie.title}' />"></option>
                 </c:forEach>
 
             </datalist>
@@ -93,15 +85,20 @@
                 <c:forEach var="movie" items="${movies}">
                     <c:if test="${not empty movie.posterUrl}">
                         <c:choose>
-                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') or fn:startsWith(movie.posterUrl, 'https://')}">
+                            
+                            <c:when test="${fn:startsWith(movie.posterUrl, 'http://') 
+                                            or fn:startsWith(movie.posterUrl, 'https://')}">
                                 <c:set var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            
                             <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
                                 <c:url var="posterSrc" value="${movie.posterUrl}" />
                             </c:when>
+                            
                             <c:otherwise>
                                 <c:url var="posterSrc" value="/${movie.posterUrl}" />
                             </c:otherwise>
+                            
                         </c:choose>
                     </c:if>
 
