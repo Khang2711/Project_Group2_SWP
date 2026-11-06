@@ -187,7 +187,7 @@
                                 <input type="hidden" name="comboId" value="${combo.comboId}" form="checkoutForm">
                                 <div class="quantity-control">
                                     <button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button>
-                                    <input class="quantity-value" type="number" name="comboQuantity" form="checkoutForm" min="0" max="20" value="${selectedComboQuantities[combo.comboId] != null ? selectedComboQuantities[combo.comboId] : 0}" aria-label="Số lượng combo">
+                                    <input class="quantity-value" type="number" name="comboQuantity" form="checkoutForm" data-unit-price="${combo.comboPrice}" data-total-group="combo" min="0" max="20" value="${selectedComboQuantities[combo.comboId] != null ? selectedComboQuantities[combo.comboId] : 0}" aria-label="Số lượng combo">
                                     <button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button>
                                 </div>
                             </div>
@@ -205,10 +205,10 @@
                         <c:if test="${food.itemType eq 'FOOD'}">
                             <c:set var="hasFoodItems" value="true" />
                             <div class="combo-item">
-                                <c:if test="${not empty food.imageUrl}"><c:url var="foodImageSrc" value="/${food.imageUrl}" /><img src="${foodImageSrc}" alt="Đồ ăn"></c:if>
+                                <c:if test="${not empty food.imageUrl}"><c:set var="foodImagePath" value="${fn:trim(food.imageUrl)}" /><c:choose><c:when test="${fn:startsWith(foodImagePath, 'http://') or fn:startsWith(foodImagePath, 'https://') or fn:startsWith(foodImagePath, '/') }"><c:url var="foodImageSrc" value="${foodImagePath}" /></c:when><c:otherwise><c:url var="foodImageSrc" value="/${foodImagePath}" /></c:otherwise></c:choose><img src="${foodImageSrc}" alt="Sản phẩm"></c:if>
                                 <div class="combo-info"><strong><c:out value="${food.itemName}" /></strong><small><c:out value="${food.description}" /></small><strong class="combo-price"><fmt:formatNumber value="${food.price}" pattern="#,##0.##" /> VNĐ</strong></div>
                                 <input type="hidden" name="foodItemId" value="${food.foodItemId}" form="checkoutForm">
-                                <div class="quantity-control"><button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button><input class="quantity-value" type="number" name="foodQuantity" form="checkoutForm" min="0" max="20" value="${selectedFoodQuantities[food.foodItemId] != null ? selectedFoodQuantities[food.foodItemId] : 0}" aria-label="Số lượng đồ ăn"><button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button></div>
+                                <div class="quantity-control"><button class="quantity-btn" type="button" data-quantity-action="minus" aria-label="Giảm số lượng">−</button><input class="quantity-value" type="number" name="foodQuantity" form="checkoutForm" data-unit-price="${food.price}" data-total-group="food" min="0" max="20" value="${selectedFoodQuantities[food.foodItemId] != null ? selectedFoodQuantities[food.foodItemId] : 0}" aria-label="Số lượng đồ ăn"><button class="quantity-btn" type="button" data-quantity-action="plus" aria-label="Tăng số lượng">+</button></div>
                             </div>
                         </c:if>
                     </c:forEach>
@@ -349,24 +349,18 @@
                 <div class="summary-row">
                     <span>Giảm giá</span>
 
-                    <strong class="discount-value">
-                        - <fmt:formatNumber
-                            value="${discountAmount}"
-                            pattern="#,##0.##" />
-                        VNĐ
+                    <strong class="discount-value" id="discountDisplay">
+                        - <fmt:formatNumber value="${discountAmount}" pattern="#,##0.##" /> VNĐ
                     </strong>
                 </div>
 
-                <div class="summary-row"><span>Combo bắp nước</span><strong><fmt:formatNumber value="${comboTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
-                <div class="summary-row"><span>Đồ ăn &amp; nước uống</span><strong><fmt:formatNumber value="${foodTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
+                <div class="summary-row"><span>Combo bắp nước</span><strong id="comboTotalDisplay"><fmt:formatNumber value="${comboTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
+                <div class="summary-row"><span>Đồ ăn &amp; nước uống</span><strong id="foodTotalDisplay"><fmt:formatNumber value="${foodTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
                 <div class="summary-row summary-total">
                     <span>Tổng thanh toán</span>
 
-                    <strong>
-                        <fmt:formatNumber
-                            value="${finalAmount}"
-                            pattern="#,##0.##" />
-                        VNĐ
+                    <strong id="finalAmountDisplay">
+                        <fmt:formatNumber value="${finalAmount}" pattern="#,##0.##" /> VNĐ
                     </strong>
                 </div>
 
@@ -396,22 +390,72 @@
 </section>
 
 <script>
-document.addEventListener("click", function (event) {
-    var button = event.target.closest("[data-quantity-action]");
-    if (!button) return;
-    var control = button.closest(".quantity-control");
-    var input = control ? control.querySelector(".quantity-value") : null;
-    if (!input) return;
-    var current = parseInt(input.value, 10) || 0;
-    input.value = button.dataset.quantityAction === "plus"
-        ? Math.min(20, current + 1)
-        : Math.max(0, current - 1);
-});
-document.addEventListener("change", function (event) {
-    if (!event.target.classList.contains("quantity-value")) return;
-    var value = parseInt(event.target.value, 10);
-    if (isNaN(value)) value = 0;
-    event.target.value = Math.max(0, Math.min(20, value));
-});
+(function () {
+    var form = document.getElementById("checkoutForm");
+    if (!form) return;
+
+    var moneyFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
+
+    function updateCheckoutTotal() {
+        var comboTotal = 0;
+        var foodTotal = 0;
+
+        form.querySelectorAll(".quantity-value[data-unit-price]").forEach(function (input) {
+            var quantity = Math.max(0, Math.min(20, parseInt(input.value, 10) || 0));
+            var lineTotal = (Number(input.dataset.unitPrice) || 0) * quantity;
+            if (input.dataset.totalGroup === "combo") comboTotal += lineTotal;
+            if (input.dataset.totalGroup === "food") foodTotal += lineTotal;
+        });
+
+        var comboDisplay = document.getElementById("comboTotalDisplay");
+        var foodDisplay = document.getElementById("foodTotalDisplay");
+        var finalDisplay = document.getElementById("finalAmountDisplay");
+        var discountDisplay = document.getElementById("discountDisplay");
+        var subtotal = Number("${subtotal}") || 0;
+        var discount = Number("${discountAmount}") || 0;
+
+        if (comboDisplay) comboDisplay.textContent = moneyFormat.format(comboTotal) + " VNĐ";
+        if (foodDisplay) foodDisplay.textContent = moneyFormat.format(foodTotal) + " VNĐ";
+        if (finalDisplay) {
+            finalDisplay.textContent = moneyFormat.format(
+                Math.max(0, subtotal - discount + comboTotal + foodTotal)
+            ) + " VNĐ";
+        }
+        if (discountDisplay) {
+            discountDisplay.textContent = "- " + moneyFormat.format(discount) + " VNĐ";
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-quantity-action]");
+        if (!button) return;
+        var control = button.closest(".quantity-control");
+        var input = control ? control.querySelector(".quantity-value") : null;
+        if (!input) return;
+        var current = parseInt(input.value, 10) || 0;
+        input.value = button.dataset.quantityAction === "plus"
+            ? Math.min(20, current + 1)
+            : Math.max(0, current - 1);
+        updateCheckoutTotal();
+    });
+
+    document.addEventListener("input", function (event) {
+        if (!event.target.classList.contains("quantity-value")) return;
+        var value = parseInt(event.target.value, 10);
+        if (isNaN(value)) value = 0;
+        event.target.value = Math.max(0, Math.min(20, value));
+        updateCheckoutTotal();
+    });
+
+    document.addEventListener("change", function (event) {
+        if (!event.target.classList.contains("quantity-value")) return;
+        var value = parseInt(event.target.value, 10);
+        if (isNaN(value)) value = 0;
+        event.target.value = Math.max(0, Math.min(20, value));
+        updateCheckoutTotal();
+    });
+
+    updateCheckoutTotal();
+})();
 </script>
 <%@ include file="/WEB-INF/include/footer.jsp" %>
