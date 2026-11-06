@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import model.Combo;
+import model.FoodOrderItem;
 import java.util.Set;
 import model.Booking;
 import model.Movie;
@@ -208,6 +210,13 @@ public class BookingController extends HttpServlet {
             subtotal = subtotal.add(price);
         }
 
+        List<Combo> checkoutCombos = bookingService.getCombosForCheckout(showtimeId);
+        Map<Integer, Integer> selectedComboQuantities = readComboQuantities(request);
+        BigDecimal comboTotal = BigDecimal.ZERO;
+        for (Combo combo : checkoutCombos) {
+            Integer quantity = selectedComboQuantities.get(combo.getComboId());
+            if (quantity != null) comboTotal = comboTotal.add(combo.getComboPrice().multiply(BigDecimal.valueOf(quantity)));
+        }
         String action = request.getParameter("action");
         String promoCode = request.getParameter("promoCode");
 
@@ -261,6 +270,9 @@ public class BookingController extends HttpServlet {
                 bookingService.getBookableShowtime(showtimeId));
 
         request.setAttribute("selectedSeats", selectedSeats);
+        request.setAttribute("checkoutCombos", checkoutCombos);
+        request.setAttribute("selectedComboQuantities", selectedComboQuantities);
+        request.setAttribute("comboTotal", comboTotal);
         request.setAttribute("seatPrices", seatPrices);
         request.setAttribute("subtotal", subtotal);
         request.setAttribute("fullRoom", fullRoom);
@@ -270,7 +282,7 @@ public class BookingController extends HttpServlet {
 
         request.setAttribute(
                 "finalAmount",
-                subtotal.subtract(discount));
+                subtotal.subtract(discount).add(comboTotal));
 
         request.setAttribute("promoError", promoError);
 
@@ -298,7 +310,8 @@ public class BookingController extends HttpServlet {
                     customerId,
                     showtimeId,
                     request.getParameterValues("seatId"),
-                    request.getParameter("promoCode"));
+                    request.getParameter("promoCode"),
+                    readComboItems(request));
 
         } catch (IllegalArgumentException e) {
             request.setAttribute(
@@ -469,6 +482,32 @@ public class BookingController extends HttpServlet {
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/select-seats.jsp"
         ).forward(request, response);
+    }
+
+    private List<FoodOrderItem> readComboItems(HttpServletRequest request) {
+        List<FoodOrderItem> items = new ArrayList<>();
+        String[] ids = request.getParameterValues("comboId");
+        String[] quantities = request.getParameterValues("comboQuantity");
+        if (ids == null && quantities == null) return items;
+        if (ids == null || quantities == null || ids.length != quantities.length)
+            throw new IllegalArgumentException("Thông tin combo không hợp lệ. Vui lòng chọn lại.");
+        for (int i=0;i<ids.length;i++) {
+            int id = parsePositiveInt(ids[i], "Combo được chọn không hợp lệ.");
+            int quantity;
+            try { quantity = Integer.parseInt(quantities[i]); }
+            catch (NumberFormatException e) { throw new IllegalArgumentException("Số lượng combo không hợp lệ."); }
+            if (quantity < 0 || quantity > 20) throw new IllegalArgumentException("Mỗi combo chỉ được chọn từ 0 đến 20 phần.");
+            if (quantity > 0) { FoodOrderItem item = new FoodOrderItem(); item.setComboId(id); item.setQuantity(quantity); items.add(item); }
+        }
+        return items;
+    }
+
+    private Map<Integer, Integer> readComboQuantities(HttpServletRequest request) {
+        Map<Integer, Integer> map = new LinkedHashMap<>();
+        String[] ids=request.getParameterValues("comboId"), values=request.getParameterValues("comboQuantity");
+        if(ids==null || values==null || ids.length!=values.length) return map;
+        for(int i=0;i<ids.length;i++) try { int id=Integer.parseInt(ids[i]), q=Integer.parseInt(values[i]); if(id>0 && q>0 && q<=20) map.put(id,q); } catch(NumberFormatException ignored) { }
+        return map;
     }
 
     private int getCurrentCustomerId(
