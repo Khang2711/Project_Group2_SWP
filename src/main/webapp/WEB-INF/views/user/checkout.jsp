@@ -157,7 +157,16 @@
                 <c:choose><c:when test="${not empty checkoutCombos}">
                     <c:forEach var="combo" items="${checkoutCombos}">
                         <div class="combo-item">
-                            <c:if test="${not empty combo.imageUrl}"><img src="${ctx}/${combo.imageUrl}" alt="Combo"></c:if>
+                            <c:set var="comboImagePath" value="${fn:trim(combo.imageUrl)}" />
+                            <c:if test="${not empty comboImagePath}">
+                                <c:choose>
+                                    <c:when test="${fn:startsWith(comboImagePath, 'http://') or fn:startsWith(comboImagePath, 'https://') or fn:startsWith(comboImagePath, '/')}">
+                                        <c:url var="comboImageSrc" value="${comboImagePath}" />
+                                    </c:when>
+                                    <c:otherwise><c:url var="comboImageSrc" value="/${comboImagePath}" /></c:otherwise>
+                                </c:choose>
+                                <img src="${comboImageSrc}" alt="Combo">
+                            </c:if>
                             <div class="combo-info"><strong><c:out value="${combo.comboName}" /></strong>
                                 <small><c:out value="${combo.description}" /></small>
                                 <strong class="combo-price"><fmt:formatNumber value="${combo.comboPrice}" pattern="#,##0.##" /> VNĐ</strong></div>
