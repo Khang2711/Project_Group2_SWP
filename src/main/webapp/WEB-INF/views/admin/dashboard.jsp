@@ -378,7 +378,7 @@
 
                 <article class="dashboard-card">
                     <p class="card-label">
-                        Đơn bắp nước/combo hoàn tất
+                        Đơn bắp nước/combo đã thanh toán
                     </p>
 
                     <p class="card-value">
@@ -525,7 +525,7 @@
                 <c:when test="${empty dailyRows}">
                     <div class="dashboard-panel dashboard-empty">
                         Chưa có đơn vé đã xác nhận hoặc đơn bắp nước/combo
-                        đã thanh toán và hoàn tất trong khoảng ngày đã chọn.
+                        đã thanh toán trong khoảng ngày đã chọn.
                     </div>
                 </c:when>
 
@@ -699,5 +699,40 @@
     </c:choose>
 
 </section>
+
+<script>
+    (function () {
+        const filterForm = document.querySelector('.dashboard-filter');
+        let hasUnsavedFilterChanges = false;
+
+        if (filterForm) {
+            filterForm.addEventListener('input', function () {
+                hasUnsavedFilterChanges = true;
+            });
+
+            filterForm.addEventListener('change', function () {
+                hasUnsavedFilterChanges = true;
+            });
+
+            filterForm.addEventListener('submit', function () {
+                hasUnsavedFilterChanges = false;
+            });
+        }
+
+        // Refresh thống kê mỗi 60 giây khi Manager đang xem Dashboard.
+        // Không refresh khi đang chỉnh bộ lọc hoặc mở bảng chi tiết.
+        window.setInterval(function () {
+            const detailIsOpen = document.querySelector(
+                '.dashboard-details[open]'
+            );
+
+            if (document.visibilityState === 'visible'
+                    && !hasUnsavedFilterChanges
+                    && !detailIsOpen) {
+                window.location.reload();
+            }
+        }, 60000);
+    })();
+</script>
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
