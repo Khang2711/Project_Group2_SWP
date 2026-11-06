@@ -332,6 +332,23 @@ public class BookingController extends HttpServlet {
 
             prepareCheckout(request, response);
             return;
+
+        } catch (SQLException e) {
+            log("Cannot create pending booking with online food order.", e);
+
+            String message = "Không thể tạo đơn đặt vé hoặc lưu sản phẩm đã chọn. "
+                    + "Vui lòng kiểm tra cấu hình database rồi thử lại.";
+            String sqlMessage = e.getMessage();
+
+            if (sqlMessage != null
+                    && sqlMessage.toLowerCase().contains("staff_id")) {
+                message = "Database hiện tại chưa cho phép Food_Order.staff_id nhận NULL. "
+                        + "Hãy chạy database/allow_online_food_orders.sql một lần rồi thử lại.";
+            }
+
+            request.setAttribute("checkoutError", message);
+            prepareCheckout(request, response);
+            return;
         }
 
         // Giữ luồng chuyển sang trang thanh toán VNPay của nhóm.
