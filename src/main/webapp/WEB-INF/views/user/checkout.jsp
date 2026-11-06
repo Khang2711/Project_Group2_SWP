@@ -65,9 +65,14 @@
         border: 1px solid #4caf50;
     }
 
-    .uc22-checkout .discount-value {
-        color: #6cdb92;
-    }
+    .uc22-checkout .discount-value { color: #6cdb92; }
+    .uc22-checkout .combo-list { display:grid; gap:12px; margin-top:12px; }
+    .uc22-checkout .combo-item { display:flex; align-items:center; gap:14px; padding:12px; border:1px solid #3a3a42; border-radius:7px; background:#17171b; }
+    .uc22-checkout .combo-item img { width:88px; height:72px; object-fit:cover; border-radius:5px; }
+    .uc22-checkout .combo-info { flex:1; min-width:0; }
+    .uc22-checkout .combo-info small { display:block; color:#aaa; margin-top:4px; }
+    .uc22-checkout .combo-quantity { width:72px; padding:9px; color:white; background:#101012; border:1px solid #55555d; border-radius:5px; }
+    .uc22-checkout .combo-price { color:#f5c451; white-space:nowrap; }
 
     .uc22-checkout .booking-primary-button:disabled {
         background: #55555f;
@@ -146,6 +151,23 @@
 
             </div>
 
+            <div class="checkout-card-title" style="margin-top:24px;"><h2>Chọn combo bắp nước</h2><span class="seat-count">Không bắt buộc</span></div>
+            <p>Chọn số lượng combo muốn mua kèm. Giá combo được cộng vào tổng thanh toán VNPay.</p>
+            <div class="combo-list">
+                <c:choose><c:when test="${not empty checkoutCombos}">
+                    <c:forEach var="combo" items="${checkoutCombos}">
+                        <div class="combo-item">
+                            <c:if test="${not empty combo.imageUrl}"><img src="${ctx}/${combo.imageUrl}" alt="Combo"></c:if>
+                            <div class="combo-info"><strong><c:out value="${combo.comboName}" /></strong>
+                                <small><c:out value="${combo.description}" /></small>
+                                <strong class="combo-price"><fmt:formatNumber value="${combo.comboPrice}" pattern="#,##0.##" /> VNĐ</strong></div>
+                            <input type="hidden" name="comboId" value="${combo.comboId}" form="checkoutForm">
+                            <input class="combo-quantity" type="number" name="comboQuantity" form="checkoutForm" min="0" max="20" value="${selectedComboQuantities[combo.comboId] != null ? selectedComboQuantities[combo.comboId] : 0}" aria-label="Số lượng combo">
+                        </div>
+                    </c:forEach>
+                </c:when><c:otherwise><p>Hiện chưa có combo khả dụng tại rạp này.</p></c:otherwise></c:choose>
+            </div>
+
         </div>
 
         <div class="checkout-summary">
@@ -180,7 +202,7 @@
 
             <form action="${ctx}/user/checkout"
                   method="post"
-                  class="checkout-confirm-form">
+                  id="checkoutForm" class="checkout-confirm-form">
 
                 <input type="hidden"
                        name="showtimeId"
@@ -267,8 +289,9 @@
                     </strong>
                 </div>
 
+                <div class="summary-row"><span>Combo bắp nước</span><strong><fmt:formatNumber value="${comboTotal}" pattern="#,##0.##" /> VNĐ</strong></div>
                 <div class="summary-row summary-total">
-                    <span>Tổng sau giảm</span>
+                    <span>Tổng thanh toán</span>
 
                     <strong>
                         <fmt:formatNumber
