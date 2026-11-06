@@ -498,10 +498,11 @@ public class BookingController extends HttpServlet {
         List<FoodOrderItem> items = new ArrayList<>();
         String[] ids = request.getParameterValues("comboId");
         String[] quantities = request.getParameterValues("comboQuantity");
-        if (ids == null && quantities == null) return items;
-        if (ids == null || quantities == null || ids.length != quantities.length)
-            throw new IllegalArgumentException("Thông tin combo không hợp lệ. Vui lòng chọn lại.");
-        for (int i=0;i<ids.length;i++) {
+        if (ids != null || quantities != null) {
+            if (ids == null || quantities == null || ids.length != quantities.length)
+                throw new IllegalArgumentException("Thông tin combo không hợp lệ. Vui lòng chọn lại.");
+        }
+        if (ids != null) for (int i=0;i<ids.length;i++) {
             int id = parsePositiveInt(ids[i], "Combo được chọn không hợp lệ.");
             int quantity;
             try { quantity = Integer.parseInt(quantities[i]); }
