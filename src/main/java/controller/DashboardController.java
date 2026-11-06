@@ -223,7 +223,7 @@ public class DashboardController extends HttpServlet {
             String[] labels = {
                 "Đơn đặt vé đã xác nhận",
                 "Vé đã bán",
-                "Đơn bắp nước/combo hoàn tất",
+                "Đơn bắp nước/combo đã thanh toán",
                 "Doanh thu vé sau giảm giá (VND)",
                 "Doanh thu bắp nước/combo (VND)",
                 "Tổng doanh thu (VND)"
@@ -257,7 +257,7 @@ public class DashboardController extends HttpServlet {
 
             summary.createRow(14).createCell(0)
                     .setCellValue(
-                            "Vé: đơn CONFIRMED; bắp nước/combo: PAID và COMPLETED.");
+                            "Vé: đơn CONFIRMED; bắp nước/combo: PAID.");
 
             summary.setColumnWidth(0, 48 * 256);
             summary.setColumnWidth(1, 32 * 256);
