@@ -152,6 +152,17 @@ public class ComboService {
         }
     }
 
+    public void deleteCombo(int comboId, int cinemaId) {
+        requireCinema(cinemaId);
+        if (comboId <= 0 || comboRepository.findById(comboId, cinemaId) == null) {
+            throw new IllegalArgumentException("Không tìm thấy combo trong rạp này.");
+        }
+        if (!comboRepository.deleteIfUnused(comboId, cinemaId)) {
+            throw new IllegalStateException(
+                    "Không thể xóa combo vì combo đã được sử dụng trong đơn hàng.");
+        }
+    }
+
     private void validateStatus(String status) {
         if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
             throw new IllegalArgumentException("Trạng thái chỉ được là ACTIVE hoặc INACTIVE.");

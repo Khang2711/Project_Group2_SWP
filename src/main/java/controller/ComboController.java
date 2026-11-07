@@ -31,7 +31,8 @@ import util.ProjectImageStorage;
 @WebServlet(urlPatterns = {
     "/admin/combos",
     "/admin/combo-form",
-    "/admin/combo-status"
+    "/admin/combo-status",
+    "/admin/combo-delete"
 })
 public class ComboController extends HttpServlet {
 
@@ -99,6 +100,21 @@ public class ComboController extends HttpServlet {
         }
 
         String path = request.getServletPath();
+        if ("/admin/combo-delete".equals(path)) {
+            try {
+                int comboId = Integer.parseInt(request.getParameter("id"));
+                comboService.deleteCombo(comboId, manager.getCinemaId());
+                response.sendRedirect(request.getContextPath() + "/admin/combos?deleted=1");
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Mã combo không hợp lệ.");
+                showList(request, response, manager);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                request.setAttribute("error", e.getMessage());
+                showList(request, response, manager);
+            }
+            return;
+        }
+
         if ("/admin/combo-status".equals(path)) {
             try {
                 int comboId = Integer.parseInt(request.getParameter("id"));

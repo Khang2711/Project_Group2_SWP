@@ -119,6 +119,17 @@ public class FoodService {
         }
     }
 
+    public void deleteItem(int foodItemId, int cinemaId) {
+        requireCinema(cinemaId);
+        if (foodItemId <= 0 || repository.findById(foodItemId, cinemaId) == null) {
+            throw new IllegalArgumentException("Không tìm thấy sản phẩm trong rạp này.");
+        }
+        if (!repository.deleteIfUnused(foodItemId, cinemaId)) {
+            throw new IllegalStateException(
+                    "Không thể xóa sản phẩm vì sản phẩm đang nằm trong combo hoặc đã có trong đơn hàng.");
+        }
+    }
+
     private void validateStatus(String status) {
         if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
             throw new IllegalArgumentException("Trạng thái chỉ được là ACTIVE hoặc INACTIVE.");
