@@ -24,7 +24,6 @@ import service.PromotionService;
 @WebServlet(urlPatterns = {
     "/admin/promotions",
     "/admin/promotion-form",
-    "/user/apply-promo"
 })
 public class PromotionController extends HttpServlet {
 
@@ -49,9 +48,6 @@ public class PromotionController extends HttpServlet {
         } else if ("/admin/promotion-form".equals(path)) {
             showPromotionForm(request, response);
 
-        } else if ("/user/apply-promo".equals(path)) {
-            showApplyPromo(request, response);
-
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -72,9 +68,6 @@ public class PromotionController extends HttpServlet {
 
         } else if ("/admin/promotions".equals(path)) {
             changePromotionStatus(request, response);
-
-        } else if ("/user/apply-promo".equals(path)) {
-            applyPromotion(request, response);
 
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -356,126 +349,6 @@ public class PromotionController extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST,
                     e.getMessage()
             );
-        }
-    }
-
-    private void showApplyPromo(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        request.setAttribute(
-                "showtimeId",
-                request.getParameter("showtimeId")
-        );
-
-        request.getRequestDispatcher(
-                "/WEB-INF/views/user/apply-promo.jsp"
-        ).forward(request, response);
-    }
-
-    private void applyPromotion(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        try {
-            String promoCode = request.getParameter("promoCode");
-
-            if (promoCode == null || promoCode.trim().isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Vui lòng nhập mã khuyến mãi."
-                );
-            }
-
-            int showtimeId = parsePositiveInt(
-                    request.getParameter("showtimeId"),
-                    "Suất chiếu không hợp lệ."
-            );
-
-            int cinemaId = promotionService.getCinemaIdByShowtimeId(
-                    showtimeId
-            );
-
-            if (cinemaId <= 0) {
-                throw new IllegalArgumentException(
-                        "Không xác định được rạp của suất chiếu."
-                );
-            }
-
-            BigDecimal orderAmount = parseBigDecimal(
-                    request.getParameter("orderAmount"),
-                    "Giá trị đơn hàng không hợp lệ."
-            );
-
-            if (orderAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException(
-                        "Giá trị đơn hàng phải lớn hơn 0."
-                );
-            }
-
-            Promotion promotion = promotionService.getPromotionByCode(
-                    promoCode,
-                    cinemaId
-            );
-
-            String error = promotionService.validateApplyPromotion(
-                    promotion,
-                    orderAmount
-            );
-
-            if (error != null) {
-                request.setAttribute("error", error);
-                request.setAttribute("promoCode", promoCode);
-                request.setAttribute("orderAmount", orderAmount);
-                request.setAttribute("showtimeId", showtimeId);
-
-                showApplyPromo(request, response);
-                return;
-            }
-
-            BigDecimal discountAmount
-                    = promotionService.calculateDiscount(
-                            promotion,
-                            orderAmount
-                    );
-
-            BigDecimal finalAmount = orderAmount.subtract(discountAmount);
-
-            request.setAttribute(
-                    "success",
-                    "Áp dụng mã khuyến mãi thành công."
-            );
-
-            request.setAttribute("promoCode", promotion.getPromoCode());
-            request.setAttribute("orderAmount", orderAmount);
-            request.setAttribute("discountAmount", discountAmount);
-            request.setAttribute("finalAmount", finalAmount);
-            request.setAttribute("appliedPromotion", promotion);
-            request.setAttribute("showtimeId", showtimeId);
-
-            showApplyPromo(request, response);
-
-        } catch (IllegalArgumentException e) {
-
-            request.setAttribute("error", e.getMessage());
-
-            request.setAttribute(
-                    "promoCode",
-                    request.getParameter("promoCode")
-            );
-
-            request.setAttribute(
-                    "orderAmount",
-                    request.getParameter("orderAmount")
-            );
-
-            request.setAttribute(
-                    "showtimeId",
-                    request.getParameter("showtimeId")
-            );
-
-            showApplyPromo(request, response);
         }
     }
 
