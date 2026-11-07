@@ -120,9 +120,7 @@ public class ShowtimeRepository extends DBContext {
         return null;
     }
 
-    public List<Showtime> getByMovieIdAndDate(
-            int movieId,
-            LocalDate date) {
+    public List<Showtime> getByMovieIdAndDate(int movieId,LocalDate date) {
 
         List<Showtime> showtimes = new ArrayList<>();
 
@@ -140,18 +138,8 @@ public class ShowtimeRepository extends DBContext {
 
             ps.setInt(1, movieId);
             ps.setString(2, "ACTIVE");
-
-            ps.setTimestamp(
-                    3,
-                    Timestamp.valueOf(date.atStartOfDay())
-            );
-
-            ps.setTimestamp(
-                    4,
-                    Timestamp.valueOf(
-                            date.plusDays(1).atStartOfDay()
-                    )
-            );
+            ps.setTimestamp(3,Timestamp.valueOf(date.atStartOfDay()));
+            ps.setTimestamp(4,Timestamp.valueOf(date.plusDays(1).atStartOfDay()));
 
             ResultSet rs = ps.executeQuery();
 

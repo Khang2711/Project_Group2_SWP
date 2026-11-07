@@ -1,6 +1,5 @@
 package service;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +16,6 @@ import model.Room;
 import model.Showtime;
 import repository.CinemaRepository;
 import repository.MovieRepository;
-import repository.PricingRepository;
 import repository.RoomRepository;
 import repository.ShowtimeRepository;
 import java.sql.Date;
@@ -45,7 +43,6 @@ public class MovieService {
     private ShowtimeRepository showtimeRepository;
     private RoomRepository roomRepository;
     private CinemaRepository cinemaRepository;
-    private PricingRepository pricingRepository;
     private GenreRepository genreRepository;
 
     public MovieService() {
@@ -53,7 +50,6 @@ public class MovieService {
         showtimeRepository = new ShowtimeRepository();
         roomRepository = new RoomRepository();
         cinemaRepository = new CinemaRepository();
-        pricingRepository = new PricingRepository();
         genreRepository = new GenreRepository();
     }
 
@@ -173,58 +169,6 @@ public class MovieService {
             }
         }
         return result;
-    }
-
-    /**
-     * Gets the lowest ticket price for each movie.
-     *
-     * @param scheduleByDate movie schedules grouped by date
-     * @return movie ID and lowest ticket price
-     */
-    public Map<Integer, BigDecimal> getMinPriceByMovie(Map<String, Map<Movie, List<Showtime>>> scheduleByDate) {
-
-        Map<Integer, Room> rooms = getRoomById();
-        Map<Integer, BigDecimal> priceByCinema
-                = pricingRepository.getMinPriceByCinema();
-
-        Map<Integer, BigDecimal> priceByMovie
-                = new HashMap<>();
-
-        for (Map<Movie, List<Showtime>> movies : scheduleByDate.values()) {
-
-            for (Movie movie : movies.keySet()) {
-
-                for (Showtime showtime : movies.get(movie)) {
-
-                    Room room = rooms.get(showtime.getRoomId());
-
-                    if (room == null) {
-                        continue;
-                    }
-
-                    BigDecimal price
-                            = priceByCinema.get(room.getCinemaId());
-
-                    if (price == null) {
-                        continue;
-                    }
-
-                    BigDecimal minPrice
-                            = priceByMovie.get(movie.getMovieId());
-
-                    if (minPrice == null
-                            || price.compareTo(minPrice) < 0) {
-
-                        priceByMovie.put(
-                                movie.getMovieId(),
-                                price
-                        );
-                    }
-                }
-            }
-        }
-
-        return priceByMovie;
     }
 
     /**

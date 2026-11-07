@@ -19,89 +19,54 @@ import repository.ShowtimeRepository;
 
 public class ShowtimeService {
 
-    private final ShowtimeRepository showtimeRepository =
-            new ShowtimeRepository();
+    private final ShowtimeRepository showtimeRepository = new ShowtimeRepository();
+    private final RoomRepository roomRepository = new RoomRepository();
+    private final CinemaRepository cinemaRepository = new CinemaRepository();
+    private final MovieRepository movieRepository = new MovieRepository();
 
-    private final RoomRepository roomRepository =
-            new RoomRepository();
+    public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 
-    private final CinemaRepository cinemaRepository =
-            new CinemaRepository();
-
-    private final MovieRepository movieRepository =
-            new MovieRepository();
-
-    public List<Showtime> getByMovieAndDate(
-            int movieId,
-            LocalDate date) {
-
-        return showtimeRepository
-                .getByMovieIdAndDate(
-                        movieId,
-                        date
-                );
+        return showtimeRepository.getByMovieIdAndDate(movieId,date);
     }
 
     public List<Cinema> getActiveCinema() {
 
-        return cinemaRepository
-                .getAllActive();
+        return cinemaRepository.getAllActive();
     }
 
     public Map<Integer, Room> getActiveRoomById() {
 
-        Map<Integer, Room> rooms =
-                new HashMap<>();
+        Map<Integer, Room> rooms = new HashMap<>();
 
-        for (Room room
-                : roomRepository.getAllActive()) {
+        for (Room room : roomRepository.getAllActive()) {
 
-            rooms.put(
-                    room.getRoomId(),
-                    room
-            );
+            rooms.put(room.getRoomId(),room);
         }
 
         return rooms;
     }
 
-    public Map<Integer, List<Showtime>>
-            groupByCinema(
+    public Map<Integer, List<Showtime>> groupByCinema(
                     List<Showtime> showtimes,
                     Map<Integer, Room> roomsById,
                     List<Cinema> cinemas) {
 
-        Map<Integer, List<Showtime>> result =
-                new LinkedHashMap<>();
+        Map<Integer, List<Showtime>> result = new LinkedHashMap<>();
 
         for (Cinema cinema : cinemas) {
 
-            for (Showtime showtime
-                    : showtimes) {
+            for (Showtime showtime : showtimes) {
 
-                Room room =
-                        roomsById.get(
-                                showtime.getRoomId()
-                        );
+                Room room = roomsById.get(showtime.getRoomId());
 
-                if (room != null
-                        && room.getCinemaId()
-                        == cinema.getCinemaId()) {
+                if (room != null && room.getCinemaId() == cinema.getCinemaId()) {
 
-                    if (!result.containsKey(
-                            cinema.getCinemaId())) {
+                    if (!result.containsKey(cinema.getCinemaId())) {
 
-                        result.put(
-                                cinema.getCinemaId(),
-                                new ArrayList<>()
-                        );
+                        result.put(cinema.getCinemaId(),new ArrayList<>());
                     }
 
-                    result
-                            .get(
-                                    cinema.getCinemaId()
-                            )
-                            .add(showtime);
+                    result.get(cinema.getCinemaId()).add(showtime);
                 }
             }
         }
