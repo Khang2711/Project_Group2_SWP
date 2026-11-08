@@ -389,10 +389,157 @@
 
 </section>
 
+
+<c:set var="checkoutAgeRating" value="${fn:toUpperCase(fn:trim(movie.ageRating))}" />
+
+<style>
+    .checkout-age-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 0, 0, .80);
+    }
+    .checkout-age-overlay.is-visible { display: flex; }
+    .checkout-age-dialog {
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 26px;
+        color: #f5f5f5;
+        background: #1c1c22;
+        border: 1px solid #454550;
+        border-top: 4px solid #e50914;
+        border-radius: 12px;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+    }
+    .checkout-age-dialog h2 { margin: 0 0 18px; font-size: 22px; }
+    .checkout-age-dialog strong { display: block; margin: 14px 0 6px; color: #ff727b; }
+    .checkout-age-dialog p { margin: 0; color: #dedee3; font-size: 14px; line-height: 1.7; }
+    .checkout-age-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    .checkout-age-actions button {
+        min-width: 110px; padding: 11px 18px; border: 0; border-radius: 6px;
+        font: inherit; font-weight: 700; cursor: pointer;
+    }
+    .checkout-age-cancel { color: #eee; background: #34343d; }
+    .checkout-age-agree { color: #fff; background: #e50914; }
+    .checkout-age-actions button:hover { filter: brightness(1.12); }
+    @media (max-width: 480px) {
+        .checkout-age-dialog { padding: 22px 18px; }
+        .checkout-age-actions { flex-direction: column-reverse; }
+        .checkout-age-actions button { width: 100%; }
+    }
+</style>
+
+<div class="checkout-age-overlay" id="checkoutAgeModal" aria-hidden="true">
+    <div class="checkout-age-dialog" role="dialog" aria-modal="true"
+         aria-labelledby="checkoutAgeTitle" aria-describedby="checkoutAgeMessage">
+        <h2 id="checkoutAgeTitle">Xác nhận thông tin trước khi thanh toán</h2>
+        <div id="checkoutAgeMessage">
+            <strong>1. Quy định độ tuổi của phim</strong>
+            <p>
+                <c:choose>
+                    <c:when test="${checkoutAgeRating eq 'P'}">
+                        Phim được phân loại P – phù hợp với mọi độ tuổi. Khán giả ở mọi lứa tuổi đều có thể xem phim.
+                    </c:when>
+                    <c:when test="${checkoutAgeRating eq 'T13'}">
+                        Phim được phân loại T13 – chỉ dành cho khán giả từ đủ 13 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 13 tuổi sẽ không được vào xem.
+                    </c:when>
+                    <c:when test="${checkoutAgeRating eq 'T16'}">
+                        Phim được phân loại T16 – chỉ dành cho khán giả từ đủ 16 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 16 tuổi sẽ không được vào xem.
+                    </c:when>
+                    <c:when test="${checkoutAgeRating eq 'T18'}">
+                        Phim được phân loại T18 – chỉ dành cho khán giả từ đủ 18 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 18 tuổi sẽ không được vào xem.
+                    </c:when>
+                    <c:otherwise>
+                        <c:choose>
+                            <c:when test="${not empty movie.ageRating}">
+                                Phim có phân loại ${movie.ageRating}. Vui lòng kiểm tra điều kiện độ tuổi và liên hệ nhân viên F-Cinema nếu cần được giải đáp trước khi thanh toán.
+                            </c:when>
+                            <c:otherwise>
+                                Phim hiện chưa có thông tin phân loại độ tuổi. Vui lòng liên hệ nhân viên F-Cinema để xác nhận trước khi thanh toán.
+                            </c:otherwise>
+                        </c:choose>
+                    </c:otherwise>
+                </c:choose>
+            </p>
+            <strong>2. Chính sách hủy và hoàn tiền</strong>
+            <p>
+                Sau khi thanh toán thành công, đơn đặt vé không được hủy và không được hoàn tiền.
+                Vui lòng kiểm tra kỹ phim, ngày giờ chiếu, rạp, ghế, combo, đồ ăn và tổng tiền trước khi xác nhận.
+                F-Cinema không hoàn tiền trong trường hợp người xem không đáp ứng điều kiện độ tuổi của phim.
+            </p>
+        </div>
+        <div class="checkout-age-actions">
+            <button type="button" class="checkout-age-cancel" id="cancelCheckoutAge">Hủy</button>
+            <button type="button" class="checkout-age-agree" id="agreeCheckoutAge">Đồng ý</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
     var form = document.getElementById("checkoutForm");
     if (!form) return;
+
+    // Chỉ yêu cầu xác nhận khi người dùng thực sự xác nhận đặt vé.
+    var confirmButton = form.querySelector('button[name="action"][value="CONFIRM"]');
+    var ageModal = document.getElementById("checkoutAgeModal");
+    var cancelAgeButton = document.getElementById("cancelCheckoutAge");
+    var agreeAgeButton = document.getElementById("agreeCheckoutAge");
+    var ageConfirmed = false;
+
+    function closeAgeModal() {
+        ageModal.classList.remove("is-visible");
+        ageModal.setAttribute("aria-hidden", "true");
+        if (confirmButton) confirmButton.focus();
+    }
+
+    form.addEventListener("submit", function (event) {
+        var submitter = event.submitter;
+        var isConfirmAction = !submitter
+            || (submitter.name === "action" && submitter.value === "CONFIRM");
+
+        // Áp dụng/bỏ mã khuyến mãi không cần hiện hộp thoại.
+        if (!isConfirmAction || ageConfirmed) return;
+
+        event.preventDefault();
+        ageModal.classList.add("is-visible");
+        ageModal.setAttribute("aria-hidden", "false");
+        agreeAgeButton.focus();
+    });
+
+    cancelAgeButton.addEventListener("click", closeAgeModal);
+
+    agreeAgeButton.addEventListener("click", function () {
+        ageConfirmed = true;
+        closeAgeModal();
+
+        if (form.requestSubmit && confirmButton) {
+            form.requestSubmit(confirmButton);
+        } else {
+            var actionInput = document.createElement("input");
+            actionInput.type = "hidden";
+            actionInput.name = "action";
+            actionInput.value = "CONFIRM";
+            form.appendChild(actionInput);
+            form.submit();
+        }
+    });
+
+    ageModal.addEventListener("click", function (event) {
+        if (event.target === ageModal) closeAgeModal();
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && ageModal.classList.contains("is-visible")) {
+            closeAgeModal();
+        }
+    });
 
     var moneyFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
 
