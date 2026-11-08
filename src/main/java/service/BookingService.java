@@ -278,6 +278,38 @@ public class BookingService {
         return promotion;
     }
 
+    public List<Promotion> getAvailablePromotions(
+            BigDecimal subtotal,
+            int showtimeId) {
+
+        List<Promotion> availablePromotions = new ArrayList<>();
+
+        if (subtotal == null || showtimeId <= 0) {
+            return availablePromotions;
+        }
+
+        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+
+        if (cinemaId <= 0) {
+            return availablePromotions;
+        }
+
+        List<Promotion> promotions
+                = promotionService.getAllPromotions(cinemaId);
+
+        for (Promotion promotion : promotions) {
+            String error = promotionService.validateApplyPromotion(
+                    promotion,
+                    subtotal);
+
+            if (error == null) {
+                availablePromotions.add(promotion);
+            }
+        }
+
+        return availablePromotions;
+    }
+
     public BigDecimal calculatePromotionDiscount(
             Promotion promotion,
             BigDecimal subtotal) {
