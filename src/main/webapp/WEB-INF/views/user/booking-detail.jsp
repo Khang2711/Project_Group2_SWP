@@ -462,6 +462,13 @@
             </div>
 
 
+            <c:if test="${booking.status eq 'CONFIRMED'}">
+                <div class="booking-policy-notice">
+                    <strong>Lưu ý về hoàn tiền</strong>
+                    <p>Đơn đặt vé đã thanh toán thành công. F-Cinema không hỗ trợ hủy đơn hoặc hoàn tiền. Vui lòng liên hệ nhân viên rạp nếu cần được hỗ trợ về thông tin vé.</p>
+                </div>
+            </c:if>
+
             <c:if test="${booking.status eq 'PENDING'}">
 
                 <button type="button"
@@ -485,7 +492,30 @@
 
 
 
+<style>
+    .booking-policy-notice {
+        margin-top: 18px;
+        padding: 14px 16px;
+        color: #ffe1e4;
+        background: rgba(229, 9, 20, .10);
+        border: 1px solid rgba(229, 9, 20, .45);
+        border-left: 4px solid #e50914;
+        border-radius: 8px;
+    }
+    .booking-policy-notice strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #ff727b;
+    }
+    .booking-policy-notice p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+</style>
+
 <c:if test="${booking.status eq 'PENDING'}">
+    <c:set var="movieAgeRating" value="${fn:toUpperCase(fn:trim(movie.ageRating))}" />
     <style>
         .age-confirm-overlay {
             position: fixed;
@@ -559,10 +589,43 @@
              aria-modal="true"
              aria-labelledby="ageConfirmationTitle"
              aria-describedby="ageConfirmationMessage">
-            <h2 id="ageConfirmationTitle">Thông tin vé</h2>
-            <p id="ageConfirmationMessage">
-                Tôi xác nhận mua vé cho người xem từ đủ 18 tuổi trở lên và đồng ý cung cấp giấy tờ tùy thân để xác thực độ tuổi người xem, tham khảo quy định của Bộ Văn Hóa, Thể Thao Và Du Lịch. F-Cinema sẽ không hoàn tiền nếu người xem không đáp ứng đủ điều kiện.
-            </p>
+            <h2 id="ageConfirmationTitle">Xác nhận thông tin vé</h2>
+
+            <div id="ageConfirmationMessage">
+                <strong>1. Quy định độ tuổi</strong>
+                <p>
+                    <c:choose>
+                        <c:when test="${movieAgeRating eq 'P'}">
+                            Phim được phân loại P – phù hợp với mọi độ tuổi. Khán giả ở mọi lứa tuổi đều có thể xem phim.
+                        </c:when>
+                        <c:when test="${movieAgeRating eq 'T13'}">
+                            Phim được phân loại T13 – chỉ dành cho khán giả từ đủ 13 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 13 tuổi sẽ không được vào xem.
+                        </c:when>
+                        <c:when test="${movieAgeRating eq 'T16'}">
+                            Phim được phân loại T16 – chỉ dành cho khán giả từ đủ 16 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 16 tuổi sẽ không được vào xem.
+                        </c:when>
+                        <c:when test="${movieAgeRating eq 'T18'}">
+                            Phim được phân loại T18 – chỉ dành cho khán giả từ đủ 18 tuổi trở lên. Người xem cần xuất trình giấy tờ tùy thân để xác thực độ tuổi khi được yêu cầu. Khán giả chưa đủ 18 tuổi sẽ không được vào xem.
+                        </c:when>
+                        <c:otherwise>
+                            <c:choose>
+                                <c:when test="${not empty movie.ageRating}">
+                                    Phim có phân loại ${movie.ageRating}. Vui lòng kiểm tra điều kiện độ tuổi của phim và liên hệ nhân viên F-Cinema nếu cần được giải đáp trước khi thanh toán.
+                                </c:when>
+                                <c:otherwise>
+                                    Phim hiện chưa có thông tin phân loại độ tuổi. Vui lòng liên hệ nhân viên F-Cinema để xác nhận trước khi thanh toán.
+                                </c:otherwise>
+                            </c:choose>
+                        </c:otherwise>
+                    </c:choose>
+                </p>
+
+                <strong>2. Chính sách hủy và hoàn tiền</strong>
+                <p>
+                    Sau khi thanh toán thành công, đơn đặt vé không được hủy và không được hoàn tiền. Vui lòng kiểm tra kỹ tên phim, ngày giờ chiếu, rạp, ghế và tổng tiền trước khi xác nhận thanh toán. F-Cinema không hoàn tiền trong trường hợp người xem không đáp ứng điều kiện độ tuổi của phim.
+                </p>
+            </div>
+
             <div class="age-confirm-actions">
                 <button type="button"
                         class="age-confirm-cancel"
