@@ -274,9 +274,13 @@ public class BookingController extends HttpServlet {
             promoError = e.getMessage();
         }
 
-        request.setAttribute(
-                "showtime",
-                bookingService.getBookableShowtime(showtimeId));
+        Showtime checkoutShowtime
+                = bookingService.getBookableShowtime(showtimeId);
+        Movie checkoutMovie
+                = bookingService.getMovieForShowtime(checkoutShowtime);
+
+        request.setAttribute("showtime", checkoutShowtime);
+        request.setAttribute("movie", checkoutMovie);
 
         request.setAttribute("selectedSeats", selectedSeats);
         request.setAttribute("checkoutCombos", checkoutCombos);
