@@ -400,10 +400,7 @@
                                         <span class="available-promo-detail">
                                             Hạn dùng đến:
                                             <fmt:formatDate value="${availablePromo.endDate}" pattern="dd/MM/yyyy HH:mm" />
-                                            <c:if test="${not empty availablePromo.usageLimit}">
-                                                · Còn lượt:
-                                                ${availablePromo.usageLimit - availablePromo.usedCount}
-                                            </c:if>
+                                            
                                         </span>
                                         <button type="submit"
                                                 name="action"
