@@ -65,6 +65,55 @@
         border: 1px solid #4caf50;
     }
 
+    .uc22-checkout .available-promo-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .uc22-checkout .available-promo-item {
+        padding: 12px;
+        border: 1px solid #454550;
+        border-left: 3px solid #e50914;
+        border-radius: 7px;
+        background: #1c1c22;
+    }
+
+    .uc22-checkout .available-promo-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .uc22-checkout .available-promo-code {
+        color: #ffd166;
+        font-weight: 700;
+        letter-spacing: .5px;
+    }
+
+    .uc22-checkout .available-promo-detail {
+        display: block;
+        margin-top: 5px;
+        color: #c4c4cc;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .uc22-checkout .available-promo-item .promo-button {
+        flex-shrink: 0;
+        margin-top: 8px;
+        background: #e50914;
+        border-color: #e50914;
+    }
+
+    .uc22-checkout .available-promo-empty {
+        margin: 10px 0 0;
+        color: #aaa;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
     .uc22-checkout .discount-value { color: #6cdb92; }
     .uc22-checkout .menu-section { margin-top:24px; }
     .uc22-checkout .menu-section-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
@@ -318,6 +367,62 @@
 
                     </div>
 
+                    <div class="available-promo-list">
+                        <strong>Voucher khả dụng cho đơn hàng này</strong>
+                        <c:choose>
+                            <c:when test="${not empty availablePromotions}">
+                                <c:forEach var="availablePromo" items="${availablePromotions}">
+                                    <div class="available-promo-item">
+                                        <div class="available-promo-top">
+                                            <span class="available-promo-code">
+                                                <c:out value="${availablePromo.promoCode}" />
+                                            </span>
+                                            <c:choose>
+                                                <c:when test="${availablePromo.discountType eq 'PERCENT'}">
+                                                    <strong>Giảm <fmt:formatNumber value="${availablePromo.discountValue}" pattern="#,##0.##" />%</strong>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <strong>Giảm <fmt:formatNumber value="${availablePromo.discountValue}" pattern="#,##0.##" /> VNĐ</strong>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <c:if test="${not empty availablePromo.description}">
+                                            <span class="available-promo-detail"><c:out value="${availablePromo.description}" /></span>
+                                        </c:if>
+                                        <span class="available-promo-detail">
+                                            Đơn tối thiểu:
+                                            <fmt:formatNumber value="${availablePromo.minOrderAmount}" pattern="#,##0.##" /> VNĐ
+                                            <c:if test="${not empty availablePromo.maxDiscountAmount}">
+                                                · Giảm tối đa:
+                                                <fmt:formatNumber value="${availablePromo.maxDiscountAmount}" pattern="#,##0.##" /> VNĐ
+                                            </c:if>
+                                        </span>
+                                        <span class="available-promo-detail">
+                                            Hạn dùng đến:
+                                            <fmt:formatDate value="${availablePromo.endDate}" pattern="dd/MM/yyyy HH:mm" />
+                                            <c:if test="${not empty availablePromo.usageLimit}">
+                                                · Còn lượt:
+                                                ${availablePromo.usageLimit - availablePromo.usedCount}
+                                            </c:if>
+                                        </span>
+                                        <button type="submit"
+                                                name="action"
+                                                value="APPLY_PROMO"
+                                                class="promo-button"
+                                                data-select-promo="${availablePromo.promoCode}">
+                                            Chọn voucher
+                                        </button>
+                                    </div>
+                                </c:forEach>
+                            </c:when>
+                            <c:otherwise>
+                                <p class="available-promo-empty">
+                                    Hiện không có voucher nào đủ điều kiện áp dụng cho đơn hàng này.
+                                </p>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+
                     <c:if test="${not empty promoError
                                   and empty checkoutError}">
                           <div class="promo-message promo-error">
@@ -498,6 +603,15 @@
         ageModal.setAttribute("aria-hidden", "true");
         if (confirmButton) confirmButton.focus();
     }
+
+    form.addEventListener("click", function (event) {
+        var voucherButton = event.target.closest("[data-select-promo]");
+        if (!voucherButton) return;
+        var promoInput = document.getElementById("promoCode");
+        if (promoInput) {
+            promoInput.value = voucherButton.dataset.selectPromo || "";
+        }
+    });
 
     form.addEventListener("submit", function (event) {
         var submitter = event.submitter;
