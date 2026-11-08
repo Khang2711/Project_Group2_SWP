@@ -464,10 +464,11 @@
 
             <c:if test="${booking.status eq 'PENDING'}">
 
-                <a class="booking-primary-button"
-                   href="${ctx}/user/payment?bookingId=${booking.bookingId}">
+                <button type="button"
+                        class="booking-primary-button"
+                        id="openAgeConfirmation">
                     Thanh toán ngay
-                </a>
+                </button>
 
             </c:if>
 
@@ -479,6 +480,149 @@
 
 
 </section>
+
+
+
+
+
+<c:if test="${booking.status eq 'PENDING'}">
+    <style>
+        .age-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, .78);
+        }
+        .age-confirm-overlay.is-visible { display: flex; }
+        .age-confirm-dialog {
+            width: 100%;
+            max-width: 540px;
+            padding: 28px;
+            color: #f5f5f5;
+            background: #1c1c22;
+            border: 1px solid #454550;
+            border-top: 4px solid #e50914;
+            border-radius: 12px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+        }
+        .age-confirm-dialog h2 {
+            margin: 0 0 18px;
+            font-size: 23px;
+        }
+        .age-confirm-dialog p {
+            margin: 0;
+            color: #dedee3;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+        .age-confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 26px;
+        }
+        .age-confirm-actions button {
+            min-width: 110px;
+            padding: 11px 18px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .age-confirm-cancel {
+            color: #eee;
+            background: #34343d;
+            border-color: #555560 !important;
+        }
+        .age-confirm-agree {
+            color: #fff;
+            background: #e50914;
+        }
+        .age-confirm-actions button:hover { filter: brightness(1.12); }
+        @media (max-width: 480px) {
+            .age-confirm-dialog { padding: 22px 18px; }
+            .age-confirm-actions { flex-direction: column-reverse; }
+            .age-confirm-actions button { width: 100%; }
+        }
+    </style>
+
+    <div class="age-confirm-overlay"
+         id="ageConfirmationModal"
+         aria-hidden="true">
+        <div class="age-confirm-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="ageConfirmationTitle"
+             aria-describedby="ageConfirmationMessage">
+            <h2 id="ageConfirmationTitle">Thông tin vé</h2>
+            <p id="ageConfirmationMessage">
+                Tôi xác nhận mua vé cho người xem từ đủ 18 tuổi trở lên và đồng ý cung cấp giấy tờ tùy thân để xác thực độ tuổi người xem, tham khảo quy định của Bộ Văn Hóa, Thể Thao Và Du Lịch. F-Cinema sẽ không hoàn tiền nếu người xem không đáp ứng đủ điều kiện.
+            </p>
+            <div class="age-confirm-actions">
+                <button type="button"
+                        class="age-confirm-cancel"
+                        id="cancelAgeConfirmation">
+                    Hủy
+                </button>
+                <button type="button"
+                        class="age-confirm-agree"
+                        id="agreeAgeConfirmation">
+                    Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var openButton = document.getElementById("openAgeConfirmation");
+            var modal = document.getElementById("ageConfirmationModal");
+            var cancelButton = document.getElementById("cancelAgeConfirmation");
+            var agreeButton = document.getElementById("agreeAgeConfirmation");
+
+            if (!openButton || !modal || !cancelButton || !agreeButton) {
+                return;
+            }
+
+            var paymentUrl = "${ctx}/user/payment?bookingId=${booking.bookingId}";
+
+            function closeModal() {
+                modal.classList.remove("is-visible");
+                modal.setAttribute("aria-hidden", "true");
+                openButton.focus();
+            }
+
+            openButton.addEventListener("click", function () {
+                modal.classList.add("is-visible");
+                modal.setAttribute("aria-hidden", "false");
+                agreeButton.focus();
+            });
+
+            cancelButton.addEventListener("click", closeModal);
+
+            agreeButton.addEventListener("click", function () {
+                window.location.href = paymentUrl;
+            });
+
+            modal.addEventListener("click", function (event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && modal.classList.contains("is-visible")) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
+</c:if>
 
 
 <%@ include file="/WEB-INF/include/footer.jsp" %>
