@@ -471,7 +471,7 @@
             <p>
                 Sau khi thanh toán thành công, đơn đặt vé không được hủy và không được hoàn tiền.
                 Vui lòng kiểm tra kỹ phim, ngày giờ chiếu, rạp, ghế, combo, đồ ăn và tổng tiền trước khi xác nhận.
-                F-Cinema không hoàn tiền trong trường hợp người xem không đáp ứng điều kiện độ tuổi của phim.
+                F-Cinema sẽ không chịu trách nhiệm trong trường hợp người xem không đáp ứng điều kiện độ tuổi của phim.
             </p>
         </div>
         <div class="checkout-age-actions">
