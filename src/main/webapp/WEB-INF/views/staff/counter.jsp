@@ -444,10 +444,6 @@
 
         <h2>Báo cáo bán hàng của tôi</h2>
 
-        <p class="counter-report-note">
-            Chỉ hiển thị các đơn hàng bạn đã hoàn tất trong khoảng thời gian đã chọn.
-        </p>
-
         <form class="counter-report-filter"
               method="get"
               action="${ctx}/staff/counter">
