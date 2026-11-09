@@ -58,6 +58,19 @@ class PromotionServiceTest {
     }
 
     @Test
+    void shouldHandlePercentAtZeroPercentBoundary() {
+        // 0% là biên dưới: số tiền được giảm phải bằng 0.
+        Promotion promotion = createPromotion("PERCENT", "0", null);
+
+        BigDecimal actual = service.calculateDiscount(
+                promotion,
+                new BigDecimal("200")
+        );
+
+        assertAmount("0", actual);
+    }
+
+    @Test
     void shouldHandlePercentAtOneHundredPercentBoundary() {
         // 100% của đơn hàng bằng chính giá trị đơn hàng.
         Promotion promotion = createPromotion("PERCENT", "100", null);
