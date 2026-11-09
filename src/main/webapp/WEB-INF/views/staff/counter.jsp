@@ -445,7 +445,7 @@
         <h2>Báo cáo bán hàng của tôi</h2>
 
         <p class="counter-report-note">
-            Chỉ tính đơn đã hoàn tất do bạn bán. Lọc theo ngày bán.
+            Chỉ hiển thị các đơn hàng bạn đã hoàn tất trong khoảng thời gian đã chọn.
         </p>
 
         <form class="counter-report-filter"
