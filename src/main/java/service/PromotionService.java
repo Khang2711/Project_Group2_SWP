@@ -13,8 +13,8 @@ public class PromotionService {
     private final PromotionRepository promotionRepository
             = new PromotionRepository();
 
-    private final ShowtimeRepository showtimeRepository
-            = new ShowtimeRepository();
+    // Khởi tạo trễ để các phép tính thuần như calculateDiscount() không mở DB.
+    private ShowtimeRepository showtimeRepository;
 
     public List<Promotion> getAllPromotions(int cinemaId) {
 
@@ -154,13 +154,26 @@ public class PromotionService {
         );
     }
 
+
+    /**
+     * Khởi tạo repository khi thật sự cần truy vấn suất chiếu.
+     * Đồng bộ để tránh khởi tạo nhiều connection nếu service được dùng đồng thời.
+     */
+    private synchronized ShowtimeRepository getShowtimeRepository() {
+        if (showtimeRepository == null) {
+            showtimeRepository = new ShowtimeRepository();
+        }
+
+        return showtimeRepository;
+    }
+
     public int getCinemaIdByShowtimeId(int showtimeId) {
 
         if (showtimeId <= 0) {
             return 0;
         }
 
-        return showtimeRepository.getCinemaIdByShowtimeId(showtimeId);
+        return getShowtimeRepository().getCinemaIdByShowtimeId(showtimeId);
     }
 
     public String validateApplyPromotion(
