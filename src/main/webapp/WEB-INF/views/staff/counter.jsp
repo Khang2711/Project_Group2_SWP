@@ -568,7 +568,7 @@
 
             <section class="counter-report-panel">
 
-                <h2>Lịch sử vé do tôi bán</h2>
+                <h2>Lịch sử vé</h2>
 
                 <div class="counter-table-wrap">
                     <table class="counter-sales-table">
@@ -655,7 +655,7 @@
 
             <section class="counter-report-panel">
 
-                <h2>Lịch sử bắp nước/combo do tôi bán</h2>
+                <h2>Lịch sử bắp nước/combo</h2>
 
                 <div class="counter-table-wrap">
                     <table class="counter-sales-table">
