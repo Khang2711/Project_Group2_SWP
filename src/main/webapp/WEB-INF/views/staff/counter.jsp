@@ -442,7 +442,7 @@
 
     <section class="counter-report-panel">
 
-        <h2>Báo cáo bán hàng của tôi</h2>
+        <h2>Báo cáo bán hàng</h2>
 
         <form class="counter-report-filter"
               method="get"
@@ -552,7 +552,7 @@
             </div>
 
             <div class="counter-total-revenue">
-                Tổng doanh thu của tôi trong khoảng ngày đã chọn:
+                Tổng doanh thu trong khoảng ngày đã chọn:
 
                 <strong>
                     <fmt:formatNumber
