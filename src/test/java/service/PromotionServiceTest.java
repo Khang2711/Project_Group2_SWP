@@ -13,9 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Unit tests cho PromotionService.calculateDiscount().
  *
  * Các test chỉ gọi method tính toán, không gọi truy vấn repository.
- * PromotionService hiện khởi tạo ShowtimeRepository trong constructor;
- * DBContext có thể ghi log nếu SQL Server local chưa chạy, nhưng method
- * calculateDiscount() không sử dụng kết nối database đó.
+ * ShowtimeRepository được khởi tạo trễ, vì vậy calculateDiscount()
+ * có thể được kiểm thử độc lập mà không cần SQL Server.
  */
 class PromotionServiceTest {
 
