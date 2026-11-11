@@ -116,7 +116,7 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("seat", seat);
 
                 String validation
-                        = checkInService.validateCheckIn(ticket);
+                        = checkInService.validateCheckIn(ticket, showtime);
 
                 request.setAttribute(
                         "canCheckIn", validation == null);

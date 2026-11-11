@@ -40,6 +40,10 @@ public class PromotionController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        if (!requireCinemaManager(request, response)) {
+            return;
+        }
+
         String path = request.getServletPath();
 
         if ("/admin/promotions".equals(path)) {
@@ -59,6 +63,10 @@ public class PromotionController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        if (!requireCinemaManager(request, response)) {
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
 
         String path = request.getServletPath();
@@ -72,6 +80,28 @@ public class PromotionController extends HttpServlet {
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    private boolean requireCinemaManager(
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        HttpSession session = request.getSession(false);
+
+        if (session == null
+                || !(session.getAttribute("user") instanceof User)) {
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+            return false;
+        }
+
+        if (!"CINEMA_MANAGER".equals(
+                session.getAttribute("roleName"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
+
+        return true;
     }
 
     private Integer getCurrentCinemaId(HttpServletRequest request) {
