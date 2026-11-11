@@ -54,15 +54,6 @@ public class MovieService {
     }
 
     /**
-     * Gets all active movies.
-     *
-     * @return a list of active movies
-     */
-    public List<Movie> getAllMovies() {
-        return movieRepository.getAll();
-    }
-
-    /**
      * Gets a movie by its ID.
      *
      * @param id the movie ID
