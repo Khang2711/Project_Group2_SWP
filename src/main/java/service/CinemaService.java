@@ -7,8 +7,6 @@ import java.util.Map;
 import model.Cinema;
 import model.Showtime;
 import repository.CinemaRepository;
-import model.Showtime;
-import repository.ShowtimeRepository;
 import repository.ShowtimeRepository;
 
 /**
@@ -18,9 +16,6 @@ import repository.ShowtimeRepository;
  */
 public class CinemaService {
     
-    private final ShowtimeRepository showtimeRepository
-        = new ShowtimeRepository();
-
 public Cinema getCinemaByShowtime(Showtime showtime) {
     if (showtime == null) {
         return null;
