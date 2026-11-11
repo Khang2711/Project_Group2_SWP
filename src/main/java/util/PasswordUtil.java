@@ -88,7 +88,7 @@ public final class PasswordUtil {
             throw new IllegalStateException("PBKDF2 is unavailable.", e);
         } finally {
             spec.clearPassword();
-            java.util.Arrays.fill(password, '\\0');
+            java.util.Arrays.fill(password, (char) 0);
         }
     }
 
