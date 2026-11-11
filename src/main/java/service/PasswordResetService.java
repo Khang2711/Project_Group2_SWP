@@ -73,10 +73,9 @@ public class PasswordResetService {
 
         String passwordHash = PasswordUtil.md5(newPassword);
 
-        userRepository.updatePassword(
-                user.getUserId(),
-                passwordHash
-        );
+        if (!userRepository.updatePassword(user.getUserId(), passwordHash)) {
+            throw new SQLException("Could not update password.");
+        }
     }
 
     private String validateEmail(String email) {

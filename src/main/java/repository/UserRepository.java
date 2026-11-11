@@ -348,6 +348,135 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Create account and associated role record atomically.
+     * Prevents an orphan User when Staff/Customer insert fails.
+     */
+    public int insertManagedUser(User user, String roleName, Integer cinemaId)
+            throws SQLException {
+        String sql = "INSERT INTO dbo.[User] "
+                + "(role_id, full_name, email, password_hash, phone, "
+                + "avatar_url, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+            connection.setAutoCommit(false);
+            try {
+                int newUserId;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        sql, Statement.RETURN_GENERATED_KEYS)) {
+                    statement.setInt(1, user.getRoleId());
+                    statement.setString(2, user.getFullName());
+                    statement.setString(3, user.getEmail());
+                    statement.setString(4, user.getPasswordHash());
+                    statement.setString(5, user.getPhone());
+                    statement.setString(6, user.getAvatarUrl());
+                    statement.setString(7, user.getStatus());
+
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException("Could not create account.");
+                    }
+                    try (ResultSet keys = statement.getGeneratedKeys()) {
+                        if (!keys.next()) {
+                            throw new SQLException("Could not get account ID.");
+                        }
+                        newUserId = keys.getInt(1);
+                    }
+                }
+
+                saveManagedRole(connection, newUserId, roleName, cinemaId);
+                connection.commit();
+                return newUserId;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * Update account fields and its staff cinema in the same transaction.
+     */
+    public void updateManagedUser(User user, String roleName, Integer cinemaId)
+            throws SQLException {
+        String sql = "UPDATE dbo.[User] "
+                + "SET full_name = ?, email = ?, phone = ?, "
+                + "updated_at = SYSDATETIME() WHERE user_id = ?";
+
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                throw new SQLException("Cannot connect to FCinemaDB.");
+            }
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, user.getFullName());
+                    statement.setString(2, user.getEmail());
+                    statement.setString(3, user.getPhone());
+                    statement.setInt(4, user.getUserId());
+
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException("Could not update account.");
+                    }
+                }
+
+                saveManagedRole(connection, user.getUserId(), roleName, cinemaId);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
+        }
+    }
+
+    private void saveManagedRole(Connection connection, int userId,
+            String roleName, Integer cinemaId) throws SQLException {
+        if ("STAFF".equals(roleName) || "CINEMA_MANAGER".equals(roleName)) {
+            if (cinemaId == null || cinemaId <= 0) {
+                throw new SQLException("Staff cinema is required.");
+            }
+
+            String updateSql = "UPDATE dbo.Staff SET cinema_id = ? "
+                    + "WHERE staff_id = ?";
+            try (PreparedStatement statement = connection.prepareStatement(updateSql)) {
+                statement.setInt(1, cinemaId);
+                statement.setInt(2, userId);
+                if (statement.executeUpdate() > 0) {
+                    return;
+                }
+            }
+
+            String insertSql = "INSERT INTO dbo.Staff(staff_id, cinema_id) "
+                    + "VALUES (?, ?)";
+            try (PreparedStatement statement = connection.prepareStatement(insertSql)) {
+                statement.setInt(1, userId);
+                statement.setInt(2, cinemaId);
+                if (statement.executeUpdate() != 1) {
+                    throw new SQLException("Could not assign staff cinema.");
+                }
+            }
+        } else if ("CUSTOMER".equals(roleName)) {
+            String sql = "IF NOT EXISTS (SELECT 1 FROM dbo.Customer "
+                    + "WHERE customer_id = ?) "
+                    + "INSERT INTO dbo.Customer(customer_id) VALUES (?)";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, userId);
+                statement.setInt(2, userId);
+                statement.executeUpdate();
+            }
+        }
+    }
+
     private User mapUser(ResultSet resultSet) throws SQLException {
         User user = new User();
 

@@ -1,3 +1,4 @@
+
 package service;
 
 import java.util.List;
@@ -12,6 +13,10 @@ public class RoomService {
         roomRepository = new RoomRepository();
     }
 
+    // =====================================================
+    // LẤY DANH SÁCH PHÒNG THEO RẠP
+    // =====================================================
+
     public List<Room> getRoomsByCinema(
             int cinemaId) {
 
@@ -24,6 +29,10 @@ public class RoomService {
         return roomRepository
                 .findByCinemaId(cinemaId);
     }
+
+    // =====================================================
+    // LẤY THÔNG TIN PHÒNG
+    // =====================================================
 
     public Room getRoom(
             int roomId,
@@ -44,10 +53,10 @@ public class RoomService {
                 );
     }
 
-    // =========================================================
+    // =====================================================
     // TẠO PHÒNG
-    // Không còn cố định số ghế theo 2D/3D/IMAX.
-    // =========================================================
+    // =====================================================
+
     public void createRoom(
             int cinemaId,
             String roomName,
@@ -98,12 +107,15 @@ public class RoomService {
         }
     }
 
-    // =========================================================
-    // SỬA PHÒNG
+    // =====================================================
+    // BUG 04 FIX - CẬP NHẬT PHÒNG
     //
-    // Capacity không nhập trực tiếp.
-    // Muốn đổi số ghế -> Quản lý ghế.
-    // =========================================================
+    // 1. Không cho đổi loại phòng đã có lịch chiếu.
+    // 2. Không cho vô hiệu hóa phòng còn suất chiếu
+    //    ACTIVE trong tương lai.
+    // 3. Cho phép sửa tên nếu dữ liệu hợp lệ.
+    // =====================================================
+
     public void updateRoom(
             int roomId,
             int cinemaId,
@@ -136,19 +148,58 @@ public class RoomService {
                 status
         );
 
-        if ("ACTIVE".equals(
-                currentRoom.getStatus())
-                && "INACTIVE".equals(status)
+        // =================================================
+        // BUG 04 FIX 1:
+        // Kiểm tra có thay đổi loại phòng hay không.
+        // =================================================
+
+        boolean roomTypeChanged =
+                !normalizedType.equalsIgnoreCase(
+                        currentRoom.getRoomType()
+                );
+
+        // Phòng đã từng có lịch chiếu thì không cho
+        // đổi loại để bảo vệ dữ liệu nghiệp vụ.
+        if (roomTypeChanged
+                && roomRepository.hasAnyShowtime(roomId)) {
+
+            throw new IllegalArgumentException(
+                    "Không thể thay đổi loại phòng "
+                    + "vì phòng đã có lịch sử suất chiếu. "
+                    + "Vui lòng sử dụng phòng khác "
+                    + "nếu cần thay đổi loại phòng."
+            );
+        }
+
+        // =================================================
+        // BUG 04 FIX 2:
+        // Không cho vô hiệu hóa phòng khi vẫn còn
+        // suất chiếu ACTIVE trong tương lai.
+        // =================================================
+
+        boolean disablingRoom =
+                "ACTIVE".equalsIgnoreCase(
+                        currentRoom.getStatus()
+                )
+                && "INACTIVE".equalsIgnoreCase(status);
+
+        if (disablingRoom
                 && roomRepository
-                        .hasFutureActiveShowtime(
-                                roomId
-                        )) {
+                        .hasFutureActiveShowtime(roomId)) {
 
             throw new IllegalArgumentException(
                     "Không thể ngừng hoạt động phòng "
-                    + "đang có suất chiếu trong tương lai."
+                    + "đang có suất chiếu trong tương lai. "
+                    + "Vui lòng xử lý các suất chiếu "
+                    + "liên quan trước."
             );
         }
+
+        // =================================================
+        // CẬP NHẬT PHÒNG
+        // Capacity được giữ nguyên.
+        // Muốn thay đổi số ghế thì dùng Manage Seats.
+        // =================================================
 
         Room room =
                 new Room(
@@ -167,6 +218,13 @@ public class RoomService {
             );
         }
     }
+
+    // =====================================================
+    // XÓA PHÒNG
+    //
+    // Không được xóa phòng đã có lịch sử suất chiếu
+    // hoặc lịch sử bán vé.
+    // =====================================================
 
     public void deleteRoom(
             int roomId,
@@ -194,19 +252,23 @@ public class RoomService {
             );
         }
 
+        // Không xóa phòng đã từng có suất chiếu.
         if (roomRepository
                 .hasAnyShowtime(roomId)) {
 
             throw new IllegalArgumentException(
-                    "Không thể xóa phòng đã có lịch sử suất chiếu."
+                    "Không thể xóa phòng "
+                    + "đã có lịch sử suất chiếu."
             );
         }
 
+        // Không xóa phòng đã có lịch sử vé.
         if (roomRepository
                 .hasSeatTicketHistory(roomId)) {
 
             throw new IllegalArgumentException(
-                    "Không thể xóa phòng vì ghế đã có lịch sử vé."
+                    "Không thể xóa phòng "
+                    + "vì ghế đã có lịch sử vé."
             );
         }
 
@@ -221,6 +283,10 @@ public class RoomService {
             );
         }
     }
+
+    // =====================================================
+    // KIỂM TRA SƠ ĐỒ GHẾ KHI TẠO PHÒNG
+    // =====================================================
 
     private void validateLayout(
             int rowCount,
@@ -261,6 +327,10 @@ public class RoomService {
             );
         }
     }
+
+    // =====================================================
+    // KIỂM TRA THÔNG TIN PHÒNG
+    // =====================================================
 
     private void validateRoom(
             int cinemaId,
@@ -314,6 +384,10 @@ public class RoomService {
         }
     }
 
+    // =====================================================
+    // KIỂM TRA LOẠI PHÒNG
+    // =====================================================
+
     private void validateRoomType(
             String roomType) {
 
@@ -326,6 +400,10 @@ public class RoomService {
             );
         }
     }
+
+    // =====================================================
+    // CHUẨN HÓA LOẠI PHÒNG
+    // =====================================================
 
     private String normalizeRoomType(
             String roomType) {

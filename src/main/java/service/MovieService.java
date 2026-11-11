@@ -1,6 +1,8 @@
+
 package service;
 
 import java.sql.Timestamp;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -9,17 +11,17 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import model.Cinema;
 import model.Movie;
 import model.Room;
 import model.Showtime;
+import model.Genre;
 import repository.CinemaRepository;
 import repository.MovieRepository;
 import repository.RoomRepository;
 import repository.ShowtimeRepository;
-import java.sql.Date;
-import model.Genre;
 import repository.GenreRepository;
 
 /**
@@ -29,15 +31,11 @@ import repository.GenreRepository;
  */
 public class MovieService {
 
-    /**
-     * Heading for movies that have no upcoming showtime yet.
-     */
-    public static String NO_SCHEDULE_GROUP = "Sắp chiếu · Chưa mở lịch";
+    public static String NO_SCHEDULE_GROUP =
+            "Sắp chiếu · Chưa mở lịch";
 
-    /**
-     * Display format of a show date: day/month/year.
-     */
-    private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private MovieRepository movieRepository;
     private ShowtimeRepository showtimeRepository;
@@ -53,43 +51,27 @@ public class MovieService {
         genreRepository = new GenreRepository();
     }
 
-    /**
-     * Gets a movie by its ID.
-     *
-     * @param id the movie ID
-     * @return the movie if found, otherwise null
-     */
     public Movie getMovieById(int id) {
         return movieRepository.getById(id);
     }
 
-    /**
-     * Gets all active rooms by room ID.
-     *
-     * @return a map of room ID and room
-     */
     public Map<Integer, Room> getRoomById() {
         Map<Integer, Room> rooms = new HashMap<>();
+
         for (Room room : roomRepository.getAllActive()) {
             rooms.put(room.getRoomId(), room);
         }
+
         return rooms;
     }
 
-    /**
-     * Builds the movie list page data: for each show date, the movies that have
-     * showtimes on that date and their showtime.
-     *
-     * @param keyword the movie title keyword, empty string for all movies
-     * @param date the show date filter, null for all dates
-     * @param cinemaId the cinema filter, null for all cinemas
-     * @return movies and showtimes grouped by date (dd/MM/yyyy) in
-     * chronological order
-     */
-    public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(String keyword, LocalDate date, Integer cinemaId) {
+    public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(
+            String keyword,
+            LocalDate date,
+            Integer cinemaId) {
 
-        // Active movies whose title matches the keyword.
         Map<Integer, Movie> movies = new LinkedHashMap<>();
+
         for (Movie movie : movieRepository.search(keyword)) {
             movies.put(movie.getMovieId(), movie);
         }
@@ -97,97 +79,108 @@ public class MovieService {
         Map<Integer, Room> rooms = getRoomById();
 
         Set<Integer> activeCinemaIds = new HashSet<>();
+
         for (Cinema cinema : cinemaRepository.getAllActive()) {
             activeCinemaIds.add(cinema.getCinemaId());
         }
 
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+        Timestamp now =
+                new Timestamp(System.currentTimeMillis());
 
-        // date -> (movie -> showtimes). The repository returns showtimes ordered by start time.
-        Map<String, Map<Movie, List<Showtime>>> result = new LinkedHashMap<>();
+        Map<String, Map<Movie, List<Showtime>>> result =
+                new LinkedHashMap<>();
+
         Set<Integer> scheduledMovieIds = new HashSet<>();
 
         for (Showtime showtime : showtimeRepository.getAll()) {
+
             Movie movie = movies.get(showtime.getMovieId());
             Room room = rooms.get(showtime.getRoomId());
 
-            // Skip showtimes that already started.
             if (showtime.getStartTime().before(now)) {
                 continue;
             }
 
-            // Skip other movies, inactive rooms and rooms of inactive cinemas.
-            if (movie == null || room == null || !activeCinemaIds.contains(room.getCinemaId())) {
+            if (movie == null
+                    || room == null
+                    || !activeCinemaIds.contains(
+                            room.getCinemaId())) {
                 continue;
             }
 
-            // Apply the cinema filter.
-            if (cinemaId != null && room.getCinemaId() != cinemaId) {
+            if (cinemaId != null
+                    && room.getCinemaId() != cinemaId) {
                 continue;
             }
 
-            // Apply the date filter.
-            LocalDate showDate = showtime.getStartTime().toLocalDateTime().toLocalDate();
+            LocalDate showDate =
+                    showtime.getStartTime()
+                            .toLocalDateTime()
+                            .toLocalDate();
+
             if (date != null && !showDate.equals(date)) {
                 continue;
             }
 
             String dateKey = showDate.format(DATE_FORMAT);
-            Map<Movie, List<Showtime>> dayMovies = result.get(dateKey);
+
+            Map<Movie, List<Showtime>> dayMovies =
+                    result.get(dateKey);
+
             if (dayMovies == null) {
                 dayMovies = new LinkedHashMap<>();
                 result.put(dateKey, dayMovies);
             }
 
             List<Showtime> showtimes = dayMovies.get(movie);
+
             if (showtimes == null) {
                 showtimes = new ArrayList<>();
                 dayMovies.put(movie, showtimes);
             }
+
             showtimes.add(showtime);
             scheduledMovieIds.add(movie.getMovieId());
         }
 
         if (date == null && cinemaId == null) {
-            Map<Movie, List<Showtime>> unscheduled = new LinkedHashMap<>();
+
+            Map<Movie, List<Showtime>> unscheduled =
+                    new LinkedHashMap<>();
+
             for (Movie movie : movies.values()) {
-                if (!scheduledMovieIds.contains(movie.getMovieId())) {
-                    unscheduled.put(movie, new ArrayList<>());
+                if (!scheduledMovieIds.contains(
+                        movie.getMovieId())) {
+
+                    unscheduled.put(
+                            movie,
+                            new ArrayList<>()
+                    );
                 }
             }
+
             if (!unscheduled.isEmpty()) {
-                result.put(NO_SCHEDULE_GROUP, unscheduled);
+                result.put(
+                        NO_SCHEDULE_GROUP,
+                        unscheduled
+                );
             }
         }
+
         return result;
     }
 
-    /**
-     * Gets movies that are currently showing.
-     *
-     * @return a list of currently showing movies
-     */
     public List<Movie> getNowShowingMovies() {
         return movieRepository.getNowShowing();
     }
 
-    /**
-     * Gets movies that will be released in the future.
-     *
-     * @return a list of upcoming movies
-     */
     public List<Movie> getComingSoonMovies() {
         return movieRepository.getComingSoon();
     }
 
-    /**
-     * Gets movies for the customer movie list page.
-     *
-     * @param type now for currently showing movies, coming for upcoming movies
-     * @param keyword movie title keyword
-     * @return a filtered list of movies
-     */
-    public List<Movie> getMoviesForList(String type, String keyword) {
+    public List<Movie> getMoviesForList(
+            String type,
+            String keyword) {
 
         if (keyword == null) {
             keyword = "";
@@ -202,22 +195,18 @@ public class MovieService {
         return movieRepository.searchNowShowing(keyword);
     }
 
-    /**
-     * Gets movies to display in the Home page carousel.
-     *
-     * @return a list of featured movies for the carousel
-     */
     public List<Movie> getFeaturedMovies() {
 
         List<Movie> featuredMovies = new ArrayList<>();
 
-        List<Movie> nowShowingMovies
-                = movieRepository.getNowShowing();
+        List<Movie> nowShowingMovies =
+                movieRepository.getNowShowing();
 
         for (Movie movie : nowShowingMovies) {
 
             if (movie.getPosterUrl() != null
-                    && !movie.getPosterUrl().trim().isEmpty()) {
+                    && !movie.getPosterUrl()
+                            .trim().isEmpty()) {
 
                 featuredMovies.add(movie);
             }
@@ -230,30 +219,37 @@ public class MovieService {
         return featuredMovies;
     }
 
-    /**
-     * Gets genres for each movie.
-     *
-     * @param movies the movie list
-     * @return a map of movie ID and its genres
-     */
-    public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
+    public Map<Integer, List<Genre>> getGenresByMovie(
+            List<Movie> movies) {
 
-        Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
-        List<Genre> allGenres = genreRepository.getAll();
+        Map<Integer, List<Genre>> genresByMovie =
+                new HashMap<>();
+
+        List<Genre> allGenres =
+                genreRepository.getAll();
 
         for (Movie movie : movies) {
 
-            List<Integer> genreIds = movieRepository.getGenreIds(movie.getMovieId());
+            List<Integer> genreIds =
+                    movieRepository.getGenreIds(
+                            movie.getMovieId()
+                    );
+
             List<Genre> movieGenres = new ArrayList<>();
 
             for (Genre genre : allGenres) {
 
-                if (genreIds.contains(genre.getGenreId())) {
+                if (genreIds.contains(
+                        genre.getGenreId())) {
+
                     movieGenres.add(genre);
                 }
             }
 
-            genresByMovie.put(movie.getMovieId(), movieGenres);
+            genresByMovie.put(
+                    movie.getMovieId(),
+                    movieGenres
+            );
         }
 
         return genresByMovie;
@@ -292,7 +288,8 @@ public class MovieService {
         return movieRepository.getByIdAnyStatus(movieId);
     }
 
-    public void createMovie(int cinemaId,
+    public void createMovie(
+            int cinemaId,
             String title,
             String description,
             String durationText,
@@ -317,8 +314,8 @@ public class MovieService {
                 status
         );
 
-        List<Integer> genreIds
-                = parseGenreIds(genreValues);
+        List<Integer> genreIds =
+                parseGenreIds(genreValues);
 
         if (genreIds.isEmpty()) {
             throw new IllegalArgumentException(
@@ -337,7 +334,12 @@ public class MovieService {
         }
     }
 
-    public void updateMovie(int movieId,
+    // =====================================================
+    // BUG 02 FIX: BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
+    // =====================================================
+
+    public void updateMovie(
+            int movieId,
             int cinemaId,
             String title,
             String description,
@@ -359,6 +361,15 @@ public class MovieService {
             );
         }
 
+        Movie oldMovie =
+                movieRepository.getByIdAnyStatus(movieId);
+
+        if (oldMovie == null) {
+            throw new IllegalArgumentException(
+                    "Không tìm thấy phim cần cập nhật."
+            );
+        }
+
         Movie movie = buildMovie(
                 movieId,
                 title,
@@ -372,13 +383,57 @@ public class MovieService {
                 status
         );
 
-        List<Integer> genreIds
-                = parseGenreIds(genreValues);
+        List<Integer> genreIds =
+                parseGenreIds(genreValues);
 
         if (genreIds.isEmpty()) {
             throw new IllegalArgumentException(
                     "Phim phải có ít nhất một thể loại."
             );
+        }
+
+        // Kiểm tra các suất chiếu ACTIVE của phim.
+        // Movie là dữ liệu dùng chung giữa các rạp nên
+        // không chỉ kiểm tra suất chiếu tại cinemaId.
+        List<Showtime> activeShowtimes =
+                showtimeRepository.getByMovieId(movieId);
+
+        if (!activeShowtimes.isEmpty()) {
+
+            boolean durationChanged =
+                    oldMovie.getDurationMinutes()
+                    != movie.getDurationMinutes();
+
+            boolean releaseDateChanged =
+                    !Objects.equals(
+                            oldMovie.getReleaseDate(),
+                            movie.getReleaseDate()
+                    );
+
+            boolean endDateChanged =
+                    !Objects.equals(
+                            oldMovie.getEndDate(),
+                            movie.getEndDate()
+                    );
+
+            boolean statusChanged =
+                    !Objects.equals(
+                            oldMovie.getStatus(),
+                            movie.getStatus()
+                    );
+
+            if (durationChanged
+                    || releaseDateChanged
+                    || endDateChanged
+                    || statusChanged) {
+
+                throw new IllegalArgumentException(
+                        "Không thể thay đổi thời lượng, "
+                        + "ngày phát hành, ngày kết thúc "
+                        + "hoặc trạng thái của phim "
+                        + "đang có suất chiếu hoạt động."
+                );
+            }
         }
 
         if (!movieRepository.updateForCinema(
@@ -392,7 +447,8 @@ public class MovieService {
         }
     }
 
-    private Movie buildMovie(int movieId,
+    private Movie buildMovie(
+            int movieId,
             String title,
             String description,
             String durationText,
@@ -534,12 +590,14 @@ public class MovieService {
             );
         }
 
+        // Giữ nguyên ràng buộc xóa phim của project.
         if (movieRepository.hasShowtimeAtCinema(
                 movieId,
                 cinemaId)) {
 
             throw new IllegalArgumentException(
-                    "Không thể xóa phim vì phim đã có suất chiếu tại rạp."
+                    "Không thể xóa phim vì phim "
+                    + "đã có suất chiếu tại rạp."
             );
         }
 
