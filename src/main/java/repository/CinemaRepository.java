@@ -82,6 +82,33 @@ public class CinemaRepository extends DBContext {
         return null;
     }
 
+    /**
+     * Gets only the address for a cinema, without loading its branch name.
+     * Used by the staff ticket check-in page.
+     */
+    public String findAddressById(int cinemaId) {
+
+        String sql = "SELECT COALESCE(address, '') AS address "
+                + "FROM dbo.Cinema "
+                + "WHERE cinema_id = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, cinemaId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("address");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public int countRooms(int cinemaId) {
 
         String sql = "SELECT COUNT(*) AS total "
