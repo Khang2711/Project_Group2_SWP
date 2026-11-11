@@ -227,9 +227,6 @@
             padding: 30px 15px;
         }
 
-        .checkin-detail {
-            grid-template-columns: 110px 1fr;
-        }
     }
 </style>
 
