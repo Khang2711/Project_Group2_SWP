@@ -268,7 +268,7 @@
 
                 <span>Địa chỉ rạp</span>
                 <strong>
-                    <c:out value="${cinema.address}" />
+                    <c:out value="${cinemaAddress}" />
                 </strong>
 
                 <span>Suất chiếu</span>
