@@ -14,11 +14,15 @@ import java.util.Map;
 import model.User;
 import service.PaymentService;
 import service.PaymentService.PaymentResult;
+import model.Booking;
+import model.Showtime;
+import service.BookingService;
+import service.CinemaService;
 
 /**
- * UC-13 VNPay controller.
- * The return URL is for the customer's browser; the IPN URL is for VNPay
- * server-to-server notifications. Both use the same signature-checked service.
+ * UC-13 VNPay controller. The return URL is for the customer's browser; the IPN
+ * URL is for VNPay server-to-server notifications. Both use the same
+ * signature-checked service.
  */
 @WebServlet(urlPatterns = {
     "/user/payment",
@@ -29,6 +33,8 @@ import service.PaymentService.PaymentResult;
 public class PaymentController extends HttpServlet {
 
     private PaymentService paymentService;
+    private final BookingService bookingService = new BookingService();
+    private final CinemaService cinemaService = new CinemaService();
 
     @Override
     public void init() {
@@ -132,6 +138,41 @@ public class PaymentController extends HttpServlet {
                     readVnPayParameters(request)
             );
             request.setAttribute("paymentResult", result);
+            
+            if (result.isSignatureValid()
+        && result.getBookingId() > 0) {
+
+    HttpSession session = request.getSession(false);
+
+    if (session != null
+            && session.getAttribute("user") instanceof User) {
+
+        User user = (User) session.getAttribute("user");
+
+        try {
+            Booking booking = bookingService.getBookingDetail(
+                    result.getBookingId(),
+                    user.getUserId()
+            );
+
+            Showtime showtime =
+                    bookingService.getShowtimeForBooking(booking);
+
+            request.setAttribute("paymentShowtime", showtime);
+
+            request.setAttribute("paymentCinema",
+                    cinemaService.getCinemaByShowtime(showtime));
+
+            request.setAttribute("paymentMovie",
+                    bookingService.getMovieForShowtime(showtime));
+
+        } catch (IllegalArgumentException ignored) {
+            // Không hiển thị đơn không thuộc khách hàng.
+        } catch (SQLException e) {
+            log("Cannot load payment booking details.", e);
+        }
+    }
+}
 
         } catch (SQLException e) {
             log("Cannot process VNPay browser return.", e);

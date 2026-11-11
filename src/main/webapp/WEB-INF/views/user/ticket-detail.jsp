@@ -88,6 +88,11 @@
 
                     </c:when>
 
+                    <c:when test="${expired}">
+                        <span class="ticket-status ticket-status-expired">
+                            Hết hiệu lực
+                        </span>
+                    </c:when>
 
                     <c:otherwise>
 
@@ -108,6 +113,24 @@
 
 
             <div class="cinema-ticket-grid">
+
+                <c:if test="${not empty cinema}">
+
+                    <div>
+                        <span>Rạp chiếu</span>
+                        <strong>
+                            <c:out value="${cinema.cinemaName}" />
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Địa chỉ rạp</span>
+                        <strong>
+                            <c:out value="${cinema.address}" />
+                        </strong>
+                    </div>
+
+                </c:if>
 
 
                 <div>
@@ -285,6 +308,51 @@
 
             </div>
 
+            <c:if test="${not empty foodItems}">
+
+                <div class="cinema-ticket-food">
+
+                    <h3>Bắp nước / Combo</h3>
+
+                    <c:forEach var="item" items="${foodItems}">
+
+                        <div class="cinema-ticket-food-item">
+
+                            <div>
+                                <strong>
+                                    <c:out value="${item.productName}" />
+                                </strong>
+
+                                <span>
+                                    Số lượng: ${item.quantity}
+                                </span>
+                            </div>
+
+                            <strong class="cinema-ticket-price">
+
+                                <fmt:formatNumber
+                                    value="${item.lineTotal}"
+                                    pattern="#,###" />
+
+                                VNĐ
+
+                            </strong>
+
+                        </div>
+
+                    </c:forEach>
+
+                    <small>
+                        Sản phẩm đi kèm đơn đặt vé
+                        #${ticket.bookingId}
+                    </small>
+
+                </div>
+
+            </c:if>
+
+
+
 
             <c:if test="${ticket.status eq 'USED'
                           and not empty ticket.checkedInAt}">
@@ -317,11 +385,23 @@
             </span>
 
 
-            <img
-                src="${ctx}/user/ticket-qr?id=${ticket.ticketId}"
-                alt="QR code vé"
-                class="cinema-ticket-qr"
-                />
+            <c:choose>
+
+                <c:when test="${expired}">
+                    <p class="ticket-expired-message">
+                        Vé đã hết hiệu lực và không thể sử dụng
+                        để check-in.
+                    </p>
+                </c:when>
+
+                <c:otherwise>
+                    <img
+                        src="${ctx}/user/ticket-qr?id=${ticket.ticketId}"
+                        alt="QR code vé"
+                        class="cinema-ticket-qr" />
+                </c:otherwise>
+
+            </c:choose>
 
 
             <span>
@@ -337,12 +417,15 @@
             </strong>
 
 
-            <small>
+            <c:if test="${not expired}">
+                <small>
+                    Xuất trình mã vé này khi check-in
+                </small>
+                <small>
+                    Vui lòng check-in sớm nhất trước 1 tiếng khi phim bắt đầu   
+                </small>
 
-                Xuất trình mã vé này
-                khi check-in.
-
-            </small>
+            </c:if>
 
 
         </aside>
