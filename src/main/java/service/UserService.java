@@ -72,7 +72,7 @@ public class UserService {
             );
         }
 
-        user.setPasswordHash(PasswordUtil.md5(password));
+        user.setPasswordHash(PasswordUtil.hash(password));
         user.setStatus("ACTIVE");
 
         String roleName = getRoleName(user.getRoleId());
