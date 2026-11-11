@@ -166,6 +166,21 @@
 
                             </div>
 
+                            <c:if test="${not empty cinema}">
+                                <div>
+                                    <span>Rạp chiếu</span>
+                                    <strong>
+                                        <c:out value="${cinema.cinemaName}" />
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>Địa chỉ</span>
+                                    <strong>
+                                        <c:out value="${cinema.address}" />
+                                    </strong>
+                                </div>
+                            </c:if>
 
                         </div>
 

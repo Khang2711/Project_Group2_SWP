@@ -7,6 +7,8 @@ import java.util.Map;
 import model.Cinema;
 import model.Showtime;
 import repository.CinemaRepository;
+import model.Showtime;
+import repository.ShowtimeRepository;
 import repository.ShowtimeRepository;
 
 /**
@@ -15,6 +17,22 @@ import repository.ShowtimeRepository;
  * @author Kiet
  */
 public class CinemaService {
+    
+    private final ShowtimeRepository showtimeRepository
+        = new ShowtimeRepository();
+
+public Cinema getCinemaByShowtime(Showtime showtime) {
+    if (showtime == null) {
+        return null;
+    }
+
+    int cinemaId = showtimeRepository
+            .getCinemaIdByShowtimeId(showtime.getShowtimeId());
+
+    return cinemaId > 0
+            ? cinemaRepository.findById(cinemaId)
+            : null;
+}
 
     private CinemaRepository cinemaRepository;
     private ShowtimeRepository showtimeRepository;

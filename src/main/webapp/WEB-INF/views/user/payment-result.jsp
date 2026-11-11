@@ -83,20 +83,20 @@
                             and paymentResult.bookingConfirmed
                             and not paymentResult.refundRequired}">
 
-                <c:set var="resultClass"
-                       value="payment-result-success" />
+                    <c:set var="resultClass"
+                           value="payment-result-success" />
 
-                <c:set var="resultIcon"
-                       value="✓" />
+                    <c:set var="resultIcon"
+                           value="✓" />
 
-                <c:set var="resultStatus"
-                       value="THANH TOÁN THÀNH CÔNG" />
+                    <c:set var="resultStatus"
+                           value="THANH TOÁN THÀNH CÔNG" />
 
-                <c:set var="resultTitle"
-                       value="Đặt vé thành công!" />
+                    <c:set var="resultTitle"
+                           value="Đặt vé thành công!" />
 
-                <c:set var="resultDescription"
-                       value="Đơn đặt vé đã được xác nhận và vé của bạn đã sẵn sàng sử dụng." />
+                    <c:set var="resultDescription"
+                           value="Đơn đặt vé đã được xác nhận và vé của bạn đã sẵn sàng sử dụng." />
 
             </c:when>
 
@@ -107,20 +107,20 @@
                             and paymentResult.paymentSuccessful
                             and paymentResult.refundRequired}">
 
-                <c:set var="resultClass"
-                       value="payment-result-warning" />
+                    <c:set var="resultClass"
+                           value="payment-result-warning" />
 
-                <c:set var="resultIcon"
-                       value="!" />
+                    <c:set var="resultIcon"
+                           value="!" />
 
-                <c:set var="resultStatus"
-                       value="CẦN KIỂM TRA" />
+                    <c:set var="resultStatus"
+                           value="CẦN KIỂM TRA" />
 
-                <c:set var="resultTitle"
-                       value="Giao dịch cần được kiểm tra" />
+                    <c:set var="resultTitle"
+                           value="Giao dịch cần được kiểm tra" />
 
-                <c:set var="resultDescription"
-                       value="VNPay đã ghi nhận thanh toán nhưng đơn cần được nhân viên kiểm tra và xử lý." />
+                    <c:set var="resultDescription"
+                           value="VNPay đã ghi nhận thanh toán nhưng đơn cần được nhân viên kiểm tra và xử lý." />
 
             </c:when>
 
@@ -130,20 +130,20 @@
             <c:when test="${paymentResult.signatureValid
                             and paymentResult.paymentSuccessful}">
 
-                <c:set var="resultClass"
-                       value="payment-result-warning" />
+                    <c:set var="resultClass"
+                           value="payment-result-warning" />
 
-                <c:set var="resultIcon"
-                       value="!" />
+                    <c:set var="resultIcon"
+                           value="!" />
 
-                <c:set var="resultStatus"
-                       value="ĐÃ GHI NHẬN" />
+                    <c:set var="resultStatus"
+                           value="ĐÃ GHI NHẬN" />
 
-                <c:set var="resultTitle"
-                       value="Thanh toán đã được ghi nhận" />
+                    <c:set var="resultTitle"
+                           value="Thanh toán đã được ghi nhận" />
 
-                <c:set var="resultDescription"
-                       value="Hệ thống đã nhận kết quả giao dịch. Vui lòng kiểm tra trạng thái đơn đặt vé." />
+                    <c:set var="resultDescription"
+                           value="Hệ thống đã nhận kết quả giao dịch. Vui lòng kiểm tra trạng thái đơn đặt vé." />
 
             </c:when>
 
@@ -265,6 +265,31 @@
 
                     </div>
 
+                    <c:if test="${not empty paymentCinema}">
+
+                        <div class="payment-result-order">
+                            <span>Rạp chiếu</span>
+                            <strong>
+                                <c:out value="${paymentCinema.cinemaName}" />
+                            </strong>
+                        </div>
+
+                        <p>
+                            Địa chỉ:
+                            <c:out value="${paymentCinema.address}" />
+                        </p>
+
+                    </c:if>
+
+                    <c:if test="${not empty paymentMovie}">
+                        <p>
+                            Phim:
+                            <strong>
+                                <c:out value="${paymentMovie.title}" />
+                            </strong>
+                        </p>
+                    </c:if>
+
 
                     <div class="payment-result-actions">
 
@@ -280,16 +305,16 @@
                         <%-- Thành công thì cho xem vé --%>
 
                         <c:if test="${paymentResult.signatureValid
-                                    and paymentResult.paymentSuccessful
-                                    and paymentResult.bookingConfirmed
-                                    and not paymentResult.refundRequired}">
+                                      and paymentResult.paymentSuccessful
+                                      and paymentResult.bookingConfirmed
+                                      and not paymentResult.refundRequired}">
 
-                            <a href="${ctx}/user/tickets"
-                               class="payment-result-button payment-result-button-secondary">
+                              <a href="${ctx}/user/tickets"
+                                 class="payment-result-button payment-result-button-secondary">
 
-                                Xem vé của tôi
+                                  Xem vé của tôi
 
-                            </a>
+                              </a>
 
                         </c:if>
 
@@ -297,14 +322,14 @@
                         <%-- Thất bại hợp lệ thì cho thanh toán lại --%>
 
                         <c:if test="${paymentResult.signatureValid
-                                    and not paymentResult.paymentSuccessful}">
+                                      and not paymentResult.paymentSuccessful}">
 
-                            <a href="${ctx}/user/payment?bookingId=${paymentResult.bookingId}"
-                               class="payment-result-button payment-result-button-secondary">
+                              <a href="${ctx}/user/payment?bookingId=${paymentResult.bookingId}"
+                                 class="payment-result-button payment-result-button-secondary">
 
-                                Thử thanh toán lại
+                                  Thử thanh toán lại
 
-                            </a>
+                              </a>
 
                         </c:if>
 

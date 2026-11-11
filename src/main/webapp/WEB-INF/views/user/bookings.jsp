@@ -77,6 +77,9 @@
                         var="movie"
                         value="${movieMap[booking.bookingId]}" />
 
+                    <c:set var="cinema"
+                           value="${cinemaMap[booking.bookingId]}" />
+
 
                     <article class="booking-history-card">
 
@@ -119,6 +122,13 @@
                                     </c:choose>
 
                                 </h2>
+
+                                <c:if test="${not empty cinema}">
+                                    <p>
+                                        Rạp:
+                                        <c:out value="${cinema.cinemaName}" />
+                                    </p>
+                                </c:if>
 
 
                                 <c:if test="${not empty showtime}">

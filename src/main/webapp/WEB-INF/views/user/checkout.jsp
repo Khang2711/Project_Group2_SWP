@@ -290,6 +290,22 @@
         <div class="checkout-summary">
 
             <h2>Thông tin đặt vé</h2>
+            
+            <c:if test="${not empty cinema}">
+    <div class="summary-row">
+        <span>Rạp chiếu</span>
+        <strong>
+            <c:out value="${cinema.cinemaName}" />
+        </strong>
+    </div>
+
+    <div class="summary-row">
+        <span>Địa chỉ rạp</span>
+        <strong>
+            <c:out value="${cinema.address}" />
+        </strong>
+    </div>
+</c:if>
 
             <div class="summary-row">
                 <span>Suất chiếu</span>
