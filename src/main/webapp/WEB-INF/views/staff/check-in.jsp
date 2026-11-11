@@ -266,6 +266,11 @@
                     <c:out value="${room.roomName}" />
                 </strong>
 
+                <span>Chi nhánh</span>
+                <strong>
+                    <c:out value="${cinema.cinemaName}" />
+                </strong>
+
                 <span>Địa chỉ rạp</span>
                 <strong>
                     <c:out value="${cinema.address}" />
@@ -324,6 +329,31 @@
                             pattern="dd/MM/yyyy HH:mm:ss" />
                     </strong>
                 </c:if>
+            </div>
+
+            <div class="checkin-food-section">
+                <h3>3. Bắp nước / Combo khách đã mua</h3>
+                <p class="checkin-note">Chỉ hiển thị sản phẩm thuộc đơn vé đã thanh toán.</p>
+
+                <c:choose>
+                    <c:when test="${not empty paidFoodItems}">
+                        <div class="checkin-detail">
+                            <span>Thanh toán</span>
+                            <strong>Đã thanh toán</strong>
+
+                            <span>Sản phẩm</span>
+                            <span><strong>Số lượng</strong></span>
+
+                            <c:forEach var="foodItem" items="${paidFoodItems}">
+                                <strong><c:out value="${foodItem.productName}" /></strong>
+                                <strong><c:out value="${foodItem.quantity}" /></strong>
+                            </c:forEach>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <p>Khách chưa có bắp nước/combo đã thanh toán kèm đơn vé này.</p>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <c:if test="${canCheckIn}">
