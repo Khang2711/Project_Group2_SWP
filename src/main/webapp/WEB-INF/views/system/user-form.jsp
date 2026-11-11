@@ -198,7 +198,7 @@
                            required>
 
                     <span class="user-form-help">
-                        Mật khẩu tối thiểu 6 ký tự và được lưu bằng PBKDF2 có salt.
+                        Mật khẩu tối thiểu 6 ký tự và được mã hóa MD5 trước khi lưu.
                     </span>
                 </c:otherwise>
             </c:choose>
