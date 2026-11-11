@@ -1,3 +1,4 @@
+
 package service;
 
 import java.sql.Timestamp;
@@ -19,18 +20,27 @@ import repository.ShowtimeRepository;
 
 public class ShowtimeService {
 
-    private final ShowtimeRepository showtimeRepository = new ShowtimeRepository();
-    private final RoomRepository roomRepository = new RoomRepository();
-    private final CinemaRepository cinemaRepository = new CinemaRepository();
-    private final MovieRepository movieRepository = new MovieRepository();
+    private final ShowtimeRepository showtimeRepository =
+            new ShowtimeRepository();
 
-    public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
+    private final RoomRepository roomRepository =
+            new RoomRepository();
 
-        return showtimeRepository.getByMovieIdAndDate(movieId,date);
+    private final CinemaRepository cinemaRepository =
+            new CinemaRepository();
+
+    private final MovieRepository movieRepository =
+            new MovieRepository();
+
+    public List<Showtime> getByMovieAndDate(
+            int movieId,
+            LocalDate date) {
+
+        return showtimeRepository
+                .getByMovieIdAndDate(movieId, date);
     }
 
     public List<Cinema> getActiveCinema() {
-
         return cinemaRepository.getAllActive();
     }
 
@@ -39,34 +49,35 @@ public class ShowtimeService {
         Map<Integer, Room> rooms = new HashMap<>();
 
         for (Room room : roomRepository.getAllActive()) {
-
-            rooms.put(room.getRoomId(),room);
+            rooms.put(room.getRoomId(), room);
         }
 
         return rooms;
     }
 
     public Map<Integer, List<Showtime>> groupByCinema(
-                    List<Showtime> showtimes,
-                    Map<Integer, Room> roomsById,
-                    List<Cinema> cinemas) {
+            List<Showtime> showtimes,
+            Map<Integer, Room> roomsById,
+            List<Cinema> cinemas) {
 
-        Map<Integer, List<Showtime>> result = new LinkedHashMap<>();
+        Map<Integer, List<Showtime>> result =
+                new LinkedHashMap<>();
 
         for (Cinema cinema : cinemas) {
 
             for (Showtime showtime : showtimes) {
 
-                Room room = roomsById.get(showtime.getRoomId());
+                Room room =
+                        roomsById.get(showtime.getRoomId());
 
-                if (room != null && room.getCinemaId() == cinema.getCinemaId()) {
+                if (room != null
+                        && room.getCinemaId()
+                        == cinema.getCinemaId()) {
 
-                    if (!result.containsKey(cinema.getCinemaId())) {
-
-                        result.put(cinema.getCinemaId(),new ArrayList<>());
-                    }
-
-                    result.get(cinema.getCinemaId()).add(showtime);
+                    result.computeIfAbsent(
+                            cinema.getCinemaId(),
+                            key -> new ArrayList<>()
+                    ).add(showtime);
                 }
             }
         }
@@ -74,13 +85,14 @@ public class ShowtimeService {
         return result;
     }
 
-    public boolean isBookable(
-            int showtimeId) {
+    // =====================================================
+    // KIEM TRA SUAT CHIEU CO THE DAT VE KHONG
+    // =====================================================
+
+    public boolean isBookable(int showtimeId) {
 
         Showtime showtime =
-                showtimeRepository.getById(
-                        showtimeId
-                );
+                showtimeRepository.getById(showtimeId);
 
         if (showtime == null) {
             return false;
@@ -88,33 +100,28 @@ public class ShowtimeService {
 
         if (!"ACTIVE".equalsIgnoreCase(
                 showtime.getStatus())) {
-
             return false;
         }
 
-        LocalDateTime now =
-                LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 
         if (showtime.getStartTime() == null
-                || !showtime
-                        .getStartTime()
+                || !showtime.getStartTime()
                         .toLocalDateTime()
                         .isAfter(now)) {
 
             return false;
         }
 
-        Movie movie =
-                movieRepository.getById(
-                        showtime.getMovieId()
-                );
+        Movie movie = movieRepository.getById(
+                showtime.getMovieId()
+        );
 
         if (movie == null) {
             return false;
         }
 
-        LocalDate today =
-                LocalDate.now();
+        LocalDate today = LocalDate.now();
 
         if (movie.getReleaseDate() == null
                 || movie.getReleaseDate()
@@ -134,8 +141,8 @@ public class ShowtimeService {
 
         Room room = null;
 
-        for (Room currentRoom
-                : roomRepository.getAllActive()) {
+        for (Room currentRoom :
+                roomRepository.getAllActive()) {
 
             if (currentRoom.getRoomId()
                     == showtime.getRoomId()) {
@@ -160,21 +167,22 @@ public class ShowtimeService {
                 );
     }
 
-    public List<Showtime>
-            getShowtimesForManager(
-                    int cinemaId) {
+    // =====================================================
+    // DANH SACH SUAT CHIEU CHO MANAGER
+    // =====================================================
+
+    public List<Showtime> getShowtimesForManager(
+            int cinemaId) {
 
         if (cinemaId <= 0) {
-
             throw new IllegalArgumentException(
                     "Rạp không hợp lệ."
             );
         }
 
-        return showtimeRepository
-                .getByCinemaId(
-                        cinemaId
-                );
+        return showtimeRepository.getByCinemaId(
+                cinemaId
+        );
     }
 
     public Showtime getShowtimeById(int showtimeId) {
@@ -190,18 +198,19 @@ public class ShowtimeService {
             int showtimeId,
             int cinemaId) {
 
-        if (showtimeId <= 0
-                || cinemaId <= 0) {
-
+        if (showtimeId <= 0 || cinemaId <= 0) {
             return null;
         }
 
-        return showtimeRepository
-                .getByIdAndCinema(
-                        showtimeId,
-                        cinemaId
-                );
+        return showtimeRepository.getByIdAndCinema(
+                showtimeId,
+                cinemaId
+        );
     }
+
+    // =====================================================
+    // TAO MOT SUAT CHIEU
+    // =====================================================
 
     public void createShowtime(
             int cinemaId,
@@ -210,29 +219,27 @@ public class ShowtimeService {
             LocalDateTime startTime,
             String status) {
 
-        Showtime showtime =
-                buildShowtime(
-                        0,
-                        cinemaId,
-                        movieId,
-                        roomId,
-                        startTime,
-                        status,
-                        null
-                );
+        Showtime showtime = buildShowtime(
+                0,
+                cinemaId,
+                movieId,
+                roomId,
+                startTime,
+                status,
+                null
+        );
 
-        if (!showtimeRepository.insert(
-                showtime)) {
-
+        if (!showtimeRepository.insert(showtime)) {
             throw new IllegalArgumentException(
                     "Không thể thêm lịch chiếu."
             );
         }
     }
 
-    /*
-     * Tạo nhiều ca cho cùng một phim.
-     */
+    // =====================================================
+    // TAO NHIEU SUAT CHIEU
+    // =====================================================
+
     public void createShowtimesBulk(
             int cinemaId,
             int movieId,
@@ -250,16 +257,13 @@ public class ShowtimeService {
             );
         }
 
-        if (roomIds.size()
-                != startTimes.size()) {
-
+        if (roomIds.size() != startTimes.size()) {
             throw new IllegalArgumentException(
                     "Dữ liệu các ca chiếu không hợp lệ."
             );
         }
 
         if (roomIds.size() > 50) {
-
             throw new IllegalArgumentException(
                     "Mỗi lần chỉ được tạo tối đa 50 ca chiếu."
             );
@@ -268,53 +272,44 @@ public class ShowtimeService {
         List<Showtime> newShowtimes =
                 new ArrayList<>();
 
-        for (int i = 0;
-                i < roomIds.size();
-                i++) {
+        for (int i = 0; i < roomIds.size(); i++) {
 
             try {
 
-                Showtime showtime =
-                        buildShowtime(
-                                0,
-                                cinemaId,
-                                movieId,
-                                roomIds.get(i),
-                                startTimes.get(i),
-                                status,
-                                null
-                        );
+                if (roomIds.get(i) == null) {
+                    throw new IllegalArgumentException(
+                            "Phòng chiếu không hợp lệ."
+                    );
+                }
 
-                newShowtimes.add(
-                        showtime
+                Showtime showtime = buildShowtime(
+                        0,
+                        cinemaId,
+                        movieId,
+                        roomIds.get(i),
+                        startTimes.get(i),
+                        status,
+                        null
                 );
+
+                newShowtimes.add(showtime);
 
             } catch (IllegalArgumentException e) {
 
                 throw new IllegalArgumentException(
-                        "Ca "
-                        + (i + 1)
-                        + ": "
+                        "Ca " + (i + 1) + ": "
                         + e.getMessage()
                 );
             }
         }
 
-        /*
-         * buildShowtime kiểm tra với dữ liệu
-         * đang có trong database.
-         *
-         * Đoạn này kiểm tra các ca vừa nhập
-         * có tự đè lên nhau hay không.
-         */
         if ("ACTIVE".equals(status)) {
 
             for (int i = 0;
                     i < newShowtimes.size();
                     i++) {
 
-                Showtime first =
-                        newShowtimes.get(i);
+                Showtime first = newShowtimes.get(i);
 
                 for (int j = i + 1;
                         j < newShowtimes.size();
@@ -325,44 +320,42 @@ public class ShowtimeService {
 
                     if (first.getRoomId()
                             != second.getRoomId()) {
-
                         continue;
                     }
 
                     boolean overlap =
-                            first.getStartTime()
-                                    .before(
-                                            second.getEndTime()
-                                    )
-                            && first.getEndTime()
-                                    .after(
-                                            second.getStartTime()
-                                    );
+                            first.getStartTime().before(
+                                    second.getEndTime()
+                            )
+                            && first.getEndTime().after(
+                                    second.getStartTime()
+                            );
 
                     if (overlap) {
-
                         throw new IllegalArgumentException(
-                                "Ca "
-                                + (i + 1)
-                                + " và ca "
-                                + (j + 1)
-                                + " bị trùng thời gian trong cùng phòng."
+                                "Ca " + (i + 1)
+                                + " và ca " + (j + 1)
+                                + " bị trùng thời gian "
+                                + "trong cùng phòng."
                         );
                     }
                 }
             }
         }
 
-        if (!showtimeRepository
-                .insertBatch(
-                        newShowtimes
-                )) {
+        if (!showtimeRepository.insertBatch(
+                newShowtimes)) {
 
             throw new IllegalArgumentException(
                     "Không thể tạo loạt lịch chiếu."
             );
         }
     }
+
+    // =====================================================
+    // BUG 01 FIX:
+    // KHONG THAY DOI SUAT CHIEU DA CO VE
+    // =====================================================
 
     public void updateShowtime(
             int showtimeId,
@@ -373,29 +366,60 @@ public class ShowtimeService {
             String status) {
 
         Showtime oldShowtime =
-                showtimeRepository
-                        .getByIdAndCinema(
-                                showtimeId,
-                                cinemaId
-                        );
+                showtimeRepository.getByIdAndCinema(
+                        showtimeId,
+                        cinemaId
+                );
 
         if (oldShowtime == null) {
-
             throw new IllegalArgumentException(
                     "Không tìm thấy lịch chiếu."
             );
         }
 
-        Showtime showtime =
-                buildShowtime(
-                        showtimeId,
-                        cinemaId,
-                        movieId,
-                        roomId,
-                        startTime,
-                        status,
-                        showtimeId
+        if (showtimeRepository.hasTickets(showtimeId)) {
+
+            boolean movieChanged =
+                    oldShowtime.getMovieId() != movieId;
+
+            boolean roomChanged =
+                    oldShowtime.getRoomId() != roomId;
+
+            boolean timeChanged =
+                    startTime == null
+                    || oldShowtime.getStartTime() == null
+                    || !oldShowtime.getStartTime()
+                            .toLocalDateTime()
+                            .equals(startTime);
+
+            boolean statusChanged =
+                    status == null
+                    || !status.equals(
+                            oldShowtime.getStatus()
+                    );
+
+            if (movieChanged
+                    || roomChanged
+                    || timeChanged
+                    || statusChanged) {
+
+                throw new IllegalArgumentException(
+                        "Không thể thay đổi phim, phòng, "
+                        + "thời gian hoặc trạng thái "
+                        + "của suất chiếu đã có vé."
                 );
+            }
+        }
+
+        Showtime showtime = buildShowtime(
+                showtimeId,
+                cinemaId,
+                movieId,
+                roomId,
+                startTime,
+                status,
+                showtimeId
+        );
 
         if (!showtimeRepository.update(
                 showtime,
@@ -407,39 +431,46 @@ public class ShowtimeService {
         }
     }
 
+    // =====================================================
+    // BUG-07 FIX:
+    // KHONG XOA HOAC VO HIEU HOA SUAT DA CO VE
+    //
+    // Code cu:
+    // Co ve -> setInactive()
+    //
+    // Code moi:
+    // Co ve -> TU CHOI thao tac
+    //
+    // Khong tu dong huy ve, khong tu dong
+    // hoan tien va khong lam mat hieu luc ve.
+    // =====================================================
+
     public void deleteShowtime(
             int showtimeId,
             int cinemaId) {
 
         Showtime showtime =
-                showtimeRepository
-                        .getByIdAndCinema(
-                                showtimeId,
-                                cinemaId
-                        );
+                showtimeRepository.getByIdAndCinema(
+                        showtimeId,
+                        cinemaId
+                );
 
         if (showtime == null) {
-
             throw new IllegalArgumentException(
                     "Không tìm thấy lịch chiếu."
             );
         }
 
-        if (showtimeRepository.hasTickets(
-                showtimeId)) {
+        // BUG-07 FIX:
+        // Bao ve du lieu ve da phat sinh.
+        if (showtimeRepository.hasTickets(showtimeId)) {
 
-            if (!showtimeRepository
-                    .setInactive(
-                            showtimeId,
-                            cinemaId
-                    )) {
-
-                throw new IllegalArgumentException(
-                        "Không thể ngừng lịch chiếu."
-                );
-            }
-
-            return;
+            throw new IllegalArgumentException(
+                    "Không thể xóa hoặc ngừng hoạt động "
+                    + "suất chiếu đã có vé. "
+                    + "Vui lòng xử lý vé liên quan "
+                    + "theo quy trình trước khi xóa."
+            );
         }
 
         if (!showtimeRepository.delete(
@@ -452,6 +483,13 @@ public class ShowtimeService {
         }
     }
 
+    // =====================================================
+    // TAO VA KIEM TRA DOI TUONG SHOWTIME
+    //
+    // GIU BUG 06 FIX:
+    // KHONG TAO SUAT ACTIVE TAI RAP INACTIVE
+    // =====================================================
+
     private Showtime buildShowtime(
             int showtimeId,
             int cinemaId,
@@ -462,24 +500,27 @@ public class ShowtimeService {
             Integer excludeShowtimeId) {
 
         if (cinemaId <= 0) {
-
             throw new IllegalArgumentException(
                     "Rạp không hợp lệ."
             );
         }
 
+        Cinema cinema =
+                cinemaRepository.findById(cinemaId);
+
+        if (cinema == null) {
+            throw new IllegalArgumentException(
+                    "Không tìm thấy rạp chiếu."
+            );
+        }
+
         Movie movie =
-                movieRepository
-                        .getByIdAnyStatus(
-                                movieId
-                        );
+                movieRepository.getByIdAnyStatus(movieId);
 
         if (movie == null
-                || !movieRepository
-                        .belongsToCinema(
-                                movieId,
-                                cinemaId
-                        )) {
+                || !movieRepository.belongsToCinema(
+                        movieId,
+                        cinemaId)) {
 
             throw new IllegalArgumentException(
                     "Phim không thuộc rạp của bạn."
@@ -487,21 +528,18 @@ public class ShowtimeService {
         }
 
         Room room =
-                roomRepository
-                        .findByIdAndCinema(
-                                roomId,
-                                cinemaId
-                        );
+                roomRepository.findByIdAndCinema(
+                        roomId,
+                        cinemaId
+                );
 
         if (room == null) {
-
             throw new IllegalArgumentException(
                     "Phòng chiếu không thuộc rạp của bạn."
             );
         }
 
         if (startTime == null) {
-
             throw new IllegalArgumentException(
                     "Thời gian bắt đầu không được để trống."
             );
@@ -518,10 +556,19 @@ public class ShowtimeService {
         if ("ACTIVE".equals(status)) {
 
             if (!"ACTIVE".equalsIgnoreCase(
+                    cinema.getStatus())) {
+
+                throw new IllegalArgumentException(
+                    "Không thể tạo suất chiếu "
+                    + "vì rạp đang ngừng hoạt động."
+                );
+            }
+
+            if (!"ACTIVE".equalsIgnoreCase(
                     movie.getStatus())) {
 
                 throw new IllegalArgumentException(
-                        "Phim đang không hoạt động."
+                    "Phim đang không hoạt động."
                 );
             }
 
@@ -529,7 +576,7 @@ public class ShowtimeService {
                     room.getStatus())) {
 
                 throw new IllegalArgumentException(
-                        "Phòng chiếu đang không hoạt động."
+                    "Phòng chiếu đang không hoạt động."
                 );
             }
 
@@ -537,39 +584,35 @@ public class ShowtimeService {
                     LocalDateTime.now())) {
 
                 throw new IllegalArgumentException(
-                        "Suất chiếu phải bắt đầu trong tương lai."
+                    "Suất chiếu phải bắt đầu trong tương lai."
                 );
             }
         }
 
-        LocalDate showDate =
-                startTime.toLocalDate();
+        LocalDate showDate = startTime.toLocalDate();
 
         if (movie.getReleaseDate() != null
                 && showDate.isBefore(
                         movie.getReleaseDate()
-                                .toLocalDate()
-                )) {
+                                .toLocalDate())) {
 
             throw new IllegalArgumentException(
-                    "Ngày chiếu không được trước ngày phát hành phim."
+                    "Ngày chiếu không được trước "
+                    + "ngày phát hành phim."
             );
         }
 
         if (movie.getEndDate() != null
                 && showDate.isAfter(
                         movie.getEndDate()
-                                .toLocalDate()
-                )) {
+                                .toLocalDate())) {
 
             throw new IllegalArgumentException(
                     "Phim đã hết thời gian chiếu tại rạp."
             );
         }
 
-        if (movie.getDurationMinutes()
-                <= 0) {
-
+        if (movie.getDurationMinutes() <= 0) {
             throw new IllegalArgumentException(
                     "Thời lượng phim không hợp lệ."
             );
@@ -581,54 +624,32 @@ public class ShowtimeService {
                 );
 
         Timestamp startTimestamp =
-                Timestamp.valueOf(
-                        startTime
-                );
+                Timestamp.valueOf(startTime);
 
         Timestamp endTimestamp =
-                Timestamp.valueOf(
-                        endTime
-                );
+                Timestamp.valueOf(endTime);
 
         if ("ACTIVE".equals(status)
                 && showtimeRepository.hasConflict(
                         roomId,
                         startTimestamp,
                         endTimestamp,
-                        excludeShowtimeId
-                )) {
+                        excludeShowtimeId)) {
 
             throw new IllegalArgumentException(
-                    "Phòng chiếu đã có lịch khác trong khoảng thời gian này."
+                    "Phòng chiếu đã có lịch khác "
+                    + "trong khoảng thời gian này."
             );
         }
 
-        Showtime showtime =
-                new Showtime();
+        Showtime showtime = new Showtime();
 
-        showtime.setShowtimeId(
-                showtimeId
-        );
-
-        showtime.setMovieId(
-                movieId
-        );
-
-        showtime.setRoomId(
-                roomId
-        );
-
-        showtime.setStartTime(
-                startTimestamp
-        );
-
-        showtime.setEndTime(
-                endTimestamp
-        );
-
-        showtime.setStatus(
-                status
-        );
+        showtime.setShowtimeId(showtimeId);
+        showtime.setMovieId(movieId);
+        showtime.setRoomId(roomId);
+        showtime.setStartTime(startTimestamp);
+        showtime.setEndTime(endTimestamp);
+        showtime.setStatus(status);
 
         return showtime;
     }
