@@ -47,29 +47,17 @@ public class ShowtimeController extends HttpServlet {
             = new RoomService();
 
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
 
-        String path
-                = request.getServletPath();
+        String path = request.getServletPath();
 
         if ("/user/showtimes".equals(path)) {
 
-            loadUserShowtimes(
-                    request,
-                    response
-            );
-
+            loadUserShowtimes(request,response);
             return;
         }
 
-        User user
-                = getManager(
-                        request,
-                        response
-                );
+        User user = getManager(request, response);
 
         if (user == null) {
             return;
@@ -657,73 +645,46 @@ public class ShowtimeController extends HttpServlet {
         return user;
     }
 
-    private void loadUserShowtimes(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    private void loadUserShowtimes(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        if (request.getParameter("movieId")
-                == null
-                || request.getParameter(
-                        "movieId"
-                ).trim().isEmpty()) {
+        if (request.getParameter("movieId") == null 
+                || request.getParameter("movieId").trim().isEmpty()) {
 
-            String keyword
-                    = request.getParameter(
-                            "keyword"
-                    );
+            String keyword = request.getParameter("keyword");
 
             if (keyword == null) {
                 keyword = "";
             }
 
-            keyword
-                    = keyword.trim();
+            keyword = keyword.trim();
 
             LocalDate searchDate = null;
 
-            String searchDateText
-                    = request.getParameter(
-                            "date"
-                    );
+            String searchDateText = request.getParameter("date");
 
-            if (searchDateText != null
-                    && !searchDateText.isEmpty()) {
+            if (searchDateText != null && !searchDateText.isEmpty()) {
 
                 try {
 
-                    searchDate
-                            = LocalDate.parse(
-                                    searchDateText
-                            );
+                    searchDate = LocalDate.parse(searchDateText);
 
                 } catch (Exception e) {
-
-                    response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            "Ngày chiếu không hợp lệ."
-                    );
-
+                    
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,"Ngày chiếu không hợp lệ.");
                     return;
+                    
                 }
             }
 
             Integer searchCinemaId = null;
 
-            String searchCinemaText
-                    = request.getParameter(
-                            "cinemaId"
-                    );
+            String searchCinemaText = request.getParameter("cinemaId");
 
-            if (searchCinemaText != null
-                    && !searchCinemaText.isEmpty()) {
+            if (searchCinemaText != null && !searchCinemaText.isEmpty()) {
 
                 try {
 
-                    int id
-                            = Integer.parseInt(
-                                    searchCinemaText
-                            );
+                    int id = Integer.parseInt(searchCinemaText);
 
                     if (id > 0) {
                         searchCinemaId = id;
@@ -731,83 +692,27 @@ public class ShowtimeController extends HttpServlet {
 
                 } catch (NumberFormatException e) {
 
-                    response.sendError(
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            "Rạp không hợp lệ."
-                    );
-
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,"Rạp không hợp lệ.");
                     return;
+                    
                 }
             }
 
-            Map<String, Map<Movie, List<Showtime>>>
-                    scheduleByDate
-                    = movieService
-                            .getSchedulesByDate(
-                                    keyword,
-                                    searchDate,
-                                    searchCinemaId
-                            );
+            Map<String, Map<Movie, List<Showtime>>> scheduleByDate
+                    = movieService.getSchedulesByDate(keyword,searchDate,searchCinemaId);
 
-            scheduleByDate.remove(
-                    MovieService.NO_SCHEDULE_GROUP
-            );
+            scheduleByDate.remove(MovieService.NO_SCHEDULE_GROUP);
+            request.setAttribute("scheduleByDate",scheduleByDate);
+            request.setAttribute("roomById",movieService.getRoomById());
+            request.setAttribute("cinemaById",cinemaService.getCinemaById());
+            request.setAttribute("cinemas",cinemaService.getActiveCinemas());
+            request.setAttribute("nowShowingMovies",movieService.getNowShowingMovies());
 
-            request.setAttribute(
-                    "scheduleByDate",
-                    scheduleByDate
-            );
+            request.setAttribute("keyword",keyword);
+            request.setAttribute("date",searchDate == null? "" : searchDate.toString());
+            request.setAttribute("cinemaId", searchCinemaId == null ? 0 : searchCinemaId);
 
-            request.setAttribute(
-                    "roomById",
-                    movieService
-                            .getRoomById()
-            );
-
-            request.setAttribute(
-                    "cinemaById",
-                    cinemaService
-                            .getCinemaById()
-            );
-
-            request.setAttribute(
-                    "cinemas",
-                    cinemaService
-                            .getActiveCinemas()
-            );
-
-            request.setAttribute(
-                    "nowShowingMovies",
-                    movieService
-                            .getNowShowingMovies()
-            );
-
-            request.setAttribute(
-                    "keyword",
-                    keyword
-            );
-
-            request.setAttribute(
-                    "date",
-                    searchDate == null
-                            ? ""
-                            : searchDate.toString()
-            );
-
-            request.setAttribute(
-                    "cinemaId",
-                    searchCinemaId == null
-                            ? 0
-                            : searchCinemaId
-            );
-
-            request.getRequestDispatcher(
-                    "/WEB-INF/views/user/showtime-search.jsp"
-            ).forward(
-                    request,
-                    response
-            );
-
+            request.getRequestDispatcher("/WEB-INF/views/user/showtime-search.jsp").forward(request,response);
             return;
         }
 
@@ -815,171 +720,108 @@ public class ShowtimeController extends HttpServlet {
 
         try {
 
-            movieId
-                    = Integer.parseInt(
-                            request.getParameter(
-                                    "movieId"
-                            )
-                    );
+            movieId = Integer.parseInt(request.getParameter("movieId"));
 
         } catch (Exception e) {
 
-            response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST
-            );
-
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
-        Movie movie
-                = movieService
-                        .getMovieById(
-                                movieId
-                        );
+        
+        Movie movie = movieService.getMovieById(movieId);
 
         if (movie == null) {
 
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
+            
         }
 
-        LocalDate today
-                = LocalDate.now();
+        LocalDate today = LocalDate.now();
+        LocalDate selectedDate = today;
 
-        LocalDate selectedDate
-                = today;
+        String date = request.getParameter("date");
 
-        String date
-                = request.getParameter(
-                        "date"
-                );
-
-        if (date != null
-                && !date.isEmpty()) {
+        if (date != null && !date.isEmpty()) {
 
             try {
 
-                selectedDate
-                        = LocalDate.parse(
-                                date
-                        );
+                selectedDate = LocalDate.parse(date);
 
             } catch (Exception e) {
 
                 selectedDate = today;
+                
             }
         }
 
-        if (selectedDate.isBefore(today)
-                || selectedDate.isAfter(
-                        today.plusDays(6)
-                )) {
+        if (selectedDate.isBefore(today)|| selectedDate.isAfter(today.plusDays(6))) {
 
             selectedDate = today;
+            
         }
 
-        List<Date> days
-                = new ArrayList<>();
+        List<Date> days = new ArrayList<>();
 
         for (int i = 0; i < 7; i++) {
 
-            days.add(
-                    Date.valueOf(
-                            today.plusDays(i)
-                    )
-            );
+            days.add(Date.valueOf(today.plusDays(i)));
+            
         }
 
         int selectedCinemaId = 0;
 
-        String cinemaId
-                = request.getParameter(
-                        "cinemaId"
-                );
+        String cinemaId = request.getParameter("cinemaId");
 
-        if (cinemaId != null
-                && !cinemaId.isEmpty()) {
+        if (cinemaId != null && !cinemaId.isEmpty()) {
 
             try {
 
-                selectedCinemaId
-                        = Integer.parseInt(
-                                cinemaId
-                        );
+                selectedCinemaId = Integer.parseInt(cinemaId);
 
             } catch (NumberFormatException e) {
 
                 selectedCinemaId = 0;
+                
             }
         }
 
-        List<Showtime> showtimes
-                = showtimeService
-                        .getByMovieAndDate(
-                                movieId,
-                                selectedDate
-                        );
+        List<Showtime> showtimes = showtimeService.getByMovieAndDate( movieId,selectedDate);
+        List<Cinema> cinemas= cinemaService.getActiveCinemas();
 
-        List<Cinema> cinemas
-                = cinemaService
-                        .getActiveCinemas();
-
-        Map<Integer, Room> roomsById
-                = new HashMap<>();
+        Map<Integer, Room> roomsById = new HashMap<>();
 
         for (Cinema cinema : cinemas) {
 
-            List<Room> rooms
-                    = roomService
-                            .getRoomsByCinema(
-                                    cinema.getCinemaId()
-                            );
+            List<Room> rooms = roomService.getRoomsByCinema(cinema.getCinemaId());
 
             for (Room room : rooms) {
 
-                if ("ACTIVE".equalsIgnoreCase(
-                        room.getStatus())) {
+                if ("ACTIVE".equalsIgnoreCase(room.getStatus())) {
 
-                    roomsById.put(
-                            room.getRoomId(),
-                            room
-                    );
+                    roomsById.put(room.getRoomId(),room);
+                    
                 }
             }
         }
 
-        Map<Integer, List<Showtime>>
-                cinemaSlots
-                = new LinkedHashMap<>();
+        Map<Integer, List<Showtime>> cinemaSlots = new LinkedHashMap<>();
 
-        for (Showtime showtime
-                : showtimes) {
+        for (Showtime showtime : showtimes) {
 
-            Room room
-                    = roomsById.get(
-                            showtime.getRoomId()
-                    );
+            Room room = roomsById.get(showtime.getRoomId());
 
             if (room != null) {
 
-                int id
-                        = room.getCinemaId();
+                int id = room.getCinemaId();
 
-                if (!cinemaSlots
-                        .containsKey(id)) {
+                if (!cinemaSlots.containsKey(id)) {
 
-                    cinemaSlots.put(
-                            id,
-                            new ArrayList<>()
-                    );
+                    cinemaSlots.put(id,new ArrayList<>());
+                    
                 }
 
-                cinemaSlots
-                        .get(id)
-                        .add(showtime);
+                cinemaSlots.get(id).add(showtime);
             }
         }
 
@@ -987,71 +829,23 @@ public class ShowtimeController extends HttpServlet {
 
         if (selectedCinemaId == 0) {
 
-            hasShowtimes
-                    = !cinemaSlots
-                            .isEmpty();
+            hasShowtimes = !cinemaSlots.isEmpty();
 
         } else {
 
-            hasShowtimes
-                    = cinemaSlots
-                            .containsKey(
-                                    selectedCinemaId
-                            );
+            hasShowtimes = cinemaSlots.containsKey(selectedCinemaId);
         }
 
-        request.setAttribute(
-                "movie",
-                movie
-        );
+        request.setAttribute("movie",movie);
+        request.setAttribute("days",days);
+        request.setAttribute("selectedDate",Date.valueOf(selectedDate));
+        request.setAttribute("selectedCinemaId",selectedCinemaId);
+        request.setAttribute("cinemas",cinemas);
+        request.setAttribute("roomsById",roomsById);
+        request.setAttribute("cinemaSlots",cinemaSlots);
+        request.setAttribute("hasShowtimes",hasShowtimes);
+        request.setAttribute("nowMillis",System.currentTimeMillis());
 
-        request.setAttribute(
-                "days",
-                days
-        );
-
-        request.setAttribute(
-                "selectedDate",
-                Date.valueOf(
-                        selectedDate
-                )
-        );
-
-        request.setAttribute(
-                "selectedCinemaId",
-                selectedCinemaId
-        );
-
-        request.setAttribute(
-                "cinemas",
-                cinemas
-        );
-
-        request.setAttribute(
-                "roomsById",
-                roomsById
-        );
-
-        request.setAttribute(
-                "cinemaSlots",
-                cinemaSlots
-        );
-
-        request.setAttribute(
-                "hasShowtimes",
-                hasShowtimes
-        );
-
-        request.setAttribute(
-                "nowMillis",
-                System.currentTimeMillis()
-        );
-
-        request.getRequestDispatcher(
-                "/WEB-INF/views/user/showtimes.jsp"
-        ).forward(
-                request,
-                response
-        );
+        request.getRequestDispatcher("/WEB-INF/views/user/showtimes.jsp").forward(request,response);
     }
 }

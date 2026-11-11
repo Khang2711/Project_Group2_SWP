@@ -16,7 +16,9 @@ public class RoomRepository extends DBContext {
 
         List<Room> rooms = new ArrayList<>();
 
-        String sql = "SELECT * FROM Room WHERE status = ?";
+        String sql = "SELECT * "
+                + "FROM Room "
+                + "WHERE status = ?";
 
         try {
 

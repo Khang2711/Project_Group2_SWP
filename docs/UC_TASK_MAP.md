@@ -16,7 +16,7 @@ Các file hiện là khung, chưa hoàn thành use case. Một controller có th
 | 11 | Lịch chiếu | ShowtimeController / ShowtimeService | user/showtimes.jsp |
 | 12 | Chọn ghế hoặc đặt toàn phòng | BookingController / BookingService | user/select-seats.jsp |
 | 12 | Xác nhận đặt vé | BookingController / BookingService | user/checkout.jsp |
-| 22 | Áp dụng mã giảm giá | PromotionController / PromotionService | user/apply-promo.jsp |
+| 22 | Áp dụng mã giảm giá | BookingController / BookingService | user/checkout.jsp |
 | 13 | Thanh toán VNPay | PaymentController / PaymentService | user/payment.jsp |
 | 13 | Kết quả thanh toán | PaymentController / PaymentService | user/payment-result.jsp |
 | 14 | Đơn đặt vé | BookingController / BookingService | user/bookings.jsp |
@@ -49,11 +49,11 @@ Các file hiện là khung, chưa hoàn thành use case. Một controller có th
 | Thịnh | UC-01,02,18,19,20,23; Auth/Profile; User/Role repository | Thống nhất session và mã vai trò với Vy |
 | Hoàng | UC-04–09; quản lý phim/rạp/phòng/ghế/giá/lịch chiếu | Dùng chung Movie/Showtime với Kiệt |
 | Kiệt | UC-10,11,24; danh sách phim, chi tiết, lịch chiếu khách hàng | Hoàng phụ trách ghi dữ liệu; Kiệt phụ trách đọc |
-| Hào | UC-12–15,22; đặt vé, VNPay, booking, vé | Vy cung cấp kiểm tra promotion; ticket chia sẻ với check-in |
-| Vy | UC-03,16,17,21; tài khoản, check-in, dashboard, promotion | Phối hợp Thịnh về quyền và Hào về trạng thái vé |
+| Hào | UC-12–15; đặt vé, booking, vé | Phối hợp Vy để tích hợp khuyến mãi vào Checkout; phối hợp check-in về ticket |
+| Vy | UC-03,16,17,21,22; tài khoản, check-in, dashboard, promotion, áp dụng mã | Phối hợp Thịnh về quyền và Hào về tích hợp khuyến mãi trong Checkout |
 | Khang | Tích hợp, security filters, kiểm thử luồng, tài liệu và rà soát RDS | Đây là phân công gợi ý, không phải phân công có sẵn trong RDS |
 
-UC-22 và UC-23 được gợi ý ghép theo luồng để giảm giao tiếp chéo; nhóm có thể giữ người cũ nếu cần.
+Theo backlog chính thức, UC-22 do Vy phụ trách và được tích hợp vào màn hình Checkout của UC-12; Hào phối hợp để bảo đảm luồng đặt vé hoạt động thống nhất.
 Mỗi task hoàn thành gồm: JSP → controller → service → repository → kiểm tra DB và quyền.
 Không đồng thời sửa một file mà chưa thống nhất nhánh và phần chịu trách nhiệm.
 

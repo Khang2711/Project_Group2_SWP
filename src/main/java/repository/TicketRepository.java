@@ -24,8 +24,7 @@ public class TicketRepository {
                 + "WHERE showtime_id = ? "
                 + "AND status IN ('VALID', 'USED')";
 
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, showtimeId);
 
@@ -72,8 +71,7 @@ public class TicketRepository {
                 + "FROM Ticket WHERE booking_id = ? "
                 + "ORDER BY ticket_id";
 
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, bookingId);
 
@@ -96,78 +94,71 @@ public class TicketRepository {
 
         return tickets;
     }
-    
-    // UC-15: chỉ hiển thị vé đã được phát hành cho customer.
-public List<Ticket> findIssuedTicketsByCustomerId(int customerId)
-        throws SQLException {
 
-    List<Ticket> tickets = new ArrayList<>();
+    public List<Ticket> findIssuedTicketsByCustomerId(int customerId)
+            throws SQLException {
 
-    String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
-            + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
-            + "FROM Ticket t "
-            + "JOIN Booking b ON b.booking_id = t.booking_id "
-            + "JOIN Showtime st ON st.showtime_id = t.showtime_id "
-            + "WHERE b.customer_id = ? "
-            + "AND b.status = 'CONFIRMED' "
-            + "AND t.status IN ('VALID', 'USED') "
-            + "AND t.ticket_code IS NOT NULL "
-            + "ORDER BY st.start_time DESC, t.ticket_id DESC";
+        List<Ticket> tickets = new ArrayList<>();
 
-    try (
-            Connection connection = getConnection();
-            PreparedStatement ps = connection.prepareStatement(sql)
-    ) {
+        String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
+                + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
+                + "FROM Ticket t "
+                + "JOIN Booking b ON b.booking_id = t.booking_id "
+                + "JOIN Showtime st ON st.showtime_id = t.showtime_id "
+                + "WHERE b.customer_id = ? "
+                + "AND b.status = 'CONFIRMED' "
+                + "AND t.status IN ('VALID', 'USED') "
+                + "AND t.ticket_code IS NOT NULL "
+                + "ORDER BY st.start_time DESC, t.ticket_id DESC";
 
-        ps.setInt(1, customerId);
+        try (
+                Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
-        try (ResultSet rs = ps.executeQuery()) {
+            ps.setInt(1, customerId);
 
-            while (rs.next()) {
-                tickets.add(mapTicket(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    tickets.add(mapTicket(rs));
+                }
             }
         }
+
+        return tickets;
     }
 
-    return tickets;
-}
+    public Ticket findIssuedTicketByIdAndCustomerId(
+            int ticketId,
+            int customerId
+    ) throws SQLException {
 
+        String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
+                + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
+                + "FROM Ticket t "
+                + "JOIN Booking b ON b.booking_id = t.booking_id "
+                + "WHERE t.ticket_id = ? "
+                + "AND b.customer_id = ? "
+                + "AND b.status = 'CONFIRMED' "
+                + "AND t.status IN ('VALID', 'USED') "
+                + "AND t.ticket_code IS NOT NULL";
 
-public Ticket findIssuedTicketByIdAndCustomerId(
-        int ticketId,
-        int customerId
-) throws SQLException {
+        try (
+                Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
-    String sql = "SELECT t.ticket_id, t.booking_id, t.seat_id, "
-            + "t.ticket_code, t.ticket_price, t.status, t.checked_in_at "
-            + "FROM Ticket t "
-            + "JOIN Booking b ON b.booking_id = t.booking_id "
-            + "WHERE t.ticket_id = ? "
-            + "AND b.customer_id = ? "
-            + "AND b.status = 'CONFIRMED' "
-            + "AND t.status IN ('VALID', 'USED') "
-            + "AND t.ticket_code IS NOT NULL";
+            ps.setInt(1, ticketId);
+            ps.setInt(2, customerId);
 
-    try (
-            Connection connection = getConnection();
-            PreparedStatement ps = connection.prepareStatement(sql)
-    ) {
+            try (ResultSet rs = ps.executeQuery()) {
 
-        ps.setInt(1, ticketId);
-        ps.setInt(2, customerId);
-
-        try (ResultSet rs = ps.executeQuery()) {
-
-            if (rs.next()) {
-                return mapTicket(rs);
+                if (rs.next()) {
+                    return mapTicket(rs);
+                }
             }
         }
+
+        return null;
     }
 
-    return null;
-}
-
-    // UC-25: bán vé tại quầy.
     public int findCounterStaffCinema(
             Connection connection,
             int staffId) throws SQLException {
@@ -215,7 +206,6 @@ public Ticket findIssuedTicketByIdAndCustomerId(
             int showtimeId,
             int cinemaId) throws SQLException {
 
-        // Giữ khóa đến khi lưu hoặc hủy đơn tại quầy.
         String sql = "SELECT st.showtime_id, st.room_id FROM Showtime st "
                 + "WITH (UPDLOCK, HOLDLOCK) "
                 + "JOIN Room r ON r.room_id = st.room_id "
@@ -300,7 +290,6 @@ public Ticket findIssuedTicketByIdAndCustomerId(
         }
     }
 
-    // UC-16: tra cứu vé theo mã và rạp của nhân viên.
     public Ticket findTicketForCheckIn(
             String ticketCode,
             int staffId) throws SQLException {
@@ -322,11 +311,9 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 + "AND u.status = 'ACTIVE' "
                 + "AND b.status = 'CONFIRMED' AND st.status = 'ACTIVE' "
                 + "AND r.status = 'ACTIVE' AND s.status = 'ACTIVE' "
-                + "AND c.status = 'ACTIVE' "
-                + "AND st.end_time > SYSDATETIME()";
+                + "AND c.status = 'ACTIVE'";
 
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
             ps.setInt(2, staffId);
@@ -356,8 +343,6 @@ public Ticket findIssuedTicketByIdAndCustomerId(
             String ticketCode,
             int staffId) throws SQLException {
 
-        // Điều kiện nằm ngay trong UPDATE để hai lần quét cùng lúc
-        // chỉ có một lần đổi vé từ VALID sang USED.
         String sql = "UPDATE t SET status = 'USED', "
                 + "checked_in_at = SYSDATETIME() FROM Ticket t "
                 + "JOIN Booking b ON b.booking_id = t.booking_id "
@@ -375,10 +360,10 @@ public Ticket findIssuedTicketByIdAndCustomerId(
                 + "AND b.status = 'CONFIRMED' AND st.status = 'ACTIVE' "
                 + "AND r.status = 'ACTIVE' AND s.status = 'ACTIVE' "
                 + "AND c.status = 'ACTIVE' "
+                + "AND st.start_time <= DATEADD(HOUR, 1, SYSDATETIME()) "
                 + "AND st.end_time > SYSDATETIME()";
 
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, ticketCode);
             ps.setInt(2, staffId);
@@ -388,40 +373,40 @@ public Ticket findIssuedTicketByIdAndCustomerId(
     }
 
     private Ticket mapTicket(ResultSet rs)
-        throws SQLException {
+            throws SQLException {
 
-    Ticket ticket = new Ticket();
+        Ticket ticket = new Ticket();
 
-    ticket.setTicketId(
-            rs.getInt("ticket_id")
-    );
+        ticket.setTicketId(
+                rs.getInt("ticket_id")
+        );
 
-    ticket.setBookingId(
-            rs.getInt("booking_id")
-    );
+        ticket.setBookingId(
+                rs.getInt("booking_id")
+        );
 
-    ticket.setSeatId(
-            rs.getInt("seat_id")
-    );
+        ticket.setSeatId(
+                rs.getInt("seat_id")
+        );
 
-    ticket.setTicketCode(
-            rs.getString("ticket_code")
-    );
+        ticket.setTicketCode(
+                rs.getString("ticket_code")
+        );
 
-    ticket.setTicketPrice(
-            rs.getBigDecimal("ticket_price")
-    );
+        ticket.setTicketPrice(
+                rs.getBigDecimal("ticket_price")
+        );
 
-    ticket.setStatus(
-            rs.getString("status")
-    );
+        ticket.setStatus(
+                rs.getString("status")
+        );
 
-    ticket.setCheckedInAt(
-            rs.getTimestamp("checked_in_at")
-    );
+        ticket.setCheckedInAt(
+                rs.getTimestamp("checked_in_at")
+        );
 
-    return ticket;
-}
+        return ticket;
+    }
 
     private Connection getConnection() throws SQLException {
 
@@ -434,7 +419,6 @@ public Ticket findIssuedTicketByIdAndCustomerId(
         return connection;
     }
 
-    // Các hàm từ main dùng khi xử lý thanh toán VNPay.
     public int countPendingTickets(
             Connection connection,
             int bookingId) throws SQLException {
