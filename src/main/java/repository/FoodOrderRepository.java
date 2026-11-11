@@ -281,7 +281,7 @@ public class FoodOrderRepository {
 
         List<Map<String, Object>> items = new ArrayList<>();
         String sql = "SELECT COALESCE(f.item_name, c.combo_name) AS product_name, "
-                + "oi.quantity "
+                + "oi.quantity, oi.line_total "
                 + "FROM dbo.Food_Order o "
                 + "JOIN dbo.Food_Order_Item oi ON oi.food_order_id = o.food_order_id "
                 + "LEFT JOIN dbo.Food_Item f ON f.food_item_id = oi.food_item_id "
@@ -300,6 +300,7 @@ public class FoodOrderRepository {
                     Map<String, Object> item = new HashMap<>();
                     item.put("productName", resultSet.getString("product_name"));
                     item.put("quantity", resultSet.getInt("quantity"));
+                    item.put("lineTotal", resultSet.getBigDecimal("line_total"));
                     items.add(item);
                 }
             }
