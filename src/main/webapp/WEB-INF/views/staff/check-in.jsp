@@ -333,14 +333,9 @@
 
             <div class="checkin-food-section">
                 <h3>3. Bắp nước / Combo khách đã mua</h3>
-                <p class="checkin-note">Chỉ hiển thị sản phẩm thuộc đơn vé đã thanh toán.</p>
-
                 <c:choose>
                     <c:when test="${not empty paidFoodItems}">
                         <div class="checkin-detail">
-                            <span>Thanh toán</span>
-                            <strong>Đã thanh toán</strong>
-
                             <span>Sản phẩm</span>
                             <span><strong>Số lượng</strong></span>
 
@@ -375,9 +370,6 @@
                 </form>
             </c:if>
 
-            <p class="checkin-note">
-                Mỗi vé chỉ được check-in thành công một lần.
-            </p>
         </div>
     </c:if>
 
