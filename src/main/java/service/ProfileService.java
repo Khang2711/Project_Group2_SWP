@@ -37,7 +37,7 @@ public class ProfileService {
 
         if (passwordChanged
                 && (currentPassword.isEmpty()
-                || !PasswordUtil.matches(currentPassword,
+                || !PasswordUtil.md5(currentPassword).equalsIgnoreCase(
                         currentUser.getPasswordHash()))) {
 
             throw new IllegalArgumentException(
@@ -62,7 +62,7 @@ public class ProfileService {
         updatedUser.setCreatedAt(currentUser.getCreatedAt());
 
         if (passwordChanged) {
-            updatedUser.setPasswordHash(PasswordUtil.hash(newPassword));
+            updatedUser.setPasswordHash(PasswordUtil.md5(newPassword));
         }
 
         if (!userRepository.updateProfile(
