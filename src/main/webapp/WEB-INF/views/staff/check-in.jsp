@@ -306,23 +306,23 @@
         </div>
     </div>
 
-    <c:if test="\${not empty ticket}">
+    <c:if test="${not empty ticket}">
         <div class="cinema-ticket checkin-ticket-card" id="ticketResult">
             <div class="cinema-ticket-main">
                 <div class="cinema-ticket-top">
                     <div>
                         <span class="ticket-label">F-CINEMA TICKET</span>
-                        <h2><c:out value="\${movie.title}" /></h2>
+                        <h2><c:out value="${movie.title}" /></h2>
                     </div>
 
                     <c:choose>
-                        <c:when test="\${ticket.status eq 'USED'}">
+                        <c:when test="${ticket.status eq 'USED'}">
                             <span class="ticket-status ticket-status-used">Đã sử dụng</span>
                         </c:when>
-                        <c:when test="\${ticket.status eq 'CANCELLED'}">
+                        <c:when test="${ticket.status eq 'CANCELLED'}">
                             <span class="ticket-status ticket-status-used">Đã hủy</span>
                         </c:when>
-                        <c:when test="\${ticket.status eq 'PENDING'}">
+                        <c:when test="${ticket.status eq 'PENDING'}">
                             <span class="ticket-status ticket-status-used">Chưa xác nhận</span>
                         </c:when>
                         <c:otherwise>
@@ -334,79 +334,79 @@
                 <div class="cinema-ticket-grid">
                     <div>
                         <span>Rạp chiếu</span>
-                        <strong><c:out value="\${cinema.cinemaName}" /></strong>
+                        <strong><c:out value="${cinema.cinemaName}" /></strong>
                     </div>
 
                     <div>
                         <span>Địa chỉ rạp</span>
-                        <strong><c:out value="\${cinema.address}" /></strong>
+                        <strong><c:out value="${cinema.address}" /></strong>
                     </div>
 
                     <div>
                         <span>Ngày giờ chiếu</span>
                         <strong>
-                            <fmt:formatDate value="\${showtime.startTime}" pattern="dd/MM/yyyy HH:mm" />
+                            <fmt:formatDate value="${showtime.startTime}" pattern="dd/MM/yyyy HH:mm" />
                         </strong>
                     </div>
 
                     <div>
                         <span>Ghế</span>
-                        <strong>Hàng <c:out value="\${seat.seatRow}" /> - Ghế <c:out value="\${seat.seatNumber}" /></strong>
+                        <strong>Hàng <c:out value="${seat.seatRow}" /> - Ghế <c:out value="${seat.seatNumber}" /></strong>
                     </div>
 
                     <div>
                         <span>Loại ghế</span>
-                        <strong><c:out value="\${seat.seatType}" /></strong>
+                        <strong><c:out value="${seat.seatType}" /></strong>
                     </div>
 
                     <div>
                         <span>Suất chiếu</span>
-                        <strong>#<c:out value="\${showtime.showtimeId}" /></strong>
+                        <strong>#<c:out value="${showtime.showtimeId}" /></strong>
                     </div>
 
                     <div>
                         <span>Phòng chiếu</span>
-                        <strong>Phòng #<c:out value="\${showtime.roomId}" /></strong>
+                        <strong>Phòng #<c:out value="${showtime.roomId}" /></strong>
                     </div>
 
                     <div>
                         <span>Mã đơn</span>
-                        <strong>#<c:out value="\${ticket.bookingId}" /></strong>
+                        <strong>#<c:out value="${ticket.bookingId}" /></strong>
                     </div>
 
                     <div>
                         <span>Giá vé</span>
                         <strong class="cinema-ticket-price">
-                            <fmt:formatNumber value="\${ticket.ticketPrice}" pattern="#,##0" /> VND
+                            <fmt:formatNumber value="${ticket.ticketPrice}" pattern="#,##0" /> VND
                         </strong>
                     </div>
                 </div>
 
-                <c:if test="\${not empty ticket.checkedInAt}">
+                <c:if test="${not empty ticket.checkedInAt}">
                     <div class="ticket-checkin-note">
                         Đã check-in lúc
                         <strong>
-                            <fmt:formatDate value="\${ticket.checkedInAt}" pattern="dd/MM/yyyy HH:mm:ss" />
+                            <fmt:formatDate value="${ticket.checkedInAt}" pattern="dd/MM/yyyy HH:mm:ss" />
                         </strong>
                     </div>
                 </c:if>
 
-                <c:if test="\${not empty paidFoodItems}">
+                <c:if test="${not empty paidFoodItems}">
                     <div class="checkin-food-section">
                         <h3>Bắp nước / Combo</h3>
 
                         <div class="checkin-food-list">
-                            <c:forEach var="foodItem" items="\${paidFoodItems}">
+                            <c:forEach var="foodItem" items="${paidFoodItems}">
                                 <div class="checkin-food-item">
                                     <div>
-                                        <strong><c:out value="\${foodItem.productName}" /></strong>
-                                        <p>Sản phẩm đi kèm đơn vé #<c:out value="\${ticket.bookingId}" /></p>
+                                        <strong><c:out value="${foodItem.productName}" /></strong>
+                                        <p>Sản phẩm đi kèm đơn vé #<c:out value="${ticket.bookingId}" /></p>
                                     </div>
 
                                     <div class="checkin-food-summary">
-                                        <span>Số lượng: <c:out value="\${foodItem.quantity}" /></span>
+                                        <span>Số lượng: <c:out value="${foodItem.quantity}" /></span>
                                         <strong>
-                                            <fmt:formatNumber value="\${foodItem.lineTotal}" pattern="#,##0" /> VND
+                                            <fmt:formatNumber value="${foodItem.lineTotal}" pattern="#,##0" /> VND
                                         </strong>
                                     </div>
                                 </div>
@@ -415,19 +415,19 @@
                     </div>
                 </c:if>
 
-                <c:if test="\${canCheckIn}">
+                <c:if test="${canCheckIn}">
                     <div class="checkin-ticket-action">
-                        <form action="\${ctx}/staff/check-in"
+                        <form action="${ctx}/staff/check-in"
                               method="post"
                               onsubmit="return confirm('Xác nhận cho khách sử dụng vé này?')">
 
                             <input type="hidden"
                                    name="ticketCode"
-                                   value="<c:out value='\${ticket.ticketCode}' />" />
+                                   value="<c:out value='${ticket.ticketCode}' />" />
 
                             <input type="hidden"
                                    name="token"
-                                   value="\${sessionScope.checkInToken}" />
+                                   value="${sessionScope.checkInToken}" />
 
                             <button type="submit" class="checkin-button">
                                 Xác nhận check-in
@@ -437,7 +437,7 @@
                 </c:if>
             </div>
         </div>
-
+    </c:if>
 
 </section>
 
