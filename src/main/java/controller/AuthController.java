@@ -26,6 +26,8 @@ import service.EmailVerificationService;
 public class AuthController extends HttpServlet {
 
     private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
+    private static final long RESET_OTP_RESEND_COOLDOWN_MILLIS = 60 * 1000L;
+    private static final int MAX_RESET_OTP_ATTEMPTS = 5;
 
     private AuthService authService;
     private PasswordResetService passwordResetService;
@@ -532,31 +534,37 @@ public class AuthController extends HttpServlet {
             throws ServletException, IOException {
 
         String email = request.getParameter("email");
+        request.setAttribute("email", email == null ? "" : email.trim());
 
-        request.setAttribute(
-                "email",
-                email == null ? "" : email.trim());
+        HttpSession session = request.getSession(true);
+        long now = System.currentTimeMillis();
+        Long lastSentAt = (Long) session.getAttribute("resetOtpSentAt");
+
+        if (lastSentAt != null
+                && now >= lastSentAt
+                && now - lastSentAt < RESET_OTP_RESEND_COOLDOWN_MILLIS) {
+            request.setAttribute("error",
+                    "Vui lòng chờ ít nhất 60 giây trước khi gửi lại OTP.");
+            showForgotPassword(request, response);
+            return;
+        }
 
         try {
             String otp = passwordResetService.sendOtp(email);
+            String resetEmail = email.trim()
+                    .toLowerCase(java.util.Locale.ROOT);
 
-            String resetEmail = email.trim().toLowerCase();
-
-            HttpSession session = request.getSession(true);
             clearResetData(session);
-
             session.setAttribute("resetEmail", resetEmail);
             session.setAttribute("resetOtp", otp);
-
-            session.setAttribute(
-                    "resetOtpExpiresAt",
+            session.setAttribute("resetOtpExpiresAt",
                     System.currentTimeMillis() + OTP_VALID_MILLIS);
-
+            session.setAttribute("resetOtpAttempts", 0);
             session.setAttribute("resetOtpVerified", false);
+            session.setAttribute("resetOtpSentAt", System.currentTimeMillis());
 
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/auth/verify-otp?sent=1");
+                    request.getContextPath() + "/auth/verify-otp?sent=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -564,21 +572,14 @@ public class AuthController extends HttpServlet {
 
         } catch (SQLException e) {
             log("Cannot find account for password reset.", e);
-
-            request.setAttribute(
-                    "error",
+            request.setAttribute("error",
                     "Không thể kiểm tra tài khoản lúc này.");
-
             showForgotPassword(request, response);
 
         } catch (MessagingException e) {
             log("Cannot send password reset OTP.", e);
-
-            request.setAttribute(
-                    "error",
-                    "Không thể gửi OTP. "
-                    + "Vui lòng kiểm tra cấu hình email.");
-
+            request.setAttribute("error",
+                    "Không thể gửi OTP. Vui lòng kiểm tra cấu hình email.");
             showForgotPassword(request, response);
         }
     }
@@ -591,59 +592,68 @@ public class AuthController extends HttpServlet {
 
         if (!hasResetRequest(session)) {
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/auth/forgot-password");
+                    request.getContextPath() + "/auth/forgot-password");
             return;
         }
 
         String enteredOtp = request.getParameter("otp");
+        String expectedOtp = (String) session.getAttribute("resetOtp");
+        Long expiresAt = (Long) session.getAttribute("resetOtpExpiresAt");
 
-        String expectedOtp
-                = (String) session.getAttribute("resetOtp");
-
-        Long expiresAt
-                = (Long) session.getAttribute("resetOtpExpiresAt");
-
-        if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
-            request.setAttribute(
-                    "error",
-                    "Vui lòng nhập mã OTP.");
-
+        if (expectedOtp == null || expiresAt == null
+                || System.currentTimeMillis() > expiresAt) {
+            clearResetOtp(session);
+            request.setAttribute("error",
+                    "Mã OTP đã hết hạn hoặc không còn hợp lệ. Vui lòng gửi lại mã mới.");
             showVerifyOtp(request, response);
             return;
         }
 
-        if (expectedOtp == null || expiresAt == null
-                || System.currentTimeMillis() > expiresAt) {
+        if (enteredOtp == null || !enteredOtp.trim().matches("[0-9]{6}")) {
+            request.setAttribute("error", "Vui lòng nhập mã OTP gồm 6 chữ số.");
+            showVerifyOtp(request, response);
+            return;
+        }
 
-            session.removeAttribute("resetOtp");
-            session.removeAttribute("resetOtpExpiresAt");
+        Integer storedAttempts = (Integer) session.getAttribute("resetOtpAttempts");
+        int attempts = storedAttempts == null ? 0 : storedAttempts;
 
-            request.setAttribute(
-                    "error",
-                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
-
+        if (attempts >= MAX_RESET_OTP_ATTEMPTS) {
+            clearResetOtp(session);
+            request.setAttribute("error",
+                    "Mã OTP đã bị khóa. Vui lòng gửi lại mã mới.");
             showVerifyOtp(request, response);
             return;
         }
 
         if (!expectedOtp.equals(enteredOtp.trim())) {
-            request.setAttribute(
-                    "error",
-                    "Mã OTP không đúng.");
-
+            attempts++;
+            if (attempts >= MAX_RESET_OTP_ATTEMPTS) {
+                clearResetOtp(session);
+                request.setAttribute("error",
+                        "Bạn đã nhập sai OTP 5 lần. Vui lòng gửi lại mã mới.");
+            } else {
+                session.setAttribute("resetOtpAttempts", attempts);
+                request.setAttribute("error",
+                        "Mã OTP không đúng. Bạn còn "
+                        + (MAX_RESET_OTP_ATTEMPTS - attempts) + " lần thử.");
+            }
             showVerifyOtp(request, response);
             return;
         }
 
         session.setAttribute("resetOtpVerified", true);
-
-        session.removeAttribute("resetOtp");
-        session.removeAttribute("resetOtpExpiresAt");
+        session.setAttribute("resetOtpVerifiedAt", System.currentTimeMillis());
+        clearResetOtp(session);
 
         response.sendRedirect(
-                request.getContextPath()
-                + "/auth/reset-password");
+                request.getContextPath() + "/auth/reset-password");
+    }
+
+    private void clearResetOtp(HttpSession session) {
+        session.removeAttribute("resetOtp");
+        session.removeAttribute("resetOtpExpiresAt");
+        session.removeAttribute("resetOtpAttempts");
     }
 
     private void resetPassword(HttpServletRequest request,
@@ -895,9 +905,16 @@ public class AuthController extends HttpServlet {
     }
 
     private boolean isOtpVerified(HttpSession session) {
-        return hasResetRequest(session)
-                && Boolean.TRUE.equals(
-                        session.getAttribute("resetOtpVerified"));
+        if (!hasResetRequest(session)
+                || !Boolean.TRUE.equals(session.getAttribute("resetOtpVerified"))) {
+            return false;
+        }
+
+        Long verifiedAt = (Long) session.getAttribute("resetOtpVerifiedAt");
+        long elapsed = verifiedAt == null
+                ? -1 : System.currentTimeMillis() - verifiedAt;
+
+        return elapsed >= 0 && elapsed <= OTP_VALID_MILLIS;
     }
 
     private void clearResetData(HttpSession session) {
@@ -909,7 +926,10 @@ public class AuthController extends HttpServlet {
         session.removeAttribute("resetEmail");
         session.removeAttribute("resetOtp");
         session.removeAttribute("resetOtpExpiresAt");
+        session.removeAttribute("resetOtpAttempts");
         session.removeAttribute("resetOtpVerified");
+        session.removeAttribute("resetOtpVerifiedAt");
+        session.removeAttribute("resetOtpSentAt");
     }
 
     private void preventCache(HttpServletResponse response) {
