@@ -17,58 +17,6 @@ import model.FoodOrder;
 import model.FoodOrderItem;
 
 public class FoodOrderRepository {
-    
-    
-    public List<Map<String, Object>> findPaidItemsByBooking(
-        int bookingId) throws SQLException {
-
-    List<Map<String, Object>> items = new ArrayList<>();
-
-    String sql =
-            "SELECT "
-            + "COALESCE(f.item_name, c.combo_name) AS product_name, "
-            + "oi.quantity, oi.unit_price, oi.line_total "
-            + "FROM dbo.Food_Order o "
-            + "JOIN dbo.Food_Order_Item oi "
-            + "ON oi.food_order_id = o.food_order_id "
-            + "LEFT JOIN dbo.Food_Item f "
-            + "ON f.food_item_id = oi.food_item_id "
-            + "LEFT JOIN dbo.Combo c "
-            + "ON c.combo_id = oi.combo_id "
-            + "WHERE o.booking_id = ? "
-            + "AND o.payment_status = 'PAID' "
-            + "ORDER BY oi.food_order_item_id";
-
-    try (Connection connection = openConnection();
-         PreparedStatement ps = connection.prepareStatement(sql)) {
-
-        ps.setInt(1, bookingId);
-
-        try (ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-
-                Map<String, Object> item = new HashMap<>();
-
-                item.put("productName",
-                        rs.getString("product_name"));
-
-                item.put("quantity",
-                        rs.getInt("quantity"));
-
-                item.put("unitPrice",
-                        rs.getBigDecimal("unit_price"));
-
-                item.put("lineTotal",
-                        rs.getBigDecimal("line_total"));
-
-                items.add(item);
-            }
-        }
-    }
-
-    return items;
-}
 
     public int insert(FoodOrder foodOrder) {
 

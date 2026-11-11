@@ -1,6 +1,4 @@
 
-
-
 USE FCinemaDB;
 GO
 

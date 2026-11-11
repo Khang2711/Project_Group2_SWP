@@ -24,19 +24,15 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import model.Cinema;
-import service.CinemaService;
-
 @WebServlet(urlPatterns = {
     "/user/tickets",
     "/user/ticket-detail",
-    "/user/ticket-qr"
+            "/user/ticket-qr"
 
 })
 public class TicketController extends HttpServlet {
 
     private TicketService ticketService;
-    private final CinemaService cinemaService = new CinemaService();
 
     @Override
     public void init() {
@@ -67,6 +63,7 @@ public class TicketController extends HttpServlet {
 
                     break;
 
+
                 case "/user/ticket-detail":
 
                     showTicketDetail(
@@ -76,15 +73,15 @@ public class TicketController extends HttpServlet {
 
                     break;
 
-                case "/user/ticket-qr":
+case "/user/ticket-qr":
 
-                    showTicketQr(
-                            request,
-                            response
-                    );
+    showTicketQr(
+            request,
+            response
+    );
 
-                    break;
-
+    break;
+                    
                 default:
 
                     response.sendError(
@@ -112,6 +109,7 @@ public class TicketController extends HttpServlet {
         }
     }
 
+
     private void showTickets(
             HttpServletRequest request,
             HttpServletResponse response
@@ -138,8 +136,7 @@ public class TicketController extends HttpServlet {
 
         Map<Integer, Seat> seatMap
                 = new LinkedHashMap<>();
-        Map<Integer, Cinema> cinemaMap = new LinkedHashMap<>();
-        Map<Integer, Boolean> expiredMap = new LinkedHashMap<>();
+
 
         for (Ticket ticket : tickets) {
 
@@ -154,6 +151,7 @@ public class TicketController extends HttpServlet {
                 continue;
             }
 
+
             Showtime showtime
                     = ticketService
                             .getShowtimeForBooking(
@@ -164,21 +162,12 @@ public class TicketController extends HttpServlet {
                 continue;
             }
 
+
             showtimeMap.put(
                     ticket.getTicketId(),
                     showtime
             );
 
-            Cinema cinema = cinemaService.getCinemaByShowtime(showtime);
-
-            if (cinema != null) {
-                cinemaMap.put(ticket.getTicketId(), cinema);
-            }
-
-            expiredMap.put(
-                    ticket.getTicketId(),
-                    ticketService.isExpired(ticket, showtime)
-            );
 
             Movie movie
                     = ticketService
@@ -193,6 +182,7 @@ public class TicketController extends HttpServlet {
                         movie
                 );
             }
+
 
             Seat seat
                     = ticketService
@@ -209,6 +199,7 @@ public class TicketController extends HttpServlet {
                 );
             }
         }
+
 
         request.setAttribute(
                 "tickets",
@@ -230,8 +221,6 @@ public class TicketController extends HttpServlet {
                 seatMap
         );
 
-        request.setAttribute("cinemaMap", cinemaMap);
-        request.setAttribute("expiredMap", expiredMap);
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/tickets.jsp"
@@ -240,6 +229,7 @@ public class TicketController extends HttpServlet {
                 response
         );
     }
+
 
     private void showTicketDetail(
             HttpServletRequest request,
@@ -259,12 +249,14 @@ public class TicketController extends HttpServlet {
                         "Vé không hợp lệ."
                 );
 
+
         Ticket ticket
                 = ticketService
                         .getTicketDetail(
                                 ticketId,
                                 customerId
                         );
+
 
         Booking booking
                 = ticketService
@@ -273,10 +265,6 @@ public class TicketController extends HttpServlet {
                                 customerId
                         );
 
-        List<Map<String, Object>> foodItems
-                = ticketService.getPaidFoodItemsForBooking(booking);
-
-        request.setAttribute("foodItems", foodItems);
 
         Showtime showtime
                 = ticketService
@@ -284,11 +272,13 @@ public class TicketController extends HttpServlet {
                                 booking
                         );
 
+
         Movie movie
                 = ticketService
                         .getMovieForShowtime(
                                 showtime
                         );
+
 
         Seat seat
                 = ticketService
@@ -296,11 +286,7 @@ public class TicketController extends HttpServlet {
                                 ticket,
                                 showtime
                         );
-        request.setAttribute("cinema",
-                cinemaService.getCinemaByShowtime(showtime));
 
-        request.setAttribute("expired",
-                ticketService.isExpired(ticket, showtime));
 
         request.setAttribute(
                 "ticket",
@@ -322,6 +308,7 @@ public class TicketController extends HttpServlet {
                 seat
         );
 
+
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/ticket-detail.jsp"
         ).forward(
@@ -331,124 +318,121 @@ public class TicketController extends HttpServlet {
     }
 
     private void showTicketQr(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException,
-            SQLException,
-            ServletException {
+        HttpServletRequest request,
+        HttpServletResponse response
+) throws IOException,
+        SQLException,
+        ServletException {
 
-        int customerId
-                = getCurrentCustomerId(
-                        request
-                );
-
-        int ticketId
-                = parsePositiveInt(
-                        request.getParameter("id"),
-                        "Vé không hợp lệ."
-                );
-
-        // Chỉ lấy vé thuộc customer đang đăng nhập.
-        Ticket ticket
-                = ticketService
-                        .getTicketDetail(
-                                ticketId,
-                                customerId
-                        );
-
-        Booking booking = ticketService.getBookingForTicket(
-                ticket, customerId);
-
-        Showtime showtime = ticketService.getShowtimeForBooking(booking);
-
-        if (ticketService.isExpired(ticket, showtime)) {
-            response.sendError(
-                    HttpServletResponse.SC_GONE,
-                    "Vé đã hết hiệu lực."
-            );
-            return;
-        }
-
-        String ticketCode
-                = ticket.getTicketCode();
-
-        if (ticketCode == null
-                || ticketCode.trim().isEmpty()) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
+    int customerId
+            = getCurrentCustomerId(
+                    request
             );
 
-            return;
-        }
+    int ticketId
+            = parsePositiveInt(
+                    request.getParameter("id"),
+                    "Vé không hợp lệ."
+            );
 
-        try {
 
-            int size = 260;
-
-            // QR chứa đúng ticket_code để staff có thể quét.
-            BitMatrix matrix
-                    = new QRCodeWriter()
-                            .encode(
-                                    ticketCode,
-                                    BarcodeFormat.QR_CODE,
-                                    size,
-                                    size
-                            );
-
-            BufferedImage image
-                    = new BufferedImage(
-                            size,
-                            size,
-                            BufferedImage.TYPE_INT_RGB
+    // Chỉ lấy vé thuộc customer đang đăng nhập.
+    Ticket ticket
+            = ticketService
+                    .getTicketDetail(
+                            ticketId,
+                            customerId
                     );
 
-            for (int y = 0; y < size; y++) {
 
-                for (int x = 0; x < size; x++) {
+    String ticketCode
+            = ticket.getTicketCode();
 
-                    if (matrix.get(x, y)) {
 
-                        image.setRGB(
-                                x,
-                                y,
-                                0x000000
+    if (ticketCode == null
+            || ticketCode.trim().isEmpty()) {
+
+        response.sendError(
+                HttpServletResponse.SC_NOT_FOUND
+        );
+
+        return;
+    }
+
+
+    try {
+
+        int size = 260;
+
+
+        // QR chứa đúng ticket_code để staff có thể quét.
+        BitMatrix matrix
+                = new QRCodeWriter()
+                        .encode(
+                                ticketCode,
+                                BarcodeFormat.QR_CODE,
+                                size,
+                                size
                         );
 
-                    } else {
 
-                        image.setRGB(
-                                x,
-                                y,
-                                0xFFFFFF
-                        );
-                    }
+        BufferedImage image
+                = new BufferedImage(
+                        size,
+                        size,
+                        BufferedImage.TYPE_INT_RGB
+                );
+
+
+        for (int y = 0; y < size; y++) {
+
+            for (int x = 0; x < size; x++) {
+
+                if (matrix.get(x, y)) {
+
+                    image.setRGB(
+                            x,
+                            y,
+                            0x000000
+                    );
+
+                } else {
+
+                    image.setRGB(
+                            x,
+                            y,
+                            0xFFFFFF
+                    );
                 }
             }
-
-            response.setContentType(
-                    "image/png"
-            );
-
-            response.setHeader(
-                    "Cache-Control",
-                    "private, max-age=300"
-            );
-
-            ImageIO.write(
-                    image,
-                    "PNG",
-                    response.getOutputStream()
-            );
-
-        } catch (WriterException e) {
-
-            throw new ServletException(
-                    "Không thể tạo QR code cho vé.",
-                    e
-            );
         }
+
+
+        response.setContentType(
+                "image/png"
+        );
+
+        response.setHeader(
+                "Cache-Control",
+                "private, max-age=300"
+        );
+
+
+        ImageIO.write(
+                image,
+                "PNG",
+                response.getOutputStream()
+        );
+
+
+    } catch (WriterException e) {
+
+        throw new ServletException(
+                "Không thể tạo QR code cho vé.",
+                e
+        );
     }
+}
 
     private int getCurrentCustomerId(
             HttpServletRequest request
@@ -457,13 +441,16 @@ public class TicketController extends HttpServlet {
         HttpSession session
                 = request.getSession(false);
 
+
         if (session == null
-                || !(session.getAttribute("user") instanceof User)) {
+                || !(session.getAttribute("user")
+                instanceof User)) {
 
             throw new IllegalArgumentException(
                     "Vui lòng đăng nhập lại."
             );
         }
+
 
         User user
                 = (User) session
@@ -471,6 +458,7 @@ public class TicketController extends HttpServlet {
 
         return user.getUserId();
     }
+
 
     private int parsePositiveInt(
             String value,
@@ -484,9 +472,11 @@ public class TicketController extends HttpServlet {
                             value
                     );
 
+
             if (number <= 0) {
                 throw new NumberFormatException();
             }
+
 
             return number;
 
