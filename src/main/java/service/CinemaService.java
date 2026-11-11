@@ -1,4 +1,3 @@
-
 package service;
 
 import java.time.LocalDateTime;
@@ -25,20 +24,26 @@ public class CinemaService {
         showtimeRepository = new ShowtimeRepository();
     }
 
+       /**
+     * Gets all active cinemas.
+     *
+     * @return a list of active cinemas
+     */
     public List<Cinema> getActiveCinemas() {
         return cinemaRepository.getAllActive();
     }
 
+    /**
+     * Gets all active cinemas by cinema ID, in the same order as the list.
+     *
+     * @return a map of cinema ID and cinema
+     */
     public Map<Integer, Cinema> getCinemaById() {
-
-        Map<Integer, Cinema> cinemas =
-                new LinkedHashMap<>();
+        Map<Integer, Cinema> cinemas = new LinkedHashMap<>();
 
         for (Cinema cinema : getActiveCinemas()) {
-            cinemas.put(
-                    cinema.getCinemaId(),
-                    cinema
-            );
+            cinemas.put(cinema.getCinemaId(), cinema);
+            
         }
 
         return cinemas;
@@ -47,9 +52,8 @@ public class CinemaService {
     public Cinema getCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
-            throw new IllegalArgumentException(
-                    "Rạp không hợp lệ."
-            );
+            throw new IllegalArgumentException("Rạp không hợp lệ.");
+
         }
 
         return cinemaRepository.findById(cinemaId);

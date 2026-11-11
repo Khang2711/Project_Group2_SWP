@@ -13,21 +13,13 @@ public class RoomService {
         roomRepository = new RoomRepository();
     }
 
-    // =====================================================
-    // LẤY DANH SÁCH PHÒNG THEO RẠP
-    // =====================================================
-
-    public List<Room> getRoomsByCinema(
-            int cinemaId) {
+    public List<Room> getRoomsByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
-            throw new IllegalArgumentException(
-                    "Rạp không hợp lệ."
-            );
+            throw new IllegalArgumentException("Rạp không hợp lệ.");
         }
 
-        return roomRepository
-                .findByCinemaId(cinemaId);
+        return roomRepository.findByCinemaId(cinemaId);
     }
 
     // =====================================================
