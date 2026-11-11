@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import model.Cinema;
@@ -19,6 +20,7 @@ import model.Showtime;
 import model.Ticket;
 import model.User;
 import repository.CinemaRepository;
+import repository.FoodOrderRepository;
 import service.BookingService;
 import service.CheckInService;
 import service.ShowtimeService;
@@ -30,6 +32,7 @@ public class CheckInController extends HttpServlet {
     private ShowtimeService showtimeService;
     private BookingService bookingService;
     private CinemaRepository cinemaRepository;
+    private FoodOrderRepository foodOrderRepository;
 
     @Override
     public void init() {
@@ -37,6 +40,7 @@ public class CheckInController extends HttpServlet {
         showtimeService = new ShowtimeService();
         bookingService = new BookingService();
         cinemaRepository = new CinemaRepository();
+        foodOrderRepository = new FoodOrderRepository();
     }
 
     private User requireStaff(HttpServletRequest request,
@@ -122,6 +126,11 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("room", room);
                 request.setAttribute("cinema", cinema);
                 request.setAttribute("seat", seat);
+
+                List<Map<String, Object>> paidFoodItems
+                        = foodOrderRepository.findPaidItemsByBooking(
+                                ticket.getBookingId(), cinema.getCinemaId());
+                request.setAttribute("paidFoodItems", paidFoodItems);
 
                 String validation
                         = checkInService.validateCheckIn(ticket, showtime);
