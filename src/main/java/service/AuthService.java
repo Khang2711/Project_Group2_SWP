@@ -58,6 +58,10 @@ public class AuthService {
             if (!userRepository.updatePassword(user.getUserId(), PasswordUtil.hash(password))) {
                 throw new SQLException("Could not upgrade password hash.");
             }
+            User refreshed = userRepository.findById(user.getUserId());
+            if (refreshed != null) {
+                user.setUpdatedAt(refreshed.getUpdatedAt());
+            }
         }
 
         user.setPasswordHash(null);
