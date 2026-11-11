@@ -770,7 +770,30 @@ public class AuthController extends HttpServlet {
         String homePath = getHomePath(
                 (String) session.getAttribute("roleName"));
 
-        if (homePath == null) {
+        // Login page is outside AuthFilter: do not redirect disabled users
+        // back to a protected page, which would cause a redirect loop.
+        User sessionUser = (User) session.getAttribute("user");
+        try {
+            User current = new repository.UserRepository()
+                    .findById(sessionUser.getUserId());
+            model.Role role = current == null ? null
+                    : new repository.RoleRepository()
+                            .findById(current.getRoleId());
+
+            if (homePath == null || current == null
+                    || !"ACTIVE".equals(current.getStatus())
+                    || !current.isEmailVerified()
+                    || role == null || !"ACTIVE".equals(role.getStatus())
+                    || !role.getRoleName().equals(
+                            session.getAttribute("roleName"))
+                    || (sessionUser.getUpdatedAt() != null
+                        && current.getUpdatedAt() != null
+                        && current.getUpdatedAt().after(sessionUser.getUpdatedAt()))) {
+                session.invalidate();
+                return false;
+            }
+        } catch (SQLException e) {
+            log("Could not check active login session.", e);
             session.invalidate();
             return false;
         }
