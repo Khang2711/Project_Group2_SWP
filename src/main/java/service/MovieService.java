@@ -1,4 +1,3 @@
-
 package service;
 
 import java.sql.Timestamp;
@@ -13,11 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
 import model.Cinema;
 import model.Movie;
 import model.Room;
 import model.Showtime;
 import model.Genre;
+
 import repository.CinemaRepository;
 import repository.MovieRepository;
 import repository.RoomRepository;
@@ -31,11 +32,15 @@ import repository.GenreRepository;
  */
 public class MovieService {
 
-    public static String NO_SCHEDULE_GROUP =
-            "Sắp chiếu · Chưa mở lịch";
+    /**
+     * Heading for movies that have no upcoming showtime yet.
+     */
+    public static String NO_SCHEDULE_GROUP = "Sắp chiếu · Chưa mở lịch";
 
-    private static DateTimeFormatter DATE_FORMAT =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    /**
+     * Display format of a show date: day/month/year.
+     */
+    private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private MovieRepository movieRepository;
     private ShowtimeRepository showtimeRepository;
@@ -51,10 +56,21 @@ public class MovieService {
         genreRepository = new GenreRepository();
     }
 
+    /**
+     * Gets a movie by its ID.
+     *
+     * @param id the movie ID
+     * @return the movie if found, otherwise null
+     */
     public Movie getMovieById(int id) {
         return movieRepository.getById(id);
     }
 
+    /**
+     * Gets all active rooms by room ID.
+     *
+     * @return a map of room ID and room
+     */
     public Map<Integer, Room> getRoomById() {
         Map<Integer, Room> rooms = new HashMap<>();
 
@@ -65,11 +81,19 @@ public class MovieService {
         return rooms;
     }
 
-    public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(
-            String keyword,
-            LocalDate date,
-            Integer cinemaId) {
+    /**
+     * Builds the movie list page data: for each show date, the movies that have
+     * showtimes on that date and their showtime.
+     *
+     * @param keyword the movie title keyword, empty string for all movies
+     * @param date the show date filter, null for all dates
+     * @param cinemaId the cinema filter, null for all cinemas
+     * @return movies and showtimes grouped by date (dd/MM/yyyy) in
+     * chronological order
+     */
+    public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(String keyword, LocalDate date, Integer cinemaId) {
 
+        // Active movies whose title matches the keyword.
         Map<Integer, Movie> movies = new LinkedHashMap<>();
 
         for (Movie movie : movieRepository.search(keyword)) {
@@ -84,12 +108,10 @@ public class MovieService {
             activeCinemaIds.add(cinema.getCinemaId());
         }
 
-        Timestamp now =
-                new Timestamp(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        Map<String, Map<Movie, List<Showtime>>> result =
-                new LinkedHashMap<>();
-
+        // date -> (movie -> showtimes). The repository returns showtimes ordered by start time.
+        Map<String, Map<Movie, List<Showtime>>> result = new LinkedHashMap<>();
         Set<Integer> scheduledMovieIds = new HashSet<>();
 
         for (Showtime showtime : showtimeRepository.getAll()) {
@@ -97,35 +119,31 @@ public class MovieService {
             Movie movie = movies.get(showtime.getMovieId());
             Room room = rooms.get(showtime.getRoomId());
 
+            // Skip showtimes that already started.
             if (showtime.getStartTime().before(now)) {
                 continue;
             }
 
-            if (movie == null
-                    || room == null
-                    || !activeCinemaIds.contains(
-                            room.getCinemaId())) {
+            // Skip other movies, inactive rooms and rooms of inactive cinemas.
+            if (movie == null || room == null || !activeCinemaIds.contains(room.getCinemaId())) {
+
                 continue;
             }
 
-            if (cinemaId != null
-                    && room.getCinemaId() != cinemaId) {
+            // Apply the cinema filter.
+            if (cinemaId != null && room.getCinemaId() != cinemaId) {
                 continue;
             }
 
-            LocalDate showDate =
-                    showtime.getStartTime()
-                            .toLocalDateTime()
-                            .toLocalDate();
+            // Apply the date filter.
+            LocalDate showDate = showtime.getStartTime().toLocalDateTime().toLocalDate();
 
             if (date != null && !showDate.equals(date)) {
                 continue;
             }
 
             String dateKey = showDate.format(DATE_FORMAT);
-
-            Map<Movie, List<Showtime>> dayMovies =
-                    result.get(dateKey);
+            Map<Movie, List<Showtime>> dayMovies = result.get(dateKey);
 
             if (dayMovies == null) {
                 dayMovies = new LinkedHashMap<>();
@@ -144,43 +162,50 @@ public class MovieService {
         }
 
         if (date == null && cinemaId == null) {
-
-            Map<Movie, List<Showtime>> unscheduled =
-                    new LinkedHashMap<>();
+            Map<Movie, List<Showtime>> unscheduled = new LinkedHashMap<>();
 
             for (Movie movie : movies.values()) {
-                if (!scheduledMovieIds.contains(
-                        movie.getMovieId())) {
+                if (!scheduledMovieIds.contains(movie.getMovieId())) {
+                    unscheduled.put(movie, new ArrayList<>());
 
-                    unscheduled.put(
-                            movie,
-                            new ArrayList<>()
-                    );
                 }
             }
 
             if (!unscheduled.isEmpty()) {
-                result.put(
-                        NO_SCHEDULE_GROUP,
-                        unscheduled
-                );
+                result.put(NO_SCHEDULE_GROUP, unscheduled);
+
             }
         }
 
         return result;
     }
 
+    /**
+     * Gets movies that are currently showing.
+     *
+     * @return a list of currently showing movies
+     */
     public List<Movie> getNowShowingMovies() {
         return movieRepository.getNowShowing();
     }
 
+    /**
+     * Gets movies that will be released in the future.
+     *
+     * @return a list of upcoming movies
+     */
     public List<Movie> getComingSoonMovies() {
         return movieRepository.getComingSoon();
     }
 
-    public List<Movie> getMoviesForList(
-            String type,
-            String keyword) {
+    /**
+     * Gets movies for the customer movie list page.
+     *
+     * @param type now for currently showing movies, coming for upcoming movies
+     * @param keyword movie title keyword
+     * @return a filtered list of movies
+     */
+    public List<Movie> getMoviesForList(String type, String keyword) {
 
         if (keyword == null) {
             keyword = "";
@@ -195,18 +220,22 @@ public class MovieService {
         return movieRepository.searchNowShowing(keyword);
     }
 
+    /**
+     * Gets movies to display in the Home page carousel.
+     *
+     * @return a list of featured movies for the carousel
+     */
     public List<Movie> getFeaturedMovies() {
 
         List<Movie> featuredMovies = new ArrayList<>();
 
-        List<Movie> nowShowingMovies =
-                movieRepository.getNowShowing();
+        List<Movie> nowShowingMovies
+                = movieRepository.getNowShowing();
 
         for (Movie movie : nowShowingMovies) {
 
             if (movie.getPosterUrl() != null
-                    && !movie.getPosterUrl()
-                            .trim().isEmpty()) {
+                    && !movie.getPosterUrl().trim().isEmpty()) {
 
                 featuredMovies.add(movie);
             }
@@ -219,37 +248,33 @@ public class MovieService {
         return featuredMovies;
     }
 
-    public Map<Integer, List<Genre>> getGenresByMovie(
-            List<Movie> movies) {
+    /**
+     * Gets genres for each movie.
+     *
+     * @param movies the movie list
+     * @return a map of movie ID and its genres
+     */
+    public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
 
-        Map<Integer, List<Genre>> genresByMovie =
-                new HashMap<>();
-
-        List<Genre> allGenres =
-                genreRepository.getAll();
+        Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
+        List<Genre> allGenres = genreRepository.getAll();
 
         for (Movie movie : movies) {
 
-            List<Integer> genreIds =
-                    movieRepository.getGenreIds(
-                            movie.getMovieId()
-                    );
+            List<Integer> genreIds = movieRepository.getGenreIds(movie.getMovieId());
 
             List<Genre> movieGenres = new ArrayList<>();
 
             for (Genre genre : allGenres) {
 
-                if (genreIds.contains(
-                        genre.getGenreId())) {
+                if (genreIds.contains(genre.getGenreId())) {
 
                     movieGenres.add(genre);
                 }
             }
 
-            genresByMovie.put(
-                    movie.getMovieId(),
-                    movieGenres
-            );
+            genresByMovie.put(movie.getMovieId(), movieGenres);
+
         }
 
         return genresByMovie;

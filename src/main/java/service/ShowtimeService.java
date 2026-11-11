@@ -20,27 +20,20 @@ import repository.ShowtimeRepository;
 
 public class ShowtimeService {
 
-    private final ShowtimeRepository showtimeRepository =
-            new ShowtimeRepository();
+    
+    private ShowtimeRepository showtimeRepository = new ShowtimeRepository();
+    private RoomRepository roomRepository = new RoomRepository();
+    private CinemaRepository cinemaRepository = new CinemaRepository();
+    private MovieRepository movieRepository = new MovieRepository();
 
-    private final RoomRepository roomRepository =
-            new RoomRepository();
+    public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 
-    private final CinemaRepository cinemaRepository =
-            new CinemaRepository();
+        return showtimeRepository.getByMovieIdAndDate(movieId,date);
 
-    private final MovieRepository movieRepository =
-            new MovieRepository();
-
-    public List<Showtime> getByMovieAndDate(
-            int movieId,
-            LocalDate date) {
-
-        return showtimeRepository
-                .getByMovieIdAndDate(movieId, date);
     }
 
     public List<Cinema> getActiveCinema() {
+
         return cinemaRepository.getAllActive();
     }
 
@@ -49,7 +42,8 @@ public class ShowtimeService {
         Map<Integer, Room> rooms = new HashMap<>();
 
         for (Room room : roomRepository.getAllActive()) {
-            rooms.put(room.getRoomId(), room);
+
+            rooms.put(room.getRoomId(),room);
         }
 
         return rooms;

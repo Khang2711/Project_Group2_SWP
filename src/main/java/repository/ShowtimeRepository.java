@@ -54,15 +54,16 @@ public class ShowtimeRepository extends DBContext {
                 + "WHERE status = ? "
                 + "ORDER BY start_time";
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try {
+
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setString(1, "ACTIVE");
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    showtimes.add(mapShowtime(rs));
-                }
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                showtimes.add(mapShowtime(rs));
             }
 
         } catch (Exception e) {
@@ -81,16 +82,17 @@ public class ShowtimeRepository extends DBContext {
                 + "AND status = ? "
                 + "ORDER BY start_time";
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try {
+
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, movieId);
             ps.setString(2, "ACTIVE");
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    showtimes.add(mapShowtime(rs));
-                }
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                showtimes.add(mapShowtime(rs));
             }
 
         } catch (Exception e) {
@@ -102,18 +104,20 @@ public class ShowtimeRepository extends DBContext {
 
     public Showtime getById(int id) {
 
-        String sql = "SELECT * FROM Showtime "
+        String sql = "SELECT * "
+                + "FROM Showtime "
                 + "WHERE showtime_id = ?";
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try {
+
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, id);
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapShowtime(rs);
-                }
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapShowtime(rs);
             }
 
         } catch (Exception e) {
@@ -123,43 +127,32 @@ public class ShowtimeRepository extends DBContext {
         return null;
     }
 
-    public List<Showtime> getByMovieIdAndDate(
-            int movieId,
-            LocalDate date) {
+    public List<Showtime> getByMovieIdAndDate(int movieId, LocalDate date) {
 
         List<Showtime> showtimes = new ArrayList<>();
 
-        if (date == null) {
-            return showtimes;
-        }
-
-        String sql = "SELECT * FROM Showtime "
+        String sql = "SELECT * "
+                + "FROM Showtime "
                 + "WHERE movie_id = ? "
                 + "AND status = ? "
                 + "AND start_time >= ? "
                 + "AND start_time < ? "
                 + "ORDER BY start_time";
 
-        try (PreparedStatement ps =
-                conn.prepareStatement(sql)) {
+        try {
+
+            PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, movieId);
             ps.setString(2, "ACTIVE");
-            ps.setTimestamp(
-                    3,
-                    Timestamp.valueOf(date.atStartOfDay())
-            );
-            ps.setTimestamp(
-                    4,
-                    Timestamp.valueOf(
-                            date.plusDays(1).atStartOfDay()
-                    )
-            );
+            ps.setTimestamp(3, Timestamp.valueOf(date.atStartOfDay()));
+            ps.setTimestamp(4, Timestamp.valueOf(date.plusDays(1).atStartOfDay()));
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    showtimes.add(mapShowtime(rs));
-                }
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                showtimes.add(mapShowtime(rs));
+
             }
 
         } catch (Exception e) {
