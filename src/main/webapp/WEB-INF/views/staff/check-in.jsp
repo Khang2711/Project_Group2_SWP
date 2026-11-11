@@ -266,6 +266,11 @@
                     <c:out value="${room.roomName}" />
                 </strong>
 
+                <span>Địa chỉ rạp</span>
+                <strong>
+                    <c:out value="${cinema.address}" />
+                </strong>
+
                 <span>Suất chiếu</span>
                 <strong>
                     <fmt:formatDate
