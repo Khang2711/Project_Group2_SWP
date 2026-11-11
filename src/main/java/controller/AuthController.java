@@ -27,6 +27,8 @@ import security.LoginAttemptLimiter;
 public class AuthController extends HttpServlet {
 
     private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
+    private static final long RESET_OTP_RESEND_COOLDOWN_MILLIS = 60 * 1000L;
+    private static final int MAX_RESET_OTP_ATTEMPTS = 5;
     // Thông báo chung cho mọi trường hợp đăng nhập không hợp lệ
     private static final String LOGIN_FAILURE_MESSAGE
             = "Thông tin đăng nhập không hợp lệ hoặc tài khoản hiện không thể đăng nhập.";
@@ -867,8 +869,8 @@ public class AuthController extends HttpServlet {
                     || !role.getRoleName().equals(
                             session.getAttribute("roleName"))
                     || (sessionUser.getUpdatedAt() != null
-                        && current.getUpdatedAt() != null
-                        && current.getUpdatedAt().after(sessionUser.getUpdatedAt()))) {
+                    && current.getUpdatedAt() != null
+                    && current.getUpdatedAt().after(sessionUser.getUpdatedAt()))) {
                 session.invalidate();
                 return false;
             }
