@@ -266,11 +266,6 @@
                     <c:out value="${room.roomName}" />
                 </strong>
 
-                <span>Chi nhánh</span>
-                <strong>
-                    <c:out value="${cinema.cinemaName}" />
-                </strong>
-
                 <span>Địa chỉ rạp</span>
                 <strong>
                     <c:out value="${cinema.address}" />
