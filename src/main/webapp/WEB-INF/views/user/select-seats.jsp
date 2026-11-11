@@ -42,14 +42,7 @@
 
 
     <div class="showtime-info-bar">
-        <c:if test="${not empty cinema}">
-            <div>
-                <span>Rạp chiếu</span>
-                <strong>
-                    <c:out value="${cinema.cinemaName}" />
-                </strong>
-            </div>
-        </c:if>
+
         <div>
 
             <span>
@@ -154,154 +147,92 @@
                                        movie-seat
                                        ${seat.seatType eq 'VIP'
                                          ? 'movie-seat-vip' : ''}
-                                         ${occupied
-                                           ? 'movie-seat-occupied' : ''}
-                                           ${seat.status ne 'ACTIVE'
-                                             ? 'movie-seat-disabled' : ''}">
+                                       ${occupied
+                                         ? 'movie-seat-occupied' : ''}
+                                       ${seat.status ne 'ACTIVE'
+                                         ? 'movie-seat-disabled' : ''}">
 
 
-                                             <input
-                                                 type="checkbox"
-                                                 name="seatId"
-                                                 value="${seat.seatId}"
-                                                 ${disabledSeat
-                                                   ? 'disabled' : ''}>
+                                    <input
+                                        type="checkbox"
+                                        name="seatId"
+                                        value="${seat.seatId}"
+                                        ${disabledSeat
+                                          ? 'disabled' : ''}>
 
 
-                                             <span class="movie-seat-box">
+                                    <span class="movie-seat-box">
 
-                                                 ${seat.seatNumber}
+                                        ${seat.seatNumber}
 
-                                             </span>
+                                    </span>
 
 
-                                             <span class="movie-seat-tooltip">
+                                    <span class="movie-seat-tooltip">
 
 
-                                                 Hàng ${seat.seatRow}
-                                                 - Ghế ${seat.seatNumber}
+                                        Hàng ${seat.seatRow}
+                                        - Ghế ${seat.seatNumber}
 
 
-                                                 <br>
+                                        <br>
 
 
-                                                 <c:out
-                                                     value="${seat.seatType}" />
+                                        <c:out
+                                            value="${seat.seatType}" />
 
 
-                                                 <br>
+                                        <br>
 
 
-                                                 <c:choose>
+                                        <c:choose>
 
 
-                                                     <c:when test="${occupied}">
+                                            <c:when test="${occupied}">
 
-                                                         Đã bán
+                                                Đã bán
 
-                                                     </c:when>
+                                            </c:when>
 
 
-                                                     <c:when test="${seat.status ne 'ACTIVE'}">
+                                            <c:when test="${seat.status ne 'ACTIVE'}">
 
-                                                         Không khả dụng
+                                                Không khả dụng
 
-                                                     </c:when>
+                                            </c:when>
 
 
-                                                     <c:when test="${not hasPrice}">
+                                            <c:when test="${not hasPrice}">
 
-                                                         Chưa có giá
+                                                Chưa có giá
 
-                                                     </c:when>
+                                            </c:when>
 
 
-                                                     <c:otherwise>
+                                            <c:otherwise>
 
 
-                                                         <fmt:formatNumber
-                                                             value="${seatPrices[seat.seatId]}"
-                                                             pattern="#,###" />
+                                                <fmt:formatNumber
+                                                    value="${seatPrices[seat.seatId]}"
+                                                    pattern="#,###" />
 
-                                                         VNĐ
+                                                VNĐ
 
 
-                                                     </c:otherwise>
+                                            </c:otherwise>
 
 
-                                                 </c:choose>
+                                        </c:choose>
 
 
-                                             </span>
+                                    </span>
 
 
-                                         </label>
+                                </label>
 
 
-                                       </c:forEach>
+                            </c:forEach>
 
-
-                                </div>
-
-
-                            </div>
-
-
-                        </c:forEach>
-
-
-                    </div>
-
-
-                    <!-- LEGEND -->
-
-                    <div class="cinema-seat-legend">
-
-
-                        <div>
-
-                            <span class="
-                                  legend-seat
-                                  legend-available">
-                            </span>
-
-                            Ghế thường
-
-                        </div>
-
-
-                        <div>
-
-                            <span class="
-                                  legend-seat
-                                  legend-vip-seat">
-                            </span>
-
-                            VIP
-
-                        </div>
-
-
-                        <div>
-
-                            <span class="
-                                  legend-seat
-                                  legend-selected">
-                            </span>
-
-                            Đang chọn
-
-                        </div>
-
-
-                        <div>
-
-                            <span class="
-                                  legend-seat
-                                  legend-occupied">
-                            </span>
-
-                            Đã bán
 
                         </div>
 
@@ -309,41 +240,103 @@
                     </div>
 
 
-                </div>
+                </c:forEach>
 
 
-                <div class="booking-actions">
+            </div>
 
 
-                    <button type="submit"
-                            name="bookingMode"
-                            value="SELECTED"
-                            class="booking-primary-button">
+            <!-- LEGEND -->
 
-                        Tiếp tục
-
-                    </button>
+            <div class="cinema-seat-legend">
 
 
-                    <button type="submit"
-                            name="bookingMode"
-                            value="FULL_ROOM"
-                            class="
-                            booking-secondary-button
-                            booking-button-element">
+                <div>
 
-                        Đặt toàn phòng
+                    <span class="
+                          legend-seat
+                          legend-available">
+                    </span>
 
-                    </button>
-
+                    Ghế thường
 
                 </div>
 
 
-            </form>
+                <div>
+
+                    <span class="
+                          legend-seat
+                          legend-vip-seat">
+                    </span>
+
+                    VIP
+
+                </div>
 
 
-        </section>
+                <div>
+
+                    <span class="
+                          legend-seat
+                          legend-selected">
+                    </span>
+
+                    Đang chọn
+
+                </div>
 
 
-        <%@ include file="/WEB-INF/include/footer.jsp" %>
+                <div>
+
+                    <span class="
+                          legend-seat
+                          legend-occupied">
+                    </span>
+
+                    Đã bán
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="booking-actions">
+
+
+            <button type="submit"
+                    name="bookingMode"
+                    value="SELECTED"
+                    class="booking-primary-button">
+
+                Tiếp tục
+
+            </button>
+
+
+            <button type="submit"
+                    name="bookingMode"
+                    value="FULL_ROOM"
+                    class="
+                    booking-secondary-button
+                    booking-button-element">
+
+                Đặt toàn phòng
+
+            </button>
+
+
+        </div>
+
+
+    </form>
+
+
+</section>
+
+
+<%@ include file="/WEB-INF/include/footer.jsp" %>
