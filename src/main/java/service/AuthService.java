@@ -34,9 +34,10 @@ public class AuthService {
         }
 
         User user = userRepository.findByEmail(email);
+        String passwordHash = PasswordUtil.md5(password);
 
         if (user == null
-                || !PasswordUtil.matches(password, user.getPasswordHash())) {
+                || !passwordHash.equalsIgnoreCase(user.getPasswordHash())) {
             throw new IllegalArgumentException(
                     "Email hoặc mật khẩu không đúng."
             );
@@ -52,16 +53,6 @@ public class AuthService {
             throw new IllegalArgumentException(
                     "Email chưa được xác thực. Vui lòng xác thực email trước khi đăng nhập."
             );
-        }
-
-        if (PasswordUtil.needsUpgrade(user.getPasswordHash())) {
-            if (!userRepository.updatePassword(user.getUserId(), PasswordUtil.hash(password))) {
-                throw new SQLException("Could not upgrade password hash.");
-            }
-            User refreshed = userRepository.findById(user.getUserId());
-            if (refreshed != null) {
-                user.setUpdatedAt(refreshed.getUpdatedAt());
-            }
         }
 
         user.setPasswordHash(null);
@@ -99,7 +90,7 @@ public class AuthService {
         user.setFullName(fullName);
         user.setEmail(email);
         user.setPhone(phone);
-        user.setPasswordHash(PasswordUtil.hash(password));
+        user.setPasswordHash(PasswordUtil.md5(password));
         user.setStatus("ACTIVE");
         user.setEmailVerified(false);
 
