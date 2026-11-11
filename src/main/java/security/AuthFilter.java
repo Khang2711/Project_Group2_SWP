@@ -10,6 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.SQLException;
+import model.User;
+import repository.RoleRepository;
+import repository.UserRepository;
+import model.Role;
 
 @WebFilter(urlPatterns = {
     "/user/*",
@@ -71,7 +76,36 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        User loggedIn = (User) session.getAttribute("user");
         String roleName = (String) session.getAttribute("roleName");
+
+        // Verify current database state on protected requests. The session
+        // must not remain authorized after the account or role is disabled.
+        try {
+            User current = new UserRepository().findById(loggedIn.getUserId());
+            Role currentRole = current == null ? null
+                    : new RoleRepository().findById(current.getRoleId());
+
+            if (current == null
+                    || !"ACTIVE".equals(current.getStatus())
+                    || !current.isEmailVerified()
+                    || currentRole == null
+                    || !"ACTIVE".equals(currentRole.getStatus())
+                    || !currentRole.getRoleName().equals(roleName)
+                    || loggedIn.getRoleId() != current.getRoleId()
+                    || (loggedIn.getUpdatedAt() != null
+                        && current.getUpdatedAt() != null
+                        && current.getUpdatedAt().after(loggedIn.getUpdatedAt()))) {
+                session.invalidate();
+                response.sendRedirect(request.getContextPath() + "/auth/login");
+                return;
+            }
+        } catch (SQLException e) {
+            request.getServletContext().log("Could not validate active session.", e);
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Không thể xác thực tài khoản lúc này.");
+            return;
+        }
 
         if (!hasPermission(path, roleName)) {
             response.sendError(

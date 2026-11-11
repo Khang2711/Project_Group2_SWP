@@ -192,10 +192,13 @@
                     <input type="password"
                            id="password"
                            name="password"
+                           minlength="6"
+                           maxlength="128"
+                           autocomplete="new-password"
                            required>
 
                     <span class="user-form-help">
-                        Mật khẩu sẽ được mã hóa MD5 trước khi lưu.
+                        Mật khẩu tối thiểu 6 ký tự và được mã hóa MD5 trước khi lưu.
                     </span>
                 </c:otherwise>
             </c:choose>
