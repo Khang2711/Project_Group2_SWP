@@ -13,6 +13,7 @@ import model.User;
 import service.AuthService;
 import service.PasswordResetService;
 import service.EmailVerificationService;
+import security.LoginAttemptLimiter;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
@@ -26,10 +27,14 @@ import service.EmailVerificationService;
 public class AuthController extends HttpServlet {
 
     private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
-
+    // Thông báo chung cho mọi trường hợp đăng nhập không hợp lệ
+    private static final String LOGIN_FAILURE_MESSAGE
+            = "Thông tin đăng nhập không hợp lệ hoặc tài khoản hiện không thể đăng nhập.";
     private AuthService authService;
     private PasswordResetService passwordResetService;
     private EmailVerificationService emailVerificationService;
+    private final LoginAttemptLimiter loginAttemptLimiter
+            = new LoginAttemptLimiter();
 
     @Override
     public void init() {
@@ -151,61 +156,138 @@ public class AuthController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        String error;
+        // Lấy IP của kết nối trực tiếp tới server
+        String clientIp = request.getRemoteAddr();
 
-        try {
-            User user = authService.login(email, password);
+        // BƯỚC 1: Kiểm tra có bị giới hạn đăng nhập không
+        if (loginAttemptLimiter.isBlocked(email, clientIp)) {
 
-            String roleName = authService.getRoleName(user.getRoleId());
-            String homePath = getHomePath(roleName);
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Bạn đăng nhập quá nhiều lần. "
+                    + "Vui lòng thử lại sau 5 phút.");
 
-            if (homePath != null) {
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
 
-                // Get saved URL before creating a new session
-                HttpSession oldSession = request.getSession(false);
-                String redirectAfterLogin = null;
-
-                if (oldSession != null) {
-                    redirectAfterLogin
-                            = (String) oldSession.getAttribute("redirectAfterLogin");
-                }
-
-                startSession(request, user, roleName);
-
-                // Continue booking after customer login
-                if ("CUSTOMER".equals(roleName)
-                        && redirectAfterLogin != null) {
-
-                    response.sendRedirect(
-                            request.getContextPath() + redirectAfterLogin
-                    );
-
-                } else {
-
-                    response.sendRedirect(
-                            request.getContextPath() + homePath
-                    );
-                }
-
-                return;
-            }
-
-            error = "Vai trò của tài khoản chưa được hỗ trợ.";
-
-        } catch (IllegalArgumentException e) {
-            error = e.getMessage();
-
-        } catch (SQLException e) {
-            log("Cannot process login.", e);
-
-            error = "Không thể đăng nhập lúc này. "
-                    + "Vui lòng kiểm tra kết nối database.";
+            return;
         }
 
-        request.getSession().setAttribute("loginError", error);
+        User user;
 
-        response.sendRedirect(
-                request.getContextPath() + "/auth/login");
+        // BƯỚC 2: Kiểm tra email và mật khẩu
+        try {
+
+            user = authService.login(email, password);
+
+        } catch (IllegalArgumentException e) {
+
+            // Ghi nhận lần đăng nhập thất bại
+            loginAttemptLimiter.recordFailure(
+                    email, clientIp);
+
+            // Không tiết lộ nguyên nhân cụ thể cho người đăng nhập
+            request.getSession().setAttribute(
+                    "loginError",
+                    LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        } catch (SQLException e) {
+
+            // Lỗi database không được tính là nhập sai mật khẩu
+            log("Cannot process login.", e);
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Không thể đăng nhập lúc này. "
+                    + "Vui lòng kiểm tra kết nối database.");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        // BƯỚC 3: Đăng nhập thành công
+        loginAttemptLimiter.recordSuccess(
+                email, clientIp);
+
+        String roleName;
+
+        try {
+
+            roleName = authService.getRoleName(
+                    user.getRoleId());
+
+        } catch (IllegalArgumentException e) {
+
+            request.getSession().setAttribute(
+                    "loginError", LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+
+        } catch (SQLException e) {
+
+            log("Cannot get user role.", e);
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Không thể xác định quyền tài khoản lúc này.");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        String homePath = getHomePath(roleName);
+
+        if (homePath == null) {
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        // BƯỚC 4: Lấy URL đã lưu trước khi tạo session mới
+        HttpSession oldSession = request.getSession(false);
+
+        String redirectAfterLogin = null;
+
+        if (oldSession != null) {
+
+            redirectAfterLogin
+                    = (String) oldSession.getAttribute(
+                            "redirectAfterLogin");
+        }
+
+        // BƯỚC 5: Tạo session đăng nhập
+        startSession(request, user, roleName);
+
+        // BƯỚC 6: Chuyển trang
+        if ("CUSTOMER".equals(roleName)
+                && redirectAfterLogin != null) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + redirectAfterLogin);
+
+        } else {
+
+            response.sendRedirect(
+                    request.getContextPath() + homePath);
+        }
     }
 
     private void register(HttpServletRequest request,
