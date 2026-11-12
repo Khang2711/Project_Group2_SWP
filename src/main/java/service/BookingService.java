@@ -51,6 +51,8 @@ public class BookingService {
     private final FoodOrderRepository foodOrderRepository
             = new FoodOrderRepository();
 
+        = new FoodOrderRepository();
+
     public BookingService() {
         bookingRepository = new BookingRepository();
         ticketRepository = new TicketRepository();
@@ -64,6 +66,16 @@ public class BookingService {
         foodItemRepository = new FoodItemRepository();
         foodOrderService = new FoodOrderService();
     }
+    
+    public List<Map<String, Object>> getOnlineFoodItemsForBooking(
+        int bookingId,
+        int customerId) throws SQLException {
+
+    // Xác minh booking thuộc khách hàng đang đăng nhập.
+    getBookingDetail(bookingId, customerId);
+
+    return foodOrderRepository.findOnlineItemsByBooking(bookingId);
+}
 
     // =====================================================
     // BUG-06 FIX:
@@ -724,8 +736,7 @@ public class BookingService {
                     );
                 }
 
-                // Có sản phẩm được chọn thì phải lưu,
-// kể cả khi tổng tiền bắp nước bằng 0.
+
                 if (comboItems != null && !comboItems.isEmpty()) {
 
                     foodOrderService.createPendingOnlineOrder(
@@ -871,5 +882,6 @@ public class BookingService {
 
         return foodOrderRepository.findOnlineItemsByBooking(bookingId);
     }
+
 
 }

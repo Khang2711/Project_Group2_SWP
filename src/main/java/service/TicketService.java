@@ -20,10 +20,6 @@ import repository.PaymentRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
 import repository.TicketRepository;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Map;
-import repository.FoodOrderRepository;
 
 public class TicketService {
 
@@ -44,42 +40,6 @@ public class TicketService {
 
     private final SeatRepository seatRepository
             = new SeatRepository();
-
-    private final FoodOrderRepository foodOrderRepository
-            = new FoodOrderRepository();
-
-    public List<Map<String, Object>> getPaidFoodItemsForBooking(
-            Booking booking) throws SQLException {
-
-        if (booking == null || booking.getBookingId() <= 0) {
-            return Collections.emptyList();
-        }
-
-        return foodOrderRepository.findPaidItemsByBooking(
-                booking.getBookingId()
-        );
-    }
-
-    public boolean isExpired(Ticket ticket, Showtime showtime) {
-
-        if (ticket == null || showtime == null
-                || showtime.getStartTime() == null) {
-            return false;
-        }
-
-        if (!"VALID".equalsIgnoreCase(ticket.getStatus())) {
-            return false;
-        }
-
-        LocalDate showDate = showtime.getStartTime()
-                .toLocalDateTime()
-                .toLocalDate();
-
-        LocalDate today = LocalDate.now(
-                ZoneId.of("Asia/Ho_Chi_Minh"));
-
-        return showDate.isBefore(today);
-    }
 
     public List<Ticket> getTicketsByCustomer(int customerId)
             throws SQLException {
