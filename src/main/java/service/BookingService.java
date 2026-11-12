@@ -34,6 +34,7 @@ import repository.SeatRepository;
 import repository.ShowtimeRepository;
 import repository.TicketRepository;
 import repository.FoodOrderRepository;
+
 public class BookingService {
 
     private final BookingRepository bookingRepository;
@@ -124,6 +125,14 @@ public class BookingService {
                     "Phim của suất chiếu không tồn tại."
             );
         }
+        
+        
+        
+        
+        
+        
+        
+        
 
         if (!"ACTIVE".equalsIgnoreCase(
                 movie.getStatus())) {
@@ -733,6 +742,8 @@ public class BookingService {
                     );
                 }
 
+                // Có sản phẩm được chọn thì phải lưu,
+// kể cả khi tổng tiền bắp nước bằng 0.
                 if (comboItems != null && !comboItems.isEmpty()) {
 
                     foodOrderService.createPendingOnlineOrder(

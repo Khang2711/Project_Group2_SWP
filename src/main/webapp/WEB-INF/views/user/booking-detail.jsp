@@ -360,6 +360,66 @@
 
         </div>
 
+        <c:if test="${not empty onlineFoodItems}">
+
+            <div class="booking-detail-card">
+
+                <div class="booking-detail-card-header">
+                    <h2>Bắp nước / Combo đã chọn</h2>
+                </div>
+
+                <div class="booking-ticket-list">
+
+                    <c:forEach var="item" items="${onlineFoodItems}">
+
+                        <div class="booking-ticket-item">
+
+                            <div>
+                                <strong>
+                                    <c:out value="${item.productName}" />
+                                </strong>
+
+                                <p>
+                                    Số lượng: ${item.quantity}
+                                </p>
+
+                                <small>
+                                    <c:choose>
+                                        <c:when test="${item.paymentStatus eq 'PAID'}">
+                                            Đã thanh toán
+                                        </c:when>
+                                        <c:otherwise>
+                                            Chờ thanh toán
+                                        </c:otherwise>
+                                    </c:choose>
+                                </small>
+                            </div>
+
+                            <strong>
+                                <fmt:formatNumber
+                                    value="${item.lineTotal}"
+                                    pattern="#,##0" />
+                                VNĐ
+                            </strong>
+
+                        </div>
+
+                    </c:forEach>
+
+                </div>
+
+            </div>
+
+        </c:if>   
+
+
+              <c:if test="${not empty onlineFoodItems}">
+
+    <div class="booking-detail-card">
+
+        <div class="booking-detail-card-header">
+            <h2>Bắp nước / Combo đã chọn</h2>
+        </div>
 
               <c:if test="${not empty onlineFoodItems}">
 
@@ -579,7 +639,9 @@
             padding: 20px;
             background: rgba(0, 0, 0, .78);
         }
-        .age-confirm-overlay.is-visible { display: flex; }
+        .age-confirm-overlay.is-visible {
+            display: flex;
+        }
         .age-confirm-dialog {
             width: 100%;
             max-width: 540px;
@@ -625,11 +687,19 @@
             color: #fff;
             background: #e50914;
         }
-        .age-confirm-actions button:hover { filter: brightness(1.12); }
+        .age-confirm-actions button:hover {
+            filter: brightness(1.12);
+        }
         @media (max-width: 480px) {
-            .age-confirm-dialog { padding: 22px 18px; }
-            .age-confirm-actions { flex-direction: column-reverse; }
-            .age-confirm-actions button { width: 100%; }
+            .age-confirm-dialog {
+                padding: 22px 18px;
+            }
+            .age-confirm-actions {
+                flex-direction: column-reverse;
+            }
+            .age-confirm-actions button {
+                width: 100%;
+            }
         }
     </style>
 
@@ -706,36 +776,36 @@
 
             var paymentUrl = "${ctx}/user/payment?bookingId=${booking.bookingId}";
 
-            function closeModal() {
-                modal.classList.remove("is-visible");
-                modal.setAttribute("aria-hidden", "true");
-                openButton.focus();
-            }
+                    function closeModal() {
+                        modal.classList.remove("is-visible");
+                        modal.setAttribute("aria-hidden", "true");
+                        openButton.focus();
+                    }
 
-            openButton.addEventListener("click", function () {
-                modal.classList.add("is-visible");
-                modal.setAttribute("aria-hidden", "false");
-                agreeButton.focus();
-            });
+                    openButton.addEventListener("click", function () {
+                        modal.classList.add("is-visible");
+                        modal.setAttribute("aria-hidden", "false");
+                        agreeButton.focus();
+                    });
 
-            cancelButton.addEventListener("click", closeModal);
+                    cancelButton.addEventListener("click", closeModal);
 
-            agreeButton.addEventListener("click", function () {
-                window.location.href = paymentUrl;
-            });
+                    agreeButton.addEventListener("click", function () {
+                        window.location.href = paymentUrl;
+                    });
 
-            modal.addEventListener("click", function (event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
+                    modal.addEventListener("click", function (event) {
+                        if (event.target === modal) {
+                            closeModal();
+                        }
+                    });
 
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape" && modal.classList.contains("is-visible")) {
-                    closeModal();
-                }
-            });
-        })();
+                    document.addEventListener("keydown", function (event) {
+                        if (event.key === "Escape" && modal.classList.contains("is-visible")) {
+                            closeModal();
+                        }
+                    });
+                })();
     </script>
 </c:if>
 
