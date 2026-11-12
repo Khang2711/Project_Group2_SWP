@@ -10,16 +10,12 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import model.Movie;
-import service.CinemaService;
 import service.MovieService;
 import java.util.ArrayList;
 import model.Genre;
-import model.Room;
-import model.Showtime;
 import model.User;
 import util.ProjectImageStorage;
 
@@ -40,14 +36,7 @@ import util.ProjectImageStorage;
 })
 public class MovieController extends HttpServlet {
 
-    private MovieService movieService;
-    private CinemaService cinemaService;
-
-    @Override
-    public void init() {
-        movieService = new MovieService();
-        cinemaService = new CinemaService();
-    }
+    private MovieService movieService = new MovieService();
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -77,21 +66,6 @@ public class MovieController extends HttpServlet {
                 List<Movie> filteredMovies = movieService.getMoviesForList(type, keyword);
 
                 int totalMovies = filteredMovies.size();
-                
-                LocalDate date = parseDate(
-                        request.getParameter("date")
-                );
-
-                Integer cinemaId = parseCinemaId(
-                        request.getParameter("cinemaId")
-                );
-
-                Map<String, Map<Movie, List<Showtime>>> scheduleByDate
-                        = movieService.getSchedulesByDate(
-                                keyword,
-                                date,
-                                cinemaId
-                        );
 
                 List<Movie> movies = filteredMovies;
 
@@ -102,30 +76,6 @@ public class MovieController extends HttpServlet {
                 request.setAttribute("type", type);
                 request.setAttribute("keyword", keyword);
                 request.setAttribute("totalMovies", totalMovies);
-                request.setAttribute("nowShowingMovies", movieService.getNowShowingMovies());
-
-                int resultCount = 0;
-
-                for (Map<Movie, List<Showtime>> dayMovies
-                        : scheduleByDate.values()) {
-
-                    resultCount += dayMovies.size();
-                }
-
-                Map<Integer, Room> roomById
-                        = movieService.getRoomById();
-
-                request.setAttribute(
-                        "scheduleByDate",
-                        scheduleByDate
-                );
-
-                request.setAttribute("roomById", roomById);
-                request.setAttribute("cinemaById", cinemaService.getCinemaById());
-                request.setAttribute("resultCount", resultCount);
-                request.setAttribute("keyword", keyword);
-                request.setAttribute("date", date == null ? "" : date.toString());
-                request.setAttribute("cinemaId", cinemaId);
 
                 view = "/WEB-INF/views/user/movies.jsp";
 
@@ -471,58 +421,6 @@ public class MovieController extends HttpServlet {
                     response,
                     manager
             );
-        }
-    }
-
-    /**
-     * Parses a yyyy-MM-dd date.
-     *
-     * @param value the request parameter
-     * @return the date, or null if it is empty or invalid
-     */
-    private LocalDate parseDate(String value) {
-
-        if (value == null
-                || value.trim().isEmpty()) {
-
-            return null;
-        }
-
-        try {
-
-            return LocalDate.parse(
-                    value.trim()
-            );
-
-        } catch (DateTimeParseException e) {
-
-            return null;
-        }
-    }
-
-    /**
-     * Parses a cinema ID.
-     *
-     * @param value the request parameter
-     * @return the cinema ID, or null if it is empty or invalid
-     */
-    private Integer parseCinemaId(String value) {
-
-        if (value == null
-                || value.trim().isEmpty()) {
-
-            return null;
-        }
-
-        try {
-
-            return Integer.valueOf(
-                    value.trim()
-            );
-
-        } catch (NumberFormatException e) {
-
-            return null;
         }
     }
 

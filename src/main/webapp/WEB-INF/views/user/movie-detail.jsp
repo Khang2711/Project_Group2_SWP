@@ -188,8 +188,11 @@
                 </c:if>
 
                 <!-- WATCH TRAILER -->
-                <c:if test="${not empty movie.trailerUrl}">
-                    <a href="${movie.trailerUrl}"
+                <c:if test="${not empty movie.trailerUrl 
+                              and (fn:startsWith(fn:toLowerCase(movie.trailerUrl), 'https://') 
+                              or fn:startsWith(fn:toLowerCase(movie.trailerUrl), 'http://'))}">
+                      
+                    <a href="<c:out value='${movie.trailerUrl}' />"
                        target="_blank"
                        rel="noopener noreferrer"
                        class="detail-trailer-btn">
