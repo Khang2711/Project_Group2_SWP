@@ -421,6 +421,14 @@
             <h2>Bắp nước / Combo đã chọn</h2>
         </div>
 
+              <c:if test="${not empty onlineFoodItems}">
+
+    <div class="booking-detail-card">
+
+        <div class="booking-detail-card-header">
+            <h2>Bắp nước / Combo đã chọn</h2>
+        </div>
+
         <div class="booking-ticket-list">
 
             <c:forEach var="item" items="${onlineFoodItems}">
