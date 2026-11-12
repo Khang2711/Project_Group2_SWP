@@ -268,6 +268,24 @@
 
                     </div>
 
+                    <c:if test="${not empty paymentMovie}">
+                        <div class="payment-result-order">
+                            <span>Phim</span>
+                            <strong><c:out value="${paymentMovie.title}" /></strong>
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty paymentCinema}">
+                        <div class="payment-result-order">
+                            <span>Rạp chiếu</span>
+                            <strong><c:out value="${paymentCinema.cinemaName}" /></strong>
+                        </div>
+                        <c:if test="${not empty paymentCinema.address}">
+                            <div class="payment-result-order">
+                                <span>Địa chỉ rạp</span>
+                                <strong><c:out value="${paymentCinema.address}" /></strong>
+                            </div>
+                        </c:if>
+                    </c:if>
 
                     <div class="payment-result-actions">
 
