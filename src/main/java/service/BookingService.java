@@ -108,7 +108,9 @@ public class BookingService {
         if (showtime.getStartTime() == null
                 || !showtime.getStartTime()
                         .toLocalDateTime()
-                        .isAfter(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))) {
+                        .isAfter(
+                                LocalDateTime.now(
+                                        ZoneId.of("Asia/Ho_Chi_Minh")))) {
 
             throw new IllegalArgumentException(
                     "Suất chiếu đã bắt đầu hoặc đã kết thúc."
