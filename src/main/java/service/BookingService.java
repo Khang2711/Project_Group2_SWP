@@ -49,7 +49,7 @@ public class BookingService {
     private final FoodItemRepository foodItemRepository;
     private final FoodOrderService foodOrderService;
     private final FoodOrderRepository foodOrderRepository
-            = new FoodOrderRepository();
+        = new FoodOrderRepository();
 
     public BookingService() {
         bookingRepository = new BookingRepository();
@@ -64,6 +64,16 @@ public class BookingService {
         foodItemRepository = new FoodItemRepository();
         foodOrderService = new FoodOrderService();
     }
+    
+    public List<Map<String, Object>> getOnlineFoodItemsForBooking(
+        int bookingId,
+        int customerId) throws SQLException {
+
+    // Xác minh booking thuộc khách hàng đang đăng nhập.
+    getBookingDetail(bookingId, customerId);
+
+    return foodOrderRepository.findOnlineItemsByBooking(bookingId);
+}
 
     // =====================================================
     // BUG-06 FIX:
@@ -861,15 +871,6 @@ public class BookingService {
 
         return connection;
     }
-
-    public List<Map<String, Object>> getOnlineFoodItemsForBooking(
-            int bookingId,
-            int customerId) throws SQLException {
-
-        // Xác minh booking thuộc khách hàng đang đăng nhập.
-        getBookingDetail(bookingId, customerId);
-
-        return foodOrderRepository.findOnlineItemsByBooking(bookingId);
-    }
-
+    
+    
 }

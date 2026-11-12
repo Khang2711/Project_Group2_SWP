@@ -27,7 +27,7 @@ public class DBContext {
             String dbURL = "jdbc:sqlserver://localhost:1433;"
                     + "databaseName=FCinemaDB;"
                     + "user=sa;"
-                    + "password=12345;"
+                    + "password=123456;"
                     + "encrypt=true;trustServerCertificate=true;";
 
             conn = DriverManager.getConnection(dbURL);

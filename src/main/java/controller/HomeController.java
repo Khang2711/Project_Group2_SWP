@@ -18,15 +18,11 @@ public class HomeController extends HttpServlet {
     private MovieService movieService = new MovieService();
     private CinemaService cinemaService = new CinemaService();
 
-//    @Override
-//    public void init() {
-//        movieService = new MovieService();
-//    }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Movie> nowShowingMovies = movieService.getNowShowingMovies();
         List<Movie> comingSoonMovies = movieService.getComingSoonMovies();
-        List<Movie> featuredMovies = movieService.getFeaturedMovies();
+        List<Movie> featuredMovies = movieService.getFeaturedMovies(nowShowingMovies);
 
         List<Movie> homeMovies = new ArrayList<>();
         homeMovies.addAll(nowShowingMovies);

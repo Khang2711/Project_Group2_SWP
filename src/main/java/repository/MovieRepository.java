@@ -123,7 +123,7 @@ public class MovieRepository extends DBContext {
                 + "FROM Movie "
                 + "WHERE status = ? "
                 + "AND release_date <= GETDATE() "
-                + "AND (end_date IS NULL OR end_date >= GETDATE()) "
+                + "AND (end_date IS NULL OR end_date >= CAST(GETDATE() AS DATE)) "
                 + "ORDER BY release_date DESC";
 
         try {
