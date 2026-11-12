@@ -17,6 +17,7 @@ import model.Combo;
 import model.FoodOrderItem;
 import java.util.Set;
 import model.Booking;
+import model.Cinema;
 import model.Movie;
 import model.Promotion;
 import model.Seat;
@@ -24,6 +25,7 @@ import model.Showtime;
 import model.Ticket;
 import model.User;
 import service.BookingService;
+import service.CinemaService;
 
 @WebServlet(urlPatterns = {
     "/user/select-seats",
@@ -34,6 +36,7 @@ import service.BookingService;
 public class BookingController extends HttpServlet {
 
     private BookingService bookingService;
+    private final CinemaService cinemaService = new CinemaService();
 
     @Override
     public void init() {
@@ -280,6 +283,7 @@ public class BookingController extends HttpServlet {
                 = bookingService.getMovieForShowtime(checkoutShowtime);
 
         request.setAttribute("showtime", checkoutShowtime);
+        request.setAttribute("cinema", cinemaService.getCinemaByShowtime(checkoutShowtime));
         request.setAttribute("movie", checkoutMovie);
         request.setAttribute(
                 "availablePromotions",
@@ -393,6 +397,7 @@ public class BookingController extends HttpServlet {
         }
 
         request.setAttribute("showtime", showtime);
+        request.setAttribute("cinema", cinemaService.getCinemaByShowtime(showtime));
         request.setAttribute("seats", seats);
         request.setAttribute("seatRows", seatRows);
         request.setAttribute("occupiedSeatIds", occupiedSeatIds);
@@ -411,6 +416,7 @@ public class BookingController extends HttpServlet {
 
         Map<Integer, Showtime> showtimeMap = new LinkedHashMap<>();
         Map<Integer, Movie> movieMap = new LinkedHashMap<>();
+        Map<Integer, Cinema> cinemaMap = new LinkedHashMap<>();
 
         for (Booking booking : bookings) {
             Showtime showtime
@@ -429,12 +435,18 @@ public class BookingController extends HttpServlet {
                             booking.getBookingId(),
                             movie);
                 }
+
+                Cinema cinema = cinemaService.getCinemaByShowtime(showtime);
+                if (cinema != null) {
+                    cinemaMap.put(booking.getBookingId(), cinema);
+                }
             }
         }
 
         request.setAttribute("bookings", bookings);
         request.setAttribute("showtimeMap", showtimeMap);
         request.setAttribute("movieMap", movieMap);
+        request.setAttribute("cinemaMap", cinemaMap);
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/bookings.jsp"
@@ -486,6 +498,7 @@ request.setAttribute("onlineFoodItems", onlineFoodItems);
         }
 
         request.setAttribute("booking", booking);
+        request.setAttribute("cinema", cinemaService.getCinemaByShowtime(showtime));
         request.setAttribute("showtime", showtime);
         request.setAttribute("movie", movie);
         request.setAttribute("tickets", tickets);
