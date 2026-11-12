@@ -26,7 +26,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return null;
     }
 
-    int cinemaId = showtimeRepository
+    int cinemaId = showtimeRepositorys
             .getCinemaIdByShowtimeId(showtime.getShowtimeId());
 
     return cinemaId > 0
@@ -35,11 +35,11 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
 }
 
     private CinemaRepository cinemaRepository;
-    private ShowtimeRepository showtimeRepository;
+    private ShowtimeRepository showtimeRepositorys;
 
     public CinemaService() {
         cinemaRepository = new CinemaRepository();
-        showtimeRepository = new ShowtimeRepository();
+        showtimeRepositorys = new ShowtimeRepository();
     }
 
        /**

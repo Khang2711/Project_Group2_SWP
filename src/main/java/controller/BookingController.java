@@ -474,6 +474,14 @@ public class BookingController extends HttpServlet {
         Booking booking = bookingService.getBookingDetail(
                 bookingId,
                 customerId);
+        
+        List<Map<String, Object>> onlineFoodItems
+        = bookingService.getOnlineFoodItemsForBooking(
+                bookingId,
+                customerId
+        );
+
+request.setAttribute("onlineFoodItems", onlineFoodItems);
 
         Showtime showtime
                 = bookingService.getShowtimeForBooking(booking);
