@@ -43,6 +43,13 @@
 
     <div class="showtime-info-bar">
 
+        <c:if test="${not empty cinema}">
+            <div>
+                <span>Rạp chiếu</span>
+                <strong><c:out value="${cinema.cinemaName}" /></strong>
+            </div>
+        </c:if>
+
         <div>
 
             <span>
