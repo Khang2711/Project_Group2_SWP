@@ -24,6 +24,8 @@ import repository.PaymentRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
 import repository.TicketRepository;
+import java.util.UUID;
+import java.util.Locale;
 
 public class TicketService {
 
@@ -273,8 +275,10 @@ public class TicketService {
                     ticket.setStatus("VALID");
 
                     ticket.setTicketCode(
-                            "COUNTER-" + bookingId
-                            + "-" + ticket.getSeatId());
+                            "FC-" + UUID.randomUUID().toString()
+                                    .replace("-", "")
+                                    .toUpperCase(Locale.ROOT)
+                    );
 
                     ticketRepository.insert(
                             connection,

@@ -43,6 +43,7 @@ public class CheckInController extends HttpServlet {
         foodOrderRepository = new FoodOrderRepository();
     }
 
+    // Check staff login and access permission.
     private User requireStaff(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
@@ -62,6 +63,7 @@ public class CheckInController extends HttpServlet {
         return (User) session.getAttribute("user");
     }
 
+    // Handle ticket lookup and display ticket information.
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
@@ -86,13 +88,12 @@ public class CheckInController extends HttpServlet {
 
         String code = request.getParameter("ticketCode");
         request.setAttribute("ticketCode", code);
-
+        // Find the ticket by code and verify its ownership.
         try {
             if (code != null && !code.trim().isEmpty()) {
                 Ticket ticket = checkInService.lookupTicket(
                         code, user.getUserId());
-
-                // Lấy suất chiếu trực tiếp từ thông tin của vé.
+                // Load all related information for the selected ticket.
                 Showtime showtime = showtimeService.getShowtimeById(
                         ticket.getShowtimeId());
 
@@ -126,12 +127,12 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("room", room);
                 request.setAttribute("cinema", cinema);
                 request.setAttribute("seat", seat);
-
+                // Load paid food and combo items for the booking.
                 List<Map<String, Object>> paidFoodItems
                         = foodOrderRepository.findPaidItemsByBooking(
                                 ticket.getBookingId(), room.getCinemaId());
                 request.setAttribute("paidFoodItems", paidFoodItems);
-
+                // Validate ticket status and showtime before check-in.
                 String validation
                         = checkInService.validateCheckIn(ticket, showtime);
 
@@ -154,7 +155,7 @@ public class CheckInController extends HttpServlet {
                     "error",
                     "Không thể tra cứu vé. Vui lòng thử lại.");
         }
-
+        // Generate a one-time token to prevent duplicate check-in requests.
         if (session.getAttribute("checkInToken") == null) {
             session.setAttribute(
                     "checkInToken", UUID.randomUUID().toString());
@@ -165,6 +166,7 @@ public class CheckInController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Handle the ticket check-in submission.
     @Override
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
@@ -181,9 +183,8 @@ public class CheckInController extends HttpServlet {
         HttpSession session = request.getSession();
 
         String code = request.getParameter("ticketCode");
-
+        // Verify the one-time token to prevent duplicate submissions.
         try {
-            // Mỗi mã xác nhận chỉ được dùng một lần để tránh gửi lặp.
             synchronized (session) {
                 String expected
                         = (String) session.getAttribute("checkInToken");
@@ -215,14 +216,13 @@ public class CheckInController extends HttpServlet {
                     "Không thể check-in. Vui lòng thử lại.");
         }
 
-        // Chuyển sang GET để F5 không thực hiện lại thao tác cập nhật.
         String url = request.getContextPath() + "/staff/check-in";
 
         if (code != null && !code.trim().isEmpty()) {
             url += "?ticketCode="
                     + URLEncoder.encode(code.trim(), "UTF-8");
         }
-
+        // Redirect to GET to prevent duplicate submissions when refreshing.
         response.sendRedirect(url);
     }
 }
