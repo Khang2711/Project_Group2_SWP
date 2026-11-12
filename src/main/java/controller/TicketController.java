@@ -12,11 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import model.Booking;
+import model.Cinema;
 import model.Movie;
 import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import model.User;
+import service.CinemaService;
 import service.TicketService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -33,6 +35,7 @@ import javax.imageio.ImageIO;
 public class TicketController extends HttpServlet {
 
     private TicketService ticketService;
+    private final CinemaService cinemaService = new CinemaService();
 
     @Override
     public void init() {
@@ -137,6 +140,10 @@ case "/user/ticket-qr":
         Map<Integer, Seat> seatMap
                 = new LinkedHashMap<>();
 
+        Map<Integer, Cinema> cinemaMap
+                = new LinkedHashMap<>();
+        Map<Integer, Boolean> expiredMap
+                = new LinkedHashMap<>();
 
         for (Ticket ticket : tickets) {
 
@@ -168,6 +175,12 @@ case "/user/ticket-qr":
                     showtime
             );
 
+            Cinema cinema = cinemaService.getCinemaByShowtime(showtime);
+            if (cinema != null) {
+                cinemaMap.put(ticket.getTicketId(), cinema);
+            }
+            expiredMap.put(ticket.getTicketId(),
+                    ticketService.isExpired(ticket, showtime));
 
             Movie movie
                     = ticketService
@@ -220,7 +233,8 @@ case "/user/ticket-qr":
                 "seatMap",
                 seatMap
         );
-
+        request.setAttribute("cinemaMap", cinemaMap);
+        request.setAttribute("expiredMap", expiredMap);
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/tickets.jsp"
@@ -287,6 +301,12 @@ case "/user/ticket-qr":
                                 showtime
                         );
 
+        Cinema cinema = cinemaService.getCinemaByShowtime(showtime);
+        request.setAttribute("cinema", cinema);
+        request.setAttribute("expired", ticketService.isExpired(ticket, showtime));
+        request.setAttribute("foodItems",
+                ticketService.getPaidFoodItemsForBooking(
+                        booking, cinema == null ? 0 : cinema.getCinemaId()));
 
         request.setAttribute(
                 "ticket",
