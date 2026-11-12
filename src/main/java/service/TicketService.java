@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import model.Booking;
 import model.FoodOrder;
@@ -60,6 +62,21 @@ public class TicketService {
 
         return foodOrderRepository.findPaidItemsByBooking(
                 booking.getBookingId(), cinemaId);
+    }
+
+    /**
+     * Preserve Hao's expired-ticket behavior. Use the showtime end instant,
+     * not the calendar date, to handle late screenings past midnight.
+     */
+    public boolean isExpired(Ticket ticket, Showtime showtime) {
+        if (ticket == null || showtime == null
+                || showtime.getEndTime() == null
+                || !"VALID".equalsIgnoreCase(ticket.getStatus())) {
+            return false;
+        }
+        LocalDateTime end = showtime.getEndTime().toLocalDateTime();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        return !end.isAfter(now);
     }
 
     public List<Ticket> getTicketsByCustomer(int customerId)
