@@ -28,6 +28,7 @@ import repository.MovieRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
 import repository.TicketRepository;
+import repository.FoodOrderRepository;
 
 public class BookingService {
 
@@ -40,6 +41,17 @@ public class BookingService {
     private final ComboRepository comboRepository;
     private final FoodItemRepository foodItemRepository;
     private final FoodOrderService foodOrderService;
+    private final FoodOrderRepository foodOrderRepository
+            = new FoodOrderRepository();
+
+    public List<Map<String, Object>> getOnlineFoodItemsForBooking(
+            int bookingId,
+            int customerId) throws SQLException {
+
+        getBookingDetail(bookingId, customerId);
+
+        return foodOrderRepository.findOnlineItemsByBooking(bookingId);
+    }
 
     public BookingService() {
         bookingRepository = new BookingRepository();
@@ -305,13 +317,17 @@ public class BookingService {
 
     public List<Combo> getCombosForCheckout(int showtimeId) {
         int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
-        if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        if (cinemaId <= 0) {
+            throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        }
         return comboRepository.findActiveForSale(cinemaId);
     }
 
     public List<FoodItem> getFoodItemsForCheckout(int showtimeId) {
         int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
-        if (cinemaId <= 0) throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        if (cinemaId <= 0) {
+            throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+        }
         return foodItemRepository.findActiveByCinema(cinemaId);
     }
 
@@ -405,8 +421,15 @@ public class BookingService {
                             showtimeId);
                 }
 
-                if (comboTotal.signum() > 0) {
-                    foodOrderService.createPendingOnlineOrder(connection, bookingId, cinemaId, comboItems, comboTotal);
+                if (comboItems != null && !comboItems.isEmpty()) {
+
+                    foodOrderService.createPendingOnlineOrder(
+                            connection,
+                            bookingId,
+                            cinemaId,
+                            comboItems,
+                            comboTotal
+                    );
                 }
                 connection.commit();
                 return bookingId;

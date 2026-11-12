@@ -17,58 +17,56 @@ import model.FoodOrder;
 import model.FoodOrderItem;
 
 public class FoodOrderRepository {
-    
-    
+
     public List<Map<String, Object>> findPaidItemsByBooking(
-        int bookingId) throws SQLException {
+            int bookingId) throws SQLException {
 
-    List<Map<String, Object>> items = new ArrayList<>();
+        List<Map<String, Object>> items = new ArrayList<>();
 
-    String sql =
-            "SELECT "
-            + "COALESCE(f.item_name, c.combo_name) AS product_name, "
-            + "oi.quantity, oi.unit_price, oi.line_total "
-            + "FROM dbo.Food_Order o "
-            + "JOIN dbo.Food_Order_Item oi "
-            + "ON oi.food_order_id = o.food_order_id "
-            + "LEFT JOIN dbo.Food_Item f "
-            + "ON f.food_item_id = oi.food_item_id "
-            + "LEFT JOIN dbo.Combo c "
-            + "ON c.combo_id = oi.combo_id "
-            + "WHERE o.booking_id = ? "
-            + "AND o.payment_status = 'PAID' "
-            + "ORDER BY oi.food_order_item_id";
+        String sql
+                = "SELECT "
+                + "COALESCE(f.item_name, c.combo_name) AS product_name, "
+                + "oi.quantity, oi.unit_price, oi.line_total "
+                + "FROM dbo.Food_Order o "
+                + "JOIN dbo.Food_Order_Item oi "
+                + "ON oi.food_order_id = o.food_order_id "
+                + "LEFT JOIN dbo.Food_Item f "
+                + "ON f.food_item_id = oi.food_item_id "
+                + "LEFT JOIN dbo.Combo c "
+                + "ON c.combo_id = oi.combo_id "
+                + "WHERE o.booking_id = ? "
+                + "AND o.payment_status = 'PAID' "
+                + "ORDER BY oi.food_order_item_id";
 
-    try (Connection connection = openConnection();
-         PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = openConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
 
-        ps.setInt(1, bookingId);
+            ps.setInt(1, bookingId);
 
-        try (ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
 
-            while (rs.next()) {
+                while (rs.next()) {
 
-                Map<String, Object> item = new HashMap<>();
+                    Map<String, Object> item = new HashMap<>();
 
-                item.put("productName",
-                        rs.getString("product_name"));
+                    item.put("productName",
+                            rs.getString("product_name"));
 
-                item.put("quantity",
-                        rs.getInt("quantity"));
+                    item.put("quantity",
+                            rs.getInt("quantity"));
 
-                item.put("unitPrice",
-                        rs.getBigDecimal("unit_price"));
+                    item.put("unitPrice",
+                            rs.getBigDecimal("unit_price"));
 
-                item.put("lineTotal",
-                        rs.getBigDecimal("line_total"));
+                    item.put("lineTotal",
+                            rs.getBigDecimal("line_total"));
 
-                items.add(item);
+                    items.add(item);
+                }
             }
         }
-    }
 
-    return items;
-}
+        return items;
+    }
 
     public int insert(FoodOrder foodOrder) {
 
@@ -279,8 +277,11 @@ public class FoodOrderRepository {
                 + "JOIN dbo.Room r ON r.room_id=st.room_id WHERE b.booking_id=? AND r.cinema_id=? "
                 + "AND b.status='PENDING' AND b.staff_id IS NULL";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId); ps.setInt(2, cinemaId);
-            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+            ps.setInt(1, bookingId);
+            ps.setInt(2, cinemaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         }
     }
 
@@ -515,8 +516,11 @@ public class FoodOrderRepository {
             PreparedStatement statement,
             FoodOrder foodOrder) throws SQLException {
 
-        if (foodOrder.getStaffId() <= 0) statement.setNull(1, Types.INTEGER);
-        else statement.setInt(1, foodOrder.getStaffId());
+        if (foodOrder.getStaffId() <= 0) {
+            statement.setNull(1, Types.INTEGER);
+        } else {
+            statement.setInt(1, foodOrder.getStaffId());
+        }
         statement.setInt(2, foodOrder.getCinemaId());
         statement.setBigDecimal(3, foodOrder.getSubtotal());
         statement.setBigDecimal(4, foodOrder.getTotalAmount());
@@ -574,5 +578,61 @@ public class FoodOrderRepository {
                 resultSet.getTimestamp("created_at"));
 
         return foodOrder;
+    }
+
+    public List<Map<String, Object>> findOnlineItemsByBooking(
+            int bookingId) throws SQLException {
+
+        List<Map<String, Object>> items = new ArrayList<>();
+
+        String sql
+                = "SELECT "
+                + "COALESCE(f.item_name, c.combo_name) AS product_name, "
+                + "oi.quantity, oi.unit_price, oi.line_total, "
+                + "o.payment_status "
+                + "FROM dbo.Food_Order o "
+                + "JOIN dbo.Food_Order_Item oi "
+                + "ON oi.food_order_id = o.food_order_id "
+                + "LEFT JOIN dbo.Food_Item f "
+                + "ON f.food_item_id = oi.food_item_id "
+                + "LEFT JOIN dbo.Combo c "
+                + "ON c.combo_id = oi.combo_id "
+                + "WHERE o.booking_id = ? "
+                + "AND o.staff_id IS NULL "
+                + "AND o.payment_method = 'VNPAY' "
+                + "AND o.payment_status IN ('PENDING', 'PAID') "
+                + "ORDER BY o.food_order_id, oi.food_order_item_id";
+
+        try (Connection conn = openConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Map<String, Object> item = new HashMap<>();
+
+                    item.put("productName",
+                            rs.getString("product_name"));
+
+                    item.put("quantity",
+                            rs.getInt("quantity"));
+
+                    item.put("unitPrice",
+                            rs.getBigDecimal("unit_price"));
+
+                    item.put("lineTotal",
+                            rs.getBigDecimal("line_total"));
+
+                    item.put("paymentStatus",
+                            rs.getString("payment_status"));
+
+                    items.add(item);
+                }
+            }
+        }
+
+        return items;
     }
 }
