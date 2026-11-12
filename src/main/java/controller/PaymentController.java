@@ -11,7 +11,11 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import model.Booking;
+import model.Showtime;
 import model.User;
+import service.BookingService;
+import service.CinemaService;
 import service.PaymentService;
 import service.PaymentService.PaymentResult;
 
@@ -29,6 +33,8 @@ import service.PaymentService.PaymentResult;
 public class PaymentController extends HttpServlet {
 
     private PaymentService paymentService;
+    private final BookingService bookingService = new BookingService();
+    private final CinemaService cinemaService = new CinemaService();
 
     @Override
     public void init() {
@@ -132,6 +138,32 @@ public class PaymentController extends HttpServlet {
                     readVnPayParameters(request)
             );
             request.setAttribute("paymentResult", result);
+
+            // Display booking details only to the owning, signed-in customer
+            // and only for a result with a verified VNPay signature.
+            if (result.isSignatureValid() && result.getBookingId() > 0) {
+                HttpSession session = request.getSession(false);
+                if (session != null
+                        && session.getAttribute("user") instanceof User
+                        && "CUSTOMER".equals(session.getAttribute("roleName"))) {
+                    User customer = (User) session.getAttribute("user");
+                    try {
+                        Booking booking = bookingService.getBookingDetail(
+                                result.getBookingId(), customer.getUserId());
+                        Showtime showtime = bookingService.getShowtimeForBooking(booking);
+
+                        request.setAttribute("paymentShowtime", showtime);
+                        request.setAttribute("paymentCinema",
+                                cinemaService.getCinemaByShowtime(showtime));
+                        request.setAttribute("paymentMovie",
+                                bookingService.getMovieForShowtime(showtime));
+                    } catch (IllegalArgumentException ignored) {
+                        // Do not expose details of another customer's booking.
+                    } catch (SQLException e) {
+                        log("Cannot load customer booking details for payment result.", e);
+                    }
+                }
+            }
 
         } catch (SQLException e) {
             log("Cannot process VNPay browser return.", e);
