@@ -254,7 +254,7 @@ public class DashboardController extends HttpServlet {
 
             summary.createRow(13).createCell(0)
                     .setCellValue(
-                            "Booking: ngày tạo; doanh thu vé và đồ ăn online: ngày thanh toán thành công.");
+                            "Booking: ngày tạo; vé và doanh thu vé/đồ ăn online: ngày thanh toán thành công.");
 
             summary.createRow(14).createCell(0)
                     .setCellValue(
