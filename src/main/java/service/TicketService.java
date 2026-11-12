@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import model.Booking;
 import model.FoodOrder;
 import model.FoodOrderItem;
@@ -15,6 +16,7 @@ import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import repository.BookingRepository;
+import repository.FoodOrderRepository;
 import repository.MovieRepository;
 import repository.PaymentRepository;
 import repository.SeatRepository;
@@ -40,6 +42,25 @@ public class TicketService {
 
     private final SeatRepository seatRepository
             = new SeatRepository();
+
+    private final FoodOrderRepository foodOrderRepository
+            = new FoodOrderRepository();
+
+    /**
+     * Products already paid for with a booking, scoped to its cinema.
+     * A ticket is only used for display after verifying its customer owner.
+     */
+    public List<Map<String, Object>> getPaidFoodItemsForBooking(
+            Booking booking, int cinemaId) throws SQLException {
+
+        if (booking == null || booking.getBookingId() <= 0
+                || cinemaId <= 0) {
+            return Collections.emptyList();
+        }
+
+        return foodOrderRepository.findPaidItemsByBooking(
+                booking.getBookingId(), cinemaId);
+    }
 
     public List<Ticket> getTicketsByCustomer(int customerId)
             throws SQLException {
