@@ -291,6 +291,19 @@
 
             <h2>Thông tin đặt vé</h2>
 
+            <c:if test="${not empty cinema}">
+                <div class="summary-row">
+                    <span>Rạp chiếu</span>
+                    <strong><c:out value="${cinema.cinemaName}" /></strong>
+                </div>
+                <c:if test="${not empty cinema.address}">
+                    <div class="summary-row">
+                        <span>Địa chỉ rạp</span>
+                        <strong><c:out value="${cinema.address}" /></strong>
+                    </div>
+                </c:if>
+            </c:if>
+
             <div class="summary-row">
                 <span>Suất chiếu</span>
 
