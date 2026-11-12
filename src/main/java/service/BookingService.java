@@ -547,18 +547,32 @@ public class BookingService {
     }
 
     public List<Combo> getCombosForCheckout(int showtimeId) {
-        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+
+        getBookableShowtime(showtimeId);
+
+        int cinemaId = promotionService
+                .getCinemaIdByShowtimeId(showtimeId);
+
         if (cinemaId <= 0) {
-            throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+            throw new IllegalArgumentException(
+                    "Không xác định được rạp của suất chiếu.");
         }
+
         return comboRepository.findActiveForSale(cinemaId);
     }
 
     public List<FoodItem> getFoodItemsForCheckout(int showtimeId) {
-        int cinemaId = promotionService.getCinemaIdByShowtimeId(showtimeId);
+
+        getBookableShowtime(showtimeId);
+
+        int cinemaId = promotionService
+                .getCinemaIdByShowtimeId(showtimeId);
+
         if (cinemaId <= 0) {
-            throw new IllegalArgumentException("Không xác định được rạp của suất chiếu.");
+            throw new IllegalArgumentException(
+                    "Không xác định được rạp của suất chiếu.");
         }
+
         return foodItemRepository.findActiveByCinema(cinemaId);
 
     public List<Combo> getCombosForCheckout(
