@@ -216,9 +216,9 @@ public class TicketRepository {
                 + "AND st.start_time > SYSDATETIME() "
                 + "AND r.status = 'ACTIVE' AND c.status = 'ACTIVE' "
                 + "AND m.status = 'ACTIVE' "
-                + "AND m.release_date <= CAST(SYSDATETIME() AS DATE) "
+                + "AND m.release_date <= CAST(st.start_time AS DATE) "
                 + "AND (m.end_date IS NULL "
-                + "OR m.end_date >= CAST(SYSDATETIME() AS DATE))";
+                + "OR m.end_date >= CAST(st.start_time AS DATE))";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, showtimeId);
