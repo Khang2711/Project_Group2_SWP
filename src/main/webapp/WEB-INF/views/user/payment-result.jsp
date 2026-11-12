@@ -17,6 +17,9 @@
         <span class="payment-result-label">
             VNPAY
         </span>
+        
+        
+        
 
         <h1>Kết quả thanh toán</h1>
 
