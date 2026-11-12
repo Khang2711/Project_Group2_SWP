@@ -292,7 +292,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
             int cinemaId) {
 
         List<Showtime> showtimes =
-                showtimeRepository.getByCinemaId(
+                showtimeRepositorys.getByCinemaId(
                         cinemaId
                 );
 
@@ -328,7 +328,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
 
             // Kiểm tra vé ngay cả khi showtime
             // đã chuyển INACTIVE.
-            if (showtimeRepository.hasTickets(
+            if (showtimeRepositorys.hasTickets(
                     showtime.getShowtimeId())) {
 
                 return "Không thể ngừng hoạt động rạp "
