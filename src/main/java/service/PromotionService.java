@@ -7,6 +7,7 @@ import java.util.Locale;
 import model.Promotion;
 import repository.PromotionRepository;
 import repository.ShowtimeRepository;
+import java.sql.SQLException;
 
 public class PromotionService {
 
@@ -200,11 +201,18 @@ public class PromotionService {
 
         if (promotion.getUsageLimit() != null) {
 
-            int usedCount
-                    = promotionRepository.countUsageByPromotionId(
-                            promotion.getPromotionId()
-                    );
+            int usedCount;
 
+            try {
+                usedCount = promotionRepository.countUsageByPromotionId(
+                        promotion.getPromotionId()
+                );
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+                return "Không thể kiểm tra lượt sử dụng mã khuyến mãi. "
+                        + "Vui lòng thử lại.";
+            }
             if (usedCount >= promotion.getUsageLimit()) {
                 return "Mã khuyến mãi đã hết lượt sử dụng.";
             }
@@ -309,6 +317,13 @@ public class PromotionService {
 
         if (oldPromotion == null) {
             return "Không tìm thấy khuyến mãi trong rạp của bạn.";
+        }
+        Integer newUsageLimit = promotion.getUsageLimit();
+        int usedCount = oldPromotion.getUsedCount();
+
+        if (newUsageLimit != null && newUsageLimit < usedCount) {
+            return "Giới hạn sử dụng không thể nhỏ hơn số lượt đã dùng ("
+                    + usedCount + ").";
         }
 
         if (promotionRepository.existsByCodeExceptId(

@@ -204,7 +204,7 @@ public class PromotionRepository {
         return null;
     }
 
-    public int countUsageByPromotionId(int promotionId) {
+    public int countUsageByPromotionId(int promotionId) throws SQLException {
 
         String sql = "SELECT COUNT(*) FROM dbo.Booking "
                 + "WHERE promotion_id = ? "
@@ -219,12 +219,11 @@ public class PromotionRepository {
                     return rs.getInt(1);
                 }
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
 
-        return 0;
+        throw new SQLException(
+                "Không thể đếm lượt sử dụng khuyến mãi."
+        );
     }
 
     public boolean existsByCode(String promoCode, int cinemaId) {

@@ -20,14 +20,19 @@ import java.util.Map;
 import model.Promotion;
 import model.User;
 import service.PromotionService;
+import java.sql.SQLException;
+import model.Cinema;
+import service.DashboardService;
 
 @WebServlet(urlPatterns = {
     "/admin/promotions",
-    "/admin/promotion-form",
-})
+    "/admin/promotion-form",})
 public class PromotionController extends HttpServlet {
 
     private PromotionService promotionService;
+
+    private final DashboardService dashboardService
+            = new DashboardService();
 
     @Override
     public void init() {
@@ -90,6 +95,7 @@ public class PromotionController extends HttpServlet {
 
         if (session == null
                 || !(session.getAttribute("user") instanceof User)) {
+
             response.sendRedirect(
                     request.getContextPath() + "/auth/login");
             return false;
@@ -97,30 +103,58 @@ public class PromotionController extends HttpServlet {
 
         if (!"CINEMA_MANAGER".equals(
                 session.getAttribute("roleName"))) {
+
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return false;
         }
 
-        return true;
+        User user = (User) session.getAttribute("user");
+
+        try {
+            Cinema cinema = dashboardService.getManagerCinema(
+                    user.getUserId()
+            );
+
+            if (cinema == null) {
+                response.sendError(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "Tài khoản không còn quyền Manager "
+                        + "hoặc chưa được phân công rạp."
+                );
+                return false;
+            }
+
+            request.setAttribute("managerCinema", cinema);
+
+            return true;
+
+        } catch (SQLException e) {
+            log("Cannot verify Cinema Manager access.", e);
+
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Không thể xác minh quyền truy cập. Vui lòng thử lại."
+            );
+
+            return false;
+        }
     }
 
     private Integer getCurrentCinemaId(HttpServletRequest request) {
 
-        HttpSession session = request.getSession(false);
+        Object managerCinema = request.getAttribute("managerCinema");
 
-        if (session == null) {
+        if (!(managerCinema instanceof Cinema)) {
             return null;
         }
 
-        Object sessionUser = session.getAttribute("user");
+        int cinemaId = ((Cinema) managerCinema).getCinemaId();
 
-        if (!(sessionUser instanceof User)) {
+        if (cinemaId <= 0) {
             return null;
         }
 
-        User user = (User) sessionUser;
-
-        return user.getCinemaId();
+        return cinemaId;
     }
 
     private void showPromotionList(

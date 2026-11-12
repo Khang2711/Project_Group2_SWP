@@ -16,7 +16,7 @@ public class CheckInService {
 
     private final TicketRepository ticketRepository
             = new TicketRepository();
-
+    // Validate the ticket code format and input.
     public String validateTicketCode(String ticketCode) {
         if (ticketCode == null || ticketCode.trim().isEmpty()) {
             return "Vui lòng nhập mã vé.";
@@ -28,7 +28,7 @@ public class CheckInService {
 
         return null;
     }
-
+    // Validate ticket status and check-in time conditions.
     public String validateCheckIn(Ticket ticket, Showtime showtime) {
         if (ticket == null) {
             return "Không tìm thấy vé.";
@@ -62,7 +62,7 @@ public class CheckInService {
                 || showtime.getEndTime() == null) {
             return "Không tìm thấy thời gian suất chiếu.";
         }
-
+        // Get the current time in the Vietnam time zone.
         LocalDateTime now = LocalDateTime.now(
                 ZoneId.of("Asia/Ho_Chi_Minh"));
 
