@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -107,7 +108,7 @@ public class BookingService {
         if (showtime.getStartTime() == null
                 || !showtime.getStartTime()
                         .toLocalDateTime()
-                        .isAfter(LocalDateTime.now())) {
+                        .isAfter(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))) {
 
             throw new IllegalArgumentException(
                     "Suất chiếu đã bắt đầu hoặc đã kết thúc."
