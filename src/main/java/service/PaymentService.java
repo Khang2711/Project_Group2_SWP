@@ -6,9 +6,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -77,6 +80,15 @@ public class PaymentService {
                     );
                 }
 
+                if (!isBeforeShowtime(connection, bookingId)) {
+                    throw new IllegalArgumentException(
+                            "Suất chiếu đã bắt đầu. Không thể tiếp tục thanh toán.");
+                }
+                if (!promotionHasCapacity(connection, booking)) {
+                    throw new IllegalArgumentException(
+                            "Mã giảm giá đã hết lượt sử dụng. Vui lòng đặt lại vé.");
+                }
+
                 BigDecimal amount = booking.getTotalAmount();
                 if (amount == null || amount.signum() <= 0) {
                     throw new IllegalArgumentException(
@@ -103,22 +115,20 @@ public class PaymentService {
                     );
                 }
 
-                /*
-                 * Mỗi lần bắt đầu thanh toán dùng một merchant_reference mới.
-                 * Callback thành công đến muộn từ attempt cũ vẫn được xác minh;
-                 * nếu đã có giao dịch khác xác nhận đơn, attempt này sẽ được đánh dấu cần hoàn tiền.
-                 */
-                paymentRepository.failPendingPaymentsForBooking(
-                        connection,
-                        bookingId
-                );
-
-                payment = paymentRepository.insertPending(
-                        connection,
-                        bookingId,
-                        createMerchantReference(),
-                        amount
-                );
+                // Refreshing the GET payment page must not invalidate a still
+                // valid payment attempt. Reuse it for up to 14 minutes.
+                Payment existing = paymentRepository.findPendingByBookingId(
+                        connection, bookingId);
+                if (existing != null && existing.getAmount() != null
+                        && existing.getAmount().compareTo(amount) == 0
+                        && isFreshPaymentReference(existing.getMerchantReference())) {
+                    payment = existing;
+                } else {
+                    paymentRepository.failPendingPaymentsForBooking(
+                            connection, bookingId);
+                    payment = paymentRepository.insertPending(
+                            connection, bookingId, createMerchantReference(), amount);
+                }
 
                 connection.commit();
 
@@ -135,6 +145,64 @@ public class PaymentService {
                 payment.getAmount(),
                 clientIp
         );
+    }
+
+    /**
+     * A completely discounted booking has no VNPay charge to perform.
+     * Returns false for paid bookings. Every change is committed atomically.
+     */
+    public boolean confirmFreeBooking(int bookingId, int customerId)
+            throws SQLException {
+        try (Connection connection = getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Booking booking = bookingRepository.findByIdForPayment(
+                        connection, bookingId, customerId);
+                if (booking == null) {
+                    throw new IllegalArgumentException(
+                            "Không tìm thấy đơn đặt vé của tài khoản này.");
+                }
+                BigDecimal amount = booking.getTotalAmount();
+                if (amount == null || amount.signum() < 0) {
+                    throw new IllegalArgumentException("Tổng tiền đơn không hợp lệ.");
+                }
+                if (amount.signum() > 0) {
+                    connection.rollback();
+                    return false;
+                }
+                if (!"PENDING".equals(booking.getStatus())) {
+                    throw new IllegalArgumentException(
+                            "Đơn đặt vé không còn chờ xác nhận.");
+                }
+                if (!isBeforeShowtime(connection, bookingId)) {
+                    throw new IllegalArgumentException(
+                            "Suất chiếu đã bắt đầu. Không thể xác nhận vé.");
+                }
+                if (!promotionHasCapacity(connection, booking)) {
+                    throw new IllegalArgumentException(
+                            "Mã giảm giá đã hết lượt sử dụng. Vui lòng đặt lại vé.");
+                }
+                int pending = ticketRepository.countPendingTickets(connection, bookingId);
+                if (pending <= 0 || ticketRepository.hasSeatConflict(connection, bookingId)
+                        || paymentRepository.hasSuccessfulPayment(connection, bookingId, 0)) {
+                    throw new IllegalArgumentException(
+                            "Đơn vé không còn khả dụng để xác nhận.");
+                }
+                if (ticketRepository.confirmPendingTickets(connection, bookingId) != pending
+                        || bookingRepository.updateStatus(connection, bookingId, "CONFIRMED") != 1) {
+                    throw new SQLException("Could not confirm free booking.");
+                }
+                paymentRepository.insertFreePayment(connection, bookingId);
+                markOnlineFoodPaid(connection, bookingId);
+                connection.commit();
+                return true;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        }
     }
 
     /**
@@ -356,6 +424,33 @@ public class PaymentService {
                     );
                 }
 
+                // The gateway may capture money after the showtime starts or
+                // after a promotion becomes fully used. Record the charge and
+                // flag it for a manual refund; never issue an unusable ticket.
+                if (!isBeforeShowtime(connection, bookingId)
+                        || !promotionHasCapacity(connection, booking)) {
+                    if (paymentRepository.updateStatus(
+                            connection, payment.getPaymentId(),
+                            "SUCCESS", transactionCode, paymentTime(params),
+                            "REQUIRED") != 1) {
+                        throw new SQLException("Could not record refund-required payment.");
+                    }
+                    paymentRepository.failPendingPaymentsForBooking(
+                            connection, bookingId);
+                    bookingRepository.updateStatus(connection, bookingId, "CANCELLED");
+                    ticketRepository.cancelPendingTickets(connection, bookingId);
+                    if (anotherSuccessfulPayment) {
+                        paymentRepository.markSuccessfulPaymentsRefundRequired(
+                                connection, bookingId);
+                    }
+                    connection.commit();
+                    return result(
+                            "00", "Confirm Success", true, true,
+                            false, true, bookingId,
+                            "Đơn không còn đủ điều kiện xác nhận. "
+                            + "Giao dịch đã thu tiền và cần xử lý hoàn tiền.");
+                }
+
                 if (anotherSuccessfulPayment) {
                     int pendingTicketCount = ticketRepository.countPendingTickets(
                             connection,
@@ -514,12 +609,7 @@ public class PaymentService {
                 }
 
                 paymentRepository.failPendingPaymentsForBooking(connection, bookingId);
-                try (java.sql.PreparedStatement foodUpdate = connection.prepareStatement(
-                        "UPDATE dbo.Food_Order SET payment_status='PAID' WHERE booking_id=? "
-                        + "AND payment_method='VNPAY' AND payment_status='PENDING'")) {
-                    foodUpdate.setInt(1, bookingId);
-                    foodUpdate.executeUpdate();
-                }
+                markOnlineFoodPaid(connection, bookingId);
                 connection.commit();
                 return result(
                         "00", "Confirm Success", true, true,
@@ -533,6 +623,79 @@ public class PaymentService {
             } finally {
                 connection.setAutoCommit(true);
             }
+        }
+    }
+
+    /** SQL datetime values in this project are Vietnam-local showtimes. */
+    private boolean isBeforeShowtime(Connection connection, int bookingId)
+            throws SQLException {
+        String sql = "SELECT st.start_time FROM dbo.Booking b "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "WHERE b.booking_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, bookingId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() && rs.getTimestamp(1) != null
+                        && rs.getTimestamp(1).toLocalDateTime().isAfter(
+                                LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            }
+        }
+    }
+
+    /**
+     * Serialize confirmations sharing the same promotion by locking its row.
+     * Usage is counted only after that lock is acquired in this transaction.
+     */
+    private boolean promotionHasCapacity(Connection connection, Booking booking)
+            throws SQLException {
+        if (booking.getPromotionId() == null) {
+            return true;
+        }
+        String sql = "SELECT usage_limit, status FROM dbo.Promotion "
+                + "WITH (UPDLOCK, HOLDLOCK) WHERE promotion_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, booking.getPromotionId());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next() || !"ACTIVE".equalsIgnoreCase(rs.getString("status"))) {
+                    return false;
+                }
+                int limit = rs.getInt("usage_limit");
+                if (rs.wasNull()) {
+                    return true;
+                }
+                try (PreparedStatement count = connection.prepareStatement(
+                        "SELECT COUNT(*) FROM dbo.Booking "
+                        + "WHERE promotion_id = ? AND status = 'CONFIRMED'")) {
+                    count.setInt(1, booking.getPromotionId());
+                    try (ResultSet usage = count.executeQuery()) {
+                        return usage.next() && usage.getInt(1) < limit;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isFreshPaymentReference(String reference) {
+        if (reference == null || !reference.matches("FC[0-9]{13}[A-Z0-9]{8}")) {
+            return false;
+        }
+        try {
+            long age = System.currentTimeMillis()
+                    - Long.parseLong(reference.substring(2, 15));
+            return age >= 0 && age < 14 * 60 * 1000L;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private void markOnlineFoodPaid(Connection connection, int bookingId)
+            throws SQLException {
+        try (PreparedStatement update = connection.prepareStatement(
+                "UPDATE dbo.Food_Order SET payment_status = 'PAID' "
+                + "WHERE booking_id = ? AND payment_status = 'PENDING' "
+                + "AND staff_id IS NULL")) {
+            update.setInt(1, bookingId);
+            update.executeUpdate();
         }
     }
 
