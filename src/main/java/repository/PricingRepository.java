@@ -6,53 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import model.Pricing;
 
 public class PricingRepository extends DBContext {
-
-    // Giữ lại để MovieService hiện tại không bị vỡ.
-    public Map<Integer, BigDecimal> getMinPriceByCinema() {
-
-        Map<Integer, BigDecimal> prices =
-                new HashMap<>();
-
-        String sql =
-                "SELECT cinema_id, "
-                + "MIN(price) AS min_price "
-                + "FROM Pricing "
-                + "WHERE status = 'ACTIVE' "
-                + "AND start_date <= "
-                + "CAST(SYSDATETIME() AS DATE) "
-                + "AND (end_date IS NULL "
-                + "OR end_date >= "
-                + "CAST(SYSDATETIME() AS DATE)) "
-                + "GROUP BY cinema_id";
-
-        try {
-
-            PreparedStatement ps =
-                    conn.prepareStatement(sql);
-
-            ResultSet rs =
-                    ps.executeQuery();
-
-            while (rs.next()) {
-
-                prices.put(
-                        rs.getInt("cinema_id"),
-                        rs.getBigDecimal("min_price")
-                );
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return prices;
-    }
 
     public List<Pricing> findByCinemaId(
             int cinemaId) {

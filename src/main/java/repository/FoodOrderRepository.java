@@ -18,6 +18,7 @@ import model.FoodOrderItem;
 
 public class FoodOrderRepository {
 
+
     public List<Map<String, Object>> findPaidItemsByBooking(
             int bookingId) throws SQLException {
 
@@ -67,6 +68,7 @@ public class FoodOrderRepository {
 
         return items;
     }
+
 
     public int insert(FoodOrder foodOrder) {
 
@@ -325,6 +327,40 @@ public class FoodOrderRepository {
         }
 
         return orders;
+    }
+
+    // Lấy các dòng bắp nước/combo đã thanh toán gắn với đơn vé.
+    // Không lọc staff_id hoặc order_status để bao gồm cả đơn online đã PAID.
+    public List<Map<String, Object>> findPaidItemsByBooking(
+            int bookingId, int cinemaId) throws SQLException {
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        String sql = "SELECT COALESCE(f.item_name, c.combo_name) AS product_name, "
+                + "oi.quantity, oi.line_total "
+                + "FROM dbo.Food_Order o "
+                + "JOIN dbo.Food_Order_Item oi ON oi.food_order_id = o.food_order_id "
+                + "LEFT JOIN dbo.Food_Item f ON f.food_item_id = oi.food_item_id "
+                + "LEFT JOIN dbo.Combo c ON c.combo_id = oi.combo_id "
+                + "WHERE o.booking_id = ? AND o.cinema_id = ? "
+                + "AND o.payment_status = 'PAID' "
+                + "ORDER BY o.food_order_id, oi.food_order_item_id";
+
+        try (Connection connection = openConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, bookingId);
+            statement.setInt(2, cinemaId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("productName", resultSet.getString("product_name"));
+                    item.put("quantity", resultSet.getInt("quantity"));
+                    item.put("lineTotal", resultSet.getBigDecimal("line_total"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
     }
 
     public List<FoodItem> findFoodsForCounter(int cinemaId)

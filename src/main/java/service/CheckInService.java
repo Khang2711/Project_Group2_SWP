@@ -4,8 +4,15 @@ import java.sql.SQLException;
 import java.util.Locale;
 import model.Ticket;
 import repository.TicketRepository;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import model.Showtime;
+import repository.ShowtimeRepository;
 
 public class CheckInService {
+
+    private final ShowtimeRepository showtimeRepository
+            = new ShowtimeRepository();
 
     private final TicketRepository ticketRepository
             = new TicketRepository();
@@ -22,7 +29,7 @@ public class CheckInService {
         return null;
     }
 
-    public String validateCheckIn(Ticket ticket) {
+    public String validateCheckIn(Ticket ticket, Showtime showtime) {
         if (ticket == null) {
             return "Không tìm thấy vé.";
         }
@@ -48,6 +55,31 @@ public class CheckInService {
 
         if (!"VALID".equalsIgnoreCase(status)) {
             return "Trạng thái vé không hợp lệ.";
+        }
+
+        if (showtime == null
+                || showtime.getStartTime() == null
+                || showtime.getEndTime() == null) {
+            return "Không tìm thấy thời gian suất chiếu.";
+        }
+
+        LocalDateTime now = LocalDateTime.now(
+                ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        LocalDateTime checkInStart = showtime.getStartTime()
+                .toLocalDateTime()
+                .minusHours(1);
+
+        LocalDateTime showtimeEnd = showtime.getEndTime()
+                .toLocalDateTime();
+
+        if (now.isBefore(checkInStart)) {
+            return "Chưa đến thời gian check-in. "
+                    + "Chỉ được check-in trước giờ chiếu 1 tiếng.";
+        }
+
+        if (!now.isBefore(showtimeEnd)) {
+            return "Suất chiếu đã kết thúc. Không thể check-in vé.";
         }
 
         return null;
@@ -85,16 +117,17 @@ public class CheckInService {
     public void checkInTicket(String ticketCode, int staffId)
             throws SQLException {
 
-        // Tra cứu lại lúc xác nhận để không dùng dữ liệu cũ trên màn hình.
         Ticket ticket = lookupTicket(ticketCode, staffId);
 
-        String error = validateCheckIn(ticket);
+        Showtime showtime = showtimeRepository.getById(
+                ticket.getShowtimeId());
+
+        String error = validateCheckIn(ticket, showtime);
 
         if (error != null) {
             throw new IllegalArgumentException(error);
         }
 
-        // Repository tự lấy showtime_id từ chính vé trong database.
         boolean updated = ticketRepository.markTicketUsed(
                 ticket.getTicketCode(), staffId);
 

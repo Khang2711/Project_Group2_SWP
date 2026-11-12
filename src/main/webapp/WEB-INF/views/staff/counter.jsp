@@ -442,11 +442,7 @@
 
     <section class="counter-report-panel">
 
-        <h2>Báo cáo bán hàng của tôi</h2>
-
-        <p class="counter-report-note">
-            Chỉ tính đơn đã hoàn tất do bạn bán. Lọc theo ngày bán.
-        </p>
+        <h2>Báo cáo bán hàng</h2>
 
         <form class="counter-report-filter"
               method="get"
@@ -556,7 +552,7 @@
             </div>
 
             <div class="counter-total-revenue">
-                Tổng doanh thu của tôi trong khoảng ngày đã chọn:
+                Tổng doanh thu trong khoảng ngày đã chọn:
 
                 <strong>
                     <fmt:formatNumber
@@ -572,7 +568,7 @@
 
             <section class="counter-report-panel">
 
-                <h2>Lịch sử vé do tôi bán</h2>
+                <h2>Lịch sử vé</h2>
 
                 <div class="counter-table-wrap">
                     <table class="counter-sales-table">
@@ -659,7 +655,7 @@
 
             <section class="counter-report-panel">
 
-                <h2>Lịch sử bắp nước/combo do tôi bán</h2>
+                <h2>Lịch sử bắp nước/combo</h2>
 
                 <div class="counter-table-wrap">
                     <table class="counter-sales-table">

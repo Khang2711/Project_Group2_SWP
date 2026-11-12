@@ -8,7 +8,7 @@
 
 <style>
     .checkin-page {
-        max-width: 850px;
+        max-width: 1050px;
         margin: 0 auto;
         padding: 40px 30px 60px;
     }
@@ -107,21 +107,86 @@
         background: #153827;
     }
 
-    .checkin-detail {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
-
-    .checkin-detail span {
-        color: #aaaaaa;
-    }
-
     .checkin-note {
         color: #aaaaaa;
         font-size: 13px;
         line-height: 1.6;
+    }
+
+    .checkin-ticket-card {
+        grid-template-columns: minmax(0, 1fr);
+        margin: 25px auto 0;
+    }
+
+    .checkin-ticket-card .cinema-ticket-main {
+        padding: 30px;
+    }
+
+    .checkin-ticket-card .cinema-ticket-grid strong {
+        overflow-wrap: anywhere;
+    }
+
+    .checkin-food-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px dashed #55555f;
+    }
+
+    .checkin-food-section h3 {
+        margin: 0 0 16px;
+        font-size: 18px;
+    }
+
+    .checkin-food-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .checkin-food-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .checkin-food-item strong {
+        display: block;
+        color: #f1f1f3;
+        font-size: 15px;
+    }
+
+    .checkin-food-item p {
+        margin: 5px 0 0;
+        color: #85858d;
+        font-size: 12px;
+    }
+
+    .checkin-food-summary {
+        min-width: 125px;
+        text-align: right;
+    }
+
+    .checkin-food-summary span {
+        display: block;
+        margin-bottom: 5px;
+        color: #a5a5ad;
+        font-size: 13px;
+    }
+
+    .checkin-food-summary strong {
+        color: #ff4652;
+        white-space: nowrap;
+    }
+
+    .checkin-ticket-action {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #303038;
+    }
+
+    .checkin-ticket-action .checkin-button {
+        min-width: 210px;
     }
 
     .qr-section {
@@ -162,9 +227,6 @@
             padding: 30px 15px;
         }
 
-        .checkin-detail {
-            grid-template-columns: 110px 1fr;
-        }
     }
 </style>
 
@@ -242,107 +304,135 @@
     </div>
 
     <c:if test="${not empty ticket}">
-        <div class="checkin-box" id="ticketResult">
-            <h2>2. Thông tin vé</h2>
+        <div class="cinema-ticket checkin-ticket-card" id="ticketResult">
+            <div class="cinema-ticket-main">
+                <div class="cinema-ticket-top">
+                    <div>
+                        <span class="ticket-label">F-CINEMA TICKET</span>
+                        <h2><c:out value="${movie.title}" /></h2>
+                    </div>
 
-            <div class="checkin-detail">
-                <span>Mã vé</span>
-                <strong>
-                    <c:out value="${ticket.ticketCode}" />
-                </strong>
-
-                <span>Mã đơn</span>
-                <strong>
-                    <c:out value="${ticket.bookingId}" />
-                </strong>
-
-                <span>Phim</span>
-                <strong>
-                    <c:out value="${movie.title}" />
-                </strong>
-
-                <span>Phòng</span>
-                <strong>
-                    <c:out value="${room.roomName}" />
-                </strong>
-
-                <span>Suất chiếu</span>
-                <strong>
-                    <fmt:formatDate
-                        value="${showtime.startTime}"
-                        pattern="dd/MM/yyyy HH:mm" />
-                </strong>
-
-                <span>Ghế</span>
-                <strong>
-                    H<c:out value="${seat.seatRow}" />
-                    - <c:out value="${seat.seatNumber}" />
-                </strong>
-
-                <span>Giá vé</span>
-                <strong>
-                    <fmt:formatNumber
-                        value="${ticket.ticketPrice}"
-                        pattern="#,##0.##" /> đ
-                </strong>
-
-                <span>Trạng thái</span>
-                <strong>
                     <c:choose>
-                        <c:when test="${ticket.status eq 'VALID'}">
-                            Vé hợp lệ
-                        </c:when>
-
                         <c:when test="${ticket.status eq 'USED'}">
-                            Đã check-in
+                            <span class="ticket-status ticket-status-used">Đã sử dụng</span>
                         </c:when>
-
                         <c:when test="${ticket.status eq 'CANCELLED'}">
-                            Đã hủy
+                            <span class="ticket-status ticket-status-used">Đã hủy</span>
                         </c:when>
-
                         <c:when test="${ticket.status eq 'PENDING'}">
-                            Chưa xác nhận
+                            <span class="ticket-status ticket-status-used">Chưa xác nhận</span>
                         </c:when>
-
                         <c:otherwise>
-                            <c:out value="${ticket.status}" />
+                            <span class="ticket-status ticket-status-valid">Có hiệu lực</span>
                         </c:otherwise>
                     </c:choose>
-                </strong>
+                </div>
+
+                <div class="cinema-ticket-grid">
+                    <div>
+                        <span>Rạp chiếu</span>
+                        <strong><c:out value="${cinema.cinemaName}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Địa chỉ rạp</span>
+                        <strong><c:out value="${cinema.address}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Ngày giờ chiếu</span>
+                        <strong>
+                            <fmt:formatDate value="${showtime.startTime}" pattern="dd/MM/yyyy HH:mm" />
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Ghế</span>
+                        <strong>Hàng <c:out value="${seat.seatRow}" /> - Ghế <c:out value="${seat.seatNumber}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Loại ghế</span>
+                        <strong><c:out value="${seat.seatType}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Suất chiếu</span>
+                        <strong>#<c:out value="${showtime.showtimeId}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Phòng chiếu</span>
+                        <strong>Phòng #<c:out value="${showtime.roomId}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Mã đơn</span>
+                        <strong>#<c:out value="${ticket.bookingId}" /></strong>
+                    </div>
+
+                    <div>
+                        <span>Giá vé</span>
+                        <strong class="cinema-ticket-price">
+                            <fmt:formatNumber value="${ticket.ticketPrice}" pattern="#,##0" /> VND
+                        </strong>
+                    </div>
+                </div>
 
                 <c:if test="${not empty ticket.checkedInAt}">
-                    <span>Thời gian check-in</span>
-                    <strong>
-                        <fmt:formatDate
-                            value="${ticket.checkedInAt}"
-                            pattern="dd/MM/yyyy HH:mm:ss" />
-                    </strong>
+                    <div class="ticket-checkin-note">
+                        Đã check-in lúc
+                        <strong>
+                            <fmt:formatDate value="${ticket.checkedInAt}" pattern="dd/MM/yyyy HH:mm:ss" />
+                        </strong>
+                    </div>
+                </c:if>
+
+                <c:if test="${not empty paidFoodItems}">
+                    <div class="checkin-food-section">
+                        <h3>Bắp nước / Combo</h3>
+
+                        <div class="checkin-food-list">
+                            <c:forEach var="foodItem" items="${paidFoodItems}">
+                                <div class="checkin-food-item">
+                                    <div>
+                                        <strong><c:out value="${foodItem.productName}" /></strong>
+                                        <p>Sản phẩm đi kèm đơn vé #<c:out value="${ticket.bookingId}" /></p>
+                                    </div>
+
+                                    <div class="checkin-food-summary">
+                                        <span>Số lượng: <c:out value="${foodItem.quantity}" /></span>
+                                        <strong>
+                                            <fmt:formatNumber value="${foodItem.lineTotal}" pattern="#,##0" /> VND
+                                        </strong>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </c:if>
+
+                <c:if test="${canCheckIn}">
+                    <div class="checkin-ticket-action">
+                        <form action="${ctx}/staff/check-in"
+                              method="post"
+                              onsubmit="return confirm('Xác nhận cho khách sử dụng vé này?')">
+
+                            <input type="hidden"
+                                   name="ticketCode"
+                                   value="<c:out value='${ticket.ticketCode}' />" />
+
+                            <input type="hidden"
+                                   name="token"
+                                   value="${sessionScope.checkInToken}" />
+
+                            <button type="submit" class="checkin-button">
+                                Xác nhận check-in
+                            </button>
+                        </form>
+                    </div>
                 </c:if>
             </div>
-
-            <c:if test="${canCheckIn}">
-                <form action="${ctx}/staff/check-in"
-                      method="post"
-                      onsubmit="return confirm('Xác nhận cho khách sử dụng vé này?')">
-
-                    <input type="hidden"
-                           name="ticketCode"
-                           value="<c:out value='${ticket.ticketCode}' />" />
-
-                    <input type="hidden"
-                           name="token"
-                           value="${sessionScope.checkInToken}" />
-
-                    <button type="submit" class="checkin-button">
-                        Xác nhận check-in
-                    </button>
-                </form>
-            </c:if>
-
-            <p class="checkin-note">
-                Mỗi vé chỉ được check-in thành công một lần.
-            </p>
         </div>
     </c:if>
 

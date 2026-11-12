@@ -75,10 +75,9 @@ public class UserService {
         user.setPasswordHash(PasswordUtil.md5(password));
         user.setStatus("ACTIVE");
 
-        int userId = userRepository.insert(user);
+        String roleName = getRoleName(user.getRoleId());
+        int userId = userRepository.insertManagedUser(user, roleName, cinemaId);
         user.setUserId(userId);
-
-        saveProfileByRole(userId, user.getRoleId(), cinemaId);
     }
 
     public void updateUserInfo(int userId,
@@ -117,15 +116,9 @@ public class UserService {
         validateRoleAndCinema(currentUser.getRoleId(), cinemaId);
         currentUser.setCinemaId(cinemaId);
 
-        if (!userRepository.updateProfile(currentUser)) {
-            throw new IllegalArgumentException(
-                    "Không thể cập nhật tài khoản. Vui lòng thử lại."
-            );
-        }
-
-        saveProfileByRole(
-                userId,
-                currentUser.getRoleId(),
+        userRepository.updateManagedUser(
+                currentUser,
+                getRoleName(currentUser.getRoleId()),
                 cinemaId
         );
     }
@@ -173,9 +166,9 @@ public class UserService {
 
         validateUserInfo(user);
 
-        if (password == null || password.isEmpty()) {
+        if (password == null || password.length() < 6) {
             throw new IllegalArgumentException(
-                    "Vui lòng nhập mật khẩu."
+                    "Mật khẩu phải có ít nhất 6 ký tự."
             );
         }
 
@@ -209,7 +202,7 @@ public class UserService {
         user.setEmail(user.getEmail().trim().toLowerCase());
 
         if (user.getEmail().length() > 100
-                || !user.getEmail().contains("@")) {
+                || !user.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new IllegalArgumentException(
                     "Email không hợp lệ."
             );
@@ -220,9 +213,9 @@ public class UserService {
 
             if (user.getPhone().isEmpty()) {
                 user.setPhone(null);
-            } else if (user.getPhone().length() > 20) {
+            } else if (!user.getPhone().matches("[0-9]{10}")) {
                 throw new IllegalArgumentException(
-                        "Số điện thoại không được vượt quá 20 ký tự."
+                        "Số điện thoại phải gồm đúng 10 chữ số."
                 );
             }
         }

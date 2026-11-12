@@ -96,7 +96,6 @@ src/main/webapp/WEB-INF/views/home.jsp
 src/main/webapp/WEB-INF/views/staff/check-in.jsp
 src/main/webapp/WEB-INF/views/system/user-form.jsp
 src/main/webapp/WEB-INF/views/system/users.jsp
-src/main/webapp/WEB-INF/views/user/apply-promo.jsp
 src/main/webapp/WEB-INF/views/user/booking-detail.jsp
 src/main/webapp/WEB-INF/views/user/bookings.jsp
 src/main/webapp/WEB-INF/views/user/checkout.jsp

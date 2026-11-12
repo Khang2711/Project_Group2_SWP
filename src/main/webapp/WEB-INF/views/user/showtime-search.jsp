@@ -136,6 +136,25 @@
 
                             <c:set var="movie" value="${movieEntry.key}" />
 
+                            <c:if test="${not empty movie.posterUrl}">
+                                <c:choose>
+
+                                    <c:when test="${fn:startsWith(movie.posterUrl, 'http://')
+                                                    or fn:startsWith(movie.posterUrl, 'https://')}">
+                                        <c:set var="posterSrc" value="${movie.posterUrl}" />
+                                    </c:when>
+
+                                    <c:when test="${fn:startsWith(movie.posterUrl, '/')}">
+                                        <c:url var="posterSrc" value="${movie.posterUrl}" />
+                                    </c:when>
+
+                                    <c:otherwise>
+                                        <c:url var="posterSrc" value="/${movie.posterUrl}" />
+                                    </c:otherwise>
+
+                                </c:choose>
+                            </c:if>
+
                             <article class="showtimes-movie showtimes-search-movie">
 
                                 <%-- Movie poster --%>
@@ -146,8 +165,7 @@
                                     <c:choose>
                                         <c:when test="${not empty movie.posterUrl}">
                                             <img src="<c:out value='${posterSrc}' />"
-                                                 alt="<c:out value='${movie.title}' />"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                 alt="<c:out value='${movie.title}' />">
 
                                             <div class="showtimes-no-poster" style="display:none;">
                                                 <c:out value="${movie.title}" />

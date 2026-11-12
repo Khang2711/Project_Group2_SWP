@@ -13,6 +13,7 @@ import model.User;
 import service.AuthService;
 import service.PasswordResetService;
 import service.EmailVerificationService;
+import security.LoginAttemptLimiter;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
@@ -26,10 +27,16 @@ import service.EmailVerificationService;
 public class AuthController extends HttpServlet {
 
     private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
-
+    private static final long RESET_OTP_RESEND_COOLDOWN_MILLIS = 60 * 1000L;
+    private static final int MAX_RESET_OTP_ATTEMPTS = 5;
+    // Thông báo chung cho mọi trường hợp đăng nhập không hợp lệ
+    private static final String LOGIN_FAILURE_MESSAGE
+            = "Thông tin đăng nhập không hợp lệ hoặc tài khoản hiện không thể đăng nhập.";
     private AuthService authService;
     private PasswordResetService passwordResetService;
     private EmailVerificationService emailVerificationService;
+    private final LoginAttemptLimiter loginAttemptLimiter
+            = new LoginAttemptLimiter();
 
     @Override
     public void init() {
@@ -151,61 +158,138 @@ public class AuthController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        String error;
+        // Lấy IP của kết nối trực tiếp tới server
+        String clientIp = request.getRemoteAddr();
 
-        try {
-            User user = authService.login(email, password);
+        // BƯỚC 1: Kiểm tra có bị giới hạn đăng nhập không
+        if (loginAttemptLimiter.isBlocked(email, clientIp)) {
 
-            String roleName = authService.getRoleName(user.getRoleId());
-            String homePath = getHomePath(roleName);
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Bạn đăng nhập quá nhiều lần. "
+                    + "Vui lòng thử lại sau 5 phút.");
 
-            if (homePath != null) {
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
 
-                // Get saved URL before creating a new session
-                HttpSession oldSession = request.getSession(false);
-                String redirectAfterLogin = null;
-
-                if (oldSession != null) {
-                    redirectAfterLogin
-                            = (String) oldSession.getAttribute("redirectAfterLogin");
-                }
-
-                startSession(request, user, roleName);
-
-                // Continue booking after customer login
-                if ("CUSTOMER".equals(roleName)
-                        && redirectAfterLogin != null) {
-
-                    response.sendRedirect(
-                            request.getContextPath() + redirectAfterLogin
-                    );
-
-                } else {
-
-                    response.sendRedirect(
-                            request.getContextPath() + homePath
-                    );
-                }
-
-                return;
-            }
-
-            error = "Vai trò của tài khoản chưa được hỗ trợ.";
-
-        } catch (IllegalArgumentException e) {
-            error = e.getMessage();
-
-        } catch (SQLException e) {
-            log("Cannot process login.", e);
-
-            error = "Không thể đăng nhập lúc này. "
-                    + "Vui lòng kiểm tra kết nối database.";
+            return;
         }
 
-        request.getSession().setAttribute("loginError", error);
+        User user;
 
-        response.sendRedirect(
-                request.getContextPath() + "/auth/login");
+        // BƯỚC 2: Kiểm tra email và mật khẩu
+        try {
+
+            user = authService.login(email, password);
+
+        } catch (IllegalArgumentException e) {
+
+            // Ghi nhận lần đăng nhập thất bại
+            loginAttemptLimiter.recordFailure(
+                    email, clientIp);
+
+            // Không tiết lộ nguyên nhân cụ thể cho người đăng nhập
+            request.getSession().setAttribute(
+                    "loginError",
+                    LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        } catch (SQLException e) {
+
+            // Lỗi database không được tính là nhập sai mật khẩu
+            log("Cannot process login.", e);
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Không thể đăng nhập lúc này. "
+                    + "Vui lòng kiểm tra kết nối database.");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        // BƯỚC 3: Đăng nhập thành công
+        loginAttemptLimiter.recordSuccess(
+                email, clientIp);
+
+        String roleName;
+
+        try {
+
+            roleName = authService.getRoleName(
+                    user.getRoleId());
+
+        } catch (IllegalArgumentException e) {
+
+            request.getSession().setAttribute(
+                    "loginError", LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+
+        } catch (SQLException e) {
+
+            log("Cannot get user role.", e);
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    "Không thể xác định quyền tài khoản lúc này.");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        String homePath = getHomePath(roleName);
+
+        if (homePath == null) {
+
+            request.getSession().setAttribute(
+                    "loginError",
+                    LOGIN_FAILURE_MESSAGE);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+        }
+
+        // BƯỚC 4: Lấy URL đã lưu trước khi tạo session mới
+        HttpSession oldSession = request.getSession(false);
+
+        String redirectAfterLogin = null;
+
+        if (oldSession != null) {
+
+            redirectAfterLogin
+                    = (String) oldSession.getAttribute(
+                            "redirectAfterLogin");
+        }
+
+        // BƯỚC 5: Tạo session đăng nhập
+        startSession(request, user, roleName);
+
+        // BƯỚC 6: Chuyển trang
+        if ("CUSTOMER".equals(roleName)
+                && redirectAfterLogin != null) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + redirectAfterLogin);
+
+        } else {
+
+            response.sendRedirect(
+                    request.getContextPath() + homePath);
+        }
     }
 
     private void register(HttpServletRequest request,
@@ -532,31 +616,37 @@ public class AuthController extends HttpServlet {
             throws ServletException, IOException {
 
         String email = request.getParameter("email");
+        request.setAttribute("email", email == null ? "" : email.trim());
 
-        request.setAttribute(
-                "email",
-                email == null ? "" : email.trim());
+        HttpSession session = request.getSession(true);
+        long now = System.currentTimeMillis();
+        Long lastSentAt = (Long) session.getAttribute("resetOtpSentAt");
+
+        if (lastSentAt != null
+                && now >= lastSentAt
+                && now - lastSentAt < RESET_OTP_RESEND_COOLDOWN_MILLIS) {
+            request.setAttribute("error",
+                    "Vui lòng chờ ít nhất 60 giây trước khi gửi lại OTP.");
+            showForgotPassword(request, response);
+            return;
+        }
 
         try {
             String otp = passwordResetService.sendOtp(email);
+            String resetEmail = email.trim()
+                    .toLowerCase(java.util.Locale.ROOT);
 
-            String resetEmail = email.trim().toLowerCase();
-
-            HttpSession session = request.getSession(true);
             clearResetData(session);
-
             session.setAttribute("resetEmail", resetEmail);
             session.setAttribute("resetOtp", otp);
-
-            session.setAttribute(
-                    "resetOtpExpiresAt",
+            session.setAttribute("resetOtpExpiresAt",
                     System.currentTimeMillis() + OTP_VALID_MILLIS);
-
+            session.setAttribute("resetOtpAttempts", 0);
             session.setAttribute("resetOtpVerified", false);
+            session.setAttribute("resetOtpSentAt", System.currentTimeMillis());
 
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/auth/verify-otp?sent=1");
+                    request.getContextPath() + "/auth/verify-otp?sent=1");
 
         } catch (IllegalArgumentException e) {
             request.setAttribute("error", e.getMessage());
@@ -564,21 +654,14 @@ public class AuthController extends HttpServlet {
 
         } catch (SQLException e) {
             log("Cannot find account for password reset.", e);
-
-            request.setAttribute(
-                    "error",
+            request.setAttribute("error",
                     "Không thể kiểm tra tài khoản lúc này.");
-
             showForgotPassword(request, response);
 
         } catch (MessagingException e) {
             log("Cannot send password reset OTP.", e);
-
-            request.setAttribute(
-                    "error",
-                    "Không thể gửi OTP. "
-                    + "Vui lòng kiểm tra cấu hình email.");
-
+            request.setAttribute("error",
+                    "Không thể gửi OTP. Vui lòng kiểm tra cấu hình email.");
             showForgotPassword(request, response);
         }
     }
@@ -591,59 +674,68 @@ public class AuthController extends HttpServlet {
 
         if (!hasResetRequest(session)) {
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/auth/forgot-password");
+                    request.getContextPath() + "/auth/forgot-password");
             return;
         }
 
         String enteredOtp = request.getParameter("otp");
+        String expectedOtp = (String) session.getAttribute("resetOtp");
+        Long expiresAt = (Long) session.getAttribute("resetOtpExpiresAt");
 
-        String expectedOtp
-                = (String) session.getAttribute("resetOtp");
-
-        Long expiresAt
-                = (Long) session.getAttribute("resetOtpExpiresAt");
-
-        if (enteredOtp == null || enteredOtp.trim().isEmpty()) {
-            request.setAttribute(
-                    "error",
-                    "Vui lòng nhập mã OTP.");
-
+        if (expectedOtp == null || expiresAt == null
+                || System.currentTimeMillis() > expiresAt) {
+            clearResetOtp(session);
+            request.setAttribute("error",
+                    "Mã OTP đã hết hạn hoặc không còn hợp lệ. Vui lòng gửi lại mã mới.");
             showVerifyOtp(request, response);
             return;
         }
 
-        if (expectedOtp == null || expiresAt == null
-                || System.currentTimeMillis() > expiresAt) {
+        if (enteredOtp == null || !enteredOtp.trim().matches("[0-9]{6}")) {
+            request.setAttribute("error", "Vui lòng nhập mã OTP gồm 6 chữ số.");
+            showVerifyOtp(request, response);
+            return;
+        }
 
-            session.removeAttribute("resetOtp");
-            session.removeAttribute("resetOtpExpiresAt");
+        Integer storedAttempts = (Integer) session.getAttribute("resetOtpAttempts");
+        int attempts = storedAttempts == null ? 0 : storedAttempts;
 
-            request.setAttribute(
-                    "error",
-                    "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
-
+        if (attempts >= MAX_RESET_OTP_ATTEMPTS) {
+            clearResetOtp(session);
+            request.setAttribute("error",
+                    "Mã OTP đã bị khóa. Vui lòng gửi lại mã mới.");
             showVerifyOtp(request, response);
             return;
         }
 
         if (!expectedOtp.equals(enteredOtp.trim())) {
-            request.setAttribute(
-                    "error",
-                    "Mã OTP không đúng.");
-
+            attempts++;
+            if (attempts >= MAX_RESET_OTP_ATTEMPTS) {
+                clearResetOtp(session);
+                request.setAttribute("error",
+                        "Bạn đã nhập sai OTP 5 lần. Vui lòng gửi lại mã mới.");
+            } else {
+                session.setAttribute("resetOtpAttempts", attempts);
+                request.setAttribute("error",
+                        "Mã OTP không đúng. Bạn còn "
+                        + (MAX_RESET_OTP_ATTEMPTS - attempts) + " lần thử.");
+            }
             showVerifyOtp(request, response);
             return;
         }
 
         session.setAttribute("resetOtpVerified", true);
-
-        session.removeAttribute("resetOtp");
-        session.removeAttribute("resetOtpExpiresAt");
+        session.setAttribute("resetOtpVerifiedAt", System.currentTimeMillis());
+        clearResetOtp(session);
 
         response.sendRedirect(
-                request.getContextPath()
-                + "/auth/reset-password");
+                request.getContextPath() + "/auth/reset-password");
+    }
+
+    private void clearResetOtp(HttpSession session) {
+        session.removeAttribute("resetOtp");
+        session.removeAttribute("resetOtpExpiresAt");
+        session.removeAttribute("resetOtpAttempts");
     }
 
     private void resetPassword(HttpServletRequest request,
@@ -760,7 +852,30 @@ public class AuthController extends HttpServlet {
         String homePath = getHomePath(
                 (String) session.getAttribute("roleName"));
 
-        if (homePath == null) {
+        // Login page is outside AuthFilter: do not redirect disabled users
+        // back to a protected page, which would cause a redirect loop.
+        User sessionUser = (User) session.getAttribute("user");
+        try {
+            User current = new repository.UserRepository()
+                    .findById(sessionUser.getUserId());
+            model.Role role = current == null ? null
+                    : new repository.RoleRepository()
+                            .findById(current.getRoleId());
+
+            if (homePath == null || current == null
+                    || !"ACTIVE".equals(current.getStatus())
+                    || !current.isEmailVerified()
+                    || role == null || !"ACTIVE".equals(role.getStatus())
+                    || !role.getRoleName().equals(
+                            session.getAttribute("roleName"))
+                    || (sessionUser.getUpdatedAt() != null
+                    && current.getUpdatedAt() != null
+                    && current.getUpdatedAt().after(sessionUser.getUpdatedAt()))) {
+                session.invalidate();
+                return false;
+            }
+        } catch (SQLException e) {
+            log("Could not check active login session.", e);
             session.invalidate();
             return false;
         }
@@ -895,9 +1010,16 @@ public class AuthController extends HttpServlet {
     }
 
     private boolean isOtpVerified(HttpSession session) {
-        return hasResetRequest(session)
-                && Boolean.TRUE.equals(
-                        session.getAttribute("resetOtpVerified"));
+        if (!hasResetRequest(session)
+                || !Boolean.TRUE.equals(session.getAttribute("resetOtpVerified"))) {
+            return false;
+        }
+
+        Long verifiedAt = (Long) session.getAttribute("resetOtpVerifiedAt");
+        long elapsed = verifiedAt == null
+                ? -1 : System.currentTimeMillis() - verifiedAt;
+
+        return elapsed >= 0 && elapsed <= OTP_VALID_MILLIS;
     }
 
     private void clearResetData(HttpSession session) {
@@ -909,7 +1031,10 @@ public class AuthController extends HttpServlet {
         session.removeAttribute("resetEmail");
         session.removeAttribute("resetOtp");
         session.removeAttribute("resetOtpExpiresAt");
+        session.removeAttribute("resetOtpAttempts");
         session.removeAttribute("resetOtpVerified");
+        session.removeAttribute("resetOtpVerifiedAt");
+        session.removeAttribute("resetOtpSentAt");
     }
 
     private void preventCache(HttpServletResponse response) {

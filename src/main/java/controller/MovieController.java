@@ -120,7 +120,6 @@ public class MovieController extends HttpServlet {
                         scheduleByDate
                 );
 
-                request.setAttribute("priceByMovie", movieService.getMinPriceByMovie(scheduleByDate));
                 request.setAttribute("roomById", roomById);
                 request.setAttribute("cinemaById", cinemaService.getCinemaById());
                 request.setAttribute("resultCount", resultCount);

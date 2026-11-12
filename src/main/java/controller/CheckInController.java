@@ -9,14 +9,18 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import model.Cinema;
 import model.Movie;
 import model.Room;
 import model.Seat;
 import model.Showtime;
 import model.Ticket;
 import model.User;
+import repository.CinemaRepository;
+import repository.FoodOrderRepository;
 import service.BookingService;
 import service.CheckInService;
 import service.ShowtimeService;
@@ -27,12 +31,16 @@ public class CheckInController extends HttpServlet {
     private CheckInService checkInService;
     private ShowtimeService showtimeService;
     private BookingService bookingService;
+    private CinemaRepository cinemaRepository;
+    private FoodOrderRepository foodOrderRepository;
 
     @Override
     public void init() {
         checkInService = new CheckInService();
         showtimeService = new ShowtimeService();
         bookingService = new BookingService();
+        cinemaRepository = new CinemaRepository();
+        foodOrderRepository = new FoodOrderRepository();
     }
 
     private User requireStaff(HttpServletRequest request,
@@ -99,11 +107,14 @@ public class CheckInController extends HttpServlet {
                         = showtimeService.getActiveRoomById();
 
                 Room room = rooms.get(showtime.getRoomId());
+                Cinema cinema = room == null
+                        ? null : cinemaRepository.findById(room.getCinemaId());
 
                 Seat seat = bookingService.getSeatForTicket(
                         ticket, showtime);
 
-                if (movie == null || room == null || seat == null) {
+                if (movie == null || room == null || cinema == null
+                        || seat == null) {
                     throw new IllegalArgumentException(
                             "Không thể tải đầy đủ thông tin của vé. "
                             + "Vui lòng liên hệ quản lý.");
@@ -113,10 +124,16 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("showtime", showtime);
                 request.setAttribute("movie", movie);
                 request.setAttribute("room", room);
+                request.setAttribute("cinema", cinema);
                 request.setAttribute("seat", seat);
 
+                List<Map<String, Object>> paidFoodItems
+                        = foodOrderRepository.findPaidItemsByBooking(
+                                ticket.getBookingId(), room.getCinemaId());
+                request.setAttribute("paidFoodItems", paidFoodItems);
+
                 String validation
-                        = checkInService.validateCheckIn(ticket);
+                        = checkInService.validateCheckIn(ticket, showtime);
 
                 request.setAttribute(
                         "canCheckIn", validation == null);
