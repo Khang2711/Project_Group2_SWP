@@ -142,6 +142,8 @@ case "/user/ticket-qr":
 
         Map<Integer, Cinema> cinemaMap
                 = new LinkedHashMap<>();
+        Map<Integer, Boolean> expiredMap
+                = new LinkedHashMap<>();
 
         for (Ticket ticket : tickets) {
 
@@ -177,6 +179,8 @@ case "/user/ticket-qr":
             if (cinema != null) {
                 cinemaMap.put(ticket.getTicketId(), cinema);
             }
+            expiredMap.put(ticket.getTicketId(),
+                    ticketService.isExpired(ticket, showtime));
 
             Movie movie
                     = ticketService
@@ -230,6 +234,7 @@ case "/user/ticket-qr":
                 seatMap
         );
         request.setAttribute("cinemaMap", cinemaMap);
+        request.setAttribute("expiredMap", expiredMap);
 
         request.getRequestDispatcher(
                 "/WEB-INF/views/user/tickets.jsp"
@@ -298,6 +303,7 @@ case "/user/ticket-qr":
 
         Cinema cinema = cinemaService.getCinemaByShowtime(showtime);
         request.setAttribute("cinema", cinema);
+        request.setAttribute("expired", ticketService.isExpired(ticket, showtime));
         request.setAttribute("foodItems",
                 ticketService.getPaidFoodItemsForBooking(
                         booking, cinema == null ? 0 : cinema.getCinemaId()));
