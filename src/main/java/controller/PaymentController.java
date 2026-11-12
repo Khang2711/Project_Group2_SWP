@@ -100,6 +100,15 @@ public class PaymentController extends HttpServlet {
 
         try {
             int bookingId = parsePositiveInt(request.getParameter("bookingId"));
+
+            // Free bookings are confirmed by the same atomic DB workflow,
+            // without creating an invalid zero-value VNPay transaction.
+            if (paymentService.confirmFreeBooking(bookingId, user.getUserId())) {
+                response.sendRedirect(request.getContextPath()
+                        + "/user/booking-detail?id=" + bookingId);
+                return;
+            }
+
             String paymentUrl = paymentService.createPaymentUrl(
                     bookingId,
                     user.getUserId(),
