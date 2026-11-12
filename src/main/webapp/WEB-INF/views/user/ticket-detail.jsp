@@ -14,6 +14,25 @@
        value="${pageContext.request.contextPath}" />
 
 
+<style>
+    .ticket-detail-page .cinema-ticket-food {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255,255,255,.18);
+    }
+    .ticket-detail-page .cinema-ticket-food h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+    }
+    .ticket-detail-page .cinema-ticket-food-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+</style>
+
 <section class="ticket-detail-page">
 
 
@@ -109,6 +128,18 @@
 
             <div class="cinema-ticket-grid">
 
+                <c:if test="${not empty cinema}">
+                    <div>
+                        <span>Rạp chiếu</span>
+                        <strong><c:out value="${cinema.cinemaName}" /></strong>
+                    </div>
+                    <c:if test="${not empty cinema.address}">
+                        <div>
+                            <span>Địa chỉ rạp</span>
+                            <strong><c:out value="${cinema.address}" /></strong>
+                        </div>
+                    </c:if>
+                </c:if>
 
                 <div>
 
@@ -285,6 +316,20 @@
 
             </div>
 
+            <c:if test="${not empty foodItems}">
+                <div class="cinema-ticket-food">
+                    <h3>Bắp nước / Combo trong đơn đặt vé</h3>
+                    <c:forEach var="item" items="${foodItems}">
+                        <div class="cinema-ticket-food-row">
+                            <span><c:out value="${item.productName}" /> ×
+                                <c:out value="${item.quantity}" /></span>
+                            <strong>
+                                <fmt:formatNumber value="${item.lineTotal}" pattern="#,##0" /> VNĐ
+                            </strong>
+                        </div>
+                    </c:forEach>
+                </div>
+            </c:if>
 
             <c:if test="${ticket.status eq 'USED'
                           and not empty ticket.checkedInAt}">
