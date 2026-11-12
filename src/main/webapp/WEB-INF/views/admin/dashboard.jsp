@@ -430,7 +430,7 @@
                     <h2>Vé bán theo phim</h2>
 
                     <p class="panel-note">
-                        Số vé bán trong khoảng ngày đã chọn,
+                        Số vé có thanh toán thành công trong khoảng ngày đã chọn,
                         sắp xếp giảm dần.
                     </p>
 
@@ -477,8 +477,8 @@
                     <h2>Vé bán theo khung giờ chiếu</h2>
 
                     <p class="panel-note">
-                        Nhóm theo giờ bắt đầu suất chiếu.
-                        Chỉ hiện khung giờ có vé bán.
+                        Số vé có thanh toán thành công trong khoảng ngày đã chọn,
+                        nhóm theo giờ bắt đầu suất chiếu.
                     </p>
 
                     <c:choose>
@@ -524,8 +524,8 @@
             <c:choose>
                 <c:when test="${empty dailyRows}">
                     <div class="dashboard-panel dashboard-empty">
-                        Chưa có đơn vé đã xác nhận hoặc đơn bắp nước/combo
-                        đã thanh toán trong khoảng ngày đã chọn.
+                        Chưa có Booking được xác nhận theo ngày tạo hoặc
+                        giao dịch thanh toán thành công trong khoảng ngày đã chọn.
                     </div>
                 </c:when>
 
@@ -536,8 +536,9 @@
                         <h2>Tổng doanh thu theo ngày</h2>
 
                         <p class="panel-note">
-                            Gồm doanh thu vé sau giảm giá và bắp nước/combo.
-                            Hiển thị cả ngày chỉ có một trong hai loại đơn.
+                            Doanh thu vé và đồ ăn online ghi nhận theo ngày Payment thành công.
+                            Đồ ăn tại quầy/đơn không qua VNPay ghi nhận theo Food_Order.created_at;
+                            số Booking được xác định theo Booking.booking_time.
                         </p>
 
                         <c:forEach items="${dailyRows}" var="row">
@@ -579,10 +580,10 @@
 
                                 <thead>
                                     <tr>
-                                        <th>Ngày tạo đơn</th>
-                                        <th>Đơn vé</th>
-                                        <th>Vé đã bán</th>
-                                        <th>Đơn bắp nước/combo</th>
+                                        <th>Ngày tổng hợp</th>
+                                        <th>Booking tạo trong ngày</th>
+                                        <th>Vé thanh toán trong ngày</th>
+                                        <th>Đơn đồ ăn ghi nhận trong ngày</th>
                                         <th>Doanh thu vé</th>
                                         <th>Doanh thu bắp nước/combo</th>
                                         <th>Tổng doanh thu</th>
