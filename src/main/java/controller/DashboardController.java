@@ -253,11 +253,12 @@ public class DashboardController extends HttpServlet {
             }
 
             summary.createRow(13).createCell(0)
-                    .setCellValue("Lọc theo ngày tạo đơn.");
+                    .setCellValue(
+                            "Booking: ngày tạo; vé và doanh thu vé/đồ ăn online: ngày thanh toán thành công.");
 
             summary.createRow(14).createCell(0)
                     .setCellValue(
-                            "Vé: đơn CONFIRMED; bắp nước/combo: PAID.");
+                            "Chỉ tính Payment SUCCESS chưa có yêu cầu hoàn tiền; đồ ăn quầy ghi nhận theo thời điểm tạo đơn.");
 
             summary.setColumnWidth(0, 48 * 256);
             summary.setColumnWidth(1, 32 * 256);
@@ -268,13 +269,13 @@ public class DashboardController extends HttpServlet {
                     daily,
                     0,
                     new String[]{
-                        "Ngày tạo đơn",
-                        "Đơn vé",
-                        "Vé đã bán",
-                        "Đơn bắp nước/combo",
-                        "Doanh thu vé (VND)",
-                        "Doanh thu bắp nước/combo (VND)",
-                        "Tổng doanh thu (VND)"
+                        "Ngày tổng hợp",
+                        "Booking tạo trong ngày",
+                        "Vé thanh toán trong ngày",
+                        "Đơn đồ ăn ghi nhận trong ngày",
+                        "Doanh thu vé theo ngày thanh toán (VND)",
+                        "Doanh thu đồ ăn theo ngày ghi nhận (VND)",
+                        "Tổng doanh thu ghi nhận trong ngày (VND)"
                     },
                     headerStyle);
 
