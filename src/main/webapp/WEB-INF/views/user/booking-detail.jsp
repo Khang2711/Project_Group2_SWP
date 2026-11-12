@@ -361,6 +361,58 @@
         </div>
 
 
+              <c:if test="${not empty onlineFoodItems}">
+
+    <div class="booking-detail-card">
+
+        <div class="booking-detail-card-header">
+            <h2>Bắp nước / Combo đã chọn</h2>
+        </div>
+
+        <div class="booking-ticket-list">
+
+            <c:forEach var="item" items="${onlineFoodItems}">
+
+                <div class="booking-ticket-item">
+
+                    <div>
+                        <strong>
+                            <c:out value="${item.productName}" />
+                        </strong>
+
+                        <p>
+                            Số lượng: ${item.quantity}
+                        </p>
+
+                        <small>
+                            <c:choose>
+                                <c:when test="${item.paymentStatus eq 'PAID'}">
+                                    Đã thanh toán
+                                </c:when>
+                                <c:otherwise>
+                                    Chờ thanh toán
+                                </c:otherwise>
+                            </c:choose>
+                        </small>
+                    </div>
+
+                    <strong>
+                        <fmt:formatNumber
+                            value="${item.lineTotal}"
+                            pattern="#,##0" />
+                        VNĐ
+                    </strong>
+
+                </div>
+
+            </c:forEach>
+
+        </div>
+
+    </div>
+
+</c:if>          
+                        
         <!-- RIGHT -->
         <aside class="booking-detail-summary">
 

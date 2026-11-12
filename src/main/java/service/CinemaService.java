@@ -16,12 +16,29 @@ import repository.ShowtimeRepository;
  */
 public class CinemaService {
 
+    private final ShowtimeRepository showtimeRepository
+        = new ShowtimeRepository();
+
+public Cinema getCinemaByShowtime(Showtime showtime) {
+    if (showtime == null) {
+        return null;
+    }
+
+    int cinemaId = showtimeRepositorys
+            .getCinemaIdByShowtimeId(showtime.getShowtimeId());
+
+    return cinemaId > 0
+            ? cinemaRepository.findById(cinemaId)
+            : null;
+}
+
+
     private CinemaRepository cinemaRepository;
-    private ShowtimeRepository showtimeRepository;
+    private ShowtimeRepository showtimeRepositorys;
 
     public CinemaService() {
         cinemaRepository = new CinemaRepository();
-        showtimeRepository = new ShowtimeRepository();
+        showtimeRepositorys = new ShowtimeRepository();
     }
 
        /**

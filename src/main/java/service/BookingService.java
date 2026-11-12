@@ -1,4 +1,3 @@
-
 package service;
 
 import db.DBContext;
@@ -34,7 +33,7 @@ import repository.RoomRepository;
 import repository.SeatRepository;
 import repository.ShowtimeRepository;
 import repository.TicketRepository;
-
+import repository.FoodOrderRepository;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
@@ -48,6 +47,8 @@ public class BookingService {
     private final ComboRepository comboRepository;
     private final FoodItemRepository foodItemRepository;
     private final FoodOrderService foodOrderService;
+    private final FoodOrderRepository foodOrderRepository
+        = new FoodOrderRepository();
 
     public BookingService() {
         bookingRepository = new BookingRepository();
@@ -62,12 +63,21 @@ public class BookingService {
         foodItemRepository = new FoodItemRepository();
         foodOrderService = new FoodOrderService();
     }
+    
+    public List<Map<String, Object>> getOnlineFoodItemsForBooking(
+        int bookingId,
+        int customerId) throws SQLException {
+
+    // Xác minh booking thuộc khách hàng đang đăng nhập.
+    getBookingDetail(bookingId, customerId);
+
+    return foodOrderRepository.findOnlineItemsByBooking(bookingId);
+}
 
     // =====================================================
     // BUG-06 FIX:
     // KIEM TRA DAY DU DIEU KIEN MO BAN
     // =====================================================
-
     public Showtime getBookableShowtime(int showtimeId) {
 
         if (showtimeId <= 0) {
@@ -76,8 +86,8 @@ public class BookingService {
             );
         }
 
-        Showtime showtime =
-                showtimeRepository.getById(showtimeId);
+        Showtime showtime
+                = showtimeRepository.getById(showtimeId);
 
         if (showtime == null) {
             throw new IllegalArgumentException(
@@ -151,8 +161,8 @@ public class BookingService {
 
         // BUG-06 FIX 2:
         // Xac dinh rap that su cua suat chieu.
-        int cinemaId =
-                showtimeRepository.getCinemaIdByShowtimeId(
+        int cinemaId
+                = showtimeRepository.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
@@ -210,7 +220,6 @@ public class BookingService {
     // =====================================================
     // LAY DANH SACH GHE
     // =====================================================
-
     public List<Seat> getSeatsForShowtime(int showtimeId) {
 
         Showtime showtime = getBookableShowtime(showtimeId);
@@ -233,15 +242,14 @@ public class BookingService {
     // =====================================================
     // LAY GIA GHE
     // =====================================================
-
     public Map<Integer, BigDecimal> getSeatPrices(
             int showtimeId,
             List<Seat> seats) throws SQLException {
 
         getBookableShowtime(showtimeId);
 
-        Map<Integer, BigDecimal> prices =
-                new LinkedHashMap<>();
+        Map<Integer, BigDecimal> prices
+                = new LinkedHashMap<>();
 
         for (Seat seat : seats) {
 
@@ -249,8 +257,8 @@ public class BookingService {
                 continue;
             }
 
-            BigDecimal price =
-                    bookingRepository.findSeatPrice(
+            BigDecimal price
+                    = bookingRepository.findSeatPrice(
                             showtimeId,
                             seat.getSeatId()
                     );
@@ -266,17 +274,16 @@ public class BookingService {
     // =====================================================
     // KIEM TRA GHE DUOC CHON
     // =====================================================
-
     public List<Seat> prepareSelectedSeats(
             int showtimeId,
             String[] seatValues,
             boolean fullRoom) throws SQLException {
 
-        List<Seat> roomSeats =
-                getSeatsForShowtime(showtimeId);
+        List<Seat> roomSeats
+                = getSeatsForShowtime(showtimeId);
 
-        Set<Integer> occupiedSeatIds =
-                ticketRepository.findOccupiedSeatIds(
+        Set<Integer> occupiedSeatIds
+                = ticketRepository.findOccupiedSeatIds(
                         showtimeId
                 );
 
@@ -320,8 +327,8 @@ public class BookingService {
             );
         }
 
-        Set<Integer> selectedIds =
-                new LinkedHashSet<>();
+        Set<Integer> selectedIds
+                = new LinkedHashSet<>();
 
         for (String value : seatValues) {
 
@@ -343,8 +350,8 @@ public class BookingService {
             }
         }
 
-        List<Seat> selectedSeats =
-                new ArrayList<>();
+        List<Seat> selectedSeats
+                = new ArrayList<>();
 
         for (Integer selectedId : selectedIds) {
 
@@ -381,7 +388,6 @@ public class BookingService {
     // =====================================================
     // TINH TONG TIEN VE
     // =====================================================
-
     public BigDecimal calculateSubtotal(
             int showtimeId,
             List<Seat> selectedSeats) throws SQLException {
@@ -392,8 +398,8 @@ public class BookingService {
 
         for (Seat seat : selectedSeats) {
 
-            BigDecimal price =
-                    bookingRepository.findSeatPrice(
+            BigDecimal price
+                    = bookingRepository.findSeatPrice(
                             showtimeId,
                             seat.getSeatId()
                     );
@@ -413,7 +419,6 @@ public class BookingService {
     // =====================================================
     // KIEM TRA KHUYEN MAI
     // =====================================================
-
     public Promotion getValidPromotion(
             String promoCode,
             BigDecimal subtotal,
@@ -430,8 +435,8 @@ public class BookingService {
             );
         }
 
-        int cinemaId =
-                promotionService.getCinemaIdByShowtimeId(
+        int cinemaId
+                = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
@@ -441,14 +446,14 @@ public class BookingService {
             );
         }
 
-        Promotion promotion =
-                promotionService.getPromotionByCode(
+        Promotion promotion
+                = promotionService.getPromotionByCode(
                         promoCode,
                         cinemaId
                 );
 
-        String error =
-                promotionService.validateApplyPromotion(
+        String error
+                = promotionService.validateApplyPromotion(
                         promotion,
                         subtotal
                 );
@@ -464,15 +469,15 @@ public class BookingService {
             BigDecimal subtotal,
             int showtimeId) {
 
-        List<Promotion> availablePromotions =
-                new ArrayList<>();
+        List<Promotion> availablePromotions
+                = new ArrayList<>();
 
         if (subtotal == null || showtimeId <= 0) {
             return availablePromotions;
         }
 
-        int cinemaId =
-                promotionService.getCinemaIdByShowtimeId(
+        int cinemaId
+                = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
@@ -480,15 +485,15 @@ public class BookingService {
             return availablePromotions;
         }
 
-        List<Promotion> promotions =
-                promotionService.getAllPromotions(
+        List<Promotion> promotions
+                = promotionService.getAllPromotions(
                         cinemaId
                 );
 
         for (Promotion promotion : promotions) {
 
-            String error =
-                    promotionService.validateApplyPromotion(
+            String error
+                    = promotionService.validateApplyPromotion(
                             promotion,
                             subtotal
                     );
@@ -505,8 +510,8 @@ public class BookingService {
             Promotion promotion,
             BigDecimal subtotal) {
 
-        BigDecimal discount =
-                promotionService.calculateDiscount(
+        BigDecimal discount
+                = promotionService.calculateDiscount(
                         promotion,
                         subtotal
                 );
@@ -520,7 +525,6 @@ public class BookingService {
     // =====================================================
     // GIU CAC OVERLOAD CU
     // =====================================================
-
     public int createPendingBooking(
             int customerId,
             int showtimeId,
@@ -539,8 +543,8 @@ public class BookingService {
 
         getBookableShowtime(showtimeId);
 
-        int cinemaId =
-                promotionService.getCinemaIdByShowtimeId(
+        int cinemaId
+                = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
@@ -560,8 +564,8 @@ public class BookingService {
 
         getBookableShowtime(showtimeId);
 
-        int cinemaId =
-                promotionService.getCinemaIdByShowtimeId(
+        int cinemaId
+                = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
@@ -595,7 +599,6 @@ public class BookingService {
     // BUG-06 FIX:
     // KIEM TRA LAI TRUOC KHI GHI BOOKING
     // =====================================================
-
     public int createPendingBooking(
             int customerId,
             int showtimeId,
@@ -613,15 +616,15 @@ public class BookingService {
         // suat chieu ngay truoc luong checkout.
         getBookableShowtime(showtimeId);
 
-        List<Seat> selectedSeats =
-                prepareSelectedSeats(
+        List<Seat> selectedSeats
+                = prepareSelectedSeats(
                         showtimeId,
                         seatValues,
                         false
                 );
 
-        Map<Integer, BigDecimal> selectedPrices =
-                getSeatPrices(
+        Map<Integer, BigDecimal> selectedPrices
+                = getSeatPrices(
                         showtimeId,
                         selectedSeats
                 );
@@ -645,26 +648,26 @@ public class BookingService {
             );
         }
 
-        Promotion promotion =
-                getValidPromotion(
+        Promotion promotion
+                = getValidPromotion(
                         promoCode,
                         subtotal,
                         showtimeId
                 );
 
-        BigDecimal discount =
-                calculatePromotionDiscount(
+        BigDecimal discount
+                = calculatePromotionDiscount(
                         promotion,
                         subtotal
                 );
 
-        int cinemaId =
-                promotionService.getCinemaIdByShowtimeId(
+        int cinemaId
+                = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
-        BigDecimal comboTotal =
-                foodOrderService.calculateOnlineComboTotal(
+        BigDecimal comboTotal
+                = foodOrderService.calculateOnlineComboTotal(
                         cinemaId,
                         comboItems
                 );
@@ -700,8 +703,8 @@ public class BookingService {
                 // Chua thay the duoc database locking.
                 getBookableShowtime(showtimeId);
 
-                int bookingId =
-                        bookingRepository.insert(
+                int bookingId
+                        = bookingRepository.insert(
                                 connection,
                                 booking
                         );
@@ -730,7 +733,7 @@ public class BookingService {
                     );
                 }
 
-                if (comboTotal.signum() > 0) {
+                if (comboItems != null && !comboItems.isEmpty()) {
 
                     foodOrderService.createPendingOnlineOrder(
                             connection,
@@ -760,7 +763,6 @@ public class BookingService {
     // =====================================================
     // LICH SU VA CHI TIET BOOKING
     // =====================================================
-
     public List<Booking> getBookingsByCustomer(
             int customerId) throws SQLException {
 
@@ -785,8 +787,8 @@ public class BookingService {
             );
         }
 
-        Booking booking =
-                bookingRepository.findByIdAndCustomerId(
+        Booking booking
+                = bookingRepository.findByIdAndCustomerId(
                         bookingId,
                         customerId
                 );
@@ -855,8 +857,8 @@ public class BookingService {
     private Connection getConnection()
             throws SQLException {
 
-        Connection connection =
-                new DBContext().getConnection();
+        Connection connection
+                = new DBContext().getConnection();
 
         if (connection == null) {
             throw new SQLException(
@@ -866,4 +868,6 @@ public class BookingService {
 
         return connection;
     }
+    
+    
 }
