@@ -230,10 +230,10 @@ public class PromotionRepository {
      * Checks the promotion usage limit while serializing confirmation
      * transactions on the Promotion row.
      *
-     * The caller MUST use this method inside the same transaction that
-     * changes the associated Booking from PENDING to CONFIRMED. Every
-     * payment-confirmation path must acquire this lock before confirmation;
-     * otherwise concurrent callbacks can still exceed the quota.
+     * The caller MUST invoke this method BEFORE changing the associated
+     * Booking from PENDING to CONFIRMED and inside the same transaction.
+     * Every payment-confirmation path must acquire this lock before the
+     * status update; otherwise concurrent callbacks can still exceed quota.
      */
     public boolean hasRemainingQuotaForConfirmation(
             Connection connection,
