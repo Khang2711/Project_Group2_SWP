@@ -87,12 +87,6 @@
                         var="seat"
                         value="${seatMap[ticket.ticketId]}" />
 
-                    <c:set var="cinema"
-                           value="${cinemaMap[ticket.ticketId]}" />
-
-                    <c:set var="expired"
-                           value="${expiredMap[ticket.ticketId]}" />
-
 
                     <article class="ticket-card">
 
@@ -131,15 +125,6 @@
                                     </c:choose>
 
                                 </h2>
-
-                                <c:if test="${not empty cinema}">
-                                    <p>
-                                        Rạp:
-                                        <strong>
-                                            <c:out value="${cinema.cinemaName}" />
-                                        </strong>
-                                    </p>
-                                </c:if>
 
 
                                 <c:if test="${not empty showtime}">
@@ -228,14 +213,6 @@
 
                                             Đã sử dụng
 
-                                        </strong>
-
-                                    </c:when>
-
-                                    <c:when test="${expired}">
-
-                                        <strong class="ticket-status ticket-status-expired">
-                                            Hết hiệu lực
                                         </strong>
 
                                     </c:when>

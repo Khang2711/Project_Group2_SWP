@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import model.Cinema;
 import model.Movie;
 import model.Room;
 import model.Seat;
@@ -106,13 +107,13 @@ public class CheckInController extends HttpServlet {
                         = showtimeService.getActiveRoomById();
 
                 Room room = rooms.get(showtime.getRoomId());
-                String cinemaAddress = room == null
-                        ? null : cinemaRepository.findAddressById(room.getCinemaId());
+                Cinema cinema = room == null
+                        ? null : cinemaRepository.findById(room.getCinemaId());
 
                 Seat seat = bookingService.getSeatForTicket(
                         ticket, showtime);
 
-                if (movie == null || room == null || cinemaAddress == null
+                if (movie == null || room == null || cinema == null
                         || seat == null) {
                     throw new IllegalArgumentException(
                             "Không thể tải đầy đủ thông tin của vé. "
@@ -123,7 +124,7 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("showtime", showtime);
                 request.setAttribute("movie", movie);
                 request.setAttribute("room", room);
-                request.setAttribute("cinemaAddress", cinemaAddress);
+                request.setAttribute("cinema", cinema);
                 request.setAttribute("seat", seat);
 
                 List<Map<String, Object>> paidFoodItems
