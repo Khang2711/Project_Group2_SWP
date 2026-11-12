@@ -223,14 +223,12 @@ public class MovieService {
     /**
      * Gets movies to display in the Home page carousel.
      *
+     * @param nowShowingMovies get movie is showing now
      * @return a list of featured movies for the carousel
      */
-    public List<Movie> getFeaturedMovies() {
+    public List<Movie> getFeaturedMovies(List<Movie> nowShowingMovies) {
 
         List<Movie> featuredMovies = new ArrayList<>();
-
-        List<Movie> nowShowingMovies
-                = movieRepository.getNowShowing();
 
         for (Movie movie : nowShowingMovies) {
 

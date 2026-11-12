@@ -47,7 +47,7 @@
 
             <input type="text" 
                    name="keyword" 
-                   value="${keyword}" 
+                   value="<c:out value='${keyword}' />" 
                    class="movies-search-input" 
                    placeholder="Tìm tên phim..." 
                    list="movieOptions" 
