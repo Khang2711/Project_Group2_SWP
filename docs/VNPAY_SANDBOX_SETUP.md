@@ -17,8 +17,8 @@ Biến tùy chọn:
 Trên Windows, có thể dùng PowerShell (thay giá trị mẫu bằng thông tin Sandbox của nhóm):
 
 ~~~powershell
-setx VNPAY_TMN_CODE "6NUQZPYY"
-setx VNPAY_HASH_SECRET "ERHBRVNSQLHOTHBFJYWQKSPDSHRPXAHB"
+setx VNPAY_TMN_CODE "YOUR_SANDBOX_TMN_CODE"
+setx VNPAY_HASH_SECRET "YOUR_SANDBOX_HASH_SECRET"
 setx VNPAY_RETURN_URL "http://localhost:8080/FCinema/payment/vnpay-return"
 setx VNPAY_PAYMENT_URL "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
 ~~~
@@ -89,3 +89,5 @@ ORDER BY ticket_id DESC;
 - IPN cần URL công khai để VNPay gọi được. Nếu callback lỗi DB, endpoint trả **RspCode=99** để VNPay có thể gửi lại.
 - Hiện tại **refund_status='REQUIRED'** là cờ để nhân viên xử lý thủ công; luồng gọi API hoàn tiền chưa được triển khai trong UC-13.
 - Tài liệu VNPay Pay API: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html
+
+> **Bảo mật:** Nếu các giá trị từng xuất hiện ở đây là thông tin thật, hãy thu hồi/thay mới trong Gmail/VNPay Sandbox và cấu hình biến môi trường trên từng máy. Không commit khóa bí mật lên GitHub.
