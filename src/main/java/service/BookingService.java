@@ -115,6 +115,14 @@ public class BookingService {
                     "Phim của suất chiếu không tồn tại."
             );
         }
+        
+        
+        
+        
+        
+        
+        
+        
 
         if (!"ACTIVE".equalsIgnoreCase(
                 movie.getStatus())) {
