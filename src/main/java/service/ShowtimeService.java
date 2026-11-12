@@ -4,6 +4,7 @@ package service;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -97,7 +98,8 @@ public class ShowtimeService {
             return false;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(
+                ZoneId.of("Asia/Ho_Chi_Minh"));
 
         if (showtime.getStartTime() == null
                 || !showtime.getStartTime()
@@ -115,12 +117,14 @@ public class ShowtimeService {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate showDate = showtime.getStartTime()
+                .toLocalDateTime()
+                .toLocalDate();
 
         if (movie.getReleaseDate() == null
                 || movie.getReleaseDate()
                         .toLocalDate()
-                        .isAfter(today)) {
+                        .isAfter(showDate)) {
 
             return false;
         }
@@ -128,7 +132,7 @@ public class ShowtimeService {
         if (movie.getEndDate() != null
                 && movie.getEndDate()
                         .toLocalDate()
-                        .isBefore(today)) {
+                        .isBefore(showDate)) {
 
             return false;
         }

@@ -251,53 +251,108 @@ public class BookingRepository {
 
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        // Gộp theo ngày sau khi tính tiền từng loại đơn để không cộng lặp.
-        String sql = "SELECT sale_date AS booking_date, "
+        /*
+         * Separate the dates used by operational metrics and revenue:
+         * - Confirmed Booking count: Booking.booking_time.
+         * - Paid ticket/online-food revenue: Payment.payment_time.
+         * - Counter food orders: Food_Order.created_at (the order is saved
+         *   after cash has been received).
+         *
+         * Online food attached to a Booking is subtracted from ticket revenue
+         * and reported separately on the same successful payment date.
+         */
+        String sql = "SELECT report_date AS booking_date, "
                 + "SUM(booking_count) AS booking_count, "
                 + "SUM(ticket_count) AS ticket_count, "
                 + "SUM(ticket_revenue) AS revenue, "
                 + "SUM(food_order_count) AS food_order_count, "
                 + "SUM(food_revenue) AS food_revenue "
                 + "FROM ("
-                + "SELECT CAST(b.booking_time AS DATE) AS sale_date, "
+                // Confirmed Booking count: creation date.
+                + "SELECT CAST(b.booking_time AS DATE) AS report_date, "
                 + "COUNT(*) AS booking_count, "
+                + "0 AS ticket_count, "
+                + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
+                + "0 AS food_order_count, "
+                + "CAST(0 AS DECIMAL(18, 2)) AS food_revenue "
+                + "FROM dbo.Booking b "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "WHERE r.cinema_id = ? AND b.status = 'CONFIRMED' "
+                + "AND b.booking_time >= ? "
+                + "AND b.booking_time < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(b.booking_time AS DATE) "
+                + "UNION ALL "
+                // Ticket count and ticket revenue: successful payment date.
+                + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
+                + "0 AS booking_count, "
                 + "COALESCE(SUM(t.ticket_count), 0) AS ticket_count, "
                 + "COALESCE(SUM(b.total_amount - COALESCE(online_food.food_total, 0)), 0) AS ticket_revenue, "
                 + "0 AS food_order_count, "
                 + "CAST(0 AS DECIMAL(18, 2)) AS food_revenue "
-                + "FROM dbo.Booking b "
-                + "JOIN dbo.Showtime st ON b.showtime_id = st.showtime_id "
-                + "JOIN dbo.Room r ON st.room_id = r.room_id "
+                + "FROM dbo.Payment p "
+                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "LEFT JOIN ("
+                + "SELECT booking_id, COUNT(*) AS ticket_count "
+                + "FROM dbo.Ticket WHERE status IN ('VALID', 'USED') "
+                + "GROUP BY booking_id"
+                + ") t ON t.booking_id = b.booking_id "
                 + "LEFT JOIN ("
                 + "SELECT booking_id, SUM(total_amount) AS food_total "
                 + "FROM dbo.Food_Order "
                 + "WHERE booking_id IS NOT NULL AND staff_id IS NULL "
                 + "AND payment_method = 'VNPAY' AND payment_status = 'PAID' "
-                + "GROUP BY booking_id "
-                + ") online_food ON online_food.booking_id = b.booking_id "
-                + "LEFT JOIN ("
-                + "SELECT booking_id, COUNT(*) AS ticket_count "
-                + "FROM dbo.Ticket WHERE status IN ('VALID', 'USED') "
                 + "GROUP BY booking_id"
-                + ") t ON b.booking_id = t.booking_id "
+                + ") online_food ON online_food.booking_id = b.booking_id "
                 + "WHERE r.cinema_id = ? AND b.status = 'CONFIRMED' "
-                + "AND CAST(b.booking_time AS DATE) BETWEEN ? AND ? "
-                + "GROUP BY CAST(b.booking_time AS DATE) "
+                + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
+                + "AND p.payment_time IS NOT NULL "
+                + "AND p.payment_time >= ? "
+                + "AND p.payment_time < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(p.payment_time AS DATE) "
                 + "UNION ALL "
-                + "SELECT CAST(o.created_at AS DATE) AS sale_date, "
+                // Online food attached to a Booking: same payment date.
+                + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
+                + "0 AS booking_count, 0 AS ticket_count, "
+                + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
+                + "COUNT(o.food_order_id) AS food_order_count, "
+                + "COALESCE(SUM(o.total_amount), 0) AS food_revenue "
+                + "FROM dbo.Payment p "
+                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "JOIN dbo.Food_Order o ON o.booking_id = b.booking_id "
+                + "WHERE r.cinema_id = ? AND o.cinema_id = r.cinema_id "
+                + "AND b.status = 'CONFIRMED' "
+                + "AND p.payment_method = 'VNPAY' "
+                + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
+                + "AND p.payment_time IS NOT NULL "
+                + "AND o.staff_id IS NULL AND o.payment_method = 'VNPAY' "
+                + "AND o.payment_status = 'PAID' "
+                + "AND p.payment_time >= ? "
+                + "AND p.payment_time < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(p.payment_time AS DATE) "
+                + "UNION ALL "
+                // Counter-only/other paid food orders: recorded creation time.
+                + "SELECT CAST(o.created_at AS DATE) AS report_date, "
                 + "0 AS booking_count, 0 AS ticket_count, "
                 + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
                 + "COUNT(*) AS food_order_count, "
                 + "COALESCE(SUM(o.total_amount), 0) AS food_revenue "
                 + "FROM dbo.Food_Order o "
-                + "WHERE o.cinema_id = ? "
-                + "AND o.payment_status = 'PAID' "
-                + "AND CAST(o.created_at AS DATE) BETWEEN ? AND ? "
-                + "GROUP BY CAST(o.created_at AS DATE)"
+                + "WHERE o.cinema_id = ? AND o.payment_status = 'PAID' "
+                + "AND NOT (o.booking_id IS NOT NULL "
+                + "AND o.staff_id IS NULL AND o.payment_method = 'VNPAY') "
+                + "AND o.created_at >= ? "
+                + "AND o.created_at < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(o.created_at AS DATE) "
                 + ") daily_data "
-                + "GROUP BY sale_date ORDER BY sale_date";
+                + "GROUP BY report_date ORDER BY report_date";
 
-        try (Connection connection = getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setInt(1, cinemaId);
             ps.setDate(2, Date.valueOf(fromDate));
@@ -306,6 +361,14 @@ public class BookingRepository {
             ps.setInt(4, cinemaId);
             ps.setDate(5, Date.valueOf(fromDate));
             ps.setDate(6, Date.valueOf(toDate));
+
+            ps.setInt(7, cinemaId);
+            ps.setDate(8, Date.valueOf(fromDate));
+            ps.setDate(9, Date.valueOf(toDate));
+
+            ps.setInt(10, cinemaId);
+            ps.setDate(11, Date.valueOf(fromDate));
+            ps.setDate(12, Date.valueOf(toDate));
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -576,7 +639,12 @@ public class BookingRepository {
                 + "WHERE r.cinema_id = ? "
                 + "AND b.status = 'CONFIRMED' "
                 + "AND t.status IN ('VALID', 'USED') "
-                + "AND CAST(b.booking_time AS DATE) BETWEEN ? AND ? "
+                + "AND EXISTS (SELECT 1 FROM dbo.Payment p "
+                + "WHERE p.booking_id = b.booking_id "
+                + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
+                + "AND p.payment_time IS NOT NULL "
+                + "AND p.payment_time >= ? "
+                + "AND p.payment_time < DATEADD(DAY, 1, ?)) "
                 + "GROUP BY m.movie_id, m.title "
                 + "ORDER BY ticket_count DESC, m.title, m.movie_id";
 
@@ -608,7 +676,7 @@ public class BookingRepository {
 
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        // Nhóm theo giờ bắt đầu suất chiếu, không phải giờ khách đặt vé.
+        // Nhóm vé theo giờ chiếu, lọc theo ngày thanh toán thành công.
         String sql = "SELECT DATEPART(HOUR, st.start_time) AS show_hour, "
                 + "COUNT(t.ticket_id) AS ticket_count "
                 + "FROM dbo.Booking b "
