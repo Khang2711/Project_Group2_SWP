@@ -17,8 +17,8 @@ For a brand-new database, the updated `database/FCinemaDB_schema.sql` already in
 The application uses Gmail SMTP. Configure these Windows environment variables with a Gmail account and its **Google App Password** (not the normal account password):
 
 ```powershell
-setx FCINEMA_EMAIL "fcinemasystem@gmail.com"
-setx FCINEMA_EMAIL_APP_PASSWORD "shenixjiqibghjjg"
+setx FCINEMA_EMAIL "your-sender@gmail.com"
+setx FCINEMA_EMAIL_APP_PASSWORD "YOUR_GOOGLE_APP_PASSWORD"
 ```
 
 Close and reopen NetBeans after setting the variables, then restart Tomcat. Never commit the sender's app password to GitHub.
@@ -40,3 +40,5 @@ Close and reopen NetBeans after setting the variables, then restart Tomcat. Neve
 - Enter a wrong OTP five times: that OTP should be invalidated and the user should request another.
 - Wait more than five minutes and submit the OTP: the page should require a new code.
 - Use the forgot-password flow and confirm it still sends a password-reset OTP independently.
+
+> **Bảo mật:** Nếu các giá trị từng xuất hiện ở đây là thông tin thật, hãy thu hồi/thay mới trong Gmail/VNPay Sandbox và cấu hình biến môi trường trên từng máy. Không commit khóa bí mật lên GitHub.
