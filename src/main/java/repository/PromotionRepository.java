@@ -226,6 +226,73 @@ public class PromotionRepository {
         );
     }
 
+    /**
+     * Checks the promotion usage limit while serializing confirmation
+     * transactions on the Promotion row.
+     *
+     * The caller MUST use this method inside the same transaction that
+     * changes the associated Booking from PENDING to CONFIRMED. Every
+     * payment-confirmation path must acquire this lock before confirmation;
+     * otherwise concurrent callbacks can still exceed the quota.
+     */
+    public boolean hasRemainingQuotaForConfirmation(
+            Connection connection,
+            int promotionId) throws SQLException {
+
+        if (connection == null || promotionId <= 0) {
+            return false;
+        }
+
+        Integer usageLimit = null;
+
+        String promotionSql =
+                "SELECT usage_limit "
+                + "FROM dbo.Promotion WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE promotion_id = ?";
+
+        try (PreparedStatement ps =
+                connection.prepareStatement(promotionSql)) {
+
+            ps.setInt(1, promotionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+
+                int value = rs.getInt("usage_limit");
+                usageLimit = rs.wasNull() ? null : value;
+            }
+        }
+
+        // NULL means unlimited usage. The Promotion row lock still protects
+        // this decision from a concurrent change to the limit.
+        if (usageLimit == null) {
+            return true;
+        }
+
+        String countSql =
+                "SELECT COUNT(*) "
+                + "FROM dbo.Booking "
+                + "WHERE promotion_id = ? AND status = 'CONFIRMED'";
+
+        try (PreparedStatement ps =
+                connection.prepareStatement(countSql)) {
+
+            ps.setInt(1, promotionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) < usageLimit;
+                }
+            }
+        }
+
+        throw new SQLException(
+                "Không thể kiểm tra quota khuyến mãi khi xác nhận đơn."
+        );
+    }
+
     public boolean existsByCode(String promoCode, int cinemaId) {
 
         String sql = "SELECT 1 FROM dbo.Promotion "
