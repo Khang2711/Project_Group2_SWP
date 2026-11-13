@@ -196,6 +196,70 @@ public class ComboRepository {
         }
     }
 
+    /** Deletes a combo and its composition when no order history references it. */
+    public boolean deleteIfUnused(int comboId, int cinemaId) {
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                return false;
+            }
+            boolean originalAutoCommit = connection.getAutoCommit();
+            try {
+                connection.setAutoCommit(false);
+
+                String checkSql = "SELECT COUNT(1) FROM dbo.Food_Order_Item "
+                        + "WHERE combo_id = ?";
+                try (PreparedStatement check = connection.prepareStatement(checkSql)) {
+                    check.setInt(1, comboId);
+                    try (ResultSet rs = check.executeQuery()) {
+                        if (!rs.next() || rs.getInt(1) > 0) {
+                            connection.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                try (PreparedStatement deleteItems = connection.prepareStatement(
+                        "DELETE FROM dbo.Combo_Item WHERE combo_id = ? "
+                        + "AND EXISTS (SELECT 1 FROM dbo.Combo WHERE combo_id = ? AND cinema_id = ?)")) {
+                    deleteItems.setInt(1, comboId);
+                    deleteItems.setInt(2, comboId);
+                    deleteItems.setInt(3, cinemaId);
+                    deleteItems.executeUpdate();
+                }
+
+                try (PreparedStatement deleteCombo = connection.prepareStatement(
+                        "DELETE FROM dbo.Combo WHERE combo_id = ? AND cinema_id = ?")) {
+                    deleteCombo.setInt(1, comboId);
+                    deleteCombo.setInt(2, cinemaId);
+                    if (deleteCombo.executeUpdate() != 1) {
+                        connection.rollback();
+                        return false;
+                    }
+                }
+
+                connection.commit();
+                return true;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    rollbackError.printStackTrace();
+                }
+                e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    connection.setAutoCommit(originalAutoCommit);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private int insert(Connection connection, Combo combo) throws SQLException {
         String sql = "INSERT INTO dbo.Combo "
                 + "(cinema_id, combo_name, description, combo_price, image_url, status) "

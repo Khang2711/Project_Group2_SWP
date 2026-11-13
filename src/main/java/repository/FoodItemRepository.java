@@ -146,6 +146,29 @@ public class FoodItemRepository {
         }
     }
 
+    /** Deletes a product only when no combo or order history references it. */
+    public boolean deleteIfUnused(int foodItemId, int cinemaId) {
+        String sql = "DELETE FROM dbo.Food_Item "
+                + "WHERE food_item_id = ? AND cinema_id = ? "
+                + "AND NOT EXISTS (SELECT 1 FROM dbo.Combo_Item WHERE food_item_id = ?) "
+                + "AND NOT EXISTS (SELECT 1 FROM dbo.Food_Order_Item WHERE food_item_id = ?)";
+        try (Connection connection = new DBContext().getConnection()) {
+            if (connection == null) {
+                return false;
+            }
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, foodItemId);
+                statement.setInt(2, cinemaId);
+                statement.setInt(3, foodItemId);
+                statement.setInt(4, foodItemId);
+                return statement.executeUpdate() == 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void setItemParameters(PreparedStatement statement, FoodItem item)
             throws SQLException {
         statement.setInt(1, item.getCinemaId());
