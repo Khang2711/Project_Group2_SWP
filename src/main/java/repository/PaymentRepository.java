@@ -90,6 +90,27 @@ public class PaymentRepository {
                 "Không thể tạo bản ghi thanh toán VNPay.");
     }
 
+    /**
+     * Record a genuinely zero-value booking without sending the customer to VNPay.
+     * The caller owns the connection and commits tickets, booking and payment together.
+     */
+    public void insertFreePayment(Connection connection, int bookingId)
+            throws SQLException {
+
+        String sql = "INSERT INTO dbo.Payment "
+                + "(booking_id, payment_method, merchant_reference, "
+                + "transaction_code, amount, payment_time, status) "
+                + "VALUES (?, 'FREE', ?, NULL, 0, SYSDATETIME(), 'SUCCESS')";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, bookingId);
+            statement.setString(2, "FREE-" + bookingId);
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Could not record free booking payment.");
+            }
+        }
+    }
+
     public int failPendingPaymentsForBooking(
             Connection connection,
             int bookingId) throws SQLException {

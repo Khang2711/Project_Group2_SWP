@@ -14,6 +14,7 @@ import service.AuthService;
 import service.PasswordResetService;
 import service.EmailVerificationService;
 import security.LoginAttemptLimiter;
+import security.OtpSendLimiter;
 
 @WebServlet(urlPatterns = {
     "/auth/login",
@@ -344,6 +345,14 @@ public class AuthController extends HttpServlet {
                 "emailVerificationEmail", normalizedEmail);
 
         try {
+            String sendError = OtpSendLimiter.checkAndRecord(
+                    "verify", normalizedEmail, request.getRemoteAddr());
+            if (sendError != null) {
+                session.setAttribute("emailVerificationError", sendError);
+                response.sendRedirect(
+                        request.getContextPath() + "/auth/verify-email");
+                return;
+            }
             String otp = emailVerificationService.sendOtp(normalizedEmail);
             saveEmailVerificationOtp(session, otp);
 
@@ -409,12 +418,16 @@ public class AuthController extends HttpServlet {
         request.setAttribute("emailVerificationEmail", email);
         session.setAttribute("emailVerificationEmail", email);
 
-        clearEmailVerificationOtp(session);
-
         try {
             if (email.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Vui lòng nhập email.");
+            }
+
+            String sendError = OtpSendLimiter.checkAndRecord(
+                    "verify", email, request.getRemoteAddr());
+            if (sendError != null) {
+                throw new IllegalArgumentException(sendError);
             }
 
             String otp = emailVerificationService.sendOtp(email);
@@ -632,6 +645,12 @@ public class AuthController extends HttpServlet {
         }
 
         try {
+            String sendError = OtpSendLimiter.checkAndRecord(
+                    "reset", email, request.getRemoteAddr());
+            if (sendError != null) {
+                throw new IllegalArgumentException(sendError);
+            }
+
             String otp = passwordResetService.sendOtp(email);
             String resetEmail = email.trim()
                     .toLowerCase(java.util.Locale.ROOT);
