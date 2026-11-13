@@ -536,9 +536,9 @@
                         <h2>Tổng doanh thu theo ngày</h2>
 
                         <p class="panel-note">
-                            Doanh thu vé và đồ ăn online ghi nhận theo ngày Payment thành công.
-                            Đồ ăn tại quầy/đơn không qua VNPay ghi nhận theo Food_Order.created_at;
-                            số Booking được xác định theo Booking.booking_time.
+                            Quy ước: Booking theo ngày tạo; vé/đơn online theo ngày thanh toán thành công;
+                            đơn quầy/ngoài VNPay theo ngày tạo. Vé và doanh thu online chỉ tính giao dịch
+                            thành công, chưa có yêu cầu hoàn tiền.
                         </p>
 
                         <c:forEach items="${dailyRows}" var="row">
