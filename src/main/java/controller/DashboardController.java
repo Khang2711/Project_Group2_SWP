@@ -252,13 +252,24 @@ public class DashboardController extends HttpServlet {
                 }
             }
 
-            summary.createRow(13).createCell(0)
-                    .setCellValue(
-                            "Booking: ngày tạo; vé và doanh thu vé/đồ ăn online: ngày thanh toán thành công.");
+            // Keep the reporting rules as one compact, readable note.
+            Row noteRow = summary.createRow(13);
+            Cell noteCell = noteRow.createCell(0);
+            noteCell.setCellValue(
+                    "Quy ước: Booking/đơn quầy theo ngày tạo; vé/đơn online theo ngày thanh toán thành công. "
+                    + "Chỉ tính giao dịch đã thanh toán thành công, chưa có yêu cầu hoàn tiền.");
 
-            summary.createRow(14).createCell(0)
-                    .setCellValue(
-                            "Chỉ tính Payment SUCCESS chưa có yêu cầu hoàn tiền; đồ ăn quầy ghi nhận theo thời điểm tạo đơn.");
+            Font noteFont = workbook.createFont();
+            noteFont.setItalic(true);
+            noteFont.setColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_50_PERCENT.getIndex());
+
+            CellStyle noteStyle = workbook.createCellStyle();
+            noteStyle.setFont(noteFont);
+            noteStyle.setWrapText(true);
+            noteCell.setCellStyle(noteStyle);
+
+            summary.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(13, 13, 0, 1));
+            noteRow.setHeightInPoints(30);
 
             summary.setColumnWidth(0, 48 * 256);
             summary.setColumnWidth(1, 32 * 256);
