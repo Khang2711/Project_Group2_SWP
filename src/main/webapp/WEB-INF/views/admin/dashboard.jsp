@@ -535,12 +535,6 @@
 
                         <h2>Tổng doanh thu theo ngày</h2>
 
-                        <p class="panel-note">
-                            Đơn đặt vé được tính theo ngày đặt; doanh thu vé và đơn đồ ăn trực tuyến tính
-                            theo ngày thanh toán thành công, còn đơn mua tại quầy tính theo ngày tạo.
-                            Các giao dịch trực tuyến có yêu cầu hoàn tiền không được tính vào doanh thu.
-                        </p>
-
                         <c:forEach items="${dailyRows}" var="row">
 
                             <div class="chart-row">
