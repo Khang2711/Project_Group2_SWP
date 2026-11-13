@@ -299,7 +299,6 @@ public class BookingRepository {
                 + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
                 + "JOIN dbo.Room r ON r.room_id = st.room_id "
                 + "LEFT JOIN dbo.Ticket t ON t.booking_id = b.booking_id "
-                + "AND t.showtime_id = st.showtime_id "
                 + "AND t.status IN ('VALID', 'USED') "
                 + "WHERE r.cinema_id = ? "
                 + "AND b.status = 'CONFIRMED' "
