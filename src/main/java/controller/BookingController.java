@@ -194,6 +194,10 @@ public class BookingController extends HttpServlet {
                         request.getParameterValues("seatId"),
                         selectWholeRoom);
 
+        if (fullRoom && !selectWholeRoom) {
+            bookingService.requireFullRoomSelection(showtimeId, selectedSeats);
+        }
+
         Map<Integer, BigDecimal> seatPrices
                 = bookingService.getSeatPrices(
                         showtimeId,
@@ -239,8 +243,14 @@ public class BookingController extends HttpServlet {
 
         promoCode = promoCode.trim();
 
+        // Both discounts use the complete amount: seats + combos + drinks.
+        BigDecimal orderTotal = subtotal.add(comboTotal).add(foodTotal);
+        BigDecimal fullRoomDiscount = bookingService.calculateFullRoomDiscount(
+                orderTotal, fullRoom);
+        BigDecimal promoBase = orderTotal.subtract(fullRoomDiscount);
+
         Promotion promotion = null;
-        BigDecimal discount = BigDecimal.ZERO;
+        BigDecimal voucherDiscount = BigDecimal.ZERO;
         String promoError = null;
 
         try {
@@ -253,12 +263,12 @@ public class BookingController extends HttpServlet {
 
             promotion = bookingService.getValidPromotion(
                     promoCode,
-                    subtotal,
+                    promoBase,
                     showtimeId);
 
-            discount = bookingService.calculatePromotionDiscount(
+            voucherDiscount = bookingService.calculatePromotionDiscount(
                     promotion,
-                    subtotal);
+                    promoBase);
 
             if (promotion != null) {
                 promoCode = promotion.getPromoCode();
@@ -287,7 +297,7 @@ public class BookingController extends HttpServlet {
         request.setAttribute("movie", checkoutMovie);
         request.setAttribute(
                 "availablePromotions",
-                bookingService.getAvailablePromotions(subtotal, showtimeId));
+                bookingService.getAvailablePromotions(promoBase, showtimeId));
 
         request.setAttribute("selectedSeats", selectedSeats);
         request.setAttribute("checkoutCombos", checkoutCombos);
@@ -301,11 +311,14 @@ public class BookingController extends HttpServlet {
         request.setAttribute("fullRoom", fullRoom);
         request.setAttribute("promoCode", promoCode);
         request.setAttribute("appliedPromotion", promotion);
-        request.setAttribute("discountAmount", discount);
+        request.setAttribute("fullRoomDiscount", fullRoomDiscount);
+        request.setAttribute("voucherDiscount", voucherDiscount);
+        request.setAttribute("discountAmount",
+                fullRoomDiscount.add(voucherDiscount));
 
         request.setAttribute(
                 "finalAmount",
-                subtotal.subtract(discount).add(comboTotal).add(foodTotal));
+                orderTotal.subtract(fullRoomDiscount).subtract(voucherDiscount));
 
         request.setAttribute("promoError", promoError);
 
@@ -334,7 +347,8 @@ public class BookingController extends HttpServlet {
                     showtimeId,
                     request.getParameterValues("seatId"),
                     request.getParameter("promoCode"),
-                    readComboItems(request));
+                    readComboItems(request),
+                    "FULL_ROOM".equals(request.getParameter("bookingMode")));
 
         } catch (IllegalArgumentException e) {
             request.setAttribute(
