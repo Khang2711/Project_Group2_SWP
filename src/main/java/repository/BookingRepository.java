@@ -258,8 +258,8 @@ public class BookingRepository {
          * - Counter food orders: Food_Order.created_at (the order is saved
          *   after cash has been received).
          *
-         * Online food attached to a Booking is subtracted from ticket revenue
-         * and reported separately on the same successful payment date.
+         * Whole-booking discounts are allocated proportionally between tickets
+         * and online food, then reported on the successful payment date.
          */
         String sql = "SELECT report_date AS booking_date, "
                 + "SUM(booking_count) AS booking_count, "
@@ -287,7 +287,7 @@ public class BookingRepository {
                 + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
                 + "0 AS booking_count, "
                 + "COALESCE(SUM(t.ticket_count), 0) AS ticket_count, "
-                + "COALESCE(SUM(b.total_amount - COALESCE(online_food.food_total, 0)), 0) AS ticket_revenue, "
+                + "COALESCE(SUM(b.total_amount - CASE WHEN COALESCE(b.subtotal, 0) + COALESCE(online_food.food_total, 0) > 0 THEN CAST(ROUND(COALESCE(online_food.food_total, 0) * b.total_amount / NULLIF(COALESCE(b.subtotal, 0) + COALESCE(online_food.food_total, 0), 0), 2) AS DECIMAL(18, 2)) ELSE 0 END), 0) AS ticket_revenue, "
                 + "0 AS food_order_count, "
                 + "CAST(0 AS DECIMAL(18, 2)) AS food_revenue "
                 + "FROM dbo.Payment p "
@@ -317,20 +317,20 @@ public class BookingRepository {
                 + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
                 + "0 AS booking_count, 0 AS ticket_count, "
                 + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
-                + "COUNT(o.food_order_id) AS food_order_count, "
-                + "COALESCE(SUM(o.total_amount), 0) AS food_revenue "
+                + "COALESCE(SUM(online_food.food_order_count), 0) AS food_order_count, "
+                + "COALESCE(SUM(CASE WHEN COALESCE(b.subtotal, 0) + online_food.food_total > 0 THEN CAST(ROUND(online_food.food_total * b.total_amount / NULLIF(COALESCE(b.subtotal, 0) + online_food.food_total, 0), 2) AS DECIMAL(18, 2)) ELSE 0 END), 0) AS food_revenue "
                 + "FROM dbo.Payment p "
                 + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
                 + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
                 + "JOIN dbo.Room r ON r.room_id = st.room_id "
-                + "JOIN dbo.Food_Order o ON o.booking_id = b.booking_id "
-                + "WHERE r.cinema_id = ? AND o.cinema_id = r.cinema_id "
+                + "JOIN (SELECT booking_id, cinema_id, COUNT(*) AS food_order_count, SUM(total_amount) AS food_total FROM dbo.Food_Order WHERE booking_id IS NOT NULL AND staff_id IS NULL AND payment_method = 'VNPAY' AND payment_status = 'PAID' GROUP BY booking_id, cinema_id) online_food ON online_food.booking_id = b.booking_id AND online_food.cinema_id = r.cinema_id "
+                + "WHERE r.cinema_id = ? "
                 + "AND b.status = 'CONFIRMED' "
                 + "AND p.payment_method = 'VNPAY' "
                 + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
                 + "AND p.payment_time IS NOT NULL "
-                + "AND o.staff_id IS NULL AND o.payment_method = 'VNPAY' "
-                + "AND o.payment_status = 'PAID' "
+                + ""
+                + ""
                 + "AND p.payment_time >= ? "
                 + "AND p.payment_time < DATEADD(DAY, 1, ?) "
                 + "GROUP BY CAST(p.payment_time AS DATE) "
@@ -687,7 +687,7 @@ public class BookingRepository {
                 + "WHERE r.cinema_id = ? "
                 + "AND b.status = 'CONFIRMED' "
                 + "AND t.status IN ('VALID', 'USED') "
-                + "AND CAST(b.booking_time AS DATE) BETWEEN ? AND ? "
+                + "AND EXISTS (SELECT 1 FROM dbo.Payment p WHERE p.booking_id = b.booking_id AND p.status = 'SUCCESS' AND p.refund_status IS NULL AND p.payment_time IS NOT NULL AND p.payment_time >= ? AND p.payment_time < DATEADD(DAY, 1, ?)) "
                 + "GROUP BY DATEPART(HOUR, st.start_time) "
                 + "ORDER BY show_hour";
 
