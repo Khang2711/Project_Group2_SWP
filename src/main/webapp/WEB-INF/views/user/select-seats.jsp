@@ -332,7 +332,7 @@
                     booking-secondary-button
                     booking-button-element">
 
-                Đặt toàn phòng
+                Đặt toàn phòng – Giảm 10%
 
             </button>
 

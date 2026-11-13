@@ -169,7 +169,7 @@
 
             <c:if test="${fullRoom}">
                 <div class="booking-notice">
-                    Bạn đang chọn hình thức đặt toàn phòng.
+                    Đặt toàn phòng được giảm 10% trên tổng tiền vé, combo và đồ ăn.
                 </div>
             </c:if>
 
@@ -445,6 +445,9 @@
                             <c:out value="${promoSuccess}" />
                         </div>
                     </c:if>
+                    <p id="promoMinimumHint" class="promo-message promo-error"
+                       hidden>Mã khuyến mãi không còn đạt giá trị đơn tối thiểu.
+                       Hãy chỉnh lại sản phẩm hoặc bỏ mã.</p>
 
                 </div>
 
@@ -461,11 +464,19 @@
                     </strong>
                 </div>
 
-                <div class="summary-row">
-                    <span>Giảm giá</span>
+                <c:if test="${fullRoom}">
+                    <div class="summary-row">
+                        <span>Giảm đặt toàn phòng (10%)</span>
+                        <strong class="discount-value" id="fullRoomDiscountDisplay">
+                            - <fmt:formatNumber value="${fullRoomDiscount}" pattern="#,##0.##" /> VNĐ
+                        </strong>
+                    </div>
+                </c:if>
 
+                <div class="summary-row">
+                    <span>Giảm từ mã khuyến mãi</span>
                     <strong class="discount-value" id="discountDisplay">
-                        - <fmt:formatNumber value="${discountAmount}" pattern="#,##0.##" /> VNĐ
+                        - <fmt:formatNumber value="${voucherDiscount}" pattern="#,##0.##" /> VNĐ
                     </strong>
                 </div>
 
@@ -667,6 +678,10 @@
 
     var moneyFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
 
+    function roundMoney(value) {
+        return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
     function updateCheckoutTotal() {
         var comboTotal = 0;
         var foodTotal = 0;
@@ -683,17 +698,50 @@
         var finalDisplay = document.getElementById("finalAmountDisplay");
         var discountDisplay = document.getElementById("discountDisplay");
         var subtotal = Number("${subtotal}") || 0;
-        var discount = Number("${discountAmount}") || 0;
+        var totalBeforeDiscount = subtotal + comboTotal + foodTotal;
+        var fullRoomDiscount = ${fullRoom ? 'true' : 'false'}
+                ? roundMoney(totalBeforeDiscount * 0.10) : 0;
+        var amountAfterFullRoom = Math.max(0, totalBeforeDiscount - fullRoomDiscount);
 
+        // Preview is recalculated whenever food quantities change.
+        // The server validates the same price and voucher again on submit.
+        var hasPromo = ${not empty appliedPromotion ? 'true' : 'false'};
+        var promoType = "${appliedPromotion.discountType}";
+        var promoValue = Number("${appliedPromotion.discountValue}") || 0;
+        var promoMaxRaw = "${appliedPromotion.maxDiscountAmount}";
+        var promoMinimum = Number("${appliedPromotion.minOrderAmount}") || 0;
+        var discount = 0;
+        var promoBelowMinimum = hasPromo && amountAfterFullRoom < promoMinimum;
+
+        if (hasPromo && !promoBelowMinimum) {
+            discount = promoType === "PERCENT"
+                ? roundMoney(amountAfterFullRoom * promoValue / 100)
+                : promoValue;
+            if (promoMaxRaw !== "") {
+                discount = Math.min(discount, Number(promoMaxRaw));
+            }
+            discount = Math.min(amountAfterFullRoom, Math.max(0, discount));
+        }
+
+        var fullRoomDisplay = document.getElementById("fullRoomDiscountDisplay");
         if (comboDisplay) comboDisplay.textContent = moneyFormat.format(comboTotal) + " VNĐ";
         if (foodDisplay) foodDisplay.textContent = moneyFormat.format(foodTotal) + " VNĐ";
-        if (finalDisplay) {
-            finalDisplay.textContent = moneyFormat.format(
-                Math.max(0, subtotal - discount + comboTotal + foodTotal)
-            ) + " VNĐ";
+        if (fullRoomDisplay) {
+            fullRoomDisplay.textContent = "- " + moneyFormat.format(fullRoomDiscount) + " VNĐ";
         }
         if (discountDisplay) {
             discountDisplay.textContent = "- " + moneyFormat.format(discount) + " VNĐ";
+        }
+        if (finalDisplay) {
+            finalDisplay.textContent = moneyFormat.format(
+                Math.max(0, amountAfterFullRoom - discount)
+            ) + " VNĐ";
+        }
+        var promoHint = document.getElementById("promoMinimumHint");
+        if (promoHint) promoHint.hidden = !promoBelowMinimum;
+        if (confirmButton) {
+            confirmButton.disabled = ${not empty promoError ? 'true' : 'false'}
+                    || promoBelowMinimum;
         }
     }
 

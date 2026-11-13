@@ -38,6 +38,8 @@ import repository.FoodOrderRepository;
 
 public class BookingService {
 
+    private static final BigDecimal FULL_ROOM_RATE = new BigDecimal("0.10");
+
     private final BookingRepository bookingRepository;
     private final TicketRepository ticketRepository;
     private final ShowtimeRepository showtimeRepository;
@@ -395,6 +397,46 @@ public class BookingService {
         return selectedSeats;
     }
 
+    /**
+     * Only a genuinely full, available room qualifies for the 10% offer.
+     * The UI flag alone must not allow a discount on a subset of seats.
+     */
+    public void requireFullRoomSelection(
+            int showtimeId, List<Seat> selectedSeats) throws SQLException {
+
+        List<Seat> roomSeats = prepareSelectedSeats(showtimeId, null, true);
+        if (selectedSeats == null || selectedSeats.size() != roomSeats.size()) {
+            throw new IllegalArgumentException(
+                    "Ưu đãi toàn phòng chỉ áp dụng khi đặt tất cả ghế khả dụng.");
+        }
+
+        Set<Integer> selectedIds = new LinkedHashSet<>();
+        for (Seat seat : selectedSeats) {
+            selectedIds.add(seat.getSeatId());
+        }
+        for (Seat seat : roomSeats) {
+            if (!selectedIds.remove(seat.getSeatId())) {
+                throw new IllegalArgumentException(
+                        "Danh sách ghế đặt toàn phòng không còn hợp lệ.");
+            }
+        }
+        if (!selectedIds.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Danh sách ghế đặt toàn phòng không còn hợp lệ.");
+        }
+    }
+
+    public BigDecimal calculateFullRoomDiscount(BigDecimal orderTotal,
+            boolean fullRoom) {
+
+        if (!fullRoom || orderTotal == null
+                || orderTotal.signum() <= 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+        return orderTotal.multiply(FULL_ROOM_RATE)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
     // =====================================================
     // TINH TONG TIEN VE
     // =====================================================
@@ -615,6 +657,17 @@ public class BookingService {
             String[] seatValues,
             String promoCode,
             List<FoodOrderItem> comboItems) throws SQLException {
+        return createPendingBooking(customerId, showtimeId,
+                seatValues, promoCode, comboItems, false);
+    }
+
+    public int createPendingBooking(
+            int customerId,
+            int showtimeId,
+            String[] seatValues,
+            String promoCode,
+            List<FoodOrderItem> comboItems,
+            boolean fullRoom) throws SQLException {
 
         if (customerId <= 0) {
             throw new IllegalArgumentException(
@@ -632,6 +685,10 @@ public class BookingService {
                         seatValues,
                         false
                 );
+
+        if (fullRoom) {
+            requireFullRoomSelection(showtimeId, selectedSeats);
+        }
 
         Map<Integer, BigDecimal> selectedPrices
                 = getSeatPrices(
@@ -658,29 +715,27 @@ public class BookingService {
             );
         }
 
-        Promotion promotion
-                = getValidPromotion(
-                        promoCode,
-                        subtotal,
-                        showtimeId
-                );
-
-        BigDecimal discount
-                = calculatePromotionDiscount(
-                        promotion,
-                        subtotal
-                );
-
         int cinemaId
                 = promotionService.getCinemaIdByShowtimeId(
                         showtimeId
                 );
 
+        // Voucher and full-room discount both include tickets, combos and food.
         BigDecimal comboTotal
                 = foodOrderService.calculateOnlineComboTotal(
                         cinemaId,
                         comboItems
                 );
+        BigDecimal orderTotal = subtotal.add(comboTotal);
+        BigDecimal fullRoomDiscount = calculateFullRoomDiscount(
+                orderTotal, fullRoom);
+        BigDecimal promoBase = orderTotal.subtract(fullRoomDiscount);
+
+        Promotion promotion = getValidPromotion(
+                promoCode, promoBase, showtimeId);
+        BigDecimal voucherDiscount = calculatePromotionDiscount(
+                promotion, promoBase);
+        BigDecimal discount = fullRoomDiscount.add(voucherDiscount);
 
         Booking booking = new Booking();
 
@@ -696,10 +751,7 @@ public class BookingService {
         booking.setSubtotal(subtotal);
         booking.setDiscountAmount(discount);
 
-        booking.setTotalAmount(
-                subtotal.subtract(discount)
-                        .add(comboTotal)
-        );
+        booking.setTotalAmount(orderTotal.subtract(discount));
 
         booking.setStatus("PENDING");
 
@@ -709,9 +761,12 @@ public class BookingService {
 
             try {
 
-                // Recheck truoc khi ghi DB.
-                // Chua thay the duoc database locking.
+                // Recheck before writing; full-room bookings must still cover
+                // all seats, not just a forged FULL_ROOM request parameter.
                 getBookableShowtime(showtimeId);
+                if (fullRoom) {
+                    requireFullRoomSelection(showtimeId, selectedSeats);
+                }
 
                 int bookingId
                         = bookingRepository.insert(
