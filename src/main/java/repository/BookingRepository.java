@@ -2,6 +2,7 @@ package repository;
 
 import db.DBContext;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,9 +11,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import model.Booking;
 import model.Cinema;
 
@@ -249,156 +252,233 @@ public class BookingRepository {
             LocalDate fromDate,
             LocalDate toDate) throws SQLException {
 
-        List<Map<String, Object>> rows = new ArrayList<>();
+        Map<LocalDate, Map<String, Object>> dailyData = new TreeMap<>();
+        Map<Integer, BigDecimal> foodRevenueByPayment = new HashMap<>();
 
-        /*
-         * Separate the dates used by operational metrics and revenue:
-         * - Confirmed Booking count: Booking.booking_time.
-         * - Paid ticket/online-food revenue: Payment.payment_time.
-         * - Counter food orders: Food_Order.created_at (the order is saved
-         *   after cash has been received).
-         *
-         * Whole-booking discounts are allocated proportionally between tickets
-         * and online food, then reported on the successful payment date.
-         */
-        String sql = "SELECT report_date AS booking_date, "
-                + "SUM(booking_count) AS booking_count, "
-                + "SUM(ticket_count) AS ticket_count, "
-                + "SUM(ticket_revenue) AS revenue, "
-                + "SUM(food_order_count) AS food_order_count, "
-                + "SUM(food_revenue) AS food_revenue "
-                + "FROM ("
-                // Confirmed Booking count: creation date.
-                + "SELECT CAST(b.booking_time AS DATE) AS report_date, "
-                + "COUNT(*) AS booking_count, "
-                + "0 AS ticket_count, "
-                + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
-                + "0 AS food_order_count, "
-                + "CAST(0 AS DECIMAL(18, 2)) AS food_revenue "
+        String bookingSql = "SELECT CAST(b.booking_time AS DATE) AS report_date, "
+                + "COUNT(*) AS booking_count "
                 + "FROM dbo.Booking b "
                 + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
                 + "JOIN dbo.Room r ON r.room_id = st.room_id "
-                + "WHERE r.cinema_id = ? AND b.status = 'CONFIRMED' "
-                + "AND b.booking_time >= ? "
-                + "AND b.booking_time < DATEADD(DAY, 1, ?) "
-                + "GROUP BY CAST(b.booking_time AS DATE) "
-                + "UNION ALL "
-                // Ticket count and ticket revenue: successful payment date.
-                + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
-                + "0 AS booking_count, "
-                + "COALESCE(SUM(t.ticket_count), 0) AS ticket_count, "
-                + "COALESCE(SUM(b.total_amount - CASE "
-                + "WHEN COALESCE(b.subtotal, 0) + COALESCE(online_food.food_total, 0) > 0 "
-                + "THEN CAST(ROUND(COALESCE(online_food.food_total, 0) * b.total_amount "
-                + "/ NULLIF(COALESCE(b.subtotal, 0) + COALESCE(online_food.food_total, 0), 0), 2) "
-                + "AS DECIMAL(18, 2)) ELSE 0 END), 0) AS ticket_revenue, "
-                + "0 AS food_order_count, "
-                + "CAST(0 AS DECIMAL(18, 2)) AS food_revenue "
-                + "FROM dbo.Payment p "
-                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
-                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
-                + "JOIN dbo.Room r ON r.room_id = st.room_id "
-                + "LEFT JOIN ("
-                + "SELECT booking_id, COUNT(*) AS ticket_count "
-                + "FROM dbo.Ticket WHERE status IN ('VALID', 'USED') "
-                + "GROUP BY booking_id"
-                + ") t ON t.booking_id = b.booking_id "
-                + "LEFT JOIN ("
-                + "SELECT booking_id, SUM(total_amount) AS food_total "
-                + "FROM dbo.Food_Order "
-                + "WHERE booking_id IS NOT NULL AND staff_id IS NULL "
-                + "AND payment_method = 'VNPAY' AND payment_status = 'PAID' "
-                + "GROUP BY booking_id"
-                + ") online_food ON online_food.booking_id = b.booking_id "
-                + "WHERE r.cinema_id = ? AND b.status = 'CONFIRMED' "
-                + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
-                + "AND p.payment_time IS NOT NULL "
-                + "AND p.payment_time >= ? "
-                + "AND p.payment_time < DATEADD(DAY, 1, ?) "
-                + "GROUP BY CAST(p.payment_time AS DATE) "
-                + "UNION ALL "
-                // Online food attached to a Booking: same payment date.
-                + "SELECT CAST(p.payment_time AS DATE) AS report_date, "
-                + "0 AS booking_count, 0 AS ticket_count, "
-                + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
-                + "COALESCE(SUM(online_food.food_order_count), 0) AS food_order_count, "
-                + "COALESCE(SUM(CASE "
-                + "WHEN COALESCE(b.subtotal, 0) + online_food.food_total > 0 "
-                + "THEN CAST(ROUND(online_food.food_total * b.total_amount "
-                + "/ NULLIF(COALESCE(b.subtotal, 0) + online_food.food_total, 0), 2) "
-                + "AS DECIMAL(18, 2)) ELSE 0 END), 0) AS food_revenue "
-                + "FROM dbo.Payment p "
-                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
-                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
-                + "JOIN dbo.Room r ON r.room_id = st.room_id "
-                + "JOIN (SELECT booking_id, cinema_id, COUNT(*) AS food_order_count, "
-                + "SUM(total_amount) AS food_total FROM dbo.Food_Order "
-                + "WHERE booking_id IS NOT NULL AND staff_id IS NULL "
-                + "AND payment_method = 'VNPAY' AND payment_status = 'PAID' "
-                + "GROUP BY booking_id, cinema_id) online_food "
-                + "ON online_food.booking_id = b.booking_id "
-                + "AND online_food.cinema_id = r.cinema_id "
                 + "WHERE r.cinema_id = ? "
                 + "AND b.status = 'CONFIRMED' "
-                + "AND p.payment_method = 'VNPAY' "
-                + "AND p.status = 'SUCCESS' AND p.refund_status IS NULL "
+                + "AND b.booking_time >= ? "
+                + "AND b.booking_time < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(b.booking_time AS DATE)";
+
+        String onlineFoodSql = "SELECT CAST(p.payment_time AS DATE) AS report_date, "
+                + "p.payment_id, p.payment_method, "
+                + "b.subtotal, b.total_amount, "
+                + "COUNT(o.food_order_id) AS food_order_count, "
+                + "SUM(o.total_amount) AS food_total "
+                + "FROM dbo.Payment p "
+                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "JOIN dbo.Food_Order o ON o.booking_id = b.booking_id "
+                + "AND o.cinema_id = r.cinema_id "
+                + "WHERE r.cinema_id = ? "
+                + "AND b.status = 'CONFIRMED' "
+                + "AND p.status = 'SUCCESS' "
+                + "AND p.refund_status IS NULL "
                 + "AND p.payment_time IS NOT NULL "
                 + "AND p.payment_time >= ? "
                 + "AND p.payment_time < DATEADD(DAY, 1, ?) "
-                + "GROUP BY CAST(p.payment_time AS DATE) "
-                + "UNION ALL "
-                // Counter-only/other paid food orders: recorded creation time.
-                + "SELECT CAST(o.created_at AS DATE) AS report_date, "
-                + "0 AS booking_count, 0 AS ticket_count, "
-                + "CAST(0 AS DECIMAL(18, 2)) AS ticket_revenue, "
+                + "AND o.booking_id IS NOT NULL "
+                + "AND o.staff_id IS NULL "
+                + "AND o.payment_method = 'VNPAY' "
+                + "AND o.payment_status = 'PAID' "
+                + "GROUP BY CAST(p.payment_time AS DATE), p.payment_id, "
+                + "p.payment_method, b.subtotal, b.total_amount";
+
+        String ticketSql = "SELECT CAST(p.payment_time AS DATE) AS report_date, "
+                + "p.payment_id, b.total_amount, "
+                + "COUNT(t.ticket_id) AS ticket_count "
+                + "FROM dbo.Payment p "
+                + "JOIN dbo.Booking b ON b.booking_id = p.booking_id "
+                + "JOIN dbo.Showtime st ON st.showtime_id = b.showtime_id "
+                + "JOIN dbo.Room r ON r.room_id = st.room_id "
+                + "LEFT JOIN dbo.Ticket t ON t.booking_id = b.booking_id "
+                + "AND t.showtime_id = st.showtime_id "
+                + "AND t.status IN ('VALID', 'USED') "
+                + "WHERE r.cinema_id = ? "
+                + "AND b.status = 'CONFIRMED' "
+                + "AND p.status = 'SUCCESS' "
+                + "AND p.refund_status IS NULL "
+                + "AND p.payment_time IS NOT NULL "
+                + "AND p.payment_time >= ? "
+                + "AND p.payment_time < DATEADD(DAY, 1, ?) "
+                + "GROUP BY CAST(p.payment_time AS DATE), "
+                + "p.payment_id, b.total_amount";
+
+        String otherFoodSql = "SELECT CAST(o.created_at AS DATE) AS report_date, "
                 + "COUNT(*) AS food_order_count, "
-                + "COALESCE(SUM(o.total_amount), 0) AS food_revenue "
+                + "SUM(o.total_amount) AS food_revenue "
                 + "FROM dbo.Food_Order o "
-                + "WHERE o.cinema_id = ? AND o.payment_status = 'PAID' "
+                + "WHERE o.cinema_id = ? "
+                + "AND o.payment_status = 'PAID' "
                 + "AND NOT (o.booking_id IS NOT NULL "
-                + "AND o.staff_id IS NULL AND o.payment_method = 'VNPAY') "
+                + "AND o.staff_id IS NULL "
+                + "AND o.payment_method = 'VNPAY') "
                 + "AND o.created_at >= ? "
                 + "AND o.created_at < DATEADD(DAY, 1, ?) "
-                + "GROUP BY CAST(o.created_at AS DATE) "
-                + ") daily_data "
-                + "GROUP BY report_date ORDER BY report_date";
+                + "GROUP BY CAST(o.created_at AS DATE)";
 
-        try (Connection connection = getConnection();
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection()) {
 
-            ps.setInt(1, cinemaId);
-            ps.setDate(2, Date.valueOf(fromDate));
-            ps.setDate(3, Date.valueOf(toDate));
+            // 1. Count confirmed bookings by booking creation date.
+            try (PreparedStatement ps = connection.prepareStatement(bookingSql)) {
+                ps.setInt(1, cinemaId);
+                ps.setDate(2, Date.valueOf(fromDate));
+                ps.setDate(3, Date.valueOf(toDate));
 
-            ps.setInt(4, cinemaId);
-            ps.setDate(5, Date.valueOf(fromDate));
-            ps.setDate(6, Date.valueOf(toDate));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> row = getOrCreateDailyRow(
+                                dailyData, rs.getDate("report_date"));
+                        addDailyCount(row, "bookingCount",
+                                rs.getInt("booking_count"));
+                    }
+                }
+            }
 
-            ps.setInt(7, cinemaId);
-            ps.setDate(8, Date.valueOf(fromDate));
-            ps.setDate(9, Date.valueOf(toDate));
+            // 2. Calculate paid online-food revenue by payment.
+            // The allocated amount is also used to calculate net ticket revenue.
+            try (PreparedStatement ps = connection.prepareStatement(onlineFoodSql)) {
+                ps.setInt(1, cinemaId);
+                ps.setDate(2, Date.valueOf(fromDate));
+                ps.setDate(3, Date.valueOf(toDate));
 
-            ps.setInt(10, cinemaId);
-            ps.setDate(11, Date.valueOf(fromDate));
-            ps.setDate(12, Date.valueOf(toDate));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        int paymentId = rs.getInt("payment_id");
+                        BigDecimal foodTotal = rs.getBigDecimal("food_total");
+                        BigDecimal foodRevenue = calculateAllocatedFoodRevenue(
+                                rs.getBigDecimal("total_amount"),
+                                rs.getBigDecimal("subtotal"),
+                                foodTotal);
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> row = new LinkedHashMap<>();
+                        foodRevenueByPayment.put(paymentId, foodRevenue);
 
-                    row.put("bookingDate", rs.getDate("booking_date"));
-                    row.put("bookingCount", rs.getInt("booking_count"));
-                    row.put("ticketCount", rs.getInt("ticket_count"));
-                    row.put("revenue", rs.getBigDecimal("revenue"));
-                    row.put("foodOrderCount", rs.getInt("food_order_count"));
-                    row.put("foodRevenue", rs.getBigDecimal("food_revenue"));
+                        // Online food is reported only for successful VNPAY payments.
+                        if ("VNPAY".equalsIgnoreCase(
+                                rs.getString("payment_method"))) {
+                            Map<String, Object> row = getOrCreateDailyRow(
+                                    dailyData, rs.getDate("report_date"));
 
-                    rows.add(row);
+                            addDailyCount(row, "foodOrderCount",
+                                    rs.getInt("food_order_count"));
+                            addDailyAmount(row, "foodRevenue", foodRevenue);
+                        }
+                    }
+                }
+            }
+
+            // 3. Count valid/used tickets and calculate their net revenue.
+            try (PreparedStatement ps = connection.prepareStatement(ticketSql)) {
+                ps.setInt(1, cinemaId);
+                ps.setDate(2, Date.valueOf(fromDate));
+                ps.setDate(3, Date.valueOf(toDate));
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> row = getOrCreateDailyRow(
+                                dailyData, rs.getDate("report_date"));
+
+                        int paymentId = rs.getInt("payment_id");
+                        BigDecimal totalAmount = rs.getBigDecimal("total_amount");
+                        BigDecimal allocatedFoodRevenue
+                                = foodRevenueByPayment.getOrDefault(
+                                        paymentId, BigDecimal.ZERO);
+
+                        addDailyCount(row, "ticketCount",
+                                rs.getInt("ticket_count"));
+                        addDailyAmount(row, "revenue",
+                                totalAmount.subtract(allocatedFoodRevenue));
+                    }
+                }
+            }
+
+            // 4. Count other paid food orders by order creation date.
+            try (PreparedStatement ps = connection.prepareStatement(otherFoodSql)) {
+                ps.setInt(1, cinemaId);
+                ps.setDate(2, Date.valueOf(fromDate));
+                ps.setDate(3, Date.valueOf(toDate));
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> row = getOrCreateDailyRow(
+                                dailyData, rs.getDate("report_date"));
+
+                        addDailyCount(row, "foodOrderCount",
+                                rs.getInt("food_order_count"));
+                        addDailyAmount(row, "foodRevenue",
+                                rs.getBigDecimal("food_revenue"));
+                    }
                 }
             }
         }
 
-        return rows;
+        return new ArrayList<>(dailyData.values());
+    }
+
+    private Map<String, Object> getOrCreateDailyRow(
+            Map<LocalDate, Map<String, Object>> dailyData,
+            Date reportDate) {
+
+        LocalDate date = reportDate.toLocalDate();
+
+        return dailyData.computeIfAbsent(date, key -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+
+            row.put("bookingDate", Date.valueOf(key));
+            row.put("bookingCount", 0);
+            row.put("ticketCount", 0);
+            row.put("revenue", BigDecimal.ZERO);
+            row.put("foodOrderCount", 0);
+            row.put("foodRevenue", BigDecimal.ZERO);
+
+            return row;
+        });
+    }
+
+    private void addDailyCount(
+            Map<String, Object> row,
+            String key,
+            int value) {
+
+        row.put(key, (Integer) row.get(key) + value);
+    }
+
+    private void addDailyAmount(
+            Map<String, Object> row,
+            String key,
+            BigDecimal value) {
+
+        BigDecimal amount = value == null ? BigDecimal.ZERO : value;
+        row.put(key, ((BigDecimal) row.get(key)).add(amount));
+    }
+
+    private BigDecimal calculateAllocatedFoodRevenue(
+            BigDecimal totalAmount,
+            BigDecimal subtotal,
+            BigDecimal foodTotal) {
+
+        BigDecimal safeTotal = totalAmount == null
+                ? BigDecimal.ZERO : totalAmount;
+        BigDecimal safeSubtotal = subtotal == null
+                ? BigDecimal.ZERO : subtotal;
+        BigDecimal safeFoodTotal = foodTotal == null
+                ? BigDecimal.ZERO : foodTotal;
+
+        BigDecimal originalTotal = safeSubtotal.add(safeFoodTotal);
+
+        if (originalTotal.signum() <= 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+
+        return safeFoodTotal.multiply(safeTotal)
+                .divide(originalTotal, 2, RoundingMode.HALF_UP);
     }
 
     private Booking mapBooking(ResultSet rs) throws SQLException {
