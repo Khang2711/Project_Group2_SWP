@@ -256,7 +256,7 @@ public class DashboardController extends HttpServlet {
             Row noteRow = summary.createRow(13);
             Cell noteCell = noteRow.createCell(0);
             noteCell.setCellValue(
-                    "Quy ước: Booking và đơn quầy theo ngày tạo; vé và đơn online theo ngày thanh toán thành công. "
+                    "Quy ước: Booking/đơn quầy theo ngày tạo; vé/đơn online theo ngày thanh toán thành công. "
                     + "Chỉ tính giao dịch đã thanh toán thành công, chưa có yêu cầu hoàn tiền.");
 
             Font noteFont = workbook.createFont();
