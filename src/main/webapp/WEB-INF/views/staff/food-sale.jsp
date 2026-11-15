@@ -267,7 +267,6 @@
         }
     }
 
-    /* Chỉ in hóa đơn đã lưu, không in danh mục và giỏ hàng. */
     @media print {
         @page {
             size: A4;
@@ -677,7 +676,6 @@
                     <strong id="totalText">0 đ</strong>
                 </p>
 
-                <%-- Mua kèm vé thì xác nhận thu tiền ở trang tổng đơn. --%>
                 <c:if test="${not isCounterDraftSale}">
                     <p>
                         Phương thức thanh toán:
@@ -824,7 +822,6 @@
 
 <c:if test="${not receiptMode}">
 
-    <%-- Giữ món đã chọn bằng dữ liệu HTML, không ghép tên vào JavaScript. --%>
     <div id="savedDraftItems" hidden>
         <c:forEach var="item" items="${draftFoodItems}">
             <span data-type="${not empty item.foodItemId ? 'FOOD' : 'COMBO'}"
@@ -908,7 +905,6 @@
             body.innerHTML = "";
             hidden.innerHTML = "";
 
-            // Đổi giỏ hàng thì phải xác nhận lại số tiền đã thu.
             var cash = document.getElementById("cashReceived");
 
             if (cash !== null) {
@@ -947,14 +943,12 @@
                         + '</button>'
                         + '</td>';
 
-                // Dùng textContent để tên sản phẩm không bị hiểu thành HTML.
                 row.cells[0].textContent = item.name;
                 row.cells[2].textContent = formatMoney(item.price) + " đ";
                 row.cells[3].textContent = formatMoney(lineTotal) + " đ";
 
                 body.appendChild(row);
 
-                // Chỉ gửi loại, ID và số lượng; server tự lấy giá.
                 addHiddenInput(hidden, "itemType", item.type);
                 addHiddenInput(hidden, "itemId", item.id);
                 addHiddenInput(hidden, "quantity", item.quantity);
@@ -991,7 +985,6 @@
                 return false;
             }
 
-            // Mua kèm vé chưa thu tiền tại bước chọn món.
             if (!draftMode
                     && !document.getElementById("cashReceived").checked) {
 
@@ -1016,7 +1009,6 @@
             var products = document.querySelectorAll(
                     ".product-card button[data-type]");
 
-            // Tìm lại sản phẩm đã chọn trong danh mục hiện tại.
             for (var i = 0; i < saved.length; i++) {
                 for (var j = 0; j < products.length; j++) {
                     if (saved[i].getAttribute("data-type")
