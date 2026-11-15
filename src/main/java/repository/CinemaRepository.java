@@ -53,6 +53,7 @@ public class CinemaRepository extends DBContext {
         return cinemas;
     }
 
+    // UC-05: Đọc thông tin chi nhánh cần quản lý.
     public Cinema findById(int cinemaId) {
 
         String sql = "SELECT cinema_id, cinema_name, address, phone, status "
@@ -109,6 +110,7 @@ public class CinemaRepository extends DBContext {
         return null;
     }
 
+    // UC-05: Đếm số phòng thuộc chi nhánh.
     public int countRooms(int cinemaId) {
 
         String sql = "SELECT COUNT(*) AS total "
@@ -132,6 +134,7 @@ public class CinemaRepository extends DBContext {
         return 0;
     }
 
+    // UC-05: Chỉ cập nhật địa chỉ và số điện thoại của chi nhánh.
     public boolean updateContact(int cinemaId, String address, String phone) {
 
         String sql = "UPDATE Cinema "
