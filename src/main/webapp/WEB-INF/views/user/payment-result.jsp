@@ -32,7 +32,6 @@
     </div>
 
 
-    <%-- Lỗi server / database --%>
 
     <c:if test="${not empty error}">
 
@@ -75,11 +74,9 @@
 
     <c:if test="${not empty paymentResult}">
 
-        <%-- Xác định giao diện theo trạng thái --%>
 
         <c:choose>
 
-            <%-- THANH TOÁN THÀNH CÔNG --%>
 
             <c:when test="${paymentResult.signatureValid
                             and paymentResult.paymentSuccessful
@@ -104,7 +101,6 @@
             </c:when>
 
 
-            <%-- ĐÃ THU TIỀN NHƯNG CẦN HOÀN TIỀN --%>
 
             <c:when test="${paymentResult.signatureValid
                             and paymentResult.paymentSuccessful
@@ -128,7 +124,6 @@
             </c:when>
 
 
-            <%-- THANH TOÁN ĐÃ GHI NHẬN --%>
 
             <c:when test="${paymentResult.signatureValid
                             and paymentResult.paymentSuccessful}">
@@ -151,7 +146,6 @@
             </c:when>
 
 
-            <%-- THANH TOÁN THẤT BẠI / HỦY --%>
 
             <c:when test="${paymentResult.signatureValid}">
 
@@ -173,7 +167,6 @@
             </c:when>
 
 
-            <%-- CHỮ KÝ KHÔNG HỢP LỆ --%>
 
             <c:otherwise>
 
@@ -298,7 +291,6 @@
                         </a>
 
 
-                        <%-- Thành công thì cho xem vé --%>
 
                         <c:if test="${paymentResult.signatureValid
                                     and paymentResult.paymentSuccessful
@@ -315,7 +307,6 @@
                         </c:if>
 
 
-                        <%-- Thất bại hợp lệ thì cho thanh toán lại --%>
 
                         <c:if test="${paymentResult.signatureValid
                                     and not paymentResult.paymentSuccessful}">
