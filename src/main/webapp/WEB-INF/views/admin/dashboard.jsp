@@ -714,8 +714,6 @@
             });
         }
 
-        // Refresh thống kê mỗi 60 giây khi Manager đang xem Dashboard.
-        // Không refresh khi đang chỉnh bộ lọc hoặc mở bảng chi tiết.
         window.setInterval(function () {
             const detailIsOpen = document.querySelector(
                 '.dashboard-details[open]'
