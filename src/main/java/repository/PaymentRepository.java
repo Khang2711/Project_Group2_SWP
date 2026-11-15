@@ -199,8 +199,8 @@ public class PaymentRepository {
         return payment;
     }
 
-    // UC-25: ghi nhận thanh toán tiền mặt tại quầy.
-    // Dùng cùng connection với booking và vé để lưu chung một transaction.
+    // UC-25: Record cash payments at the counter.
+    // Use one connection to save the booking and tickets in one transaction.
     public void insertCounterCashPayment(
             Connection connection,
             int bookingId,
