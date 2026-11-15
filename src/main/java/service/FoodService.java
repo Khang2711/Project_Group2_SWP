@@ -5,7 +5,6 @@ import java.util.List;
 import model.FoodItem;
 import repository.FoodItemRepository;
 
-/** Nghiệp vụ quản lý món ăn/uống. */
 public class FoodService {
 
     private final FoodItemRepository repository = new FoodItemRepository();
