@@ -169,6 +169,7 @@ public class ShowtimeService {
     // DANH SACH SUAT CHIEU CHO MANAGER
     // =====================================================
 
+    // UC-09: Lấy lịch chiếu thuộc chi nhánh của Cinema Manager.
     public List<Showtime> getShowtimesForManager(
             int cinemaId) {
 
@@ -192,6 +193,7 @@ public class ShowtimeService {
         return showtimeRepository.getById(showtimeId);
     }
 
+    // UC-09: Kiểm tra suất chiếu thuộc đúng chi nhánh trước khi cho sửa/xóa.
     public Showtime getShowtimeForManager(
             int showtimeId,
             int cinemaId) {
@@ -210,6 +212,7 @@ public class ShowtimeService {
     // TAO MOT SUAT CHIEU
     // =====================================================
 
+    // UC-09: Kiểm tra phim, phòng, thời gian và lịch chiếu xung đột trước khi tạo.
     public void createShowtime(
             int cinemaId,
             int movieId,
@@ -238,6 +241,7 @@ public class ShowtimeService {
     // TAO NHIEU SUAT CHIEU
     // =====================================================
 
+    // UC-09: Kiểm tra toàn bộ các lịch chiếu trong yêu cầu tạo hàng loạt và giới hạn số lượng.
     public void createShowtimesBulk(
             int cinemaId,
             int movieId,
@@ -355,6 +359,7 @@ public class ShowtimeService {
     // KHONG THAY DOI SUAT CHIEU DA CO VE
     // =====================================================
 
+    // UC-09: Kiểm tra vé đã phát hành và xung đột lịch trước khi chỉnh sửa suất chiếu.
     public void updateShowtime(
             int showtimeId,
             int cinemaId,
@@ -443,6 +448,7 @@ public class ShowtimeService {
     // hoan tien va khong lam mat hieu luc ve.
     // =====================================================
 
+    // UC-09: Không cho xóa suất chiếu khi đã có lịch sử vé.
     public void deleteShowtime(
             int showtimeId,
             int cinemaId) {
@@ -488,6 +494,7 @@ public class ShowtimeService {
     // KHONG TAO SUAT ACTIVE TAI RAP INACTIVE
     // =====================================================
 
+    // UC-09: Xây dựng đối tượng suất chiếu sau khi kiểm tra dữ liệu và thời gian kết thúc.
     private Showtime buildShowtime(
             int showtimeId,
             int cinemaId,
