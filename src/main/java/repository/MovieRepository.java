@@ -300,6 +300,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    // UC-04: Lấy danh sách phim theo chi nhánh thay vì toàn hệ thống.
     public List<Movie> getByCinemaId(int cinemaId) {
 
         List<Movie> movies = new ArrayList<>();
@@ -328,6 +329,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    // UC-04: Đọc thông tin phim kể cả khi phim đang INACTIVE.
     public Movie getByIdAnyStatus(int movieId) {
 
         String sql = "SELECT * "
@@ -351,6 +353,7 @@ public class MovieRepository extends DBContext {
         return null;
     }
 
+    // UC-04: Lấy danh sách ID thể loại đã liên kết với phim.
     public List<Integer> getGenreIds(int movieId) {
 
         List<Integer> genreIds = new ArrayList<>();
@@ -376,6 +379,7 @@ public class MovieRepository extends DBContext {
         return genreIds;
     }
 
+    // UC-04: Kiểm tra phim đã được gán cho chi nhánh hiện tại chưa.
     public boolean belongsToCinema(int movieId, int cinemaId) {
 
         String sql = "SELECT movie_id "
@@ -400,6 +404,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    // UC-04: Tạo phim và các liên kết thể loại/chi nhánh trong giao dịch.
     public boolean insertForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -479,6 +484,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    // UC-04: Cập nhật phim và danh sách thể loại trong giao dịch.
     public boolean updateForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -580,6 +586,7 @@ public class MovieRepository extends DBContext {
         return movie;
     }
 
+    // UC-04: Kiểm tra lịch sử suất chiếu tại chi nhánh trước khi gỡ phim.
     public boolean hasShowtimeAtCinema(
             int movieId,
             int cinemaId) {
@@ -607,6 +614,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    // UC-04: Chỉ xóa bản ghi liên kết Cinema_Movie, không xóa phim toàn hệ thống.
     public boolean deleteFromCinema(
             int movieId,
             int cinemaId) {
