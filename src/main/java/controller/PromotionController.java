@@ -30,9 +30,11 @@ import service.DashboardService;
 public class PromotionController extends HttpServlet {
 
     private PromotionService promotionService;
+    private final DashboardService dashboardService;
 
-    private final DashboardService dashboardService
-            = new DashboardService();
+    public PromotionController() {
+        dashboardService = new DashboardService();
+    }
 
     // Initialize the promotion service.
     @Override

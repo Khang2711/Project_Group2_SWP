@@ -22,8 +22,13 @@ import service.AvatarService;
 @WebServlet(urlPatterns = {"/user/profile", "/user/edit-profile"})
 public class ProfileController extends HttpServlet {
 
-    private final ProfileService profileService = new ProfileService();
-    private final AvatarService avatarService = new AvatarService();
+    private final ProfileService profileService;
+    private final AvatarService avatarService;
+
+    public ProfileController() {
+        profileService = new ProfileService();
+        avatarService = new AvatarService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,

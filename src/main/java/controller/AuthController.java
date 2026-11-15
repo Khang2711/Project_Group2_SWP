@@ -39,8 +39,11 @@ public class AuthController extends HttpServlet {
     private AuthService authService;
     private PasswordResetService passwordResetService;
     private EmailVerificationService emailVerificationService;
-    private final LoginAttemptLimiter loginAttemptLimiter
-            = new LoginAttemptLimiter();
+    private final LoginAttemptLimiter loginAttemptLimiter;
+
+    public AuthController() {
+        loginAttemptLimiter = new LoginAttemptLimiter();
+    }
 
     @Override
     public void init() {

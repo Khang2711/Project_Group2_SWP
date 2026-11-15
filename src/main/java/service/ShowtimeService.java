@@ -22,10 +22,17 @@ import repository.ShowtimeRepository;
 public class ShowtimeService {
 
     
-    private ShowtimeRepository showtimeRepository = new ShowtimeRepository();
-    private RoomRepository roomRepository = new RoomRepository();
-    private CinemaRepository cinemaRepository = new CinemaRepository();
-    private MovieRepository movieRepository = new MovieRepository();
+    private ShowtimeRepository showtimeRepository;
+    private RoomRepository roomRepository;
+    private CinemaRepository cinemaRepository;
+    private MovieRepository movieRepository;
+
+    public ShowtimeService() {
+        showtimeRepository = new ShowtimeRepository();
+        roomRepository = new RoomRepository();
+        cinemaRepository = new CinemaRepository();
+        movieRepository = new MovieRepository();
+    }
 
     public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 

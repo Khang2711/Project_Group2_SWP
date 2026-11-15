@@ -35,8 +35,13 @@ import util.ProjectImageStorage;
 })
 public class ComboController extends HttpServlet {
 
-    private final ComboService comboService = new ComboService();
-    private final FoodService foodService = new FoodService();
+    private final ComboService comboService;
+    private final FoodService foodService;
+
+    public ComboController() {
+        comboService = new ComboService();
+        foodService = new FoodService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

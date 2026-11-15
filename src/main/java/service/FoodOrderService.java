@@ -17,13 +17,17 @@ import repository.FoodItemRepository;
 
 public class FoodOrderService {
 
-    private final FoodOrderRepository foodOrderRepository
-            = new FoodOrderRepository();
+    private final FoodOrderRepository foodOrderRepository;
+    private final FoodOrderItemRepository foodOrderItemRepository;
+    private final ComboRepository comboRepository;
+    private final FoodItemRepository foodItemRepository;
 
-    private final FoodOrderItemRepository foodOrderItemRepository
-            = new FoodOrderItemRepository();
-    private final ComboRepository comboRepository = new ComboRepository();
-    private final FoodItemRepository foodItemRepository = new FoodItemRepository();
+    public FoodOrderService() {
+        foodOrderRepository = new FoodOrderRepository();
+        foodOrderItemRepository = new FoodOrderItemRepository();
+        comboRepository = new ComboRepository();
+        foodItemRepository = new FoodItemRepository();
+    }
 
     public BigDecimal calculateOnlineComboTotal(int cinemaId, List<FoodOrderItem> items) {
         if (items == null || items.isEmpty()) {

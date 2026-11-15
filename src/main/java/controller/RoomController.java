@@ -17,8 +17,11 @@ import service.RoomService;
 })
 public class RoomController extends HttpServlet {
 
-    private final RoomService roomService =
-            new RoomService();
+    private final RoomService roomService;
+
+    public RoomController() {
+        roomService = new RoomService();
+    }
 
     @Override
     protected void doGet(

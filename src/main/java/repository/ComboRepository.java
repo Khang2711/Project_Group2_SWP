@@ -14,7 +14,11 @@ import model.ComboItem;
 /** DAO cho bảng Combo. */
 public class ComboRepository {
 
-    private final ComboItemRepository comboItemRepository = new ComboItemRepository();
+    private final ComboItemRepository comboItemRepository;
+
+    public ComboRepository() {
+        comboItemRepository = new ComboItemRepository();
+    }
 
     public List<Combo> findByCinema(int cinemaId) {
         List<Combo> combos = new ArrayList<>();

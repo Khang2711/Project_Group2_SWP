@@ -15,8 +15,13 @@ import service.MovieService;
 @WebServlet("/home")
 public class HomeController extends HttpServlet {
 
-    private MovieService movieService = new MovieService();
-    private CinemaService cinemaService = new CinemaService();
+    private MovieService movieService;
+    private CinemaService cinemaService;
+
+    public HomeController() {
+        movieService = new MovieService();
+        cinemaService = new CinemaService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

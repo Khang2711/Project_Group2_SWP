@@ -7,7 +7,11 @@ import util.PasswordUtil;
 
 public class ProfileService {
 
-    private final UserRepository userRepository = new UserRepository();
+    private final UserRepository userRepository;
+
+    public ProfileService() {
+        userRepository = new UserRepository();
+    }
 
     public User getProfile(int userId) throws SQLException {
         User user = findCustomer(userId);

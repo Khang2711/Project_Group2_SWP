@@ -16,8 +16,7 @@ import repository.ShowtimeRepository;
  */
 public class CinemaService {
 
-    private final ShowtimeRepository showtimeRepository
-        = new ShowtimeRepository();
+    private final ShowtimeRepository showtimeRepository;
 
 public Cinema getCinemaByShowtime(Showtime showtime) {
     if (showtime == null) {
@@ -37,6 +36,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     private ShowtimeRepository showtimeRepositorys;
 
     public CinemaService() {
+        showtimeRepository = new ShowtimeRepository();
         cinemaRepository = new CinemaRepository();
         showtimeRepositorys = new ShowtimeRepository();
     }

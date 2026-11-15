@@ -12,7 +12,11 @@ import service.AvatarService;
 @WebServlet("/avatars/*")
 public class AvatarController extends HttpServlet {
 
-    private final AvatarService avatarService = new AvatarService();
+    private final AvatarService avatarService;
+
+    public AvatarController() {
+        avatarService = new AvatarService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,

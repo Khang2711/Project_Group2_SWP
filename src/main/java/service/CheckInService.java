@@ -11,11 +11,14 @@ import repository.ShowtimeRepository;
 
 public class CheckInService {
 
-    private final ShowtimeRepository showtimeRepository
-            = new ShowtimeRepository();
+    private final ShowtimeRepository showtimeRepository;
+    private final TicketRepository ticketRepository;
 
-    private final TicketRepository ticketRepository
-            = new TicketRepository();
+    public CheckInService() {
+        showtimeRepository = new ShowtimeRepository();
+        ticketRepository = new TicketRepository();
+    }
+
     // Validate the ticket code format and input.
     public String validateTicketCode(String ticketCode) {
         if (ticketCode == null || ticketCode.trim().isEmpty()) {

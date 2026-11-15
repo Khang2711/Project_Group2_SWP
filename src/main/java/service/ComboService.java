@@ -14,9 +14,15 @@ import repository.FoodItemRepository;
 /** Nghiệp vụ quản lý combo đồ ăn/uống. */
 public class ComboService {
 
-    private final ComboRepository comboRepository = new ComboRepository();
-    private final ComboItemRepository comboItemRepository = new ComboItemRepository();
-    private final FoodItemRepository foodItemRepository = new FoodItemRepository();
+    private final ComboRepository comboRepository;
+    private final ComboItemRepository comboItemRepository;
+    private final FoodItemRepository foodItemRepository;
+
+    public ComboService() {
+        comboRepository = new ComboRepository();
+        comboItemRepository = new ComboItemRepository();
+        foodItemRepository = new FoodItemRepository();
+    }
 
     public List<Combo> getCombosByCinema(int cinemaId) {
         requireCinema(cinemaId);

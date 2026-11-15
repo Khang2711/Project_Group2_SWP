@@ -11,11 +11,13 @@ import java.sql.SQLException;
 
 public class PromotionService {
 
-    private final PromotionRepository promotionRepository
-            = new PromotionRepository();
+    private final PromotionRepository promotionRepository;
+    private final ShowtimeRepository showtimeRepository;
 
-    private final ShowtimeRepository showtimeRepository
-            = new ShowtimeRepository();
+    public PromotionService() {
+        promotionRepository = new PromotionRepository();
+        showtimeRepository = new ShowtimeRepository();
+    }
 
     // Retrieve all promotions belonging to a cinema.
     public List<Promotion> getAllPromotions(int cinemaId) {

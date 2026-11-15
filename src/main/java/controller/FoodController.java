@@ -26,7 +26,11 @@ import util.ProjectImageStorage;
 })
 public class FoodController extends HttpServlet {
 
-    private final FoodService foodService = new FoodService();
+    private final FoodService foodService;
+
+    public FoodController() {
+        foodService = new FoodService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

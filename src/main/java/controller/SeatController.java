@@ -22,11 +22,13 @@ import service.SeatService;
 })
 public class SeatController extends HttpServlet {
 
-    private final SeatService seatService =
-            new SeatService();
+    private final SeatService seatService;
+    private final RoomService roomService;
 
-    private final RoomService roomService =
-            new RoomService();
+    public SeatController() {
+        seatService = new SeatService();
+        roomService = new RoomService();
+    }
 
     @Override
     protected void doGet(

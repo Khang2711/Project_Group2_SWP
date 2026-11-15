@@ -27,14 +27,15 @@ import service.ShowtimeService;
 public class ShowtimeBulkController
         extends HttpServlet {
 
-    private final ShowtimeService showtimeService =
-            new ShowtimeService();
+    private final ShowtimeService showtimeService;
+    private final MovieService movieService;
+    private final RoomService roomService;
 
-    private final MovieService movieService =
-            new MovieService();
-
-    private final RoomService roomService =
-            new RoomService();
+    public ShowtimeBulkController() {
+        showtimeService = new ShowtimeService();
+        movieService = new MovieService();
+        roomService = new RoomService();
+    }
 
     @Override
     protected void doGet(

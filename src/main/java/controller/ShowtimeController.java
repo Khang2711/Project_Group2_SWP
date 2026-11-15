@@ -34,17 +34,17 @@ import service.ShowtimeService;
 })
 public class ShowtimeController extends HttpServlet {
 
-    private final ShowtimeService showtimeService
-            = new ShowtimeService();
+    private final ShowtimeService showtimeService;
+    private final MovieService movieService;
+    private final CinemaService cinemaService;
+    private final RoomService roomService;
 
-    private final MovieService movieService
-            = new MovieService();
-
-    private final CinemaService cinemaService
-            = new CinemaService();
-
-    private final RoomService roomService
-            = new RoomService();
+    public ShowtimeController() {
+        showtimeService = new ShowtimeService();
+        movieService = new MovieService();
+        cinemaService = new CinemaService();
+        roomService = new RoomService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {

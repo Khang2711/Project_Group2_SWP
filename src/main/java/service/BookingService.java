@@ -51,10 +51,10 @@ public class BookingService {
     private final ComboRepository comboRepository;
     private final FoodItemRepository foodItemRepository;
     private final FoodOrderService foodOrderService;
-    private final FoodOrderRepository foodOrderRepository
-        = new FoodOrderRepository();
+    private final FoodOrderRepository foodOrderRepository;
 
     public BookingService() {
+        foodOrderRepository = new FoodOrderRepository();
         bookingRepository = new BookingRepository();
         ticketRepository = new TicketRepository();
         showtimeRepository = new ShowtimeRepository();

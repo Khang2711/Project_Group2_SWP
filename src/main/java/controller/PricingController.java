@@ -23,11 +23,13 @@ import service.PricingService;
 public class PricingController
         extends HttpServlet {
 
-    private final PricingService pricingService =
-            new PricingService();
+    private final PricingService pricingService;
+    private final MovieService movieService;
 
-    private final MovieService movieService =
-            new MovieService();
+    public PricingController() {
+        pricingService = new PricingService();
+        movieService = new MovieService();
+    }
 
     @Override
     protected void doGet(

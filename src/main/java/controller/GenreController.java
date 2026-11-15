@@ -12,7 +12,11 @@ import service.GenreService;
 @WebServlet(urlPatterns = {"/admin/genres", "/admin/genre-form"})
 public class GenreController extends HttpServlet {
 
-    private GenreService genreService = new GenreService();
+    private GenreService genreService;
+
+    public GenreController() {
+        genreService = new GenreService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

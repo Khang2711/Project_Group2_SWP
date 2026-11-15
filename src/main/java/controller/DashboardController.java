@@ -28,8 +28,11 @@ import service.DashboardService;
 @WebServlet(urlPatterns = {"/admin/dashboard"})
 public class DashboardController extends HttpServlet {
 
-    private final DashboardService dashboardService
-            = new DashboardService();
+    private final DashboardService dashboardService;
+
+    public DashboardController() {
+        dashboardService = new DashboardService();
+    }
 
     // Validate manager access and load dashboard data.
     @Override

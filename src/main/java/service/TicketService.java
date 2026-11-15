@@ -29,26 +29,23 @@ import java.util.Locale;
 
 public class TicketService {
 
-    private final BookingRepository bookingRepository
-            = new BookingRepository();
+    private final BookingRepository bookingRepository;
+    private final TicketRepository ticketRepository;
+    private final PaymentRepository paymentRepository;
+    private final ShowtimeRepository showtimeRepository;
+    private final MovieRepository movieRepository;
+    private final SeatRepository seatRepository;
+    private final FoodOrderRepository foodOrderRepository;
 
-    private final TicketRepository ticketRepository
-            = new TicketRepository();
-
-    private final PaymentRepository paymentRepository
-            = new PaymentRepository();
-
-    private final ShowtimeRepository showtimeRepository
-            = new ShowtimeRepository();
-
-    private final MovieRepository movieRepository
-            = new MovieRepository();
-
-    private final SeatRepository seatRepository
-            = new SeatRepository();
-
-    private final FoodOrderRepository foodOrderRepository
-            = new FoodOrderRepository();
+    public TicketService() {
+        bookingRepository = new BookingRepository();
+        ticketRepository = new TicketRepository();
+        paymentRepository = new PaymentRepository();
+        showtimeRepository = new ShowtimeRepository();
+        movieRepository = new MovieRepository();
+        seatRepository = new SeatRepository();
+        foodOrderRepository = new FoodOrderRepository();
+    }
 
     /**
      * Products already paid for with a booking, scoped to its cinema.

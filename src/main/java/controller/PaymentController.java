@@ -33,8 +33,13 @@ import service.PaymentService.PaymentResult;
 public class PaymentController extends HttpServlet {
 
     private PaymentService paymentService;
-    private final BookingService bookingService = new BookingService();
-    private final CinemaService cinemaService = new CinemaService();
+    private final BookingService bookingService;
+    private final CinemaService cinemaService;
+
+    public PaymentController() {
+        bookingService = new BookingService();
+        cinemaService = new CinemaService();
+    }
 
     @Override
     public void init() {

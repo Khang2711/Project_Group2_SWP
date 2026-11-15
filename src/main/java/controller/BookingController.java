@@ -36,7 +36,11 @@ import service.CinemaService;
 public class BookingController extends HttpServlet {
 
     private BookingService bookingService;
-    private final CinemaService cinemaService = new CinemaService();
+    private final CinemaService cinemaService;
+
+    public BookingController() {
+        cinemaService = new CinemaService();
+    }
 
     @Override
     public void init() {

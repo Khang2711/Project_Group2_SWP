@@ -15,7 +15,11 @@ import service.CinemaService;
 })
 public class SystemCinemaController extends HttpServlet {
 
-    private final CinemaService cinemaService = new CinemaService();
+    private final CinemaService cinemaService;
+
+    public SystemCinemaController() {
+        cinemaService = new CinemaService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,

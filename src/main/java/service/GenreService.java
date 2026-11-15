@@ -6,7 +6,11 @@ import repository.GenreRepository;
 
 public class GenreService {
 
-    private GenreRepository genreRepository = new GenreRepository();
+    private GenreRepository genreRepository;
+
+    public GenreService() {
+        genreRepository = new GenreRepository();
+    }
 
     /**
      * Gets all genres, including active and inactive genres.

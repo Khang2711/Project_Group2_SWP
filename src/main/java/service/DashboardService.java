@@ -15,11 +15,13 @@ import repository.FoodOrderRepository;
 
 public class DashboardService {
 
-    private final BookingRepository bookingRepository
-            = new BookingRepository();
+    private final BookingRepository bookingRepository;
+    private final FoodOrderRepository foodOrderRepository;
 
-    private final FoodOrderRepository foodOrderRepository
-            = new FoodOrderRepository();
+    public DashboardService() {
+        bookingRepository = new BookingRepository();
+        foodOrderRepository = new FoodOrderRepository();
+    }
 
     // Get the cinema assigned to the manager.
     public Cinema getManagerCinema(int managerId)

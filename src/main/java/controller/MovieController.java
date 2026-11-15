@@ -36,7 +36,11 @@ import util.ProjectImageStorage;
 })
 public class MovieController extends HttpServlet {
 
-    private MovieService movieService = new MovieService();
+    private MovieService movieService;
+
+    public MovieController() {
+        movieService = new MovieService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request,

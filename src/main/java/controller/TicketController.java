@@ -35,7 +35,11 @@ import javax.imageio.ImageIO;
 public class TicketController extends HttpServlet {
 
     private TicketService ticketService;
-    private final CinemaService cinemaService = new CinemaService();
+    private final CinemaService cinemaService;
+
+    public TicketController() {
+        cinemaService = new CinemaService();
+    }
 
     @Override
     public void init() {

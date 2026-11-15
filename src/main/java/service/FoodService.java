@@ -8,7 +8,11 @@ import repository.FoodItemRepository;
 /** Nghiệp vụ quản lý món ăn/uống. */
 public class FoodService {
 
-    private final FoodItemRepository repository = new FoodItemRepository();
+    private final FoodItemRepository repository;
+
+    public FoodService() {
+        repository = new FoodItemRepository();
+    }
 
     public List<FoodItem> getItemsByCinema(int cinemaId) {
         requireCinema(cinemaId);
