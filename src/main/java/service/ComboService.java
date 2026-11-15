@@ -11,7 +11,6 @@ import repository.ComboItemRepository;
 import repository.ComboRepository;
 import repository.FoodItemRepository;
 
-/** Nghiệp vụ quản lý combo đồ ăn/uống. */
 public class ComboService {
 
     private final ComboRepository comboRepository = new ComboRepository();
