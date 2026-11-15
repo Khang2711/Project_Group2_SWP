@@ -15,6 +15,7 @@ import model.Seat;
 
 public class SeatRepository extends DBContext {
 
+    // UC-07: Truy vấn toàn bộ ghế trong phòng để hiển thị sơ đồ.
     public List<Seat> findByRoomId(int roomId) {
         List<Seat> seats = new ArrayList<>();
 
@@ -38,6 +39,7 @@ public class SeatRepository extends DBContext {
         return seats;
     }
 
+    // UC-07: Truy vấn ghế theo phòng để tránh thao tác nhầm phòng.
     public Seat findByIdAndRoom(int seatId, int roomId) {
         String sql = "SELECT seat_id, room_id, "
                 + "seat_row, seat_number, seat_type, status "
@@ -59,6 +61,7 @@ public class SeatRepository extends DBContext {
         return null;
     }
 
+    // UC-07: Kiểm tra trùng vị trí ghế trong cùng phòng.
     public boolean existsPosition(
             int roomId, int seatRow, int seatNumber,
             Integer excludeSeatId) {
@@ -89,6 +92,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    // UC-07: Đếm ghế thực tế để đồng bộ sức chứa.
     public int countSeats(int roomId) {
         String sql = "SELECT COUNT(*) FROM Seat WHERE room_id = ?";
 
@@ -108,6 +112,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    // UC-07: Xác định số hàng hiện có trước khi thêm hàng mới.
     public int getMaxRow(int roomId) {
         String sql = "SELECT COALESCE(MAX(seat_row), 0) "
                 + "FROM Seat WHERE room_id = ?";
@@ -128,6 +133,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    // UC-07: Không cho sửa/xóa ghế gây ảnh hưởng đến vé đã tồn tại.
     public boolean hasTicketHistory(int seatId) {
         String sql = "SELECT TOP 1 ticket_id "
                 + "FROM Ticket WHERE seat_id = ?";
@@ -144,6 +150,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    // UC-07: Thêm một ghế vào cơ sở dữ liệu.
     public boolean insert(Seat seat) {
         String sql = "INSERT INTO Seat "
                 + "(room_id, seat_row, seat_number, "
@@ -199,6 +206,7 @@ public class SeatRepository extends DBContext {
     // Có transaction và đồng bộ capacity.
     // =====================================================
 
+    // UC-07: Tạo hàng ghế mới và cập nhật sức chứa trong cùng giao dịch.
     public boolean insertRowAtomic(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -254,6 +262,7 @@ public class SeatRepository extends DBContext {
     // - Rollback nếu bất kỳ ghế nào lỗi.
     // =====================================================
 
+    // UC-07: Thêm nhiều ghế vào hàng có sẵn và đồng bộ capacity trong giao dịch.
     public boolean appendSeatsToRowAtomic(
             int roomId,
             int seatRow,
@@ -339,6 +348,7 @@ public class SeatRepository extends DBContext {
     // CẬP NHẬT MỘT GHẾ
     // =====================================================
 
+    // UC-07: Cập nhật thuộc tính của một ghế.
     public boolean update(Seat seat) {
         String sql = "UPDATE Seat SET seat_row = ?, "
                 + "seat_number = ?, seat_type = ?, status = ? "
@@ -359,6 +369,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    // UC-07: Cập nhật trạng thái sử dụng ghế.
     public boolean updateStatus(
             int seatId, int roomId, String status) {
 
@@ -377,6 +388,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    // UC-07: Thực hiện cập nhật một nhóm ghế được chọn.
     public int updateBulk(
             List<Integer> seatIds,
             int roomId,
@@ -455,6 +467,7 @@ public class SeatRepository extends DBContext {
     // BUG-17 - XÓA NHIỀU GHẾ TRONG MỘT TRANSACTION
     // =====================================================
 
+    // UC-07: Xóa nhóm ghế và cập nhật sức chứa trong cùng giao dịch.
     public boolean deleteSeatsAtomic(
             List<Integer> seatIds, int roomId) {
 
@@ -577,6 +590,7 @@ public class SeatRepository extends DBContext {
         return connection;
     }
 
+    // UC-07: Khóa bản ghi Room khi cần tránh xung đột trong thao tác đồng thời.
     private void lockRoom(
             Connection connection, int roomId)
             throws SQLException {
@@ -708,6 +722,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    // UC-07: Tính lại capacity của phòng sau khi thay đổi số ghế.
     private void syncCapacity(
             Connection connection, int roomId)
             throws SQLException {
