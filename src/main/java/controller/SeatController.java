@@ -29,6 +29,7 @@ public class SeatController extends HttpServlet {
             new RoomService();
 
     @Override
+    // UC-07: Đọc roomId, kiểm tra quyền chi nhánh rồi mở sơ đồ ghế/biểu mẫu.
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -129,6 +130,7 @@ public class SeatController extends HttpServlet {
     }
 
     @Override
+    // UC-07: Xử lý tạo ghế, thêm hàng, thêm ghế vào hàng, cập nhật và xóa ghế.
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -477,6 +479,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LỖI TRÊN SƠ ĐỒ GHẾ
     // =====================================================
 
+    // UC-07: Giữ thông tin lỗi để quản lý biết thao tác ghế nào bị từ chối.
     private void showSeatMapError(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -511,6 +514,7 @@ public class SeatController extends HttpServlet {
     // LOAD SƠ ĐỒ GHẾ VÀ THÔNG TIN PHÒNG
     // =====================================================
 
+    // UC-07: Lấy danh sách ghế và nhóm theo hàng để hiển thị sơ đồ.
     private void loadSeatMap(
             HttpServletRequest request,
             Room room,
@@ -539,6 +543,7 @@ public class SeatController extends HttpServlet {
     // CHUYỂN DANH SÁCH SEAT ID THÀNH INTEGER
     // =====================================================
 
+    // UC-07: Chuyển danh sách ID ghế được chọn từ request về dữ liệu số.
     private List<Integer> parseSeatIds(
             String[] values) {
 
@@ -578,6 +583,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LẠI FORM KHI CÓ LỖI
     // =====================================================
 
+    // UC-07: Nạp lại form ghế khi dữ liệu sai hoặc thao tác không thành công.
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -672,6 +678,7 @@ public class SeatController extends HttpServlet {
     // KIỂM TRA QUYỀN CINEMA MANAGER
     // =====================================================
 
+    // UC-07: Kiểm tra người dùng có quyền quản lý ghế trong chi nhánh.
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
