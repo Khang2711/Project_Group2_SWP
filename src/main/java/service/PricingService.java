@@ -20,6 +20,7 @@ public class PricingService {
         movieRepository = new MovieRepository();
     }
 
+    // UC-08: Lấy danh sách chính sách giá theo chi nhánh.
     public List<Pricing> getPricingByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -31,6 +32,7 @@ public class PricingService {
         return pricingRepository.findByCinemaId(cinemaId);
     }
 
+    // UC-08: Lấy một chính sách giá và xác nhận thuộc chi nhánh.
     public Pricing getPricing(int pricingId, int cinemaId) {
 
         if (pricingId <= 0 || cinemaId <= 0) {
@@ -48,6 +50,7 @@ public class PricingService {
     // TẠO QUY TẮC GIÁ
     // =====================================================
 
+    // UC-08: Kiểm tra điều kiện giá và các chính sách ACTIVE có thể xung đột trước khi tạo.
     public void createPricing(
             int cinemaId,
             Integer movieId,
@@ -121,6 +124,7 @@ public class PricingService {
     // CẬP NHẬT QUY TẮC GIÁ
     // =====================================================
 
+    // UC-08: Kiểm tra phạm vi và thời gian hiệu lực trước khi cập nhật chính sách giá.
     public void updatePricing(
             int pricingId,
             int cinemaId,
@@ -202,6 +206,7 @@ public class PricingService {
     // XÓA QUY TẮC GIÁ
     // =====================================================
 
+    // UC-08: Chỉ xóa chính sách giá thuộc chi nhánh được quản lý.
     public void deletePricing(int pricingId, int cinemaId) {
 
         Pricing pricing = getPricing(pricingId, cinemaId);
@@ -223,6 +228,7 @@ public class PricingService {
     // VALIDATE DỮ LIỆU GIÁ VÉ
     // =====================================================
 
+    // UC-08: Kiểm tra giá dương, ngày giờ áp dụng và các trường bắt buộc.
     private void validatePricing(Pricing pricing) {
 
         if (pricing.getCinemaId() <= 0) {
@@ -328,6 +334,7 @@ public class PricingService {
     // cùng tồn tại theo cơ chế ưu tiên giá.
     // =====================================================
 
+    // UC-08: Phát hiện hai quy tắc giá ACTIVE cùng phạm vi và chồng thời gian.
     private boolean hasConflictingRule(
             Pricing candidate,
             Integer excludePricingId) {
@@ -382,6 +389,7 @@ public class PricingService {
     // Khung giờ được kiểm tra riêng bằng overlap.
     // =====================================================
 
+    // UC-08: So sánh các điều kiện áp dụng để xác định hai quy tắc cùng phạm vi.
     private boolean sameScope(
             Pricing first,
             Pricing second) {
@@ -412,6 +420,7 @@ public class PricingService {
     // KIỂM TRA KHOẢNG NGÀY GIAO NHAU
     // =====================================================
 
+    // UC-08: Kiểm tra giao nhau giữa hai khoảng ngày hiệu lực.
     private boolean dateRangesOverlap(
             Pricing first,
             Pricing second) {
@@ -447,6 +456,7 @@ public class PricingService {
     // => Không xung đột.
     // =====================================================
 
+    // UC-08: Kiểm tra giao nhau giữa hai khoảng giờ áp dụng.
     private boolean timeRangesOverlap(
             Pricing first,
             Pricing second) {
