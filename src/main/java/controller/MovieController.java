@@ -122,6 +122,7 @@ public class MovieController extends HttpServlet {
 
                 break;
 
+            // UC-04: Xem phim thuộc chi nhánh khi quản lý truy cập danh sách phim.
             case "/admin/movies":
 
                 User manager
@@ -140,6 +141,7 @@ public class MovieController extends HttpServlet {
 
                 break;
 
+            // UC-04: Mở biểu mẫu thêm/sửa phim của chi nhánh.
             case "/admin/movie-form":
 
                 User formManager
@@ -235,6 +237,7 @@ public class MovieController extends HttpServlet {
         // ==========================
         // XÓA PHIM KHỎI RẠP
         // ==========================
+        // UC-04: Xử lý yêu cầu gỡ phim khỏi chi nhánh, không xóa Movie toàn hệ thống.
         if ("/admin/movies".equals(path)) {
 
             User manager
@@ -426,6 +429,7 @@ public class MovieController extends HttpServlet {
 
     /* Forward lại form khi dữ liệu thêm/sửa bị lỗi.
      */
+    // UC-04: Khi biểu mẫu phim có lỗi, nạp lại dữ liệu để quản lý sửa và gửi lại.
     private void forwardAdminForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -594,6 +598,7 @@ public class MovieController extends HttpServlet {
     /**
      * Kiểm tra tài khoản Cinema Manager.
      */
+    // UC-04: Xác nhận người dùng có quyền Cinema Manager trước khi thao tác với phim của chi nhánh.
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
