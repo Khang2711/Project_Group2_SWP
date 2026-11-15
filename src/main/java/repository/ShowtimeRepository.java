@@ -162,6 +162,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    // UC-09: Lấy suất chiếu theo chi nhánh.
     public List<Showtime> getByCinemaId(int cinemaId) {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -190,6 +191,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    // UC-09: Lấy suất chiếu và kiểm tra đúng chi nhánh.
     public Showtime getByIdAndCinema(
             int showtimeId,
             int cinemaId) {
@@ -294,6 +296,7 @@ public class ShowtimeRepository extends DBContext {
     // KIỂM TRA DỮ LIỆU SUẤT CHIẾU
     // =====================================================
 
+    // UC-09: Kiểm tra điều kiện dữ liệu suất chiếu trước khi ghi DB.
     private void validateShowtime(
             Showtime showtime) throws SQLException {
 
@@ -349,6 +352,7 @@ public class ShowtimeRepository extends DBContext {
     // AND existing.end > new.start
     // =====================================================
 
+    // UC-09: Kiểm tra phòng bị trùng lịch ngay trong giao dịch.
     private boolean hasConflictInTransaction(
             Connection connection,
             int roomId,
@@ -392,6 +396,7 @@ public class ShowtimeRepository extends DBContext {
     // Lock -> Check overlap -> Insert -> Commit
     // =====================================================
 
+    // UC-09: Tạo một suất chiếu sau khi kiểm tra lịch và dữ liệu.
     public boolean insert(Showtime showtime) {
 
         String sql = "INSERT INTO Showtime "
@@ -480,6 +485,7 @@ public class ShowtimeRepository extends DBContext {
     // 5. Có lỗi -> rollback toàn bộ.
     // =====================================================
 
+    // UC-09: Ghi nhiều suất chiếu trong một giao dịch, tránh tạo dở dang.
     public boolean insertBatch(
             List<Showtime> showtimes) {
 
@@ -645,6 +651,7 @@ public class ShowtimeRepository extends DBContext {
     // Kiểm tra lại xung đột trước UPDATE.
     // =====================================================
 
+    // UC-09: Cập nhật suất chiếu sau khi đối chiếu ràng buộc.
     public boolean update(
             Showtime showtime,
             int cinemaId) {
@@ -895,6 +902,7 @@ public class ShowtimeRepository extends DBContext {
     // Tránh cho phép ghi lịch khi DB không kiểm tra được.
     // =====================================================
 
+    // UC-09: Kiểm tra hai suất chiếu ACTIVE có giao nhau về thời gian trong cùng phòng.
     public boolean hasConflict(
             int roomId,
             Timestamp startTime,
@@ -943,6 +951,7 @@ public class ShowtimeRepository extends DBContext {
     // DB lỗi => không được mặc định chưa có vé.
     // =====================================================
 
+    // UC-09: Kiểm tra suất chiếu có vé trước khi sửa/xóa.
     public boolean hasTickets(int showtimeId) {
 
         String sql = "SELECT TOP 1 ticket_id "
@@ -971,6 +980,7 @@ public class ShowtimeRepository extends DBContext {
     // CHUYỂN SUẤT CHIẾU SANG INACTIVE
     // =====================================================
 
+    // UC-09: Cập nhật trạng thái INACTIVE theo ràng buộc hiện hành.
     public boolean setInactive(
             int showtimeId,
             int cinemaId) {
@@ -1001,6 +1011,7 @@ public class ShowtimeRepository extends DBContext {
     // XÓA SUẤT CHIẾU
     // =====================================================
 
+    // UC-09: Xóa lịch chiếu khi không bị lịch sử vé ngăn cản.
     public boolean delete(
             int showtimeId,
             int cinemaId) {
