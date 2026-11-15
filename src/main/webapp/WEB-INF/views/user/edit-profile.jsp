@@ -80,10 +80,10 @@
 
                 <div class="profile-field profile-wide">
                     <label for="profile-avatar">
-                        Ảnh đại diện (JPG, PNG hoặc GIF; tối đa 5 MB)
+                        Ảnh đại diện (JPG, PNG hoặc GIF; tối đa 5 MB, khoảng 2000 × 2000 pixel)
                     </label>
 
-                    <c:if test="${not empty profile.avatarUrl}">
+                    <c:if test="${not empty profile.avatarUrl and fn:startsWith(profile.avatarUrl, '/avatars/')}">
                         <c:url var="currentAvatarSrc"
                                value="${profile.avatarUrl}" />
 
@@ -120,17 +120,6 @@
 
                 <div class="profile-form-grid">
                     <div class="profile-field">
-                        <label for="profile-current-password">
-                            Mật khẩu hiện tại
-                        </label>
-
-                        <input id="profile-current-password"
-                               name="currentPassword"
-                               type="password"
-                               autocomplete="new-password">
-                    </div>
-
-                    <div class="profile-field">
                         <label for="profile-new-password">
                             Mật khẩu mới
                         </label>
@@ -141,6 +130,29 @@
                                minlength="6"
                                autocomplete="new-password"
                                placeholder="Ít nhất 6 ký tự">
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label for="profile-current-password">
+                            Mật khẩu hiện tại
+                        </label>
+
+                        <input id="profile-current-password"
+                               name="currentPassword"
+                               type="password"
+                               autocomplete="new-password">
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label for="profile-confirm-password">
+                            Nhập lại mật khẩu mới
+                        </label>
+
+                        <input id="profile-confirm-password"
+                               name="confirmPassword"
+                               type="password"
+                               minlength="6"
+                               autocomplete="new-password">
                     </div>
                 </div>
             </fieldset>

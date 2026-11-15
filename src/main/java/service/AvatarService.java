@@ -15,6 +15,9 @@ import javax.imageio.stream.ImageInputStream;
 
 public class AvatarService {
 
+    // Max 4 million pixels (about 2000 x 2000), roughly 16 MB of RAM
+    private static final long MAX_PIXELS = 4_000_000L;
+
     public Path getDirectory() {
         String base = System.getProperty(
                 "catalina.base",
@@ -74,13 +77,17 @@ public class AvatarService {
                             "Chỉ chấp nhận ảnh JPG, PNG hoặc GIF.");
                 }
 
-                if (reader.getWidth(0) > 6000
-                        || reader.getHeight(0) > 6000) {
+                // Check the size first: decoding a huge image uses a lot of RAM
+                long pixels = (long) reader.getWidth(0)
+                        * reader.getHeight(0);
 
+                if (pixels > MAX_PIXELS) {
                     throw new IllegalArgumentException(
-                            "Kích thước ảnh tối đa 6000 × 6000 pixel.");
+                            "Ảnh quá lớn. Kích thước tối đa khoảng "
+                            + "2000 × 2000 pixel.");
                 }
 
+                // Make sure the file can really be decoded as an image
                 reader.read(0);
 
             } finally {
@@ -106,6 +113,7 @@ public class AvatarService {
         return "/avatars/" + fileName;
     }
 
+    // Delete the file only if the path is a valid avatar path
     public void delete(String avatarPath) throws IOException {
         if (isAvatarPath(avatarPath)) {
             Files.deleteIfExists(

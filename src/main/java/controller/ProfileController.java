@@ -141,9 +141,25 @@ public class ProfileController extends HttpServlet {
                     form.getPhone(),
                     avatarUrl,
                     request.getParameter("currentPassword"),
-                    request.getParameter("newPassword"));
+                    request.getParameter("newPassword"),
+                    request.getParameter("confirmPassword"));
 
             saved = true;
+
+            // The database is updated, so it is safe to delete the old avatar
+            String oldAvatar = currentProfile.getAvatarUrl();
+
+            if (uploadedAvatar != null
+                    && oldAvatar != null
+                    && !oldAvatar.equals(uploadedAvatar)) {
+
+                try {
+                    avatarService.delete(oldAvatar);
+
+                } catch (IOException e) {
+                    log("Cannot remove old avatar.", e);
+                }
+            }
 
             session.setAttribute("user", updatedUser);
 
@@ -193,6 +209,7 @@ public class ProfileController extends HttpServlet {
             showUploadError(request, response);
 
         } finally {
+            // Save failed: remove the new avatar file that nobody uses
             if (!saved && uploadedAvatar != null) {
                 try {
                     avatarService.delete(uploadedAvatar);
