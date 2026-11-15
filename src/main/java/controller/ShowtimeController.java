@@ -63,6 +63,7 @@ public class ShowtimeController extends HttpServlet {
             return;
         }
 
+        // UC-09: Hiển thị hoặc xóa suất chiếu của chi nhánh tùy theo GET/POST.
         if ("/admin/showtimes".equals(path)) {
 
             loadManagerList(
@@ -80,6 +81,7 @@ public class ShowtimeController extends HttpServlet {
             return;
         }
 
+        // UC-09: Mở biểu mẫu tạo/chỉnh sửa lịch chiếu theo chi nhánh.
         if ("/admin/showtime-form".equals(path)) {
 
             String id
@@ -165,6 +167,7 @@ public class ShowtimeController extends HttpServlet {
         String path
                 = request.getServletPath();
 
+        // UC-09: Hiển thị hoặc xóa suất chiếu của chi nhánh tùy theo GET/POST.
         if ("/admin/showtimes".equals(path)) {
 
             String action
@@ -385,6 +388,7 @@ public class ShowtimeController extends HttpServlet {
         }
     }
 
+    // UC-09: Lấy danh sách suất chiếu của chi nhánh để hiển thị.
     private void loadManagerList(
             HttpServletRequest request,
             User user) {
@@ -445,6 +449,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    // UC-09: Nạp danh sách phim/phòng liên quan vào form lịch chiếu.
     private void loadFormData(
             HttpServletRequest request,
             User user) {
@@ -466,6 +471,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    // UC-09: Nạp lại dữ liệu form khi thao tác lịch chiếu thất bại.
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -591,6 +597,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    // UC-09: Kiểm tra quyền Cinema Manager trước khi sửa lịch chiếu.
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
