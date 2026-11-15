@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import model.ComboItem;
 
-/** DAO cho bảng trung gian Combo_Item. */
 public class ComboItemRepository {
 
     public List<ComboItem> findByComboId(int comboId) {
