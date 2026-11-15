@@ -20,6 +20,7 @@ public class CinemaController extends HttpServlet {
     private final CinemaService cinemaService = new CinemaService();
 
     @Override
+    // UC-05: Nhận yêu cầu xem thông tin chi nhánh hoặc mở biểu mẫu.
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,6 +49,7 @@ public class CinemaController extends HttpServlet {
     }
 
     @Override
+    // UC-05: Nhận yêu cầu sửa địa chỉ/số điện thoại sau khi kiểm tra quyền quản lý.
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -94,6 +96,7 @@ public class CinemaController extends HttpServlet {
         }
     }
 
+    // UC-05: Nạp dữ liệu chi nhánh để hiển thị trang thông tin.
     private void showCinema(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -120,6 +123,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // UC-05: Nạp thông tin hiện tại vào form chỉnh sửa chi nhánh.
     private void showForm(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -142,6 +146,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // UC-05: Chỉ chấp nhận Cinema Manager có chi nhánh được phân công.
     private User getManager(HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
