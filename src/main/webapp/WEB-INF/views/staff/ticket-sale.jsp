@@ -252,7 +252,6 @@
             min-height: 0 !important;
         }
 
-        /* Chỉ in khu vực vé đã thanh toán. */
         .counter-page > :not(#counterTicketPrint) {
             display: none !important;
         }
@@ -343,7 +342,6 @@
         </div>
     </c:if>
 
-    <%-- Thông tin đơn chưa thanh toán. --%>
     <c:if test="${counterStep eq 'extras' or counterStep eq 'review'}">
         <div class="counter-card">
             <h2>Đơn đang chuẩn bị</h2>
@@ -383,7 +381,6 @@
         </div>
     </c:if>
 
-    <%-- Chỉ hỏi mua thêm một lần, trước bước thanh toán. --%>
     <c:if test="${counterStep eq 'extras'}">
         <div class="counter-card">
             <h2>Khách có muốn mua thêm bắp nước/combo không?</h2>
@@ -534,7 +531,6 @@
         </div>
     </c:if>
 
-    <%-- Chỉ hiển thị vé và QR sau khi lưu thành công. --%>
     <c:if test="${not empty printedTickets}">
         <div class="counter-card" id="counterTicketPrint">
             <div class="ticket-no-print">
@@ -990,7 +986,6 @@
                                                            }
 
                                                            function reloadTicketForm(field) {
-                                                               // Đổi phim hoặc ngày thì bỏ suất chiếu cũ.
                                                                document.getElementById("showtimeId").value = "";
                                                                field.form.submit();
                                                            }
@@ -1000,7 +995,6 @@
                                                                var total = 0;
                                                                var count = 0;
 
-                                                               // Chỉ là tiền hiển thị; server kiểm tra giá lại từ database.
                                                                for (var i = 0; i < seats.length; i++) {
                                                                    if (seats[i].checked && !seats[i].disabled) {
                                                                        total += Number(seats[i].getAttribute("data-price"));
@@ -1030,7 +1024,6 @@
                                                                        throw new Error("Không tải được thư viện QR.");
                                                                    }
 
-                                                                   // QR chứa mã vé đã lưu để chức năng check-in đọc được.
                                                                    for (var i = 0; i < boxes.length; i++) {
                                                                        boxes[i].innerHTML = "";
 
