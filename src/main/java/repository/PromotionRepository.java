@@ -12,6 +12,7 @@ import model.Promotion;
 
 public class PromotionRepository {
 
+    // Build the SQL query for retrieving promotion details.
     private String getSelectSql() {
         return "SELECT p.promotion_id, p.cinema_id, p.promo_code, "
                 + "p.description, p.discount_type, p.discount_value, "
@@ -23,6 +24,7 @@ public class PromotionRepository {
                 + "FROM dbo.Promotion p ";
     }
 
+    // Retrieve all promotions belonging to a cinema.
     public List<Promotion> getAll(int cinemaId) {
 
         List<Promotion> list = new ArrayList<>();
@@ -96,6 +98,7 @@ public class PromotionRepository {
         return list;
     }
 
+    // Count promotions matching the search keyword and filter.
     public int countFiltered(
             String keyword,
             String filter,
@@ -180,6 +183,7 @@ public class PromotionRepository {
         return null;
     }
 
+    // Find a promotion by its code within a cinema.
     public Promotion getByCode(String promoCode, int cinemaId) {
 
         String sql = getSelectSql()
@@ -204,6 +208,7 @@ public class PromotionRepository {
         return null;
     }
 
+    // Count confirmed bookings using a specific promotion.
     public int countUsageByPromotionId(int promotionId) throws SQLException {
 
         String sql = "SELECT COUNT(*) FROM dbo.Booking "
@@ -247,6 +252,7 @@ public class PromotionRepository {
         return false;
     }
 
+    // Check for duplicate promotion codes while excluding the current promotion.
     public boolean existsByCodeExceptId(
             String promoCode,
             int promotionId,
@@ -344,6 +350,7 @@ public class PromotionRepository {
         return false;
     }
 
+    // Set promotion values as SQL statement parameters.
     private void setPromotionData(
             PreparedStatement ps,
             Promotion promotion,
@@ -375,6 +382,7 @@ public class PromotionRepository {
         ps.setString(startIndex + 9, promotion.getStatus());
     }
 
+    // Map database query results into a Promotion object.
     private Promotion mapPromotion(ResultSet rs) throws SQLException {
 
         Promotion promotion = new Promotion();

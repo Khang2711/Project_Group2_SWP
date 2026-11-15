@@ -31,6 +31,7 @@ public class DashboardController extends HttpServlet {
     private final DashboardService dashboardService
             = new DashboardService();
 
+    // Validate manager access and load dashboard data.
     @Override
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
@@ -93,14 +94,14 @@ public class DashboardController extends HttpServlet {
 
             LocalDate toDate = dashboardService.parseDate(
                     toValue, "Ngày kết thúc");
-
+            // Retrieve statistics for the selected cinema and date range.
             Map<String, Object> statistics
                     = dashboardService.getStatistics(
                             cinema.getCinemaId(),
                             fromDate,
                             toDate);
 
-            // Chỉ xuất sau khi đã kiểm tra quyền, rạp và khoảng ngày.
+            // Export Excel after validating access, cinema, and date range.
             if ("excel".equals(request.getParameter("export"))) {
                 exportExcel(
                         response,
@@ -163,6 +164,7 @@ public class DashboardController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Export dashboard statistics into an Excel workbook.
     private void exportExcel(
             HttpServletResponse response,
             Cinema cinema,
@@ -219,7 +221,7 @@ public class DashboardController extends HttpServlet {
                     5,
                     new String[]{"Chỉ tiêu", "Giá trị"},
                     headerStyle);
-
+            // Define the summary metrics displayed in the Excel report.
             String[] labels = {
                 "Đơn đặt vé đã xác nhận",
                 "Vé đã bán",
@@ -228,7 +230,7 @@ public class DashboardController extends HttpServlet {
                 "Doanh thu bắp nước/combo (VND)",
                 "Tổng doanh thu (VND)"
             };
-
+            // Map summary labels to their corresponding statistics keys.
             String[] keys = {
                 "totalBookings",
                 "totalTickets",
@@ -237,7 +239,7 @@ public class DashboardController extends HttpServlet {
                 "foodRevenue",
                 "combinedRevenue"
             };
-
+            // Write summary metrics and values into the Excel sheet.
             for (int i = 0; i < labels.length; i++) {
                 Row row = summary.createRow(i + 6);
                 row.createCell(0).setCellValue(labels[i]);
@@ -326,7 +328,7 @@ public class DashboardController extends HttpServlet {
                         (BigDecimal) data.get("dailyTotalRevenue"),
                         moneyStyle);
             }
-
+            // Add the total values at the end of the daily report.
             Row totals = daily.createRow(rowIndex);
 
             totals.createCell(0).setCellValue("Tổng cộng");
@@ -372,7 +374,7 @@ public class DashboardController extends HttpServlet {
                     headerStyle);
 
             rowIndex = 1;
-
+            // Write ticket sales statistics for each movie.
             for (Map<String, Object> data : movieRows) {
                 Row row = movies.createRow(rowIndex);
                 rowIndex++;
@@ -431,7 +433,7 @@ public class DashboardController extends HttpServlet {
             String fileName = "FCinema-rap-" + cinema.getCinemaId()
                     + "-" + fromDate + "-" + toDate + ".xlsx";
 
-            // Báo cho trình duyệt tải file Excel về máy.
+            // Set the response content type for Excel file download.
             response.setContentType(
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
@@ -443,6 +445,7 @@ public class DashboardController extends HttpServlet {
         }
     }
 
+    // Create a formatted header row for an Excel sheet.
     private void createHeader(
             Sheet sheet,
             int rowIndex,
@@ -459,6 +462,7 @@ public class DashboardController extends HttpServlet {
         }
     }
 
+    // Write a monetary value with the specified Excel format.
     private void writeMoney(
             Row row,
             int column,

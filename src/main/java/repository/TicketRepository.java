@@ -15,6 +15,7 @@ import model.Ticket;
 
 public class TicketRepository {
 
+    // Get occupied seats in a showtime.
     public Set<Integer> findOccupiedSeatIds(int showtimeId)
             throws SQLException {
 
@@ -38,6 +39,7 @@ public class TicketRepository {
         return seatIds;
     }
 
+    // Insert a new ticket into the database.
     public void insert(
             Connection connection,
             Ticket ticket,
@@ -61,6 +63,7 @@ public class TicketRepository {
         }
     }
 
+    // Get all tickets belonging to a booking.
     public List<Ticket> findByBookingId(int bookingId)
             throws SQLException {
 
@@ -95,6 +98,7 @@ public class TicketRepository {
         return tickets;
     }
 
+    // Get all issued tickets of a customer.
     public List<Ticket> findIssuedTicketsByCustomerId(int customerId)
             throws SQLException {
 
@@ -127,6 +131,7 @@ public class TicketRepository {
         return tickets;
     }
 
+    // Find a ticket and verify customer ownership.
     public Ticket findIssuedTicketByIdAndCustomerId(
             int ticketId,
             int customerId
@@ -159,6 +164,7 @@ public class TicketRepository {
         return null;
     }
 
+    // Get the cinema assigned to the counter staff.
     public int findCounterStaffCinema(
             Connection connection,
             int staffId) throws SQLException {
@@ -180,6 +186,7 @@ public class TicketRepository {
         return 0;
     }
 
+    // Find an active customer by email.
     public int findCounterCustomerId(
             Connection connection,
             String email) throws SQLException {
@@ -201,6 +208,7 @@ public class TicketRepository {
         return 0;
     }
 
+    // Validate the showtime and cinema before counter sales.
     public Showtime findCounterShowtime(
             Connection connection,
             int showtimeId,
@@ -239,6 +247,7 @@ public class TicketRepository {
         return null;
     }
 
+    // Get the current ticket price based on seat type.
     public BigDecimal findCounterSeatPrice(
             Connection connection,
             int seatId,
@@ -270,6 +279,7 @@ public class TicketRepository {
         return null;
     }
 
+    // Check whether a seat has already been sold.
     public boolean isCounterSeatSold(
             Connection connection,
             int showtimeId,
@@ -290,6 +300,7 @@ public class TicketRepository {
         }
     }
 
+    // Find and validate a ticket for check-in.
     public Ticket findTicketForCheckIn(
             String ticketCode,
             int staffId) throws SQLException {
@@ -339,6 +350,7 @@ public class TicketRepository {
         return null;
     }
 
+    // Mark a valid ticket as used after check-in.
     public boolean markTicketUsed(
             String ticketCode,
             int staffId) throws SQLException {
@@ -372,6 +384,7 @@ public class TicketRepository {
         }
     }
 
+    // Map database results to a Ticket object.
     private Ticket mapTicket(ResultSet rs)
             throws SQLException {
 
@@ -408,6 +421,7 @@ public class TicketRepository {
         return ticket;
     }
 
+    // Create a connection to the database.
     private Connection getConnection() throws SQLException {
 
         Connection connection = new DBContext().getConnection();
@@ -419,6 +433,7 @@ public class TicketRepository {
         return connection;
     }
 
+    // Count pending tickets in a booking.
     public int countPendingTickets(
             Connection connection,
             int bookingId) throws SQLException {
@@ -436,6 +451,7 @@ public class TicketRepository {
         }
     }
 
+    // Check for seat conflicts before confirming a booking.
     public boolean hasSeatConflict(
             Connection connection,
             int bookingId) throws SQLException {
@@ -459,6 +475,7 @@ public class TicketRepository {
         }
     }
 
+    // Confirm pending tickets and generate ticket codes.
     public int confirmPendingTickets(
             Connection connection,
             int bookingId) throws SQLException {
@@ -474,6 +491,7 @@ public class TicketRepository {
         }
     }
 
+    // Cancel pending tickets that have not been issued.
     public int cancelPendingTickets(
             Connection connection,
             int bookingId) throws SQLException {

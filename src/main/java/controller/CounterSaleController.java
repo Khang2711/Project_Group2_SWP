@@ -114,11 +114,7 @@ public class CounterSaleController extends HttpServlet {
             return;
         }
 
-        /*
-         * Các yêu cầu trong cùng phiên Staff được xử lý lần lượt.
-         * Tránh hai lần bấm thanh toán cùng chạy một lúc.
-         * Phiên của nhân viên khác vẫn hoạt động bình thường.
-         */
+        // Process requests sequentially within each staff session to prevent duplicate payments.
         synchronized (request.getSession()) {
             String path = request.getServletPath();
             String action = request.getParameter("action");
@@ -179,8 +175,7 @@ public class CounterSaleController extends HttpServlet {
 
         String tab = request.getParameter("tab");
 
-        // Trang Quầy bán hàng chỉ hiển thị các tác vụ.
-        // Chỉ tải báo cáo khi nhân viên mở một mục báo cáo cụ thể.
+        // Display staff tasks on the counter home page and load reports only when requested.
         boolean showReport = "statistics".equals(tab)
                 || "tickets".equals(tab)
                 || "food".equals(tab);
@@ -239,7 +234,7 @@ public class CounterSaleController extends HttpServlet {
                         "toDate", toDate.toString());
             }
 
-            // ID người bán luôn lấy từ tài khoản đang đăng nhập.
+            // Always get the staff ID from the authenticated session.
             Map<String, Object> report
                     = dashboardService.getStaffSalesReport(
                             user.getUserId(), fromDate, toDate);
@@ -262,6 +257,7 @@ public class CounterSaleController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Display the ticket sales interface and available showtimes.
     private void showTicketSale(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -337,7 +333,7 @@ public class CounterSaleController extends HttpServlet {
 
             Movie selectedMovie = null;
 
-            // Chỉ cho chọn phim thuộc rạp của Staff.
+            // Allow staff to select movies belonging to their assigned cinema.
             for (Movie movie : movies) {
                 if (movie.getMovieId() == movieId) {
                     selectedMovie = movie;
@@ -362,7 +358,7 @@ public class CounterSaleController extends HttpServlet {
             List<Showtime> showtimes = new ArrayList<>();
             LocalDateTime now = LocalDateTime.now(zone);
 
-            // Giữ các suất chưa bắt đầu và thuộc đúng rạp.
+            // Keep only future showtimes belonging to the staff member's cinema.
             for (Showtime showtime : movieShowtimes) {
                 Room room = rooms.get(showtime.getRoomId());
 
@@ -452,6 +448,7 @@ public class CounterSaleController extends HttpServlet {
         forwardTicketSale(request, response);
     }
 
+    // Forward the ticket sale page and load receipt information.
     private void forwardTicketSale(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -493,6 +490,7 @@ public class CounterSaleController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Validate and consume the one-time token to prevent duplicate submissions.
     private void consumeCounterToken(HttpServletRequest request) {
 
         HttpSession session = request.getSession();
@@ -500,10 +498,6 @@ public class CounterSaleController extends HttpServlet {
         String expected = (String) session.getAttribute(
                 "counterSaleToken");
 
-        /*
-         * Token là mã dùng một lần cho form.
-         * Form đã gửi hoặc form ở tab cũ sẽ không được xử lý lại.
-         */
         if (expected == null
                 || !expected.equals(request.getParameter("saleToken"))) {
 
@@ -514,6 +508,7 @@ public class CounterSaleController extends HttpServlet {
         session.removeAttribute("counterSaleToken");
     }
 
+    // Clear temporary counter sale data from the session.
     private void clearCounterDraft(HttpSession session) {
         session.removeAttribute("counterDraftBooking");
         session.removeAttribute("counterDraftCinema");
@@ -524,6 +519,7 @@ public class CounterSaleController extends HttpServlet {
         session.removeAttribute("counterDraftReady");
     }
 
+    // Retrieve the counter draft and verify staff and cinema ownership.
     private Booking getCounterDraft(
             HttpSession session,
             User user,
@@ -553,6 +549,7 @@ public class CounterSaleController extends HttpServlet {
         return booking;
     }
 
+    // Retrieve selected food items from the counter draft.
     private List<FoodOrderItem> getCounterFoods(HttpSession session) {
 
         FoodOrderItem[] saved = (FoodOrderItem[]) session.getAttribute(
@@ -569,6 +566,7 @@ public class CounterSaleController extends HttpServlet {
         return items;
     }
 
+    // Validate and prepare a ticket sale without saving or processing payment.
     private void prepareCounterDraft(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -593,7 +591,7 @@ public class CounterSaleController extends HttpServlet {
 
             String[] seats = request.getParameterValues("seatIds");
 
-            // Chỉ kiểm tra và tính tiền, chưa lưu vé hoặc thanh toán.
+            // Validate and calculate the ticket sale without saving or processing payment.
             Booking preview = ticketService.previewCounterTickets(
                     user.getUserId(),
                     cinemaId,
@@ -601,7 +599,7 @@ public class CounterSaleController extends HttpServlet {
                     null,
                     seats);
 
-            // Dùng lại model Booking để giữ đơn chưa thanh toán.
+            // Reuse the Booking model to store the unpaid counter draft.
             session.setAttribute("counterDraftBooking", preview);
             session.setAttribute("counterDraftCinema", cinemaId);
 
@@ -641,7 +639,7 @@ public class CounterSaleController extends HttpServlet {
             Booking draft,
             String step) throws SQLException {
 
-        // Chỉ cho thanh toán sau khi tải thành công bước xem tổng đơn.
+        // Allow payment only after the order review step loads successfully.
         session.setAttribute("counterDraftReady", false);
 
         int cinemaId = (Integer) session.getAttribute(
@@ -698,7 +696,7 @@ public class CounterSaleController extends HttpServlet {
             seats.add(seat);
         }
 
-        // Service đã tính giá vé, không truy vấn và cộng lại lần nữa.
+        // Reuse the ticket total already calculated by the Service layer.
         BigDecimal ticketTotal = preview.getTotalAmount();
         BigDecimal foodTotal = BigDecimal.ZERO;
 
@@ -746,11 +744,11 @@ public class CounterSaleController extends HttpServlet {
         request.setAttribute("draftFoodTotal", foodTotal);
         request.setAttribute("draftTotal", total);
 
-        // Tạo mã mới để form ở tab cũ không dùng tổng tiền đã cũ.
         session.setAttribute(
                 "counterSaleToken", UUID.randomUUID().toString());
     }
 
+    // Display the current counter draft for review.
     private void showCounterDraft(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -797,6 +795,7 @@ public class CounterSaleController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Skip food selection and continue to order review.
     private void skipCounterFood(
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -874,6 +873,7 @@ public class CounterSaleController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Validate and save selected food items into the counter draft.
     private void saveCounterDraftFoods(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -909,6 +909,7 @@ public class CounterSaleController extends HttpServlet {
         }
     }
 
+    // Confirm cash payment and save the ticket and food orders.
     private void confirmCounterPayment(
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -939,11 +940,7 @@ public class CounterSaleController extends HttpServlet {
                         "Vui lòng xác nhận đã thu đủ tổng tiền.");
             }
 
-            /*
-             * Lấy dữ liệu đã chuẩn bị trên server.
-             * Không nhận giá, tổng tiền hoặc ghế mới từ form thanh toán.
-             * Service lưu vé và bắp nước trong cùng một transaction.
-             */
+            // Use server-side draft data and save tickets and food orders in one transaction.
             Booking booking = ticketService.sellCounterCashOrder(
                     user.getUserId(),
                     cinemaId,
@@ -984,6 +981,7 @@ public class CounterSaleController extends HttpServlet {
         }
     }
 
+    // Validate the booking and load ticket information for printing.
     private void loadTicketsForPrinting(
             HttpServletRequest request,
             HttpSession session) {
@@ -995,7 +993,7 @@ public class CounterSaleController extends HttpServlet {
                     request.getParameter("bookingId"),
                     "Mã đơn vé không hợp lệ.");
 
-            // Chỉ cho Staff xem và in đơn do chính mình bán.
+            // Allow staff to view and print only their own sales.
             Booking booking = dashboardService.getStaffBooking(
                     user.getUserId(), bookingId);
 
@@ -1072,6 +1070,7 @@ public class CounterSaleController extends HttpServlet {
         }
     }
 
+    // Retrieve food orders linked to the ticket booking.
     private void loadLinkedFoodOrders(
             HttpServletRequest request,
             Booking booking,
@@ -1118,6 +1117,7 @@ public class CounterSaleController extends HttpServlet {
         }
     }
 
+    // Display food sales, available products, and completed orders.
     private void showFoodSale(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -1160,10 +1160,7 @@ public class CounterSaleController extends HttpServlet {
                             "Đơn hàng chưa hoàn tất thanh toán.");
                 }
 
-                /*
-                 * Đơn vé liên quan phải lấy từ dữ liệu của hóa đơn.
-                 * Không dùng bookingId do người dùng tự sửa trên URL.
-                 */
+                // Get the linked booking from the order record instead of trusting a URL parameter.
                 if (order.getBookingId() != null) {
                     Booking booking = dashboardService.getStaffBooking(
                             user.getUserId(), order.getBookingId());
@@ -1185,7 +1182,7 @@ public class CounterSaleController extends HttpServlet {
             } else {
                 String bookingValue = request.getParameter("bookingId");
 
-                // Hỗ trợ mua thêm cho một đơn vé đã thanh toán trước đó.
+                // Allow additional food purchases for an already paid booking.
                 if (bookingValue != null) {
                     int bookingId = parsePositiveInt(
                             bookingValue,
@@ -1243,6 +1240,7 @@ public class CounterSaleController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Set booking and showtime information for a linked food order.
     private void setLinkedBooking(
             HttpServletRequest request,
             Booking booking) {

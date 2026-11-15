@@ -34,11 +34,13 @@ public class PromotionController extends HttpServlet {
     private final DashboardService dashboardService
             = new DashboardService();
 
+    // Initialize the promotion service.
     @Override
     public void init() {
         promotionService = new PromotionService();
     }
 
+    // Handle GET requests for promotion management pages.
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -87,6 +89,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Verify manager access and assigned cinema permissions.
     private boolean requireCinemaManager(
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -140,6 +143,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Get the cinema ID assigned to the current manager.
     private Integer getCurrentCinemaId(HttpServletRequest request) {
 
         Object managerCinema = request.getAttribute("managerCinema");
@@ -157,6 +161,7 @@ public class PromotionController extends HttpServlet {
         return cinemaId;
     }
 
+    // Display and filter promotions belonging to the manager's cinema.
     private void showPromotionList(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -241,6 +246,7 @@ public class PromotionController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Display the promotion form for creating or editing a promotion.
     private void showPromotionForm(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -294,6 +300,7 @@ public class PromotionController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Create or update a promotion based on submitted form data.
     private void savePromotion(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -366,6 +373,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Update the status of a promotion.
     private void changePromotionStatus(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -416,6 +424,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Build a Promotion object from submitted form data.
     private Promotion buildPromotionFromRequest(
             HttpServletRequest request) {
 
@@ -494,6 +503,7 @@ public class PromotionController extends HttpServlet {
         return promotion;
     }
 
+    // Validate and parse a positive integer value.
     private int parsePositiveInt(String value, String errorMessage) {
 
         if (value == null || value.trim().isEmpty()) {
@@ -514,6 +524,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Validate and parse a decimal number.
     private BigDecimal parseBigDecimal(
             String value,
             String errorMessage) {
@@ -530,6 +541,7 @@ public class PromotionController extends HttpServlet {
         }
     }
 
+    // Convert the start date to the beginning of the day.
     private Timestamp parseStartDate(
             String value,
             String errorMessage) {
@@ -539,6 +551,7 @@ public class PromotionController extends HttpServlet {
         return Timestamp.valueOf(date.atStartOfDay());
     }
 
+    // Convert the end date to the last second of the day.
     private Timestamp parseEndDate(
             String value,
             String errorMessage) {
@@ -548,6 +561,7 @@ public class PromotionController extends HttpServlet {
         return Timestamp.valueOf(date.atTime(23, 59, 59));
     }
 
+    // Validate and parse a date using supported formats.
     private LocalDate parseDate(
             String value,
             String errorMessage) {

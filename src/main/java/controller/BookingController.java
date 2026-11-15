@@ -106,7 +106,7 @@ public class BookingController extends HttpServlet {
             if ("/user/checkout".equals(path)) {
                 String action = request.getParameter("action");
 
-                // Áp hoặc bỏ mã chỉ tính lại tiền, chưa tạo booking.
+                // Apply or remove a promotion by recalculating the total without creating a booking.
                 if ("APPLY_PROMO".equals(action)
                         || "REMOVE_PROMO".equals(action)) {
 
@@ -155,6 +155,7 @@ public class BookingController extends HttpServlet {
         }
     }
 
+    // Display available seats for the selected showtime.
     private void showSeatSelection(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -171,6 +172,7 @@ public class BookingController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Prepare checkout data and calculate ticket, food, and promotion prices.
     private void prepareCheckout(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -183,7 +185,7 @@ public class BookingController extends HttpServlet {
         boolean fullRoom = "FULL_ROOM".equals(
                 request.getParameter("bookingMode"));
 
-        // Khi áp mã, dùng đúng danh sách ghế đã gửi từ checkout.
+        // Determine whether the customer selects the entire room.
         boolean selectWholeRoom = fullRoom
                 && "/user/select-seats".equals(
                         request.getServletPath());
@@ -224,7 +226,9 @@ public class BookingController extends HttpServlet {
         BigDecimal comboTotal = BigDecimal.ZERO;
         for (Combo combo : checkoutCombos) {
             Integer quantity = selectedComboQuantities.get(combo.getComboId());
-            if (quantity != null) comboTotal = comboTotal.add(combo.getComboPrice().multiply(BigDecimal.valueOf(quantity)));
+            if (quantity != null) {
+                comboTotal = comboTotal.add(combo.getComboPrice().multiply(BigDecimal.valueOf(quantity)));
+            }
         }
         BigDecimal foodTotal = BigDecimal.ZERO;
         for (model.FoodItem food : checkoutFoods) {
@@ -247,6 +251,7 @@ public class BookingController extends HttpServlet {
         BigDecimal orderTotal = subtotal.add(comboTotal).add(foodTotal);
         BigDecimal fullRoomDiscount = bookingService.calculateFullRoomDiscount(
                 orderTotal, fullRoom);
+        // Calculate the remaining amount eligible for promotion discounts.
         BigDecimal promoBase = orderTotal.subtract(fullRoomDiscount);
 
         Promotion promotion = null;
@@ -327,6 +332,7 @@ public class BookingController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Create a pending booking and redirect the customer to payment.
     private void createBooking(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -341,7 +347,7 @@ public class BookingController extends HttpServlet {
         int bookingId;
 
         try {
-            // Service đọc lại giá và kiểm tra mã trước khi lưu.
+           // Recalculate prices and validate the promotion in the Service layer before saving.
             bookingId = bookingService.createPendingBooking(
                     customerId,
                     showtimeId,
@@ -376,12 +382,12 @@ public class BookingController extends HttpServlet {
             return;
         }
 
-        // Giữ luồng chuyển sang trang thanh toán VNPay của nhóm.
         response.sendRedirect(
                 request.getContextPath()
                 + "/user/payment?bookingId=" + bookingId);
     }
 
+    // Load showtime, seats, occupied seats, and ticket prices.
     private void loadSeatSelection(
             HttpServletRequest request,
             int showtimeId) throws SQLException {
@@ -418,6 +424,7 @@ public class BookingController extends HttpServlet {
         request.setAttribute("seatPrices", seatPrices);
     }
 
+    // Display all bookings belonging to the current customer.
     private void showBookings(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -467,6 +474,7 @@ public class BookingController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // Display booking details, tickets, seats, and online food orders.
     private void showBookingDetail(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -481,14 +489,14 @@ public class BookingController extends HttpServlet {
         Booking booking = bookingService.getBookingDetail(
                 bookingId,
                 customerId);
-        
-        List<Map<String, Object>> onlineFoodItems
-        = bookingService.getOnlineFoodItemsForBooking(
-                bookingId,
-                customerId
-        );
 
-request.setAttribute("onlineFoodItems", onlineFoodItems);
+        List<Map<String, Object>> onlineFoodItems
+                = bookingService.getOnlineFoodItemsForBooking(
+                        bookingId,
+                        customerId
+                );
+
+        request.setAttribute("onlineFoodItems", onlineFoodItems);
 
         Showtime showtime
                 = bookingService.getShowtimeForBooking(booking);
@@ -560,28 +568,47 @@ request.setAttribute("onlineFoodItems", onlineFoodItems);
         String[] ids = request.getParameterValues("comboId");
         String[] quantities = request.getParameterValues("comboQuantity");
         if (ids != null || quantities != null) {
-            if (ids == null || quantities == null || ids.length != quantities.length)
+            if (ids == null || quantities == null || ids.length != quantities.length) {
                 throw new IllegalArgumentException("Thông tin combo không hợp lệ. Vui lòng chọn lại.");
+            }
         }
-        if (ids != null) for (int i=0;i<ids.length;i++) {
-            int id = parsePositiveInt(ids[i], "Combo được chọn không hợp lệ.");
-            int quantity;
-            try { quantity = Integer.parseInt(quantities[i]); }
-            catch (NumberFormatException e) { throw new IllegalArgumentException("Số lượng combo không hợp lệ."); }
-            if (quantity < 0 || quantity > 20) throw new IllegalArgumentException("Mỗi combo chỉ được chọn từ 0 đến 20 phần.");
-            if (quantity > 0) { FoodOrderItem item = new FoodOrderItem(); item.setComboId(id); item.setQuantity(quantity); items.add(item); }
+        if (ids != null) {
+            for (int i = 0; i < ids.length; i++) {
+                int id = parsePositiveInt(ids[i], "Combo được chọn không hợp lệ.");
+                int quantity;
+                try {
+                    quantity = Integer.parseInt(quantities[i]);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Số lượng combo không hợp lệ.");
+                }
+                if (quantity < 0 || quantity > 20) {
+                    throw new IllegalArgumentException("Mỗi combo chỉ được chọn từ 0 đến 20 phần.");
+                }
+                if (quantity > 0) {
+                    FoodOrderItem item = new FoodOrderItem();
+                    item.setComboId(id);
+                    item.setQuantity(quantity);
+                    items.add(item);
+                }
+            }
         }
         String[] foodIds = request.getParameterValues("foodItemId");
         String[] foodQuantities = request.getParameterValues("foodQuantity");
         if (foodIds != null || foodQuantities != null) {
-            if (foodIds == null || foodQuantities == null || foodIds.length != foodQuantities.length)
+            if (foodIds == null || foodQuantities == null || foodIds.length != foodQuantities.length) {
                 throw new IllegalArgumentException("Thông tin đồ ăn/nước uống không hợp lệ. Vui lòng chọn lại.");
+            }
             for (int i = 0; i < foodIds.length; i++) {
                 int id = parsePositiveInt(foodIds[i], "Sản phẩm được chọn không hợp lệ.");
                 int quantity;
-                try { quantity = Integer.parseInt(foodQuantities[i]); }
-                catch (NumberFormatException e) { throw new IllegalArgumentException("Số lượng sản phẩm không hợp lệ."); }
-                if (quantity < 0 || quantity > 20) throw new IllegalArgumentException("Mỗi sản phẩm chỉ được chọn từ 0 đến 20 phần.");
+                try {
+                    quantity = Integer.parseInt(foodQuantities[i]);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Số lượng sản phẩm không hợp lệ.");
+                }
+                if (quantity < 0 || quantity > 20) {
+                    throw new IllegalArgumentException("Mỗi sản phẩm chỉ được chọn từ 0 đến 20 phần.");
+                }
                 if (quantity > 0) {
                     FoodOrderItem item = new FoodOrderItem();
                     item.setFoodItemId(id);
@@ -598,12 +625,16 @@ request.setAttribute("onlineFoodItems", onlineFoodItems);
         Map<Integer, Integer> map = new LinkedHashMap<>();
         String[] ids = request.getParameterValues("foodItemId");
         String[] values = request.getParameterValues("foodQuantity");
-        if (ids == null || values == null || ids.length != values.length) return map;
+        if (ids == null || values == null || ids.length != values.length) {
+            return map;
+        }
         for (int i = 0; i < ids.length; i++) {
             try {
                 int id = Integer.parseInt(ids[i]);
                 int quantity = Integer.parseInt(values[i]);
-                if (id > 0 && quantity > 0 && quantity <= 20) map.put(id, quantity);
+                if (id > 0 && quantity > 0 && quantity <= 20) {
+                    map.put(id, quantity);
+                }
             } catch (NumberFormatException ignored) {
             }
         }
@@ -612,9 +643,17 @@ request.setAttribute("onlineFoodItems", onlineFoodItems);
 
     private Map<Integer, Integer> readComboQuantities(HttpServletRequest request) {
         Map<Integer, Integer> map = new LinkedHashMap<>();
-        String[] ids=request.getParameterValues("comboId"), values=request.getParameterValues("comboQuantity");
-        if(ids==null || values==null || ids.length!=values.length) return map;
-        for(int i=0;i<ids.length;i++) try { int id=Integer.parseInt(ids[i]), q=Integer.parseInt(values[i]); if(id>0 && q>0 && q<=20) map.put(id,q); } catch(NumberFormatException ignored) { }
+        String[] ids = request.getParameterValues("comboId"), values = request.getParameterValues("comboQuantity");
+        if (ids == null || values == null || ids.length != values.length) {
+            return map;
+        }
+        for (int i = 0; i < ids.length; i++) try {
+            int id = Integer.parseInt(ids[i]), q = Integer.parseInt(values[i]);
+            if (id > 0 && q > 0 && q <= 20) {
+                map.put(id, q);
+            }
+        } catch (NumberFormatException ignored) {
+        }
         return map;
     }
 

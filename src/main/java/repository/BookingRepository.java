@@ -21,6 +21,7 @@ import model.Cinema;
 
 public class BookingRepository {
 
+    // Insert a booking and return its generated ID.
     public int insert(Connection connection, Booking booking)
             throws SQLException {
 
@@ -32,7 +33,7 @@ public class BookingRepository {
         try (PreparedStatement ps = connection.prepareStatement(
                 sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            // Khách mua tại quầy có thể không có customer_id.
+            // Allow counter bookings without an associated customer account.
             if (booking.getCustomerId() == null) {
                 ps.setNull(1, java.sql.Types.INTEGER);
             } else {
@@ -70,6 +71,7 @@ public class BookingRepository {
         throw new SQLException("Cannot get booking_id after insert.");
     }
 
+    // Find the applicable ticket price based on seat and showtime.
     public BigDecimal findSeatPrice(
             int showtimeId,
             int seatId) throws SQLException {
@@ -88,7 +90,7 @@ public class BookingRepository {
                 + "AND s.seat_id = ? "
                 + "AND s.status = 'ACTIVE' "
                 + "AND p.status = 'ACTIVE' "
-                // Giá áp dụng theo ngày chiếu.
+                // Count individual tickets instead of booking orders.
                 + "AND p.start_date "
                 + "<= CAST(st.start_time AS DATE) "
                 + "AND (p.end_date IS NULL "
@@ -165,6 +167,7 @@ public class BookingRepository {
         return null;
     }
 
+    // Retrieve all bookings belonging to a customer.
     public List<Booking> findByCustomerId(int customerId)
             throws SQLException {
 
@@ -190,6 +193,7 @@ public class BookingRepository {
         return bookings;
     }
 
+    // Find a booking and verify customer ownership.
     public Booking findByIdAndCustomerId(
             int bookingId, int customerId) throws SQLException {
 
@@ -214,6 +218,7 @@ public class BookingRepository {
         return null;
     }
 
+    // Get the active cinema assigned to a cinema manager.
     public Cinema findDashboardCinema(int managerId)
             throws SQLException {
 
@@ -247,6 +252,7 @@ public class BookingRepository {
         return null;
     }
 
+    // Aggregate daily booking, ticket, and food revenue statistics.
     public List<Map<String, Object>> getDashboardDailyData(
             int cinemaId,
             LocalDate fromDate,
@@ -254,7 +260,7 @@ public class BookingRepository {
 
         Map<LocalDate, Map<String, Object>> dailyData = new TreeMap<>();
         Map<Integer, BigDecimal> foodRevenueByPayment = new HashMap<>();
-
+        // Retrieve confirmed bookings grouped by booking creation date.
         String bookingSql = "SELECT CAST(b.booking_time AS DATE) AS report_date, "
                 + "COUNT(*) AS booking_count "
                 + "FROM dbo.Booking b "
@@ -265,7 +271,7 @@ public class BookingRepository {
                 + "AND b.booking_time >= ? "
                 + "AND b.booking_time < DATEADD(DAY, 1, ?) "
                 + "GROUP BY CAST(b.booking_time AS DATE)";
-
+        // Retrieve paid online food orders for revenue allocation.
         String onlineFoodSql = "SELECT CAST(p.payment_time AS DATE) AS report_date, "
                 + "p.payment_id, p.payment_method, "
                 + "b.subtotal, b.total_amount, "
@@ -290,7 +296,7 @@ public class BookingRepository {
                 + "AND o.payment_status = 'PAID' "
                 + "GROUP BY CAST(p.payment_time AS DATE), p.payment_id, "
                 + "p.payment_method, b.subtotal, b.total_amount";
-
+        // Retrieve issued tickets and calculate net ticket revenue.
         String ticketSql = "SELECT CAST(p.payment_time AS DATE) AS report_date, "
                 + "p.payment_id, b.total_amount, "
                 + "COUNT(t.ticket_id) AS ticket_count "
@@ -309,7 +315,7 @@ public class BookingRepository {
                 + "AND p.payment_time < DATEADD(DAY, 1, ?) "
                 + "GROUP BY CAST(p.payment_time AS DATE), "
                 + "p.payment_id, b.total_amount";
-
+        // Retrieve other paid food orders grouped by creation date.
         String otherFoodSql = "SELECT CAST(o.created_at AS DATE) AS report_date, "
                 + "COUNT(*) AS food_order_count, "
                 + "SUM(o.total_amount) AS food_revenue "
@@ -419,6 +425,7 @@ public class BookingRepository {
         return new ArrayList<>(dailyData.values());
     }
 
+    // Get an existing daily report row or create a new one.
     private Map<String, Object> getOrCreateDailyRow(
             Map<LocalDate, Map<String, Object>> dailyData,
             Date reportDate) {
@@ -439,6 +446,7 @@ public class BookingRepository {
         });
     }
 
+    // Add a count value to the corresponding daily report field.
     private void addDailyCount(
             Map<String, Object> row,
             String key,
@@ -447,6 +455,7 @@ public class BookingRepository {
         row.put(key, (Integer) row.get(key) + value);
     }
 
+    // Add a monetary amount to the corresponding report field.
     private void addDailyAmount(
             Map<String, Object> row,
             String key,
@@ -478,6 +487,7 @@ public class BookingRepository {
                 .divide(originalTotal, 2, RoundingMode.HALF_UP);
     }
 
+    // Map database query results into a Booking object.
     private Booking mapBooking(ResultSet rs) throws SQLException {
 
         Booking booking = new Booking();
@@ -517,6 +527,7 @@ public class BookingRepository {
         return booking;
     }
 
+    // Create a connection to the database.
     private Connection getConnection() throws SQLException {
 
         Connection connection = new DBContext().getConnection();
@@ -528,6 +539,7 @@ public class BookingRepository {
         return connection;
     }
 
+    // Find and lock a customer's booking during payment processing.
     public Booking findByIdForPayment(
             Connection connection,
             int bookingId,
@@ -550,6 +562,7 @@ public class BookingRepository {
         }
     }
 
+    // Find and lock a booking before updating its data.
     public Booking findByIdForUpdate(
             Connection connection,
             int bookingId) throws SQLException {
@@ -587,6 +600,7 @@ public class BookingRepository {
         }
     }
 
+    // Retrieve ticket sales made by a staff member within a date range.
     public List<Map<String, Object>> findStaffTicketSales(
             int staffId, int cinemaId,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
@@ -716,7 +730,6 @@ public class BookingRepository {
 
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        // Đếm từng vé, không đếm số đơn đặt.
         String sql = "SELECT m.movie_id, m.title, "
                 + "COUNT(t.ticket_id) AS ticket_count "
                 + "FROM dbo.Booking b "
@@ -759,13 +772,13 @@ public class BookingRepository {
         return rows;
     }
 
+    // Retrieve ticket sales statistics grouped by showtime hour.
     public List<Map<String, Object>> getDashboardShowHourData(
             int cinemaId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
 
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        // Nhóm vé theo giờ chiếu, lọc theo ngày thanh toán thành công.
         String sql = "SELECT DATEPART(HOUR, st.start_time) AS show_hour, "
                 + "COUNT(t.ticket_id) AS ticket_count "
                 + "FROM dbo.Booking b "

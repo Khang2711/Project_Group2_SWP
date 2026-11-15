@@ -21,6 +21,7 @@ public class DashboardService {
     private final FoodOrderRepository foodOrderRepository
             = new FoodOrderRepository();
 
+    // Get the cinema assigned to the manager.
     public Cinema getManagerCinema(int managerId)
             throws SQLException {
 
@@ -31,6 +32,7 @@ public class DashboardService {
         return bookingRepository.findDashboardCinema(managerId);
     }
 
+    // Validate and parse a date input.
     public LocalDate parseDate(String value, String fieldName) {
 
         if (value == null || value.trim().isEmpty()) {
@@ -54,6 +56,7 @@ public class DashboardService {
         }
     }
 
+    // Calculate dashboard statistics for the selected cinema and date range.
     public Map<String, Object> getStatistics(
             int cinemaId,
             LocalDate fromDate,
@@ -94,6 +97,7 @@ public class DashboardService {
 
             BigDecimal ticketAmount = (BigDecimal) row.get("revenue");
             BigDecimal foodAmount = (BigDecimal) row.get("foodRevenue");
+            // Calculate the combined ticket and food revenue for each day.
             BigDecimal dailyTotal = ticketAmount.add(foodAmount);
 
             totalRevenue = totalRevenue.add(ticketAmount);
@@ -120,11 +124,11 @@ public class DashboardService {
 
             row.put("revenuePercent", percent);
         }
-
+        // Retrieve ticket sales statistics grouped by movie.
         List<Map<String, Object>> movieRows
                 = bookingRepository.getDashboardMovieData(
                         cinemaId, fromDate, toDate);
-
+        // Retrieve ticket sales statistics grouped by showtime hour.
         List<Map<String, Object>> showHourRows
                 = bookingRepository.getDashboardShowHourData(
                         cinemaId, fromDate, toDate);
@@ -163,6 +167,7 @@ public class DashboardService {
         return statistics;
     }
 
+    // Generate ticket and food sales reports for a staff member.
     public Map<String, Object> getStaffSalesReport(
             int staffId,
             LocalDate fromDate,
@@ -189,7 +194,7 @@ public class DashboardService {
             throw new IllegalArgumentException(
                     "Ngày bắt đầu không được sau ngày kết thúc.");
         }
-
+        // Get the cinema assigned to the staff member.
         int cinemaId = foodOrderRepository.findStaffCinema(staffId);
 
         if (cinemaId <= 0) {
@@ -273,6 +278,7 @@ public class DashboardService {
         return booking;
     }
 
+    // Calculate ticket sales percentages for dashboard charts.
     private void calculateTicketPercent(
             List<Map<String, Object>> rows) {
 
@@ -287,7 +293,7 @@ public class DashboardService {
             }
         }
 
-        // Mục bán nhiều vé nhất có thanh dài 100%.
+        // The highest ticket count represents 100% of the chart bar.
         for (Map<String, Object> row : rows) {
 
             int ticketCount = (Integer) row.get("ticketCount");

@@ -17,6 +17,7 @@ public class PromotionService {
     private final ShowtimeRepository showtimeRepository
             = new ShowtimeRepository();
 
+    // Retrieve all promotions belonging to a cinema.
     public List<Promotion> getAllPromotions(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -26,6 +27,7 @@ public class PromotionService {
         return promotionRepository.getAll(cinemaId);
     }
 
+    // Retrieve filtered promotions with pagination.
     public List<Promotion> getPagedPromotions(
             String keyword,
             String filter,
@@ -62,6 +64,7 @@ public class PromotionService {
         );
     }
 
+    // Count promotions matching the search keyword and filter.
     public int countPromotions(
             String keyword,
             String filter,
@@ -90,6 +93,7 @@ public class PromotionService {
         );
     }
 
+    // Calculate the total number of promotion pages.
     public int getTotalPages(
             String keyword,
             String filter,
@@ -109,6 +113,7 @@ public class PromotionService {
         return (totalRecords + pageSize - 1) / pageSize;
     }
 
+    // Determine the display status based on promotion dates and status.
     public String getDisplayStatus(Promotion promotion) {
 
         if ("INACTIVE".equalsIgnoreCase(promotion.getStatus())) {
@@ -130,6 +135,7 @@ public class PromotionService {
         return "AVAILABLE";
     }
 
+    // Find a promotion by ID and cinema ID.
     public Promotion getPromotionById(int promotionId, int cinemaId) {
 
         if (promotionId <= 0 || cinemaId <= 0) {
@@ -139,6 +145,7 @@ public class PromotionService {
         return promotionRepository.getById(promotionId, cinemaId);
     }
 
+    // Find a promotion using its code and cinema ID.
     public Promotion getPromotionByCode(
             String promoCode,
             int cinemaId) {
@@ -155,6 +162,7 @@ public class PromotionService {
         );
     }
 
+    // Get the cinema ID associated with a showtime.
     public int getCinemaIdByShowtimeId(int showtimeId) {
 
         if (showtimeId <= 0) {
@@ -221,6 +229,7 @@ public class PromotionService {
         return null;
     }
 
+    // Calculate the discount based on the promotion type and limits.
     public BigDecimal calculateDiscount(
             Promotion promotion,
             BigDecimal orderAmount) {
@@ -340,6 +349,7 @@ public class PromotionService {
         return null;
     }
 
+    // Update the activation status of a promotion.
     public String updateStatus(
             int promotionId,
             String status,
