@@ -66,6 +66,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemas;
     }
 
+    // UC-05: Lấy thông tin chi nhánh theo mã rạp.
     public Cinema getCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -76,6 +77,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.findById(cinemaId);
     }
 
+    // UC-05: Đếm số phòng chiếu của chi nhánh để hiển thị thông tin tổng quan.
     public int getRoomCount(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -87,6 +89,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.countRooms(cinemaId);
     }
 
+    // UC-05: Chỉ cho phép sửa địa chỉ và số điện thoại của chi nhánh; không đổi tên/trạng thái.
     public void updateCinemaContact(
             int cinemaId,
             String address,
