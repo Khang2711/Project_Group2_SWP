@@ -30,6 +30,7 @@ public class PricingController
             new MovieService();
 
     @Override
+    // UC-08: Hiển thị danh sách và biểu mẫu chính sách giá theo chi nhánh.
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -132,6 +133,7 @@ public class PricingController
     }
 
     @Override
+    // UC-08: Nhận dữ liệu tạo/sửa/xóa chính sách giá và chuyển sang Service kiểm tra.
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -374,6 +376,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Chuyển chuỗi giá nhập trên form sang BigDecimal.
     private BigDecimal parsePrice(
             String value) {
 
@@ -399,6 +402,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Xử lý mã phim không bắt buộc trong phạm vi chính sách giá.
     private Integer parseOptionalInteger(
             String value) {
 
@@ -422,6 +426,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Kiểm tra và chuyển đổi ngày bắt buộc.
     private Date parseRequiredDate(
             String value) {
 
@@ -447,6 +452,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Chuyển đổi ngày không bắt buộc nếu người dùng nhập.
     private Date parseOptionalDate(
             String value,
             String errorMessage) {
@@ -471,6 +477,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Chuyển đổi giờ không bắt buộc nếu người dùng nhập.
     private Time parseOptionalTime(
             String value,
             String errorMessage) {
@@ -500,6 +507,7 @@ public class PricingController
         }
     }
 
+    // UC-08: Nạp chính sách giá thuộc chi nhánh đang quản lý.
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -513,6 +521,7 @@ public class PricingController
         );
     }
 
+    // UC-08: Nạp danh sách phim để chọn điều kiện áp dụng giá.
     private void loadMovies(
             HttpServletRequest request,
             User user) {
@@ -526,6 +535,7 @@ public class PricingController
         );
     }
 
+    // UC-08: Nạp lại form và thông báo lỗi khi lưu chính sách giá thất bại.
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -707,6 +717,7 @@ public class PricingController
         );
     }
 
+    // UC-08: Xác nhận chi nhánh và quyền Cinema Manager.
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
