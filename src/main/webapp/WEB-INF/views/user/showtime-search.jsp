@@ -167,7 +167,7 @@
                                             <img src="<c:out value='${posterSrc}' />"
                                                  alt="<c:out value='${movie.title}' />">
 
-                                            <div class="showtimes-no-poster" style="display:none;">
+                                            <div class="showtimes-no-poster showtimes-no-poster-hidden">
                                                 <c:out value="${movie.title}" />
                                             </div>
                                         </c:when>

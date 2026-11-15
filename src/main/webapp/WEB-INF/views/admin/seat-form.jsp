@@ -3,96 +3,9 @@
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<style>
-    .form-page {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 42px 24px 70px;
-        color: #f5f5f5;
-    }
 
-    .form-page h1 {
-        margin: 0 0 8px;
-        font-size: 32px;
-    }
 
-    .subtitle {
-        color: #999;
-        margin-bottom: 28px;
-    }
-
-    .form-card {
-        background: #151517;
-        border: 1px solid #29292d;
-        border-radius: 12px;
-        padding: 28px;
-    }
-
-    .room-name {
-        background: #1c1c1f;
-        padding: 13px 15px;
-        border-radius: 7px;
-        margin-bottom: 24px;
-        color: #aaa;
-    }
-
-    .room-name strong {
-        color: white;
-    }
-
-    .form-group {
-        margin-bottom: 21px;
-    }
-
-    label {
-        display: block;
-        color: #ccc;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-    .form-control {
-        width: 100%;
-        box-sizing: border-box;
-        background: #1c1c1f;
-        color: white;
-        border: 1px solid #35353a;
-        border-radius: 7px;
-        padding: 12px 13px;
-        outline: none;
-    }
-
-    .form-control:focus {
-        border-color: #ff1744;
-    }
-
-    .error {
-        background: #32181d;
-        border: 1px solid #6b2935;
-        color: #ff8095;
-        padding: 12px 15px;
-        border-radius: 7px;
-        margin-bottom: 20px;
-    }
-
-    .btn-primary {
-        border: none;
-        background: #ff1744;
-        color: white;
-        padding: 11px 20px;
-        border-radius: 7px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .btn-secondary {
-        margin-left: 14px;
-        color: #aaa;
-        text-decoration: none;
-    }
-</style>
-
-<div class="form-page">
+<div class="form-page" data-css-page="admin-seat-form">
 
     <c:choose>
         <c:when test="${seat.seatId > 0}">

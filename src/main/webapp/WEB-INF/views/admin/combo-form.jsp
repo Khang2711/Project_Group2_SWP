@@ -3,34 +3,9 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<style>
-    .form-page { max-width:950px; margin:0 auto; padding:28px 10px 48px; }
-    .form-card { padding:25px; background:#18181c; border:1px solid #33333a; border-radius:9px; }
-    .form-card p { color:#aaa; }
-    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-    .field { display:flex; flex-direction:column; gap:7px; }
-    .field.full { grid-column:1 / -1; }
-    .field label { font-weight:600; }
-    .field input, .field select, .field textarea { width:100%; box-sizing:border-box; padding:11px 12px; color:#f5f5f5; background:#101012; border:1px solid #494951; border-radius:5px; }
-    .field textarea { min-height:85px; resize:vertical; }
-    .image-preview { display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-top:10px; }
-    .image-preview img { display:block; max-width:240px; max-height:160px; object-fit:contain; background:#101012; border:1px solid #494951; border-radius:6px; padding:5px; }
-    .image-help { color:#aaa; font-size:13px; margin:0; }
-    .items-table { width:100%; border-collapse:collapse; margin-top:15px; }
-    .items-table th, .items-table td { padding:11px; border:1px solid #3b3b44; text-align:left; }
-    .items-table th { background:#222228; }
-    .items-table input[type=number] { width:85px; padding:8px; color:white; background:#101012; border:1px solid #494951; border-radius:4px; }
-    .form-actions { display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
-    .primary-button, .secondary-link { padding:10px 15px; border-radius:5px; border:0; text-decoration:none; font-weight:700; cursor:pointer; }
-    .primary-button { background:#e50914; color:white; }
-    .secondary-link { background:#303038; color:white; border:1px solid #494951; }
-    .notice { padding:12px 14px; margin:15px 0; border-radius:6px; background:#40191d; border:1px solid #e50914; color:#ffd5d8; }
-    .inactive-row { color:#888; }
-    .muted { color:#aaa; }
-    @media(max-width:650px) { .form-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; } .form-card { padding:16px; } }
-</style>
 
-<div class="form-page">
+
+<div class="form-page" data-css-page="admin-combo-form">
     <h1><c:choose><c:when test="${combo.comboId gt 0}">Cập nhật combo</c:when><c:otherwise>Thêm combo</c:otherwise></c:choose></h1>
     <p>Chọn các món đang kinh doanh và nhập số lượng từng món trong combo.</p>
     <c:if test="${not empty error}"><div class="notice"><c:out value="${error}" /></div></c:if>
@@ -82,10 +57,10 @@
                 </div>
             </div>
 
-            <h2 style="margin-top:28px;">Các món trong combo</h2>
+            <h2 class="combo-items-heading">Các món trong combo</h2>
             <p class="muted">Đánh dấu món cần thêm vào combo và nhập số lượng. Món đã ngừng bán không thể chọn.</p>
             <table class="items-table">
-                <thead><tr><th style="width:80px;">Chọn</th><th>Tên món</th><th>Loại</th><th>Giá lẻ</th><th>Số lượng</th><th>Trạng thái</th></tr></thead>
+                <thead><tr><th class="combo-items-select-column">Chọn</th><th>Tên món</th><th>Loại</th><th>Giá lẻ</th><th>Số lượng</th><th>Trạng thái</th></tr></thead>
                 <tbody>
                     <c:choose>
                         <c:when test="${not empty foodItems}">

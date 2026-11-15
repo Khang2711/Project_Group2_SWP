@@ -3,30 +3,9 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<style>
-    .manage-page { max-width:1250px; margin:0 auto; padding:28px 10px 48px; }
-    .manage-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
-    .manage-heading p, .muted { color:#aaa; }
-    .primary-link, .action-link, .status-button { display:inline-block; padding:9px 13px; border-radius:5px; text-decoration:none; font-weight:600; cursor:pointer; }
-    .primary-link { background:#e50914; color:white; }
-    .action-link, .status-button { background:#303038; color:white; border:1px solid #494951; }
-    .table-wrap { overflow-x:auto; margin-top:22px; background:#18181c; border:1px solid #33333a; border-radius:8px; }
-    .manage-table { width:100%; min-width:900px; border-collapse:collapse; }
-    .manage-table th, .manage-table td { padding:13px 14px; border-bottom:1px solid #33333a; text-align:left; vertical-align:top; }
-    .manage-table th { background:#222228; }
-    .manage-table tr:last-child td { border-bottom:0; }
-    .pill { display:inline-block; padding:4px 9px; border-radius:20px; font-size:12px; font-weight:700; }
-    .pill-active { color:#b8f5c2; background:#173b22; }
-    .pill-inactive { color:#ffb8bd; background:#411b20; }
-    .notice { padding:12px 14px; margin-top:15px; border-radius:6px; background:#25252c; border:1px solid #45454f; }
-    .error { border-color:#e50914; color:#ffd5d8; }
-    .success { border-color:#2f8f46; color:#c5f4ce; }
-    .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .item-list { color:#ccc; line-height:1.7; }
-    .empty { text-align:center; color:#aaa; padding:30px !important; }
-</style>
 
-<div class="manage-page">
+
+<div class="manage-page" data-css-page="admin-combos">
     <div class="manage-heading">
         <div>
             <h1>Quản lý combo</h1>

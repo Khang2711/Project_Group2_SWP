@@ -3,90 +3,9 @@
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<style>
-    .admin-page {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 42px 24px 70px;
-        color: #f5f5f5;
-    }
 
-    .page-heading {
-        margin-bottom: 28px;
-    }
 
-    .page-heading h1 {
-        margin: 0 0 8px;
-        font-size: 32px;
-    }
-
-    .page-heading p {
-        margin: 0;
-        color: #999;
-    }
-
-    .cinema-card {
-        background: #151517;
-        border: 1px solid #29292d;
-        border-radius: 12px;
-        padding: 28px;
-    }
-
-    .cinema-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 25px;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 18px;
-        margin-bottom: 28px;
-    }
-
-    .info-item {
-        background: #1c1c1f;
-        border: 1px solid #2c2c30;
-        border-radius: 8px;
-        padding: 18px;
-    }
-
-    .info-label {
-        display: block;
-        color: #888;
-        font-size: 13px;
-        margin-bottom: 7px;
-        text-transform: uppercase;
-    }
-
-    .info-value {
-        color: #fff;
-        font-size: 16px;
-    }
-
-    .btn-primary {
-        display: inline-block;
-        background: #ff1744;
-        color: #fff;
-        padding: 11px 19px;
-        border-radius: 7px;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-    .btn-primary:hover {
-        background: #e3133b;
-    }
-
-    @media (max-width: 700px) {
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<div class="admin-page">
+<div class="admin-page" data-css-page="admin-cinemas">
 
     <div class="page-heading">
         <h1>Thông tin rạp</h1>

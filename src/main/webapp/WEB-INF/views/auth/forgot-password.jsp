@@ -1,62 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
-<style>
-    .auth-card {
-        max-width: 420px;
-        margin: 40px auto;
-        padding: 24px;
-        border: 1px solid #ccc;
-        border-radius: 12px;
-    }
 
-    .auth-card h1 {
-        margin-bottom: 10px;
-    }
 
-    .auth-note {
-        margin-bottom: 20px;
-        color: #aaaaaa;
-    }
-
-    .auth-field {
-        margin-bottom: 16px;
-    }
-
-    .auth-field label {
-        display: block;
-        margin-bottom: 6px;
-    }
-
-    .auth-field input {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #aaa;
-        border-radius: 6px;
-    }
-
-    .auth-submit {
-        width: 100%;
-        padding: 12px;
-        background: #e50914;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
-    .auth-error {
-        color: #e53935;
-        margin-bottom: 16px;
-    }
-
-    .auth-links {
-        margin-top: 18px;
-    }
-</style>
-
-<section class="auth-card">
+<section class="auth-card" data-css-page="auth-forgot-password">
     <h1>Quên mật khẩu</h1>
 
     <p class="auth-note">

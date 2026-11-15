@@ -16,7 +16,7 @@
        value="${pageContext.request.contextPath}" />
 
 
-<section class="booking-detail-page">
+<section class="booking-detail-page" data-css-page="user-booking-detail">
 
 
     <div class="booking-heading">
@@ -530,104 +530,11 @@
 
 
 
-<style>
-    .booking-policy-notice {
-        margin-top: 18px;
-        padding: 14px 16px;
-        color: #ffe1e4;
-        background: rgba(229, 9, 20, .10);
-        border: 1px solid rgba(229, 9, 20, .45);
-        border-left: 4px solid #e50914;
-        border-radius: 8px;
-    }
-    .booking-policy-notice strong {
-        display: block;
-        margin-bottom: 6px;
-        color: #ff727b;
-    }
-    .booking-policy-notice p {
-        margin: 0;
-        font-size: 13px;
-        line-height: 1.6;
-    }
-</style>
+
 
 <c:if test="${booking.status eq 'PENDING'}">
     <c:set var="movieAgeRating" value="${fn:toUpperCase(fn:trim(movie.ageRating))}" />
-    <style>
-        .age-confirm-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, .78);
-        }
-        .age-confirm-overlay.is-visible {
-            display: flex;
-        }
-        .age-confirm-dialog {
-            width: 100%;
-            max-width: 540px;
-            padding: 28px;
-            color: #f5f5f5;
-            background: #1c1c22;
-            border: 1px solid #454550;
-            border-top: 4px solid #e50914;
-            border-radius: 12px;
-            box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
-        }
-        .age-confirm-dialog h2 {
-            margin: 0 0 18px;
-            font-size: 23px;
-        }
-        .age-confirm-dialog p {
-            margin: 0;
-            color: #dedee3;
-            font-size: 15px;
-            line-height: 1.75;
-        }
-        .age-confirm-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 26px;
-        }
-        .age-confirm-actions button {
-            min-width: 110px;
-            padding: 11px 18px;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .age-confirm-cancel {
-            color: #eee;
-            background: #34343d;
-            border-color: #555560 !important;
-        }
-        .age-confirm-agree {
-            color: #fff;
-            background: #e50914;
-        }
-        .age-confirm-actions button:hover {
-            filter: brightness(1.12);
-        }
-        @media (max-width: 480px) {
-            .age-confirm-dialog {
-                padding: 22px 18px;
-            }
-            .age-confirm-actions {
-                flex-direction: column-reverse;
-            }
-            .age-confirm-actions button {
-                width: 100%;
-            }
-        }
-    </style>
+    
 
     <div class="age-confirm-overlay"
          id="ageConfirmationModal"
