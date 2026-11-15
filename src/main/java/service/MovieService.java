@@ -278,6 +278,7 @@ public class MovieService {
         return genresByMovie;
     }
 
+    // Lấy danh sách phim được gán cho đúng chi nhánh rạp đang quản lý.
     public List<Movie> getMoviesByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -289,14 +290,17 @@ public class MovieService {
         return movieRepository.getByCinemaId(cinemaId);
     }
 
+    // Lấy các thể loại đang hoạt động để hiển thị trong biểu mẫu phim.
     public List<Genre> getActiveGenres() {
         return genreRepository.getAllActive();
     }
 
+    // Lấy các thể loại đang gắn với phim khi mở trang chỉnh sửa.
     public List<Integer> getGenreIds(int movieId) {
         return movieRepository.getGenreIds(movieId);
     }
 
+    // Kiểm tra phim thuộc chi nhánh trước khi cho quản lý xem/chỉnh sửa.
     public Movie getMovieForManager(
             int movieId,
             int cinemaId) {
@@ -311,6 +315,7 @@ public class MovieService {
         return movieRepository.getByIdAnyStatus(movieId);
     }
 
+    // Kiểm tra dữ liệu phim và thể loại, sau đó lưu phim cùng các liên kết trong cơ sở dữ liệu.
     public void createMovie(
             int cinemaId,
             String title,
@@ -361,6 +366,7 @@ public class MovieService {
     // BUG 02 FIX: BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
     // =====================================================
 
+    // Kiểm tra quyền chi nhánh và ràng buộc lịch chiếu ACTIVE trước khi sửa thông tin hoặc trạng thái phim.
     public void updateMovie(
             int movieId,
             int cinemaId,
@@ -600,6 +606,7 @@ public class MovieService {
         return genreIds;
     }
 
+    // Chỉ gỡ phim khỏi chi nhánh khi không còn lịch sử suất chiếu tại chi nhánh đó.
     public void deleteMovieFromCinema(
             int movieId,
             int cinemaId) {
