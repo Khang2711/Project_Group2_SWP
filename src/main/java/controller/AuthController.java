@@ -9,8 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.UUID;
 import model.User;
 import service.AuthService;
+import service.AuthService.EmailNotVerifiedException;
+import service.AuthService.InvalidCredentialsException;
 import service.PasswordResetService;
 import service.EmailVerificationService;
 import security.LoginAttemptLimiter;
@@ -30,9 +33,9 @@ public class AuthController extends HttpServlet {
     private static final long OTP_VALID_MILLIS = 5 * 60 * 1000L;
     private static final long RESET_OTP_RESEND_COOLDOWN_MILLIS = 60 * 1000L;
     private static final int MAX_RESET_OTP_ATTEMPTS = 5;
-    // Thông báo chung cho mọi trường hợp đăng nhập không hợp lệ
+    // One general message: wrong email, wrong password or locked account
     private static final String LOGIN_FAILURE_MESSAGE
-            = "Thông tin đăng nhập không hợp lệ hoặc tài khoản hiện không thể đăng nhập.";
+            = "Email hoặc mật khẩu không đúng.";
     private AuthService authService;
     private PasswordResetService passwordResetService;
     private EmailVerificationService emailVerificationService;
@@ -159,10 +162,10 @@ public class AuthController extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        // Lấy IP của kết nối trực tiếp tới server
+        // IP address of the direct connection to the server
         String clientIp = request.getRemoteAddr();
 
-        // BƯỚC 1: Kiểm tra có bị giới hạn đăng nhập không
+        // STEP 1: check if this email + IP is temporarily blocked
         if (loginAttemptLimiter.isBlocked(email, clientIp)) {
 
             request.getSession().setAttribute(
@@ -178,18 +181,31 @@ public class AuthController extends HttpServlet {
 
         User user;
 
-        // BƯỚC 2: Kiểm tra email và mật khẩu
+        // STEP 2: check email and password
         try {
 
             user = authService.login(email, password);
 
         } catch (IllegalArgumentException e) {
 
-            // Ghi nhận lần đăng nhập thất bại
+            // Input error (empty email, empty password, wrong email format).
+            // Show the message. Do NOT count it as a wrong password attempt.
+            request.getSession().setAttribute(
+                    "loginError", e.getMessage());
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+
+        } catch (InvalidCredentialsException e) {
+
+            // Wrong email, wrong password or locked account.
+            // Count it as a failed attempt and show one general message,
+            // so nobody can tell which case it is.
             loginAttemptLimiter.recordFailure(
                     email, clientIp);
 
-            // Không tiết lộ nguyên nhân cụ thể cho người đăng nhập
             request.getSession().setAttribute(
                     "loginError",
                     LOGIN_FAILURE_MESSAGE);
@@ -198,9 +214,31 @@ public class AuthController extends HttpServlet {
                     request.getContextPath() + "/auth/login");
 
             return;
+
+        } catch (EmailNotVerifiedException e) {
+
+            // The password is correct, so do NOT count it as a failed attempt.
+            // The login page already has an "Xác thực email" link.
+            HttpSession errorSession = request.getSession();
+
+            errorSession.setAttribute(
+                    "loginError",
+                    "Email chưa được xác thực. "
+                    + "Vui lòng bấm \"Xác thực email\" bên dưới.");
+
+            // Fill in this email on the verify-email page
+            errorSession.setAttribute(
+                    "emailVerificationEmail",
+                    email.trim().toLowerCase(java.util.Locale.ROOT));
+
+            response.sendRedirect(
+                    request.getContextPath() + "/auth/login");
+
+            return;
+
         } catch (SQLException e) {
 
-            // Lỗi database không được tính là nhập sai mật khẩu
+            // A database error is not a wrong password
             log("Cannot process login.", e);
 
             request.getSession().setAttribute(
@@ -214,7 +252,7 @@ public class AuthController extends HttpServlet {
             return;
         }
 
-        // BƯỚC 3: Đăng nhập thành công
+        // STEP 3: login success, reset the failed attempts
         loginAttemptLimiter.recordSuccess(
                 email, clientIp);
 
@@ -263,7 +301,7 @@ public class AuthController extends HttpServlet {
             return;
         }
 
-        // BƯỚC 4: Lấy URL đã lưu trước khi tạo session mới
+        // STEP 4: get the saved URL before creating a new session
         HttpSession oldSession = request.getSession(false);
 
         String redirectAfterLogin = null;
@@ -275,10 +313,10 @@ public class AuthController extends HttpServlet {
                             "redirectAfterLogin");
         }
 
-        // BƯỚC 5: Tạo session đăng nhập
+        // STEP 5: create the login session
         startSession(request, user, roleName);
 
-        // BƯỚC 6: Chuyển trang
+        // STEP 6: redirect
         if ("CUSTOMER".equals(roleName)
                 && redirectAfterLogin != null) {
 
@@ -812,6 +850,21 @@ public class AuthController extends HttpServlet {
         HttpSession session = request.getSession(false);
 
         if (session != null) {
+
+            // A logged-in user must send the correct CSRF token
+            if (session.getAttribute("user") != null) {
+
+                String token = (String) session.getAttribute("csrfToken");
+                String sentToken = request.getParameter("csrfToken");
+
+                if (token == null || !token.equals(sentToken)) {
+                    response.sendError(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Yêu cầu đăng xuất không hợp lệ.");
+                    return;
+                }
+            }
+
             session.invalidate();
         }
 
@@ -832,6 +885,10 @@ public class AuthController extends HttpServlet {
 
         session.setAttribute("user", user);
         session.setAttribute("roleName", roleName);
+
+        // Secret token used to protect the logout form (CSRF)
+        session.setAttribute("csrfToken", UUID.randomUUID().toString());
+
         session.setMaxInactiveInterval(30 * 60);
     }
 

@@ -16,6 +16,14 @@
         </p>
     </c:if>
 
+    <c:if test="${showVerifyEmailLink eq true}">
+        <p>
+            <a href="${pageContext.request.contextPath}/auth/verify-email">
+                Bấm vào đây để xác thực email
+            </a>
+        </p>
+    </c:if>
+
     <c:if test="${param.reset eq '1'}">
         <p class="auth-success">
             Đổi mật khẩu thành công. Bạn có thể đăng nhập lại.
