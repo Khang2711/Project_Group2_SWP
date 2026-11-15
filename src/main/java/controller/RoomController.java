@@ -21,6 +21,7 @@ public class RoomController extends HttpServlet {
             new RoomService();
 
     @Override
+    // UC-06: Hiển thị danh sách phòng và biểu mẫu thêm/sửa theo chi nhánh.
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -121,6 +122,7 @@ public class RoomController extends HttpServlet {
     }
 
     @Override
+    // UC-06: Phân loại thao tác tạo, cập nhật, đổi trạng thái và xóa phòng.
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -300,6 +302,7 @@ public class RoomController extends HttpServlet {
         }
     }
 
+    // UC-06: Nạp lại form khi dữ liệu không hợp lệ hoặc lưu thất bại.
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -413,6 +416,7 @@ public class RoomController extends HttpServlet {
         ).forward(request, response);
     }
 
+    // UC-06: Kiểm tra quyền Cinema Manager và phạm vi chi nhánh.
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
