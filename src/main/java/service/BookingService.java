@@ -72,7 +72,7 @@ public class BookingService {
         int bookingId,
         int customerId) throws SQLException {
 
-    // Xác minh booking thuộc khách hàng đang đăng nhập.
+    // Verify that the booking belongs to the logged-in customer.
     getBookingDetail(bookingId, customerId);
 
     return foodOrderRepository.findOnlineItemsByBooking(bookingId);
@@ -798,8 +798,8 @@ public class BookingService {
                     );
                 }
 
-                // Có sản phẩm được chọn thì phải lưu,
-// kể cả khi tổng tiền bắp nước bằng 0.
+                // Save selected items,
+// even when the food total is zero.
                 if (comboItems != null && !comboItems.isEmpty()) {
 
                     foodOrderService.createPendingOnlineOrder(
