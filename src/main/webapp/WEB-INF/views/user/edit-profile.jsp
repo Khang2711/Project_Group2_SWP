@@ -23,11 +23,11 @@
             <div class="profile-form-grid">
 
                 <div class="profile-field">
-                    <label for="profile-account">
-                        Tài khoản đăng nhập hiện tại
+                    <label for="profile-email">
+                        Email đăng nhập
                     </label>
 
-                    <input id="profile-account"
+                    <input id="profile-email"
                            type="text"
                            readonly
                            value="<c:out value='${sessionScope.user.email}' />">
@@ -70,20 +70,15 @@
                 </div>
 
                 <div class="profile-field profile-wide">
-                    <label for="profile-email">Email đăng nhập</label>
-
-                    <input id="profile-email"
-                           type="text"
-                           value="<c:out value='${sessionScope.user.email}' />"
-                           readonly>
-                </div>
-
-                <div class="profile-field profile-wide">
                     <label for="profile-avatar">
                         Ảnh đại diện (JPG, PNG hoặc GIF; tối đa 5 MB, khoảng 2000 × 2000 pixel)
                     </label>
 
-                    <c:if test="${not empty profile.avatarUrl and fn:startsWith(profile.avatarUrl, '/avatars/')}">
+                    <%-- True when the user already has an avatar stored on this system --%>
+                    <c:set var="hasSavedAvatar"
+                           value="${not empty profile.avatarUrl and fn:startsWith(profile.avatarUrl, '/avatars/')}" />
+
+                    <c:if test="${hasSavedAvatar}">
                         <c:url var="currentAvatarSrc"
                                value="${profile.avatarUrl}" />
 
@@ -93,15 +88,38 @@
                              alt="Ảnh hiện tại">
                     </c:if>
 
+                    <%-- Preview of the image picked from the computer (not saved yet) --%>
                     <img id="avatarPreview"
                          class="profile-avatar"
                          hidden
                          alt="Ảnh đã chọn">
 
+                    <%-- Shown when the saved avatar is marked for removal --%>
+                    <p id="avatarRemovedNote" class="profile-note" hidden>
+                        Ảnh đại diện sẽ bị xóa sau khi bạn bấm Lưu.
+                    </p>
+
+                    <%-- 1 = remove the saved avatar when the form is submitted --%>
+                    <input type="hidden"
+                           id="removeAvatar"
+                           name="removeAvatar"
+                           value="0">
+
                     <input id="profile-avatar"
                            name="avatarFile"
                            type="file"
                            accept="image/jpeg,image/png,image/gif">
+
+                    <div class="profile-avatar-actions">
+                        <%-- Single button: its label is set by the script
+                             ("Xóa ảnh đang chọn" or "Xóa ảnh đại diện") --%>
+                        <button type="button"
+                                id="avatarActionBtn"
+                                class="profile-secondary"
+                                hidden>
+                            Xóa ảnh đại diện
+                        </button>
+                    </div>
 
                     <p class="profile-note">
                         Chọn ảnh từ máy tính.
@@ -131,7 +149,7 @@
                                autocomplete="new-password"
                                placeholder="Ít nhất 6 ký tự">
                     </div>
-                    
+
                     <div class="profile-field">
                         <label for="profile-current-password">
                             Mật khẩu hiện tại
@@ -142,7 +160,7 @@
                                type="password"
                                autocomplete="new-password">
                     </div>
-                    
+
                     <div class="profile-field">
                         <label for="profile-confirm-password">
                             Nhập lại mật khẩu mới
@@ -172,53 +190,113 @@
 </section>
 
 <script>
-    const avatarInput = document.getElementById("profile-avatar");
-    const avatarPreview = document.getElementById("avatarPreview");
-    const currentAvatar = document.getElementById("currentAvatar");
+    (function () {
+        const avatarInput = document.getElementById("profile-avatar");
 
-    let avatarPreviewUrl;
+        // The form is not rendered (e.g. profile failed to load)
+        if (!avatarInput) {
+            return;
+        }
 
-    if (avatarInput) {
-        avatarInput.addEventListener("change", function () {
+        const avatarPreview = document.getElementById("avatarPreview");
+        const currentAvatar = document.getElementById("currentAvatar");
+        const removeInput = document.getElementById("removeAvatar");
+        const removedNote = document.getElementById("avatarRemovedNote");
+        const actionBtn = document.getElementById("avatarActionBtn");
+
+        // True if the user already has an avatar stored in the database
+        // (read again from the database every time the edit page is opened)
+        const hasSaved = ${hasSavedAvatar == true};
+
+        let avatarPreviewUrl = null;
+
+        // Update the UI to match the current state
+        function render() {
+            const hasPicked = avatarInput.files.length > 0;
+            const removed = removeInput.value === "1";
+
+            avatarPreview.hidden = !hasPicked;
+
+            // Hide the saved avatar while a new one is picked or removal is pending
+            if (currentAvatar) {
+                currentAvatar.hidden = hasPicked || removed;
+            }
+
+            removedNote.hidden = !removed;
+
+            // Show the button when:
+            // - an image was picked from the computer (not saved yet), or
+            // - a saved avatar exists and is not already marked for removal
+            actionBtn.hidden = !(hasPicked || (hasSaved && !removed));
+
+            // The label tells the user which image will be removed
+            actionBtn.textContent = hasPicked
+                    ? "Xóa ảnh đang chọn"
+                    : "Xóa ảnh đại diện";
+        }
+
+        // Clear the picked file and free its preview URL
+        function clearPicked() {
             if (avatarPreviewUrl) {
                 URL.revokeObjectURL(avatarPreviewUrl);
+                avatarPreviewUrl = null;
             }
 
-            avatarPreview.hidden = true;
+            avatarInput.value = "";
             avatarPreview.removeAttribute("src");
+        }
 
-            if (currentAvatar) {
-                currentAvatar.hidden = false;
-            }
-
+        avatarInput.addEventListener("change", function () {
             const file = this.files[0];
 
+            if (avatarPreviewUrl) {
+                URL.revokeObjectURL(avatarPreviewUrl);
+                avatarPreviewUrl = null;
+            }
+
+            // The user opened the dialog and cancelled
             if (!file) {
+                avatarPreview.removeAttribute("src");
+                render();
                 return;
             }
 
-            const allowedTypes = [
-                "image/jpeg",
-                "image/png",
-                "image/gif"
-            ];
+            const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
 
+            // Reject wrong type or file larger than 5 MB
             if (!allowedTypes.includes(file.type)
                     || file.size > 5 * 1024 * 1024) {
 
                 alert("Vui lòng chọn ảnh JPG, PNG hoặc GIF, tối đa 5 MB.");
-                this.value = "";
+                clearPicked();
+                render();
                 return;
             }
 
             avatarPreviewUrl = URL.createObjectURL(file);
             avatarPreview.src = avatarPreviewUrl;
-            avatarPreview.hidden = false;
 
-            if (currentAvatar) {
-                currentAvatar.hidden = true;
-            }
+            // Picking a new image cancels any pending removal
+            removeInput.value = "0";
+            render();
         });
-    }
+
+        actionBtn.addEventListener("click", function () {
+            if (avatarInput.files.length > 0) {
+                // "Xóa ảnh đang chọn": discard only the picked image,
+                // the saved avatar shows again
+                clearPicked();
+
+            } else {
+                // "Xóa ảnh đại diện": mark the saved avatar for removal
+                // (actually removed on Save)
+                removeInput.value = "1";
+            }
+
+            render();
+        });
+
+        render();
+    })();
 </script>
 <%@ include file="/WEB-INF/include/footer.jsp" %>

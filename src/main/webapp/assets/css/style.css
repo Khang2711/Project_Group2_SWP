@@ -4625,6 +4625,18 @@ END CSS ADMIN
 .profile-page input[type="file"] {
     margin-top: 12px;
 }
+/* Make the hidden attribute win over display rules (buttons, notes) */
+.profile-page [hidden] {
+    display: none !important;
+}
+
+/* Button under the avatar picker */
+.profile-page .profile-avatar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
 
 /* Restored showtime date accordion styles removed in profile merge. */
 /* Showtime date accordion */

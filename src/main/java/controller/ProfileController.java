@@ -130,9 +130,23 @@ public class ProfileController extends HttpServlet {
                 uploadedAvatar = avatarService.save(avatarFile);
             }
 
-            String avatarUrl = uploadedAvatar == null
-                    ? currentProfile.getAvatarUrl()
-                    : uploadedAvatar;
+            // The user clicked "Remove avatar" on the edit page
+            boolean removeAvatar
+                    = "1".equals(request.getParameter("removeAvatar"));
+
+            String avatarUrl;
+
+            if (uploadedAvatar != null) {
+                // A new image was uploaded: the new image wins
+                avatarUrl = uploadedAvatar;
+            } else if (removeAvatar) {
+                // Remove requested: use an empty value,
+                // ProfileService will store NULL in the database
+                avatarUrl = "";
+            } else {
+                // Nothing changed: keep the current avatar
+                avatarUrl = currentProfile.getAvatarUrl();
+            }
 
             User updatedUser = profileService.updateProfile(
                     sessionUser.getUserId(),
@@ -149,7 +163,10 @@ public class ProfileController extends HttpServlet {
             // The database is updated, so it is safe to delete the old avatar
             String oldAvatar = currentProfile.getAvatarUrl();
 
-            if (uploadedAvatar != null
+            // The avatar changed if a new file was uploaded or removal was requested
+            boolean avatarChanged = uploadedAvatar != null || removeAvatar;
+
+            if (avatarChanged
                     && oldAvatar != null
                     && !oldAvatar.equals(uploadedAvatar)) {
 
