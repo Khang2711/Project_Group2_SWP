@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import model.FoodItem;
 
-/** DAO cho bảng Food_Item. */
 public class FoodItemRepository {
 
     public List<FoodItem> findByCinema(int cinemaId) {
