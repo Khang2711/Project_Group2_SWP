@@ -11,6 +11,7 @@ import model.Pricing;
 
 public class PricingRepository extends DBContext {
 
+    // UC-08: Lấy chính sách giá thuộc một chi nhánh.
     public List<Pricing> findByCinemaId(
             int cinemaId) {
 
@@ -66,6 +67,7 @@ public class PricingRepository extends DBContext {
         return pricingList;
     }
 
+    // UC-08: Đọc chính sách giá theo ID và chi nhánh.
     public Pricing findByIdAndCinema(
             int pricingId,
             int cinemaId) {
@@ -113,6 +115,7 @@ public class PricingRepository extends DBContext {
         return null;
     }
 
+    // UC-08: Lưu chính sách giá đã được Service xác thực.
     public boolean insert(
             Pricing pricing) {
 
@@ -240,6 +243,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
+    // UC-08: Cập nhật chính sách giá đã được kiểm tra điều kiện.
     public boolean update(
             Pricing pricing) {
 
@@ -380,6 +384,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
+    // UC-08: Xóa chính sách giá theo ID và chi nhánh.
     public boolean delete(
             int pricingId,
             int cinemaId) {
