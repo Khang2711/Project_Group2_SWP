@@ -309,7 +309,7 @@
                                     <span class="account-avatar">
 
                                         <c:choose>
-                                            <c:when test="${not empty sessionScope.user.avatarUrl}">
+                                            <c:when test="${not empty sessionScope.user.avatarUrl and fn:startsWith(sessionScope.user.avatarUrl, '/avatars/')}">
                                                 <c:url var="headerAvatarSrc"
                                                        value="${sessionScope.user.avatarUrl}" />
                                                 <img src="<c:out value='${headerAvatarSrc}' />"
@@ -501,6 +501,10 @@
                                       method="post"
                                       class="logout-form">
 
+                                    <input type="hidden"
+                                           name="csrfToken"
+                                           value="<c:out value='${sessionScope.csrfToken}' />">
+
                                     <button type="submit" class="logout-menu">
                                         <span class="menu-icon">↪</span>
                                         Đăng xuất
@@ -552,4 +556,4 @@
             });
         </script>
 
-        <main class="page-container">
+<main class="page-container">

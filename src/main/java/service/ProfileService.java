@@ -1,7 +1,5 @@
 package service;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import model.User;
 import repository.UserRepository;
@@ -19,7 +17,7 @@ public class ProfileService {
 
     public User updateProfile(int userId, String fullName, String email,
             String phone, String avatarUrl, String currentPassword,
-            String newPassword) throws SQLException {
+            String newPassword, String confirmPassword) throws SQLException {
 
         User currentUser = findCustomer(userId);
 
@@ -28,17 +26,37 @@ public class ProfileService {
         phone = clean(phone);
         avatarUrl = clean(avatarUrl);
 
+        // Only accept avatars saved by this system (/avatars/...).
+        // An external link (old data) is treated as "no avatar".
+        if (!new AvatarService().isAvatarPath(avatarUrl)) {
+            avatarUrl = "";
+        }
+
         currentPassword = currentPassword == null ? "" : currentPassword;
         newPassword = newPassword == null ? "" : newPassword;
+        confirmPassword = confirmPassword == null ? "" : confirmPassword;
 
-        validateInput(fullName, email, phone, avatarUrl);
+        validateInput(fullName, email, phone);
 
         boolean passwordChanged = !newPassword.isEmpty();
 
+        // The user filled the old password or the confirm box
+        // but left the new password empty
+        if (!passwordChanged
+                && (!currentPassword.isEmpty() || !confirmPassword.isEmpty())) {
+
+            throw new IllegalArgumentException(
+                    "Vui lòng nhập mật khẩu mới nếu muốn đổi mật khẩu.");
+        }
+
+        if (passwordChanged && currentPassword.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Vui lòng nhập mật khẩu hiện tại.");
+        }
+
         if (passwordChanged
-                && (currentPassword.isEmpty()
-                || !PasswordUtil.md5(currentPassword).equalsIgnoreCase(
-                        currentUser.getPasswordHash()))) {
+                && !PasswordUtil.md5(currentPassword).equalsIgnoreCase(
+                        currentUser.getPasswordHash())) {
 
             throw new IllegalArgumentException(
                     "Mật khẩu hiện tại không đúng.");
@@ -47,6 +65,17 @@ public class ProfileService {
         if (passwordChanged && newPassword.length() < 6) {
             throw new IllegalArgumentException(
                     "Mật khẩu mới phải có ít nhất 6 ký tự.");
+        }
+
+        // The new password must be typed twice the same way
+        if (passwordChanged && !newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu xác nhận không khớp.");
+        }
+
+        if (passwordChanged && newPassword.equals(currentPassword)) {
+            throw new IllegalArgumentException(
+                    "Mật khẩu mới phải khác mật khẩu hiện tại.");
         }
 
         User updatedUser = new User();
@@ -91,8 +120,7 @@ public class ProfileService {
         return user;
     }
 
-    private void validateInput(String fullName, String email,
-            String phone, String avatarUrl) {
+    private void validateInput(String fullName, String email, String phone) {
 
         if (fullName.isEmpty() || fullName.length() > 100) {
             throw new IllegalArgumentException(
@@ -109,32 +137,6 @@ public class ProfileService {
         if (!phone.matches("[0-9]{10}")) {
             throw new IllegalArgumentException(
                     "Số điện thoại phải gồm đúng 10 chữ số.");
-        }
-
-        if (avatarUrl.length() > 500) {
-            throw new IllegalArgumentException(
-                    "URL ảnh đại diện không được vượt quá 500 ký tự.");
-        }
-
-        if (!avatarUrl.isEmpty()
-                && !new AvatarService().isAvatarPath(avatarUrl)) {
-            try {
-                URI uri = new URI(avatarUrl);
-
-                if (!("http".equalsIgnoreCase(uri.getScheme())
-                        || "https".equalsIgnoreCase(uri.getScheme()))
-                        || uri.getHost() == null
-                        || uri.getUserInfo() != null) {
-
-                    throw new IllegalArgumentException(
-                            "Ảnh đại diện phải là URL "
-                            + "http hoặc https hợp lệ.");
-                }
-
-            } catch (URISyntaxException e) {
-                throw new IllegalArgumentException(
-                        "URL ảnh đại diện không hợp lệ.");
-            }
         }
     }
 

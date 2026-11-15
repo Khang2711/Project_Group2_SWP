@@ -130,9 +130,23 @@ public class ProfileController extends HttpServlet {
                 uploadedAvatar = avatarService.save(avatarFile);
             }
 
-            String avatarUrl = uploadedAvatar == null
-                    ? currentProfile.getAvatarUrl()
-                    : uploadedAvatar;
+            // The user clicked "Remove avatar" on the edit page
+            boolean removeAvatar
+                    = "1".equals(request.getParameter("removeAvatar"));
+
+            String avatarUrl;
+
+            if (uploadedAvatar != null) {
+                // A new image was uploaded: the new image wins
+                avatarUrl = uploadedAvatar;
+            } else if (removeAvatar) {
+                // Remove requested: use an empty value,
+                // ProfileService will store NULL in the database
+                avatarUrl = "";
+            } else {
+                // Nothing changed: keep the current avatar
+                avatarUrl = currentProfile.getAvatarUrl();
+            }
 
             User updatedUser = profileService.updateProfile(
                     sessionUser.getUserId(),
@@ -141,9 +155,28 @@ public class ProfileController extends HttpServlet {
                     form.getPhone(),
                     avatarUrl,
                     request.getParameter("currentPassword"),
-                    request.getParameter("newPassword"));
+                    request.getParameter("newPassword"),
+                    request.getParameter("confirmPassword"));
 
             saved = true;
+
+            // The database is updated, so it is safe to delete the old avatar
+            String oldAvatar = currentProfile.getAvatarUrl();
+
+            // The avatar changed if a new file was uploaded or removal was requested
+            boolean avatarChanged = uploadedAvatar != null || removeAvatar;
+
+            if (avatarChanged
+                    && oldAvatar != null
+                    && !oldAvatar.equals(uploadedAvatar)) {
+
+                try {
+                    avatarService.delete(oldAvatar);
+
+                } catch (IOException e) {
+                    log("Cannot remove old avatar.", e);
+                }
+            }
 
             session.setAttribute("user", updatedUser);
 
@@ -193,6 +226,7 @@ public class ProfileController extends HttpServlet {
             showUploadError(request, response);
 
         } finally {
+            // Save failed: remove the new avatar file that nobody uses
             if (!saved && uploadedAvatar != null) {
                 try {
                     avatarService.delete(uploadedAvatar);

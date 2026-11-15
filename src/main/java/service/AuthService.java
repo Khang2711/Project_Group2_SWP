@@ -10,6 +10,16 @@ import util.PasswordUtil;
 
 public class AuthService {
 
+    // Wrong email, wrong password, or account is not ACTIVE
+    public static class InvalidCredentialsException
+            extends Exception {
+    }
+    // Email and password are correct, account is ACTIVE,
+    // but the email is not verified yet
+    public static class EmailNotVerifiedException
+            extends Exception {
+    }
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -18,7 +28,11 @@ public class AuthService {
         roleRepository = new RoleRepository();
     }
 
-    public User login(String email, String password) throws SQLException {
+    public User login(String email, String password)
+            throws SQLException, InvalidCredentialsException,
+            EmailNotVerifiedException {
+
+        // Input errors: keep using IllegalArgumentException
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Vui lòng nhập email.");
         }
@@ -29,30 +43,28 @@ public class AuthService {
 
         email = email.trim().toLowerCase(Locale.ROOT);
 
-        if (email.length() > 100 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+        if (email.length() > 100
+                || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new IllegalArgumentException("Email không hợp lệ.");
         }
 
         User user = userRepository.findByEmail(email);
         String passwordHash = PasswordUtil.md5(password);
 
+        // Email does not exist or password is wrong
         if (user == null
                 || !passwordHash.equalsIgnoreCase(user.getPasswordHash())) {
-            throw new IllegalArgumentException(
-                    "Email hoặc mật khẩu không đúng."
-            );
+            throw new InvalidCredentialsException();
         }
 
+        // Locked account: same error as a wrong password
         if (!"ACTIVE".equals(user.getStatus())) {
-            throw new IllegalArgumentException(
-                    "Tài khoản không hoạt động hoặc đã bị khóa."
-            );
+            throw new InvalidCredentialsException();
         }
 
+        // Correct password and ACTIVE account, but email is not verified
         if (!user.isEmailVerified()) {
-            throw new IllegalArgumentException(
-                    "Email chưa được xác thực. Vui lòng xác thực email trước khi đăng nhập."
-            );
+            throw new EmailNotVerifiedException();
         }
 
         user.setPasswordHash(null);

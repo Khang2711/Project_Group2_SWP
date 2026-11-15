@@ -19,7 +19,7 @@
         <div class="profile-card">
             <div class="profile-summary">
                 <c:choose>
-                    <c:when test="${not empty profile.avatarUrl}">
+                    <c:when test="${not empty profile.avatarUrl and fn:startsWith(profile.avatarUrl, '/avatars/')}">
                         <c:url var="profileAvatarSrc"
                                value="${profile.avatarUrl}" />
 

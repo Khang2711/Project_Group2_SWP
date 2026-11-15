@@ -5,7 +5,7 @@ Các file hiện là khung, chưa hoàn thành use case. Một controller có th
 | UC | Chức năng | Controller / Service | JSP trong WEB-INF/views |
 |---|---|---|---|
 | 01 | Đăng nhập | AuthController / AuthService | auth/login.jsp |
-| 02 | Đăng xuất | AuthController / AuthService | auth/logout.jsp |
+| 02 | Đăng xuất | AuthController / AuthService | Không có trang riêng (nút Đăng xuất ở header, POST /auth/logout) |
 | 18 | Đăng ký | AuthController / AuthService | auth/register.jsp |
 | 20 | Quên mật khẩu | AuthController / AuthService | auth/forgot-password.jsp |
 | 20 | Đặt lại mật khẩu | AuthController / AuthService | auth/reset-password.jsp |
