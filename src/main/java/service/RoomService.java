@@ -13,6 +13,7 @@ public class RoomService {
         roomRepository = new RoomRepository();
     }
 
+    // UC-06: Chỉ hiển thị các phòng thuộc chi nhánh của Cinema Manager.
     public List<Room> getRoomsByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -26,6 +27,7 @@ public class RoomService {
     // LẤY THÔNG TIN PHÒNG
     // =====================================================
 
+    // UC-06: Kiểm tra phòng có thuộc chi nhánh trước khi trả dữ liệu.
     public Room getRoom(
             int roomId,
             int cinemaId) {
@@ -49,6 +51,7 @@ public class RoomService {
     // TẠO PHÒNG
     // =====================================================
 
+    // UC-06: Kiểm tra loại phòng và sơ đồ ghế; sức chứa tính theo số hàng nhân số ghế mỗi hàng.
     public void createRoom(
             int cinemaId,
             String roomName,
@@ -108,6 +111,7 @@ public class RoomService {
     // 3. Cho phép sửa tên nếu dữ liệu hợp lệ.
     // =====================================================
 
+    // UC-06: Chỉ cập nhật thuộc tính cho phép; không sửa capacity trực tiếp và phải kiểm tra suất chiếu.
     public void updateRoom(
             int roomId,
             int cinemaId,
@@ -218,6 +222,7 @@ public class RoomService {
     // hoặc lịch sử bán vé.
     // =====================================================
 
+    // UC-06: Chặn xóa khi phòng có lịch chiếu/vé; chỉ xóa phòng và ghế khi đủ điều kiện.
     public void deleteRoom(
             int roomId,
             int cinemaId) {
@@ -280,6 +285,7 @@ public class RoomService {
     // KIỂM TRA SƠ ĐỒ GHẾ KHI TẠO PHÒNG
     // =====================================================
 
+    // UC-06: Giới hạn số hàng, số ghế mỗi hàng và tổng ghế theo quy tắc nghiệp vụ.
     private void validateLayout(
             int rowCount,
             int seatsPerRow) {
@@ -380,6 +386,7 @@ public class RoomService {
     // KIỂM TRA LOẠI PHÒNG
     // =====================================================
 
+    // UC-06: Chỉ chấp nhận loại phòng được hệ thống hỗ trợ.
     private void validateRoomType(
             String roomType) {
 
