@@ -262,7 +262,7 @@ public class FoodOrderService {
                         + "Vui lòng chọn lại.");
             }
 
-            // Luôn lấy giá từ database.
+            // Always use the database price.
             item.setUnitPrice(price);
 
             BigDecimal lineTotal = price.multiply(
@@ -276,8 +276,8 @@ public class FoodOrderService {
         return total;
     }
 
-    // Lưu bắp nước trong transaction chung với đơn vé.
-    // TicketService sẽ commit sau khi tất cả đều lưu thành công.
+    // Save food orders in the same transaction as the booking.
+    // TicketService commits after all records are saved.
     public int createPaidOrder(
             Connection connection,
             FoodOrder order,
