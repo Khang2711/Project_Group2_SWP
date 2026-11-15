@@ -103,7 +103,7 @@ public class FoodOrderRepository {
                 FoodOrderItemRepository itemRepository
                         = new FoodOrderItemRepository();
 
-                // Lưu đơn và sản phẩm cùng nhau; lỗi một phần thì hủy toàn bộ.
+                // Save the order and items together; roll back on failure.
                 for (FoodOrderItem item : items) {
 
                     item.setFoodOrderId(foodOrderId);
@@ -274,8 +274,8 @@ public class FoodOrderRepository {
         return orders;
     }
 
-    // Lấy các dòng bắp nước/combo đã thanh toán gắn với đơn vé.
-    // Không lọc staff_id hoặc order_status để bao gồm cả đơn online đã PAID.
+    // Get paid food and combo items linked to the booking.
+    // Include paid online orders regardless of staff_id or order_status.
     public List<Map<String, Object>> findPaidItemsByBooking(
             int bookingId, int cinemaId) throws SQLException {
 
@@ -364,7 +364,7 @@ public class FoodOrderRepository {
 
         List<Combo> combos = new ArrayList<>();
 
-        // Combo phải có món và các món phải còn bán tại cùng rạp.
+        // A combo must contain items available at the same cinema.
         String sql = "SELECT c.combo_id, c.cinema_id, c.combo_name, "
                 + "c.description, c.combo_price, c.image_url, c.status "
                 + "FROM Combo c "
