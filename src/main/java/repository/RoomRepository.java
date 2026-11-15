@@ -38,6 +38,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
+    // UC-06: Đọc danh sách phòng trong chi nhánh.
     public List<Room> findByCinemaId(int cinemaId) {
 
         List<Room> rooms = new ArrayList<>();
@@ -67,6 +68,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
+    // UC-06: Truy vấn phòng theo cả roomId và cinemaId để kiểm tra phạm vi.
     public Room findByIdAndCinema(
             int roomId,
             int cinemaId) {
@@ -98,6 +100,7 @@ public class RoomRepository extends DBContext {
         return null;
     }
 
+    // UC-06: Chặn tên phòng trùng trong cùng chi nhánh.
     public boolean existsRoomName(
             int cinemaId,
             String roomName,
@@ -176,6 +179,7 @@ public class RoomRepository extends DBContext {
     // TẠO PHÒNG + SƠ ĐỒ GHẾ
     // rowCount và seatsPerRow do Manager nhập.
     // =========================================================
+    // UC-06: Tạo Room và sơ đồ Seat ban đầu trong cùng một giao dịch.
     public boolean insertWithSeats(
             Room room,
             int rowCount,
@@ -267,6 +271,7 @@ public class RoomRepository extends DBContext {
         }
     }
 
+    // UC-06: Lưu thông tin phòng sau khi Service kiểm tra ràng buộc.
     public boolean update(Room room) {
 
         String sql =
@@ -298,6 +303,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    // UC-06/07: Đếm ghế thực tế để tính sức chứa.
     public int countSeats(int roomId) {
 
         String sql =
@@ -328,6 +334,7 @@ public class RoomRepository extends DBContext {
     // Đồng bộ Room.capacity với số ghế thực tế.
     // Gọi sau khi thêm hoặc hard delete Seat.
     // =========================================================
+    // UC-06/07: Đồng bộ capacity từ số ghế đang có trong phòng.
     public boolean syncCapacityFromSeats(
             int roomId) {
 
@@ -359,6 +366,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    // UC-06: Chặn vô hiệu hóa phòng khi còn suất chiếu ACTIVE trong tương lai.
     public boolean hasFutureActiveShowtime(
             int roomId) {
 
@@ -393,6 +401,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    // UC-06: Kiểm tra phòng từng được xếp lịch chiếu hay chưa.
     public boolean hasAnyShowtime(
             int roomId) {
 
@@ -418,6 +427,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    // UC-06: Kiểm tra lịch sử vé của các ghế thuộc phòng.
     public boolean hasSeatTicketHistory(
             int roomId) {
 
@@ -470,6 +480,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    // UC-06: Xóa Seat và Room trong một giao dịch khi được phép.
     public boolean deleteRoomWithSeats(
             int roomId,
             int cinemaId) {
