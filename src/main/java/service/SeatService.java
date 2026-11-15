@@ -26,6 +26,7 @@ public class SeatService {
     // LAY DANH SACH GHE THEO PHONG
     // =====================================================
 
+    // UC-07: Lấy ghế của phòng sau khi xác nhận phòng thuộc chi nhánh.
     public List<Seat> getSeatsByRoom(
             int roomId,
             int cinemaId) {
@@ -39,6 +40,7 @@ public class SeatService {
     // NHOM GHE THEO HANG
     // =====================================================
 
+    // UC-07: Gom ghế theo hàng để dựng sơ đồ ghế trên giao diện.
     public Map<Integer, List<Seat>> getSeatRowsByRoom(
             int roomId,
             int cinemaId) {
@@ -64,6 +66,7 @@ public class SeatService {
     // LAY THONG TIN MOT GHE
     // =====================================================
 
+    // UC-07: Kiểm tra ghế tồn tại trong phòng và đúng chi nhánh.
     public Seat getSeat(
             int seatId,
             int roomId,
@@ -87,6 +90,7 @@ public class SeatService {
     // THEM MOT GHE
     // =====================================================
 
+    // UC-07: Kiểm tra vị trí ghế trùng và các giới hạn trước khi tạo ghế mới.
     public void createSeat(
             int roomId,
             int cinemaId,
@@ -133,6 +137,7 @@ public class SeatService {
     // -> Tao hang D voi 8 ghe.
     // =====================================================
 
+    // UC-07: Tạo một hàng mới cùng nhiều ghế, sau đó đồng bộ sức chứa phòng.
     public void addRow(
             int roomId,
             int cinemaId,
@@ -190,6 +195,7 @@ public class SeatService {
     // Khong lam thay doi ticket cu.
     // =====================================================
 
+    // UC-07: Thêm nhiều ghế vào hàng hiện có thay vì tạo hàng mới.
     public void addSeatsToExistingRow(
             int roomId,
             int cinemaId,
@@ -263,6 +269,7 @@ public class SeatService {
     // hoac trang thai khi ghe da co ticket.
     // =====================================================
 
+    // UC-07: Kiểm tra lịch sử vé và tính hợp lệ trước khi thay đổi thông tin ghế.
     public void updateSeat(
             int seatId,
             int roomId,
@@ -345,6 +352,7 @@ public class SeatService {
     // CAP NHAT NHIEU GHE
     // =====================================================
 
+    // UC-07: Cập nhật nhiều ghế được chọn sau khi xác minh từng ghế.
     public void bulkUpdateSeats(
             List<Integer> seatIds,
             int roomId,
@@ -433,6 +441,7 @@ public class SeatService {
     // XOA NHIEU GHE TRONG MOT TRANSACTION
     // =====================================================
 
+    // UC-07: Không xóa ghế có lịch sử vé; cập nhật lại capacity sau khi xóa.
     public void deleteSeats(
             List<Integer> seatIds,
             int roomId,
@@ -466,6 +475,7 @@ public class SeatService {
     // KIEM TRA DANH SACH GHE
     // =====================================================
 
+    // UC-07: Kiểm tra danh sách ghế được chọn hợp lệ và thuộc đúng phòng.
     private List<Integer> validateSelectedSeats(
             List<Integer> seatIds,
             int roomId) {
@@ -507,6 +517,7 @@ public class SeatService {
     // KIEM TRA PHONG THUOC RAP
     // =====================================================
 
+    // UC-07: Kiểm tra phòng thuộc chi nhánh của người quản lý.
     private Room checkRoom(
             int roomId,
             int cinemaId) {
