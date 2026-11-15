@@ -356,7 +356,6 @@ case "/user/ticket-qr":
             );
 
 
-    // Chỉ lấy vé thuộc customer đang đăng nhập.
     Ticket ticket
             = ticketService
                     .getTicketDetail(
@@ -385,7 +384,6 @@ case "/user/ticket-qr":
         int size = 260;
 
 
-        // QR chứa đúng ticket_code để staff có thể quét.
         BitMatrix matrix
                 = new QRCodeWriter()
                         .encode(
