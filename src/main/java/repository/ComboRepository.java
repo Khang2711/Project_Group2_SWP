@@ -11,7 +11,6 @@ import java.util.List;
 import model.Combo;
 import model.ComboItem;
 
-/** DAO cho bảng Combo. */
 public class ComboRepository {
 
     private final ComboItemRepository comboItemRepository = new ComboItemRepository();
