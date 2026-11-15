@@ -159,7 +159,7 @@ public class TicketService {
                 showtime.getRoomId());
     }
 
-    // Chỉ xem trước, chưa ghi Booking, Ticket hoặc Payment.
+    // Preview only; do not save booking, tickets, or payment.
     public Booking previewCounterTickets(
             int staffId,
             int cinemaId,
@@ -189,7 +189,7 @@ public class TicketService {
         }
     }
 
-    // Giữ hàm cũ để các nơi đang gọi không bị lỗi.
+    // Keep this method for backward compatibility.
     public Booking sellCounterCashTickets(
             int staffId,
             int cinemaId,
@@ -236,7 +236,7 @@ public class TicketService {
             try {
                 List<Ticket> tickets = new ArrayList<>();
 
-                // Kiểm tra lại ghế, khách hàng và giá khi xác nhận.
+                // Revalidate seats, customer, and prices before confirmation.
                 Booking booking = prepareCounterBooking(
                         connection,
                         staffId,
@@ -310,7 +310,7 @@ public class TicketService {
                             expectedFoodTotal);
                 }
 
-                // Cả vé và bắp nước đều lưu được thì mới hoàn tất.
+                // Complete only after tickets and food orders are saved.
                 connection.commit();
 
                 return booking;
@@ -408,7 +408,7 @@ public class TicketService {
                         "Có ghế vừa được bán. Vui lòng chọn lại.");
             }
 
-            // Dùng chung quy tắc giá với phần chọn ghế của nhóm.
+            // Use the same pricing rules as seat selection.
             BigDecimal price = bookingRepository.findSeatPrice(
                     showtimeId, seatId);
 
