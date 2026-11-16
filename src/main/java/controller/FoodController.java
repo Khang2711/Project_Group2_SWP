@@ -22,7 +22,8 @@ import util.ProjectImageStorage;
 @WebServlet(urlPatterns = {
     "/admin/food-items",
     "/admin/food-item-form",
-    "/admin/food-item-status"
+    "/admin/food-item-status",
+    "/admin/food-item-delete"
 })
 public class FoodController extends HttpServlet {
 
@@ -86,6 +87,21 @@ public class FoodController extends HttpServlet {
         }
 
         String path = request.getServletPath();
+        if ("/admin/food-item-delete".equals(path)) {
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                foodService.deleteItem(id, manager.getCinemaId());
+                response.sendRedirect(request.getContextPath() + "/admin/food-items?deleted=1");
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Mã sản phẩm không hợp lệ.");
+                showList(request, response, manager);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                request.setAttribute("error", e.getMessage());
+                showList(request, response, manager);
+            }
+            return;
+        }
+
         if ("/admin/food-item-status".equals(path)) {
             try {
                 int id = Integer.parseInt(request.getParameter("id"));

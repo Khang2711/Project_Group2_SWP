@@ -38,6 +38,7 @@
     <c:if test="${not empty error}"><div class="notice error"><c:out value="${error}" /></div></c:if>
     <c:if test="${param.saved eq '1'}"><div class="notice success">Đã lưu combo.</div></c:if>
     <c:if test="${param.statusUpdated eq '1'}"><div class="notice success">Đã cập nhật trạng thái combo.</div></c:if>
+    <c:if test="${param.deleted eq '1'}"><div class="notice success">Đã xóa combo.</div></c:if>
 
     <div class="table-wrap">
         <table class="manage-table">
@@ -77,6 +78,11 @@
                                                     <button class="status-button" type="submit">Kích hoạt</button>
                                                 </c:otherwise>
                                             </c:choose>
+                                        </form>
+                                        <form method="post" action="${pageContext.request.contextPath}/admin/combo-delete"
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa combo này?');">
+                                            <input type="hidden" name="id" value="${combo.comboId}">
+                                            <button class="status-button" type="submit">Xóa</button>
                                         </form>
                                     </div>
                                 </td>
