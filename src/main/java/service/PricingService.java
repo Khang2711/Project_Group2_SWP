@@ -20,6 +20,7 @@ public class PricingService {
         movieRepository = new MovieRepository();
     }
 
+    /** Loads pricing rules for a cinema. */
     public List<Pricing> getPricingByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -31,6 +32,7 @@ public class PricingService {
         return pricingRepository.findByCinemaId(cinemaId);
     }
 
+    /** Gets one pricing rule from the manager's cinema. */
     public Pricing getPricing(int pricingId, int cinemaId) {
 
         if (pricingId <= 0 || cinemaId <= 0) {
@@ -48,6 +50,7 @@ public class PricingService {
     // TẠO QUY TẮC GIÁ
     // =====================================================
 
+    /** Checks and creates a pricing rule. */
     public void createPricing(
             int cinemaId,
             Integer movieId,
@@ -121,6 +124,7 @@ public class PricingService {
     // CẬP NHẬT QUY TẮC GIÁ
     // =====================================================
 
+    /** Updates a rule after checking conflicts. */
     public void updatePricing(
             int pricingId,
             int cinemaId,
@@ -202,6 +206,7 @@ public class PricingService {
     // XÓA QUY TẮC GIÁ
     // =====================================================
 
+    /** Deletes a rule from the cinema. */
     public void deletePricing(int pricingId, int cinemaId) {
 
         Pricing pricing = getPricing(pricingId, cinemaId);
@@ -223,6 +228,7 @@ public class PricingService {
     // VALIDATE DỮ LIỆU GIÁ VÉ
     // =====================================================
 
+    /** Checks price, date, time, scope, and movie ownership. */
     private void validatePricing(Pricing pricing) {
 
         if (pricing.getCinemaId() <= 0) {
@@ -328,6 +334,7 @@ public class PricingService {
     // cùng tồn tại theo cơ chế ưu tiên giá.
     // =====================================================
 
+    /** Checks if active rules share a scope and overlapping periods. */
     private boolean hasConflictingRule(
             Pricing candidate,
             Integer excludePricingId) {
@@ -382,6 +389,7 @@ public class PricingService {
     // Khung giờ được kiểm tra riêng bằng overlap.
     // =====================================================
 
+    /** Checks if rules apply to the same scope. */
     private boolean sameScope(
             Pricing first,
             Pricing second) {
@@ -412,6 +420,7 @@ public class PricingService {
     // KIỂM TRA KHOẢNG NGÀY GIAO NHAU
     // =====================================================
 
+    /** Checks if two date ranges overlap. */
     private boolean dateRangesOverlap(
             Pricing first,
             Pricing second) {
@@ -447,6 +456,7 @@ public class PricingService {
     // => Không xung đột.
     // =====================================================
 
+    /** Checks if two time ranges overlap. */
     private boolean timeRangesOverlap(
             Pricing first,
             Pricing second) {
@@ -477,6 +487,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI GHẾ
     // =====================================================
 
+    /** Normalizes seat type for pricing. */
     private String normalizeSeatType(String seatType) {
 
         if (seatType == null
@@ -505,6 +516,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI PHÒNG
     // =====================================================
 
+    /** Normalizes room type for pricing. */
     private String normalizeRoomType(String roomType) {
 
         if (roomType == null
@@ -530,6 +542,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI NGÀY
     // =====================================================
 
+    /** Normalizes the day type. */
     private String normalizeDayType(String dayType) {
 
         if (dayType == null
@@ -555,6 +568,7 @@ public class PricingService {
     // CHUẨN HÓA TRẠNG THÁI
     // =====================================================
 
+    /** Checks and normalizes rule status. */
     private String normalizeStatus(String status) {
 
         if (status == null
