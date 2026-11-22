@@ -37,6 +37,7 @@ public class ShowtimeBulkController
             new RoomService();
 
     @Override
+    /** Opens the multiple-showtime form. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -59,6 +60,7 @@ public class ShowtimeBulkController
     }
 
     @Override
+    /** Creates showtimes for the dates selected in the form. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -265,6 +267,7 @@ public class ShowtimeBulkController
      * CHỌN TỪNG NGÀY
      * =====================================================
      */
+    /** Reads dates selected one by one. */
     private void loadSpecificDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
@@ -313,6 +316,7 @@ public class ShowtimeBulkController
      * CHỌN KHOẢNG NGÀY
      * =====================================================
      */
+    /** Builds dates using a date range and weekdays. */
     private void loadRangeDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
@@ -462,6 +466,7 @@ public class ShowtimeBulkController
         }
     }
 
+    /** Reloads the bulk form and shows an error. */
     private void forwardWithError(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -503,6 +508,7 @@ public class ShowtimeBulkController
         );
     }
 
+    /** Checks manager role and assigned cinema. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
