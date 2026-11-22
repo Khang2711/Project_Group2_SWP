@@ -30,6 +30,7 @@ public class PricingController
             new MovieService();
 
     @Override
+    /** Shows the pricing list or pricing form. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -132,6 +133,7 @@ public class PricingController
     }
 
     @Override
+    /** Handles creating, editing, and deleting price rules. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -374,6 +376,7 @@ public class PricingController
         }
     }
 
+    /** Reads a price from form input. */
     private BigDecimal parsePrice(
             String value) {
 
@@ -500,6 +503,7 @@ public class PricingController
         }
     }
 
+    /** Loads pricing rules for the manager's cinema. */
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -513,6 +517,7 @@ public class PricingController
         );
     }
 
+    /** Loads movies used in the pricing form. */
     private void loadMovies(
             HttpServletRequest request,
             User user) {
@@ -526,6 +531,7 @@ public class PricingController
         );
     }
 
+    /** Shows the form again after an error. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -707,6 +713,7 @@ public class PricingController
         );
     }
 
+    /** Checks manager permission and cinema assignment. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
