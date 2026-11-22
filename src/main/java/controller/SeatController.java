@@ -29,6 +29,7 @@ public class SeatController extends HttpServlet {
             new RoomService();
 
     @Override
+    /** Shows the seat map or seat form of the selected room. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -129,6 +130,7 @@ public class SeatController extends HttpServlet {
     }
 
     @Override
+    /** Handles seat creation, row adding, bulk editing, and deletion. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -477,6 +479,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LỖI TRÊN SƠ ĐỒ GHẾ
     // =====================================================
 
+    /** Shows a seat operation error without leaving the seat map. */
     private void showSeatMapError(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -511,6 +514,7 @@ public class SeatController extends HttpServlet {
     // LOAD SƠ ĐỒ GHẾ VÀ THÔNG TIN PHÒNG
     // =====================================================
 
+    /** Loads room details and groups seats by row for the JSP. */
     private void loadSeatMap(
             HttpServletRequest request,
             Room room,
@@ -539,6 +543,7 @@ public class SeatController extends HttpServlet {
     // CHUYỂN DANH SÁCH SEAT ID THÀNH INTEGER
     // =====================================================
 
+    /** Converts selected seat IDs from form text into numbers. */
     private List<Integer> parseSeatIds(
             String[] values) {
 
@@ -578,6 +583,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LẠI FORM KHI CÓ LỖI
     // =====================================================
 
+    /** Reloads the seat form with input values and any error. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -672,6 +678,7 @@ public class SeatController extends HttpServlet {
     // KIỂM TRA QUYỀN CINEMA MANAGER
     // =====================================================
 
+    /** Checks manager permission and assigned cinema. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
