@@ -15,6 +15,7 @@ import model.Seat;
 
 public class SeatRepository extends DBContext {
 
+    /** Reads seats from a room. */
     public List<Seat> findByRoomId(int roomId) {
         List<Seat> seats = new ArrayList<>();
 
@@ -38,6 +39,7 @@ public class SeatRepository extends DBContext {
         return seats;
     }
 
+    /** Finds a seat that belongs to the room. */
     public Seat findByIdAndRoom(int seatId, int roomId) {
         String sql = "SELECT seat_id, room_id, "
                 + "seat_row, seat_number, seat_type, status "
@@ -59,6 +61,7 @@ public class SeatRepository extends DBContext {
         return null;
     }
 
+    /** Checks if another seat uses the same position. */
     public boolean existsPosition(
             int roomId, int seatRow, int seatNumber,
             Integer excludeSeatId) {
@@ -89,6 +92,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Counts seats in a room. */
     public int countSeats(int roomId) {
         String sql = "SELECT COUNT(*) FROM Seat WHERE room_id = ?";
 
@@ -108,6 +112,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Gets the last row number. */
     public int getMaxRow(int roomId) {
         String sql = "SELECT COALESCE(MAX(seat_row), 0) "
                 + "FROM Seat WHERE room_id = ?";
@@ -128,6 +133,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Checks if a seat has ticket history. */
     public boolean hasTicketHistory(int seatId) {
         String sql = "SELECT TOP 1 ticket_id "
                 + "FROM Ticket WHERE seat_id = ?";
@@ -144,6 +150,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Inserts one seat into the database. */
     public boolean insert(Seat seat) {
         String sql = "INSERT INTO Seat "
                 + "(room_id, seat_row, seat_number, "
@@ -167,6 +174,7 @@ public class SeatRepository extends DBContext {
     // GIỮ HÀM CŨ - THÊM HÀNG GHẾ
     // =====================================================
 
+    /** Inserts seats for a new row. */
     public boolean insertRow(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -199,6 +207,7 @@ public class SeatRepository extends DBContext {
     // Có transaction và đồng bộ capacity.
     // =====================================================
 
+    /** Creates a row and updates capacity in one transaction. */
     public boolean insertRowAtomic(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -254,6 +263,7 @@ public class SeatRepository extends DBContext {
     // - Rollback nếu bất kỳ ghế nào lỗi.
     // =====================================================
 
+    /** Appends seats to a row and updates capacity in one transaction. */
     public boolean appendSeatsToRowAtomic(
             int roomId,
             int seatRow,
@@ -339,6 +349,7 @@ public class SeatRepository extends DBContext {
     // CẬP NHẬT MỘT GHẾ
     // =====================================================
 
+    /** Updates seat information. */
     public boolean update(Seat seat) {
         String sql = "UPDATE Seat SET seat_row = ?, "
                 + "seat_number = ?, seat_type = ?, status = ? "
@@ -359,6 +370,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Updates one seat's status. */
     public boolean updateStatus(
             int seatId, int roomId, String status) {
 
@@ -377,6 +389,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Updates several seats in one operation. */
     public int updateBulk(
             List<Integer> seatIds,
             int roomId,
@@ -436,6 +449,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Deletes one seat. */
     public boolean delete(int seatId, int roomId) {
         String sql = "DELETE FROM Seat "
                 + "WHERE seat_id = ? AND room_id = ?";
@@ -455,6 +469,7 @@ public class SeatRepository extends DBContext {
     // BUG-17 - XÓA NHIỀU GHẾ TRONG MỘT TRANSACTION
     // =====================================================
 
+    /** Deletes seats and updates capacity in one transaction. */
     public boolean deleteSeatsAtomic(
             List<Integer> seatIds, int roomId) {
 
@@ -564,6 +579,7 @@ public class SeatRepository extends DBContext {
     // CÁC HÀM HỖ TRỢ TRANSACTION
     // =====================================================
 
+    /** Opens a connection for a write transaction. */
     private Connection openWriteConnection()
             throws SQLException {
 
@@ -577,6 +593,7 @@ public class SeatRepository extends DBContext {
         return connection;
     }
 
+    /** Locks a room while changing its seats. */
     private void lockRoom(
             Connection connection, int roomId)
             throws SQLException {
@@ -599,6 +616,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Checks input values before inserting seats. */
     private void validateInsertInput(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -619,6 +637,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Finds the last row within the current transaction. */
     private int getMaxRowInTransaction(
             Connection connection, int roomId)
             throws SQLException {
@@ -641,6 +660,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Counts seats within the current transaction. */
     private int countSeatsInTransaction(
             Connection connection, int roomId)
             throws SQLException {
@@ -662,6 +682,7 @@ public class SeatRepository extends DBContext {
         throw new SQLException("Không thể đếm ghế.");
     }
 
+    /** Checks the room seat limit. */
     private void checkRoomCapacity(
             Connection connection, int roomId,
             int seatsToAdd) throws SQLException {
@@ -675,6 +696,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Inserts a range of seat numbers. */
     private void insertSeatRange(
             Connection connection,
             int roomId,
@@ -708,6 +730,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Updates the room capacity to match its seats. */
     private void syncCapacity(
             Connection connection, int roomId)
             throws SQLException {
@@ -729,6 +752,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Checks if all SQL batch statements succeeded. */
     private boolean batchSucceeded(
             int[] results, int expectedCount) {
 
@@ -746,6 +770,7 @@ public class SeatRepository extends DBContext {
         return true;
     }
 
+    /** Creates SQL placeholders for several IDs. */
     private String placeholders(int count) {
         StringBuilder sb = new StringBuilder();
 
@@ -759,6 +784,7 @@ public class SeatRepository extends DBContext {
         return sb.toString();
     }
 
+    /** Sets seat IDs in a SQL statement. */
     private void bindSeatIds(
             PreparedStatement ps, int roomId,
             Set<Integer> ids) throws SQLException {
@@ -772,6 +798,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Converts a SQL row into a Seat object. */
     private Seat mapSeat(ResultSet rs)
             throws SQLException {
 
