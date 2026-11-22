@@ -20,6 +20,7 @@ public class CinemaController extends HttpServlet {
     private final CinemaService cinemaService = new CinemaService();
 
     @Override
+    /** Shows details or the edit form for the manager's cinema. */
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,6 +49,7 @@ public class CinemaController extends HttpServlet {
     }
 
     @Override
+    /** Updates the address and phone number of the manager's cinema. */
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -94,6 +96,7 @@ public class CinemaController extends HttpServlet {
         }
     }
 
+    /** Loads cinema details for the page. */
     private void showCinema(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -120,6 +123,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
+    /** Displays the cinema contact edit form. */
     private void showForm(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -142,6 +146,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
+    /** Checks that the current user is a cinema manager. */
     private User getManager(HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
