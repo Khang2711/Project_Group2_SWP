@@ -1329,8 +1329,7 @@
     });
 
     // =====================================================
-    // =====================================================
-    // NEW: VALIDATE ADD SEATS TO EXISTING ROW
+    // Kiểm tra dữ liệu trong form thêm nhiều ghế vào hàng có sẵn.
     // =====================================================
 
     addSeatsToRowForm.addEventListener(
