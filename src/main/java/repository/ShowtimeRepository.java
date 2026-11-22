@@ -15,6 +15,44 @@ import model.Showtime;
 
 public class ShowtimeRepository extends DBContext {
 
+    // Ghi lỗi lưu lịch chiếu trong log và trả về mã lỗi để kiểm tra.
+    // Không hiển thị trực tiếp câu SQL hay thông tin kết nối trên giao diện.
+    private IllegalArgumentException writeFailure(
+            String operation,
+            Exception error) {
+
+        error.printStackTrace();
+
+        SQLException sqlError = null;
+        Throwable current = error;
+
+        while (current != null) {
+            if (current instanceof SQLException) {
+                sqlError = (SQLException) current;
+                break;
+            }
+            current = current.getCause();
+        }
+
+        if (sqlError != null) {
+            String message = "Không thể " + operation
+                    + ". Mã SQL: " + sqlError.getErrorCode()
+                    + ", SQLState: " + sqlError.getSQLState() + ".";
+
+            System.err.println("Showtime write error: "
+                    + message + " " + sqlError.getMessage());
+
+            return new IllegalArgumentException(message, error);
+        }
+
+        return new IllegalArgumentException(
+                "Không thể " + operation
+                + ". Kiểm tra log Tomcat: "
+                + error.getClass().getSimpleName() + ".",
+                error
+        );
+    }
+
     // =====================================================
     // READ OPERATIONS
     // =====================================================
@@ -386,8 +424,7 @@ public class ShowtimeRepository extends DBContext {
         try {
             validateShowtime(showtime);
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw writeFailure("tạo một lịch chiếu", e);
         }
 
         try (Connection connection =
@@ -443,20 +480,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                System.err.println("Showtime insert failed: roomId="
-                        + showtime.getRoomId()
-                        + ", movieId=" + showtime.getMovieId()
-                        + ", start=" + showtime.getStartTime()
-                        + ", cause=" + e.getMessage());
-                e.printStackTrace();
-                return false;
+                throw writeFailure("tạo một lịch chiếu", e);
             }
 
         } catch (SQLException e) {
-            System.err.println("Showtime insert connection failed: "
-                    + e.getMessage());
-            e.printStackTrace();
-            return false;
+            throw writeFailure("tạo một lịch chiếu", e);
         }
     }
 
@@ -490,8 +518,7 @@ public class ShowtimeRepository extends DBContext {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw writeFailure("tạo loạt lịch chiếu", e);
         }
 
         // Thứ tự cố định giúp giảm deadlock
@@ -618,13 +645,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw writeFailure("tạo loạt lịch chiếu", e);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw writeFailure("tạo loạt lịch chiếu", e);
         }
     }
 
