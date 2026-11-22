@@ -19,6 +19,7 @@ public class CinemaService {
     private final ShowtimeRepository showtimeRepository
         = new ShowtimeRepository();
 
+/** Finds the cinema where a showtime takes place. */
 public Cinema getCinemaByShowtime(Showtime showtime) {
     if (showtime == null) {
         return null;
@@ -46,6 +47,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
      *
      * @return a list of active cinemas
      */
+    /** Loads cinemas that are active. */
     public List<Cinema> getActiveCinemas() {
         return cinemaRepository.getAllActive();
     }
@@ -55,6 +57,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
      *
      * @return a map of cinema ID and cinema
      */
+    /** Builds a map of cinema IDs to cinema details. */
     public Map<Integer, Cinema> getCinemaById() {
         Map<Integer, Cinema> cinemas = new LinkedHashMap<>();
 
@@ -66,6 +69,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemas;
     }
 
+    /** Gets a cinema by its ID. */
     public Cinema getCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -76,6 +80,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.findById(cinemaId);
     }
 
+    /** Counts rooms in a cinema. */
     public int getRoomCount(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -87,6 +92,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.countRooms(cinemaId);
     }
 
+    /** Checks and updates only the manager cinema's address and phone. */
     public void updateCinemaContact(
             int cinemaId,
             String address,
@@ -138,6 +144,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         }
     }
 
+    /** Lists every cinema for system management. */
     public List<Cinema> getAllCinemas() {
         return cinemaRepository.getAll();
     }
@@ -146,6 +153,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // TẠO RẠP
     // =====================================================
 
+    /** Creates a cinema after checking its information. */
     public String createCinema(Cinema cinema) {
 
         String error = validateCinema(cinema);
@@ -173,6 +181,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // BẢO VỆ TRẠNG THÁI RẠP KHI SỬA THÔNG TIN
     // =====================================================
 
+    /** Updates cinema details in the system management flow. */
     public String updateCinema(Cinema cinema) {
 
         if (cinema == null
@@ -233,6 +242,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // CHẶN VÔ HIỆU HÓA RẠP CÒN LỊCH HOẶC VÉ
     // =====================================================
 
+    /** Changes a cinema's active status when allowed. */
     public String updateCinemaStatus(
             int cinemaId,
             String status) {
@@ -288,6 +298,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // Không tự động hủy vé hoặc hoàn tiền.
     // =====================================================
 
+    /** Explains why a cinema cannot be deactivated. */
     private String getDeactivationBlockReason(
             int cinemaId) {
 
@@ -346,6 +357,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // GIỮ RÀNG BUỘC DỮ LIỆU CỦA PROJECT
     // =====================================================
 
+    /** Deletes a cinema only when its related data allows it. */
     public String deleteCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -383,6 +395,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // VALIDATE THÔNG TIN RẠP
     // =====================================================
 
+    /** Checks required cinema fields and allowed values. */
     private String validateCinema(Cinema cinema) {
 
         if (cinema == null) {
