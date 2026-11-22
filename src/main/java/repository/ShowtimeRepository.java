@@ -459,11 +459,18 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
+                System.err.println("Showtime insert failed: roomId="
+                        + showtime.getRoomId()
+                        + ", movieId=" + showtime.getMovieId()
+                        + ", start=" + showtime.getStartTime()
+                        + ", cause=" + e.getMessage());
                 e.printStackTrace();
                 return false;
             }
 
         } catch (SQLException e) {
+            System.err.println("Showtime insert connection failed: "
+                    + e.getMessage());
             e.printStackTrace();
             return false;
         }
