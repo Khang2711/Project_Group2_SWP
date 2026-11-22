@@ -11,6 +11,7 @@ import model.Pricing;
 
 public class PricingRepository extends DBContext {
 
+    /** Gets pricing rules from the database. */
     public List<Pricing> findByCinemaId(
             int cinemaId) {
 
@@ -66,6 +67,7 @@ public class PricingRepository extends DBContext {
         return pricingList;
     }
 
+    /** Gets one rule from a specific cinema. */
     public Pricing findByIdAndCinema(
             int pricingId,
             int cinemaId) {
@@ -113,6 +115,7 @@ public class PricingRepository extends DBContext {
         return null;
     }
 
+    /** Inserts a new pricing rule. */
     public boolean insert(
             Pricing pricing) {
 
@@ -240,6 +243,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
+    /** Updates an existing pricing rule. */
     public boolean update(
             Pricing pricing) {
 
@@ -380,6 +384,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
+    /** Deletes a pricing rule. */
     public boolean delete(
             int pricingId,
             int cinemaId) {
@@ -406,6 +411,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
+    /** Sets an optional number in SQL. */
     private void setNullableInteger(
             PreparedStatement ps,
             int index,
@@ -428,6 +434,7 @@ public class PricingRepository extends DBContext {
         }
     }
 
+    /** Sets optional text in SQL. */
     private void setNullableString(
             PreparedStatement ps,
             int index,
@@ -450,6 +457,7 @@ public class PricingRepository extends DBContext {
         }
     }
 
+    /** Converts a SQL row into a Pricing object. */
     private Pricing mapPricing(
             ResultSet rs)
             throws Exception {
