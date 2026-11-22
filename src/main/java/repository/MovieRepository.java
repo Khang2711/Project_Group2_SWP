@@ -21,6 +21,7 @@ public class MovieRepository extends DBContext {
      * @param id the movie ID
      * @return the movie if found, otherwise null
      */
+    /** Loads an active movie by its ID. */
     public Movie getById(int id) {
 
         String sql = "SELECT * "
@@ -67,6 +68,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching active movies
      */
+    /** Finds movies using a search keyword. */
     public List<Movie> search(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -115,6 +117,7 @@ public class MovieRepository extends DBContext {
      *
      * @return a list of movies that are currently showing
      */
+    /** Loads movies that are currently showing. */
     public List<Movie> getNowShowing() {
 
         List<Movie> movies = new ArrayList<>();
@@ -163,6 +166,7 @@ public class MovieRepository extends DBContext {
      *
      * @return a list of upcoming movies
      */
+    /** Loads movies that are coming soon. */
     public List<Movie> getComingSoon() {
 
         List<Movie> movies = new ArrayList<>();
@@ -211,6 +215,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching currently showing movies
      */
+    /** Searches movies that are currently showing. */
     public List<Movie> searchNowShowing(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -259,6 +264,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching upcoming movies
      */
+    /** Searches upcoming movies. */
     public List<Movie> searchComingSoon(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -300,6 +306,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    /** Loads movies linked to a cinema. */
     public List<Movie> getByCinemaId(int cinemaId) {
 
         List<Movie> movies = new ArrayList<>();
@@ -328,6 +335,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    /** Loads a movie even when it is inactive. */
     public Movie getByIdAnyStatus(int movieId) {
 
         String sql = "SELECT * "
@@ -351,6 +359,7 @@ public class MovieRepository extends DBContext {
         return null;
     }
 
+    /** Loads the genre IDs linked to a movie. */
     public List<Integer> getGenreIds(int movieId) {
 
         List<Integer> genreIds = new ArrayList<>();
@@ -376,6 +385,7 @@ public class MovieRepository extends DBContext {
         return genreIds;
     }
 
+    /** Checks whether a movie is assigned to the given cinema. */
     public boolean belongsToCinema(int movieId, int cinemaId) {
 
         String sql = "SELECT movie_id "
@@ -400,6 +410,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Inserts Movie, Movie_Genre, and Cinema_Movie in one transaction. */
     public boolean insertForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -479,6 +490,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Updates movie details and genre links in the database. */
     public boolean updateForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -545,6 +557,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Sets movie values in a PreparedStatement. */
     private void setMovieParameters(
             PreparedStatement ps,
             Movie movie) throws Exception {
@@ -560,6 +573,7 @@ public class MovieRepository extends DBContext {
         ps.setString(9, movie.getStatus());
     }
 
+    /** Converts a database row into a Movie object. */
     private Movie mapMovie(ResultSet rs) throws Exception {
 
         Movie movie = new Movie();
@@ -580,6 +594,7 @@ public class MovieRepository extends DBContext {
         return movie;
     }
 
+    /** Checks whether this cinema has showtime history for a movie. */
     public boolean hasShowtimeAtCinema(
             int movieId,
             int cinemaId) {
@@ -607,6 +622,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Deletes the cinema-movie link without deleting the shared movie. */
     public boolean deleteFromCinema(
             int movieId,
             int cinemaId) {
