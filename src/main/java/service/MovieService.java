@@ -62,6 +62,7 @@ public class MovieService {
      * @param id the movie ID
      * @return the movie if found, otherwise null
      */
+    /** Gets a movie by its ID. */
     public Movie getMovieById(int id) {
         return movieRepository.getById(id);
     }
@@ -71,6 +72,7 @@ public class MovieService {
      *
      * @return a map of room ID and room
      */
+    /** Builds a map of room IDs to room details. */
     public Map<Integer, Room> getRoomById() {
         Map<Integer, Room> rooms = new HashMap<>();
 
@@ -91,6 +93,7 @@ public class MovieService {
      * @return movies and showtimes grouped by date (dd/MM/yyyy) in
      * chronological order
      */
+    /** Groups movie schedules by date for the public movie pages. */
     public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(String keyword, LocalDate date, Integer cinemaId) {
 
         // Active movies whose title matches the keyword.
@@ -185,6 +188,7 @@ public class MovieService {
      *
      * @return a list of currently showing movies
      */
+    /** Gets movies that are currently showing. */
     public List<Movie> getNowShowingMovies() {
         return movieRepository.getNowShowing();
     }
@@ -194,6 +198,7 @@ public class MovieService {
      *
      * @return a list of upcoming movies
      */
+    /** Gets movies that will be released soon. */
     public List<Movie> getComingSoonMovies() {
         return movieRepository.getComingSoon();
     }
@@ -205,6 +210,7 @@ public class MovieService {
      * @param keyword movie title keyword
      * @return a filtered list of movies
      */
+    /** Filters movies by display type and search keyword. */
     public List<Movie> getMoviesForList(String type, String keyword) {
 
         if (keyword == null) {
@@ -226,6 +232,7 @@ public class MovieService {
      * @param nowShowingMovies get movie is showing now
      * @return a list of featured movies for the carousel
      */
+    /** Selects movies to highlight on the home page. */
     public List<Movie> getFeaturedMovies(List<Movie> nowShowingMovies) {
 
         List<Movie> featuredMovies = new ArrayList<>();
@@ -252,6 +259,7 @@ public class MovieService {
      * @param movies the movie list
      * @return a map of movie ID and its genres
      */
+    /** Loads genre details for a list of movies. */
     public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
 
         Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
@@ -278,6 +286,7 @@ public class MovieService {
         return genresByMovie;
     }
 
+    /** Gets movies assigned to one cinema. */
     public List<Movie> getMoviesByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -289,14 +298,17 @@ public class MovieService {
         return movieRepository.getByCinemaId(cinemaId);
     }
 
+    /** Gets genres available for movie forms. */
     public List<Genre> getActiveGenres() {
         return genreRepository.getAllActive();
     }
 
+    /** Gets the genre IDs of a movie. */
     public List<Integer> getGenreIds(int movieId) {
         return movieRepository.getGenreIds(movieId);
     }
 
+    /** Gets a movie only if it belongs to the manager's cinema. */
     public Movie getMovieForManager(
             int movieId,
             int cinemaId) {
@@ -311,6 +323,7 @@ public class MovieService {
         return movieRepository.getByIdAnyStatus(movieId);
     }
 
+    /** Checks movie details and creates the movie for the selected cinema. */
     public void createMovie(
             int cinemaId,
             String title,
@@ -361,6 +374,7 @@ public class MovieService {
     // BUG 02 FIX: BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
     // =====================================================
 
+    /** Updates a movie and protects existing showtimes from invalid changes. */
     public void updateMovie(
             int movieId,
             int cinemaId,
@@ -470,6 +484,7 @@ public class MovieService {
         }
     }
 
+    /** Checks form values and builds a Movie object. */
     private Movie buildMovie(
             int movieId,
             String title,
@@ -568,6 +583,7 @@ public class MovieService {
         }
     }
 
+    /** Changes empty text to null before saving optional fields. */
     private String emptyToNull(String value) {
 
         if (value == null || value.trim().isEmpty()) {
@@ -577,6 +593,7 @@ public class MovieService {
         return value.trim();
     }
 
+    /** Reads and checks the genre IDs selected in the form. */
     private List<Integer> parseGenreIds(
             String[] genreValues) {
 
@@ -600,6 +617,7 @@ public class MovieService {
         return genreIds;
     }
 
+    /** Removes a movie from this cinema only when it has no showtime history there. */
     public void deleteMovieFromCinema(
             int movieId,
             int cinemaId) {
