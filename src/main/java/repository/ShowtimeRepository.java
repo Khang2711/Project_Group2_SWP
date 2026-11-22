@@ -2,13 +2,11 @@
 package repository;
 
 import db.DBContext;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -245,47 +243,33 @@ public class ShowtimeRepository extends DBContext {
     }
 
     // =====================================================
-    // BUG-08 FIX:
-    // KHÓA NGHIỆP VỤ THEO ROOM_ID
+    // KHÓA PHÒNG CHIẾU KHI THAY ĐỔI LỊCH
     //
-    // sp_getapplock yêu cầu SQL Server.
-    // LockOwner = Transaction:
-    // khóa tự giải phóng khi commit/rollback.
-    //
-    // Return >= 0: lấy khóa thành công.
-    // Return < 0: không lấy được khóa.
+    // Khóa dòng Room bằng UPDLOCK và HOLDLOCK trong transaction.
+    // Các yêu cầu ghi lịch cùng phòng được thực hiện tuần tự.
+    // Khóa được giải phóng sau commit hoặc rollback.
     // =====================================================
 
+    // Khóa bản ghi phòng trong transaction để các yêu cầu tạo hoặc sửa
+    // lịch chiếu cùng phòng phải xử lý tuần tự.
     private void lockRoom(
             Connection connection,
             int roomId) throws SQLException {
 
-        String sql = "{? = call sys.sp_getapplock(?, ?, ?, ?)}";
+        String sql = "SELECT room_id FROM Room WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE room_id = ?";
 
-        try (CallableStatement cs =
-                connection.prepareCall(sql)) {
+        try (PreparedStatement ps =
+                connection.prepareStatement(sql)) {
 
-            cs.registerOutParameter(1, Types.INTEGER);
+            ps.setInt(1, roomId);
 
-            cs.setString(
-                    2,
-                    "FCinema_Showtime_Room_" + roomId
-            );
-
-            cs.setString(3, "Exclusive");
-            cs.setString(4, "Transaction");
-            cs.setInt(5, 10000);
-
-            cs.execute();
-
-            int result = cs.getInt(1);
-
-            if (result < 0) {
-                throw new SQLException(
-                        "Không thể khóa lịch chiếu "
-                        + "của phòng " + roomId
-                        + ". Mã lỗi: " + result
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException(
+                            "Không tìm thấy phòng chiếu: " + roomId
+                    );
+                }
             }
         }
     }
