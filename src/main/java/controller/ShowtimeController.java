@@ -47,6 +47,7 @@ public class ShowtimeController extends HttpServlet {
             = new RoomService();
 
     @Override
+    /** Shows the showtime list, edit form, or customer schedule. */
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
 
         String path = request.getServletPath();
@@ -147,6 +148,7 @@ public class ShowtimeController extends HttpServlet {
     }
 
     @Override
+    /** Creates, updates, or deletes a showtime. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -385,6 +387,7 @@ public class ShowtimeController extends HttpServlet {
         }
     }
 
+    /** Loads showtimes and lookup data for the manager. */
     private void loadManagerList(
             HttpServletRequest request,
             User user) {
@@ -445,6 +448,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Loads movies and rooms for the showtime form. */
     private void loadFormData(
             HttpServletRequest request,
             User user) {
@@ -466,6 +470,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Reloads the form with the entered values and an error. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -591,6 +596,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Checks manager role and assigned cinema. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -645,6 +651,7 @@ public class ShowtimeController extends HttpServlet {
         return user;
     }
 
+    /** Loads available showtimes for customers. */
     private void loadUserShowtimes(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         if (request.getParameter("movieId") == null 
