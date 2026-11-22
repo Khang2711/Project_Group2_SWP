@@ -27,17 +27,20 @@ public class ShowtimeService {
     private CinemaRepository cinemaRepository = new CinemaRepository();
     private MovieRepository movieRepository = new MovieRepository();
 
+    /** Loads showtimes for one movie and date. */
     public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 
         return showtimeRepository.getByMovieIdAndDate(movieId,date);
 
     }
 
+    /** Gets active cinemas. */
     public List<Cinema> getActiveCinema() {
 
         return cinemaRepository.getAllActive();
     }
 
+    /** Creates a lookup map of active rooms. */
     public Map<Integer, Room> getActiveRoomById() {
 
         Map<Integer, Room> rooms = new HashMap<>();
@@ -50,6 +53,7 @@ public class ShowtimeService {
         return rooms;
     }
 
+    /** Groups showtimes by cinema. */
     public Map<Integer, List<Showtime>> groupByCinema(
             List<Showtime> showtimes,
             Map<Integer, Room> roomsById,
@@ -84,6 +88,7 @@ public class ShowtimeService {
     // KIEM TRA SUAT CHIEU CO THE DAT VE KHONG
     // =====================================================
 
+    /** Checks if customers can book this showtime. */
     public boolean isBookable(int showtimeId) {
 
         Showtime showtime =
@@ -169,6 +174,7 @@ public class ShowtimeService {
     // DANH SACH SUAT CHIEU CHO MANAGER
     // =====================================================
 
+    /** Loads showtimes of the manager's cinema. */
     public List<Showtime> getShowtimesForManager(
             int cinemaId) {
 
@@ -183,6 +189,7 @@ public class ShowtimeService {
         );
     }
 
+    /** Gets a showtime by ID. */
     public Showtime getShowtimeById(int showtimeId) {
 
         if (showtimeId <= 0) {
@@ -192,6 +199,7 @@ public class ShowtimeService {
         return showtimeRepository.getById(showtimeId);
     }
 
+    /** Gets a showtime only from the manager's cinema. */
     public Showtime getShowtimeForManager(
             int showtimeId,
             int cinemaId) {
@@ -210,6 +218,7 @@ public class ShowtimeService {
     // TAO MOT SUAT CHIEU
     // =====================================================
 
+    /** Validates and creates one showtime. */
     public void createShowtime(
             int cinemaId,
             int movieId,
@@ -238,6 +247,7 @@ public class ShowtimeService {
     // TAO NHIEU SUAT CHIEU
     // =====================================================
 
+    /** Validates and creates many showtimes together. */
     public void createShowtimesBulk(
             int cinemaId,
             int movieId,
@@ -355,6 +365,7 @@ public class ShowtimeService {
     // KHONG THAY DOI SUAT CHIEU DA CO VE
     // =====================================================
 
+    /** Updates a showtime while protecting sold tickets. */
     public void updateShowtime(
             int showtimeId,
             int cinemaId,
@@ -443,6 +454,7 @@ public class ShowtimeService {
     // hoan tien va khong lam mat hieu luc ve.
     // =====================================================
 
+    /** Deletes a showtime only if no ticket uses it. */
     public void deleteShowtime(
             int showtimeId,
             int cinemaId) {
@@ -488,6 +500,7 @@ public class ShowtimeService {
     // KHONG TAO SUAT ACTIVE TAI RAP INACTIVE
     // =====================================================
 
+    /** Checks movie, room, time, and overlaps; calculates the end time. */
     private Showtime buildShowtime(
             int showtimeId,
             int cinemaId,
