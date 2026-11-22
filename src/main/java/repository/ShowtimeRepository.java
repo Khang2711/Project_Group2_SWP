@@ -2,13 +2,11 @@
 package repository;
 
 import db.DBContext;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +14,39 @@ import java.util.TreeSet;
 import model.Showtime;
 
 public class ShowtimeRepository extends DBContext {
+
+    // Ghi nguyên nhân lỗi và cung cấp mã SQL khi thao tác tạo lịch thất bại.
+    private IllegalArgumentException showtimeWriteError(
+            String operation, Exception error) {
+
+        error.printStackTrace();
+        Throwable cause = error;
+
+        while (cause != null) {
+            if (cause instanceof SQLException) {
+                SQLException sql = (SQLException) cause;
+                String detail = sql.getMessage();
+
+                if (detail != null && detail.contains("trùng")) {
+                    return new IllegalArgumentException(detail, error);
+                }
+
+                System.err.println("Showtime SQL error: "
+                        + sql.getErrorCode() + ", SQLState: "
+                        + sql.getSQLState() + ", " + detail);
+
+                return new IllegalArgumentException(
+                        "Không thể " + operation
+                        + ". Mã SQL: " + sql.getErrorCode()
+                        + ", SQLState: " + sql.getSQLState()
+                        + ". Xem log Tomcat.", error);
+            }
+            cause = cause.getCause();
+        }
+
+        return new IllegalArgumentException(
+                "Không thể " + operation + ". Xem log Tomcat.", error);
+    }
 
     // =====================================================
     // READ OPERATIONS
@@ -245,47 +276,23 @@ public class ShowtimeRepository extends DBContext {
     }
 
     // =====================================================
-    // BUG-08 FIX:
-    // KHÓA NGHIỆP VỤ THEO ROOM_ID
-    //
-    // sp_getapplock yêu cầu SQL Server.
-    // LockOwner = Transaction:
-    // khóa tự giải phóng khi commit/rollback.
-    //
-    // Return >= 0: lấy khóa thành công.
-    // Return < 0: không lấy được khóa.
+    // KHÓA PHÒNG TRONG TRANSACTION
+    // Khóa được giải phóng khi commit hoặc rollback.
     // =====================================================
 
-    private void lockRoom(
-            Connection connection,
-            int roomId) throws SQLException {
+    // Khóa phòng để các transaction ghi lịch cùng phòng thực hiện tuần tự.
+    private void lockRoom(Connection connection, int roomId)
+            throws SQLException {
 
-        String sql = "{? = call sys.sp_getapplock(?, ?, ?, ?)}";
+        String sql = "SELECT room_id FROM Room WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE room_id = ?";
 
-        try (CallableStatement cs =
-                connection.prepareCall(sql)) {
-
-            cs.registerOutParameter(1, Types.INTEGER);
-
-            cs.setString(
-                    2,
-                    "FCinema_Showtime_Room_" + roomId
-            );
-
-            cs.setString(3, "Exclusive");
-            cs.setString(4, "Transaction");
-            cs.setInt(5, 10000);
-
-            cs.execute();
-
-            int result = cs.getInt(1);
-
-            if (result < 0) {
-                throw new SQLException(
-                        "Không thể khóa lịch chiếu "
-                        + "của phòng " + roomId
-                        + ". Mã lỗi: " + result
-                );
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("Không tìm thấy phòng chiếu: " + roomId);
+                }
             }
         }
     }
@@ -402,8 +409,7 @@ public class ShowtimeRepository extends DBContext {
         try {
             validateShowtime(showtime);
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo suất chiếu", e);
         }
 
         try (Connection connection =
@@ -459,13 +465,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw showtimeWriteError("tạo suất chiếu", e);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo suất chiếu", e);
         }
     }
 
@@ -499,8 +503,7 @@ public class ShowtimeRepository extends DBContext {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo loạt lịch chiếu", e);
         }
 
         // Thứ tự cố định giúp giảm deadlock
@@ -627,13 +630,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw showtimeWriteError("tạo loạt lịch chiếu", e);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo loạt lịch chiếu", e);
         }
     }
 
