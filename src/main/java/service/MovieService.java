@@ -48,6 +48,7 @@ public class MovieService {
     private CinemaRepository cinemaRepository;
     private GenreRepository genreRepository;
 
+    /** Khởi tạo các Repository dùng cho nghiệp vụ phim. */
     public MovieService() {
         movieRepository = new MovieRepository();
         showtimeRepository = new ShowtimeRepository();
@@ -568,6 +569,7 @@ public class MovieService {
         return movie;
     }
 
+    /** Đổi ngày nhập từ form thành kiểu Date; báo lỗi nếu sai. */
     private Date parseSqlDate(
             String value,
             String errorMessage) {
