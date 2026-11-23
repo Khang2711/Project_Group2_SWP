@@ -19,7 +19,7 @@ public class CinemaService {
     private final ShowtimeRepository showtimeRepository
         = new ShowtimeRepository();
 
-/** Finds the cinema where a showtime takes place. */
+/** Tìm rạp của một suất chiếu. */
 public Cinema getCinemaByShowtime(Showtime showtime) {
     if (showtime == null) {
         return null;
@@ -47,7 +47,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
      *
      * @return a list of active cinemas
      */
-    /** Loads cinemas that are active. */
+    /** Lấy danh sách rạp đang hoạt động. */
     public List<Cinema> getActiveCinemas() {
         return cinemaRepository.getAllActive();
     }
@@ -57,7 +57,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
      *
      * @return a map of cinema ID and cinema
      */
-    /** Builds a map of cinema IDs to cinema details. */
+    /** Tạo bảng tra cứu rạp theo mã. */
     public Map<Integer, Cinema> getCinemaById() {
         Map<Integer, Cinema> cinemas = new LinkedHashMap<>();
 
@@ -69,7 +69,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemas;
     }
 
-    /** Gets a cinema by its ID. */
+    /** Lấy rạp theo mã. */
     public Cinema getCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -80,7 +80,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.findById(cinemaId);
     }
 
-    /** Counts rooms in a cinema. */
+    /** Đếm số phòng của rạp. */
     public int getRoomCount(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -92,7 +92,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         return cinemaRepository.countRooms(cinemaId);
     }
 
-    /** Checks and updates only the manager cinema's address and phone. */
+    /** Kiểm tra và sửa địa chỉ, số điện thoại rạp. */
     public void updateCinemaContact(
             int cinemaId,
             String address,
@@ -144,7 +144,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
         }
     }
 
-    /** Lists every cinema for system management. */
+    /** Lấy tất cả rạp để quản trị. */
     public List<Cinema> getAllCinemas() {
         return cinemaRepository.getAll();
     }
@@ -153,7 +153,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // TẠO RẠP
     // =====================================================
 
-    /** Creates a cinema after checking its information. */
+    /** Kiểm tra và tạo rạp mới. */
     public String createCinema(Cinema cinema) {
 
         String error = validateCinema(cinema);
@@ -181,7 +181,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // BẢO VỆ TRẠNG THÁI RẠP KHI SỬA THÔNG TIN
     // =====================================================
 
-    /** Updates cinema details in the system management flow. */
+    /** Cập nhật thông tin rạp ở cấp hệ thống. */
     public String updateCinema(Cinema cinema) {
 
         if (cinema == null
@@ -242,7 +242,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // CHẶN VÔ HIỆU HÓA RẠP CÒN LỊCH HOẶC VÉ
     // =====================================================
 
-    /** Changes a cinema's active status when allowed. */
+    /** Đổi trạng thái hoạt động của rạp. */
     public String updateCinemaStatus(
             int cinemaId,
             String status) {
@@ -298,7 +298,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // Không tự động hủy vé hoặc hoàn tiền.
     // =====================================================
 
-    /** Explains why a cinema cannot be deactivated. */
+    /** Tìm lý do không thể ngừng hoạt động rạp. */
     private String getDeactivationBlockReason(
             int cinemaId) {
 
@@ -357,7 +357,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // GIỮ RÀNG BUỘC DỮ LIỆU CỦA PROJECT
     // =====================================================
 
-    /** Deletes a cinema only when its related data allows it. */
+    /** Xóa rạp nếu không vướng dữ liệu liên quan. */
     public String deleteCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -395,7 +395,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     // VALIDATE THÔNG TIN RẠP
     // =====================================================
 
-    /** Checks required cinema fields and allowed values. */
+    /** Kiểm tra thông tin rạp hợp lệ. */
     private String validateCinema(Cinema cinema) {
 
         if (cinema == null) {
