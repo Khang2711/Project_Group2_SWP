@@ -11,7 +11,7 @@ import model.Pricing;
 
 public class PricingRepository extends DBContext {
 
-    /** Gets pricing rules from the database. */
+    /** Đọc chính sách giá của rạp. */
     public List<Pricing> findByCinemaId(
             int cinemaId) {
 
@@ -67,7 +67,7 @@ public class PricingRepository extends DBContext {
         return pricingList;
     }
 
-    /** Gets one rule from a specific cinema. */
+    /** Tìm chính sách giá theo mã và rạp. */
     public Pricing findByIdAndCinema(
             int pricingId,
             int cinemaId) {
@@ -115,7 +115,7 @@ public class PricingRepository extends DBContext {
         return null;
     }
 
-    /** Inserts a new pricing rule. */
+    /** Thêm chính sách giá vào database. */
     public boolean insert(
             Pricing pricing) {
 
@@ -243,7 +243,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
-    /** Updates an existing pricing rule. */
+    /** Cập nhật chính sách giá. */
     public boolean update(
             Pricing pricing) {
 
@@ -384,7 +384,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
-    /** Deletes a pricing rule. */
+    /** Xóa chính sách giá khỏi database. */
     public boolean delete(
             int pricingId,
             int cinemaId) {
@@ -411,7 +411,7 @@ public class PricingRepository extends DBContext {
         return false;
     }
 
-    /** Sets an optional number in SQL. */
+    /** Gán tham số số có thể để trống. */
     private void setNullableInteger(
             PreparedStatement ps,
             int index,
@@ -434,7 +434,7 @@ public class PricingRepository extends DBContext {
         }
     }
 
-    /** Sets optional text in SQL. */
+    /** Gán tham số chữ có thể để trống. */
     private void setNullableString(
             PreparedStatement ps,
             int index,
@@ -457,7 +457,7 @@ public class PricingRepository extends DBContext {
         }
     }
 
-    /** Converts a SQL row into a Pricing object. */
+    /** Chuyển dòng SQL thành đối tượng giá. */
     private Pricing mapPricing(
             ResultSet rs)
             throws Exception {
