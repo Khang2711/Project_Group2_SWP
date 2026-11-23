@@ -20,7 +20,7 @@ public class CinemaController extends HttpServlet {
     private final CinemaService cinemaService = new CinemaService();
 
     @Override
-    /** Shows details or the edit form for the manager's cinema. */
+    /** Hiển thị thông tin và form chỉnh sửa rạp. */
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -49,7 +49,7 @@ public class CinemaController extends HttpServlet {
     }
 
     @Override
-    /** Updates the address and phone number of the manager's cinema. */
+    /** Nhận yêu cầu sửa địa chỉ và số điện thoại rạp. */
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -96,7 +96,7 @@ public class CinemaController extends HttpServlet {
         }
     }
 
-    /** Loads cinema details for the page. */
+    /** Tải thông tin rạp để hiển thị. */
     private void showCinema(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -123,7 +123,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
-    /** Displays the cinema contact edit form. */
+    /** Mở form sửa liên hệ rạp. */
     private void showForm(HttpServletRequest request,
             HttpServletResponse response,
             int cinemaId)
@@ -146,7 +146,7 @@ public class CinemaController extends HttpServlet {
         ).forward(request, response);
     }
 
-    /** Checks that the current user is a cinema manager. */
+    /** Kiểm tra tài khoản quản lý rạp. */
     private User getManager(HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
