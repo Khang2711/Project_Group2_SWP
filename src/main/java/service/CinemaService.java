@@ -37,6 +37,7 @@ public Cinema getCinemaByShowtime(Showtime showtime) {
     private CinemaRepository cinemaRepository;
     private ShowtimeRepository showtimeRepositorys;
 
+    /** Khởi tạo các Repository để quản lý rạp. */
     public CinemaService() {
         cinemaRepository = new CinemaRepository();
         showtimeRepositorys = new ShowtimeRepository();
