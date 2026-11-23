@@ -27,20 +27,20 @@ public class ShowtimeService {
     private CinemaRepository cinemaRepository = new CinemaRepository();
     private MovieRepository movieRepository = new MovieRepository();
 
-    /** Loads showtimes for one movie and date. */
+    /** Lấy lịch chiếu theo phim và ngày. */
     public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 
         return showtimeRepository.getByMovieIdAndDate(movieId,date);
 
     }
 
-    /** Gets active cinemas. */
+    /** Lấy các rạp đang hoạt động. */
     public List<Cinema> getActiveCinema() {
 
         return cinemaRepository.getAllActive();
     }
 
-    /** Creates a lookup map of active rooms. */
+    /** Tạo bảng tra cứu phòng đang hoạt động. */
     public Map<Integer, Room> getActiveRoomById() {
 
         Map<Integer, Room> rooms = new HashMap<>();
@@ -53,7 +53,7 @@ public class ShowtimeService {
         return rooms;
     }
 
-    /** Groups showtimes by cinema. */
+    /** Nhóm lịch chiếu theo rạp. */
     public Map<Integer, List<Showtime>> groupByCinema(
             List<Showtime> showtimes,
             Map<Integer, Room> roomsById,
@@ -88,7 +88,7 @@ public class ShowtimeService {
     // KIEM TRA SUAT CHIEU CO THE DAT VE KHONG
     // =====================================================
 
-    /** Checks if customers can book this showtime. */
+    /** Kiểm tra suất chiếu có thể đặt vé. */
     public boolean isBookable(int showtimeId) {
 
         Showtime showtime =
@@ -174,7 +174,7 @@ public class ShowtimeService {
     // DANH SACH SUAT CHIEU CHO MANAGER
     // =====================================================
 
-    /** Loads showtimes of the manager's cinema. */
+    /** Lấy lịch chiếu của rạp quản lý. */
     public List<Showtime> getShowtimesForManager(
             int cinemaId) {
 
@@ -189,7 +189,7 @@ public class ShowtimeService {
         );
     }
 
-    /** Gets a showtime by ID. */
+    /** Lấy lịch chiếu theo mã. */
     public Showtime getShowtimeById(int showtimeId) {
 
         if (showtimeId <= 0) {
@@ -199,7 +199,7 @@ public class ShowtimeService {
         return showtimeRepository.getById(showtimeId);
     }
 
-    /** Gets a showtime only from the manager's cinema. */
+    /** Lấy lịch chiếu thuộc đúng rạp quản lý. */
     public Showtime getShowtimeForManager(
             int showtimeId,
             int cinemaId) {
@@ -218,7 +218,7 @@ public class ShowtimeService {
     // TAO MOT SUAT CHIEU
     // =====================================================
 
-    /** Validates and creates one showtime. */
+    /** Kiểm tra và tạo một suất chiếu. */
     public void createShowtime(
             int cinemaId,
             int movieId,
@@ -247,7 +247,7 @@ public class ShowtimeService {
     // TAO NHIEU SUAT CHIEU
     // =====================================================
 
-    /** Validates and creates many showtimes together. */
+    /** Kiểm tra và tạo nhiều suất chiếu cùng giao dịch. */
     public void createShowtimesBulk(
             int cinemaId,
             int movieId,
@@ -365,7 +365,7 @@ public class ShowtimeService {
     // KHONG THAY DOI SUAT CHIEU DA CO VE
     // =====================================================
 
-    /** Updates a showtime while protecting sold tickets. */
+    /** Sửa suất chiếu nhưng bảo vệ vé đã bán. */
     public void updateShowtime(
             int showtimeId,
             int cinemaId,
@@ -454,7 +454,7 @@ public class ShowtimeService {
     // hoan tien va khong lam mat hieu luc ve.
     // =====================================================
 
-    /** Deletes a showtime only if no ticket uses it. */
+    /** Chỉ xóa suất chiếu khi chưa có vé. */
     public void deleteShowtime(
             int showtimeId,
             int cinemaId) {
@@ -500,7 +500,7 @@ public class ShowtimeService {
     // KHONG TAO SUAT ACTIVE TAI RAP INACTIVE
     // =====================================================
 
-    /** Checks movie, room, time, and overlaps; calculates the end time. */
+    /** Kiểm tra phim, phòng, giờ; tính giờ kết thúc. */
     private Showtime buildShowtime(
             int showtimeId,
             int cinemaId,
