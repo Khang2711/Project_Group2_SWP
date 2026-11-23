@@ -20,7 +20,7 @@ public class PricingService {
         movieRepository = new MovieRepository();
     }
 
-    /** Loads pricing rules for a cinema. */
+    /** Lấy chính sách giá của rạp. */
     public List<Pricing> getPricingByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -32,7 +32,7 @@ public class PricingService {
         return pricingRepository.findByCinemaId(cinemaId);
     }
 
-    /** Gets one pricing rule from the manager's cinema. */
+    /** Lấy chính sách giá đúng rạp quản lý. */
     public Pricing getPricing(int pricingId, int cinemaId) {
 
         if (pricingId <= 0 || cinemaId <= 0) {
@@ -50,7 +50,7 @@ public class PricingService {
     // TẠO QUY TẮC GIÁ
     // =====================================================
 
-    /** Checks and creates a pricing rule. */
+    /** Kiểm tra rồi tạo chính sách giá. */
     public void createPricing(
             int cinemaId,
             Integer movieId,
@@ -124,7 +124,7 @@ public class PricingService {
     // CẬP NHẬT QUY TẮC GIÁ
     // =====================================================
 
-    /** Updates a rule after checking conflicts. */
+    /** Sửa giá sau khi kiểm tra xung đột. */
     public void updatePricing(
             int pricingId,
             int cinemaId,
@@ -206,7 +206,7 @@ public class PricingService {
     // XÓA QUY TẮC GIÁ
     // =====================================================
 
-    /** Deletes a rule from the cinema. */
+    /** Xóa chính sách giá của rạp. */
     public void deletePricing(int pricingId, int cinemaId) {
 
         Pricing pricing = getPricing(pricingId, cinemaId);
@@ -228,7 +228,7 @@ public class PricingService {
     // VALIDATE DỮ LIỆU GIÁ VÉ
     // =====================================================
 
-    /** Checks price, date, time, scope, and movie ownership. */
+    /** Kiểm tra giá, ngày, giờ và phạm vi áp dụng. */
     private void validatePricing(Pricing pricing) {
 
         if (pricing.getCinemaId() <= 0) {
@@ -334,7 +334,7 @@ public class PricingService {
     // cùng tồn tại theo cơ chế ưu tiên giá.
     // =====================================================
 
-    /** Checks if active rules share a scope and overlapping periods. */
+    /** Tìm chính sách ACTIVE trùng phạm vi và thời gian. */
     private boolean hasConflictingRule(
             Pricing candidate,
             Integer excludePricingId) {
@@ -389,7 +389,7 @@ public class PricingService {
     // Khung giờ được kiểm tra riêng bằng overlap.
     // =====================================================
 
-    /** Checks if rules apply to the same scope. */
+    /** Kiểm tra hai chính sách cùng phạm vi. */
     private boolean sameScope(
             Pricing first,
             Pricing second) {
@@ -420,7 +420,7 @@ public class PricingService {
     // KIỂM TRA KHOẢNG NGÀY GIAO NHAU
     // =====================================================
 
-    /** Checks if two date ranges overlap. */
+    /** Kiểm tra hai khoảng ngày có giao nhau. */
     private boolean dateRangesOverlap(
             Pricing first,
             Pricing second) {
@@ -456,7 +456,7 @@ public class PricingService {
     // => Không xung đột.
     // =====================================================
 
-    /** Checks if two time ranges overlap. */
+    /** Kiểm tra hai khoảng giờ có giao nhau. */
     private boolean timeRangesOverlap(
             Pricing first,
             Pricing second) {
@@ -487,7 +487,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI GHẾ
     // =====================================================
 
-    /** Normalizes seat type for pricing. */
+    /** Chuẩn hóa loại ghế trong chính sách. */
     private String normalizeSeatType(String seatType) {
 
         if (seatType == null
@@ -516,7 +516,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI PHÒNG
     // =====================================================
 
-    /** Normalizes room type for pricing. */
+    /** Chuẩn hóa loại phòng trong chính sách. */
     private String normalizeRoomType(String roomType) {
 
         if (roomType == null
@@ -542,7 +542,7 @@ public class PricingService {
     // CHUẨN HÓA LOẠI NGÀY
     // =====================================================
 
-    /** Normalizes the day type. */
+    /** Chuẩn hóa loại ngày áp dụng. */
     private String normalizeDayType(String dayType) {
 
         if (dayType == null
@@ -568,7 +568,7 @@ public class PricingService {
     // CHUẨN HÓA TRẠNG THÁI
     // =====================================================
 
-    /** Checks and normalizes rule status. */
+    /** Chuẩn hóa trạng thái chính sách. */
     private String normalizeStatus(String status) {
 
         if (status == null
