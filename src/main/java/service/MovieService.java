@@ -62,7 +62,7 @@ public class MovieService {
      * @param id the movie ID
      * @return the movie if found, otherwise null
      */
-    /** Gets a movie by its ID. */
+    /** Lấy thông tin phim theo mã. */
     public Movie getMovieById(int id) {
         return movieRepository.getById(id);
     }
@@ -72,7 +72,7 @@ public class MovieService {
      *
      * @return a map of room ID and room
      */
-    /** Builds a map of room IDs to room details. */
+    /** Tạo danh sách tra cứu phòng theo mã. */
     public Map<Integer, Room> getRoomById() {
         Map<Integer, Room> rooms = new HashMap<>();
 
@@ -93,7 +93,7 @@ public class MovieService {
      * @return movies and showtimes grouped by date (dd/MM/yyyy) in
      * chronological order
      */
-    /** Groups movie schedules by date for the public movie pages. */
+    /** Nhóm lịch chiếu theo ngày để hiển thị. */
     public Map<String, Map<Movie, List<Showtime>>> getSchedulesByDate(String keyword, LocalDate date, Integer cinemaId) {
 
         // Active movies whose title matches the keyword.
@@ -188,7 +188,7 @@ public class MovieService {
      *
      * @return a list of currently showing movies
      */
-    /** Gets movies that are currently showing. */
+    /** Lấy các phim đang chiếu. */
     public List<Movie> getNowShowingMovies() {
         return movieRepository.getNowShowing();
     }
@@ -198,7 +198,7 @@ public class MovieService {
      *
      * @return a list of upcoming movies
      */
-    /** Gets movies that will be released soon. */
+    /** Lấy các phim sắp chiếu. */
     public List<Movie> getComingSoonMovies() {
         return movieRepository.getComingSoon();
     }
@@ -210,7 +210,7 @@ public class MovieService {
      * @param keyword movie title keyword
      * @return a filtered list of movies
      */
-    /** Filters movies by display type and search keyword. */
+    /** Lọc phim theo loại và từ khóa. */
     public List<Movie> getMoviesForList(String type, String keyword) {
 
         if (keyword == null) {
@@ -232,7 +232,7 @@ public class MovieService {
      * @param nowShowingMovies get movie is showing now
      * @return a list of featured movies for the carousel
      */
-    /** Selects movies to highlight on the home page. */
+    /** Chọn các phim nổi bật. */
     public List<Movie> getFeaturedMovies(List<Movie> nowShowingMovies) {
 
         List<Movie> featuredMovies = new ArrayList<>();
@@ -259,7 +259,7 @@ public class MovieService {
      * @param movies the movie list
      * @return a map of movie ID and its genres
      */
-    /** Loads genre details for a list of movies. */
+    /** Lấy thể loại của từng phim. */
     public Map<Integer, List<Genre>> getGenresByMovie(List<Movie> movies) {
 
         Map<Integer, List<Genre>> genresByMovie = new HashMap<>();
@@ -286,7 +286,7 @@ public class MovieService {
         return genresByMovie;
     }
 
-    /** Gets movies assigned to one cinema. */
+    /** Lấy phim thuộc một rạp. */
     public List<Movie> getMoviesByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -298,17 +298,17 @@ public class MovieService {
         return movieRepository.getByCinemaId(cinemaId);
     }
 
-    /** Gets genres available for movie forms. */
+    /** Lấy thể loại còn hoạt động. */
     public List<Genre> getActiveGenres() {
         return genreRepository.getAllActive();
     }
 
-    /** Gets the genre IDs of a movie. */
+    /** Lấy mã thể loại của phim. */
     public List<Integer> getGenreIds(int movieId) {
         return movieRepository.getGenreIds(movieId);
     }
 
-    /** Gets a movie only if it belongs to the manager's cinema. */
+    /** Lấy phim thuộc rạp quản lý. */
     public Movie getMovieForManager(
             int movieId,
             int cinemaId) {
@@ -323,7 +323,7 @@ public class MovieService {
         return movieRepository.getByIdAnyStatus(movieId);
     }
 
-    /** Checks movie details and creates the movie for the selected cinema. */
+    /** Kiểm tra dữ liệu và tạo phim cho rạp. */
     public void createMovie(
             int cinemaId,
             String title,
@@ -374,7 +374,7 @@ public class MovieService {
     // BUG 02 FIX: BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
     // =====================================================
 
-    /** Updates a movie and protects existing showtimes from invalid changes. */
+    /** Sửa phim và bảo vệ lịch chiếu đã có. */
     public void updateMovie(
             int movieId,
             int cinemaId,
@@ -484,7 +484,7 @@ public class MovieService {
         }
     }
 
-    /** Checks form values and builds a Movie object. */
+    /** Kiểm tra dữ liệu nhập và tạo đối tượng phim. */
     private Movie buildMovie(
             int movieId,
             String title,
@@ -583,7 +583,7 @@ public class MovieService {
         }
     }
 
-    /** Changes empty text to null before saving optional fields. */
+    /** Đổi chuỗi rỗng thành null. */
     private String emptyToNull(String value) {
 
         if (value == null || value.trim().isEmpty()) {
@@ -593,7 +593,7 @@ public class MovieService {
         return value.trim();
     }
 
-    /** Reads and checks the genre IDs selected in the form. */
+    /** Đọc và kiểm tra các thể loại được chọn. */
     private List<Integer> parseGenreIds(
             String[] genreValues) {
 
@@ -617,7 +617,7 @@ public class MovieService {
         return genreIds;
     }
 
-    /** Removes a movie from this cinema only when it has no showtime history there. */
+    /** Gỡ phim khỏi rạp nếu chưa có lịch sử chiếu. */
     public void deleteMovieFromCinema(
             int movieId,
             int cinemaId) {
