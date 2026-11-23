@@ -12,7 +12,7 @@ import model.Room;
 
 public class RoomRepository extends DBContext {
 
-    /** Loads active rooms. */
+    /** Đọc các phòng đang hoạt động. */
     public List<Room> getAllActive() {
 
         List<Room> rooms = new ArrayList<>();
@@ -39,7 +39,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
-    /** Loads rooms of a cinema. */
+    /** Đọc các phòng thuộc rạp. */
     public List<Room> findByCinemaId(int cinemaId) {
 
         List<Room> rooms = new ArrayList<>();
@@ -69,7 +69,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
-    /** Finds a room by ID and cinema ID. */
+    /** Tìm phòng theo mã phòng và mã rạp. */
     public Room findByIdAndCinema(
             int roomId,
             int cinemaId) {
@@ -101,7 +101,7 @@ public class RoomRepository extends DBContext {
         return null;
     }
 
-    /** Checks whether the cinema already has a room with this name. */
+    /** Kiểm tra tên phòng trùng trong cùng rạp. */
     public boolean existsRoomName(
             int cinemaId,
             String roomName,
@@ -150,7 +150,7 @@ public class RoomRepository extends DBContext {
     }
 
     // Giữ lại để không ảnh hưởng code cũ.
-    /** Inserts a room record. */
+    /** Thêm bản ghi phòng. */
     public boolean insert(Room room) {
 
         String sql =
@@ -181,7 +181,7 @@ public class RoomRepository extends DBContext {
     // TẠO PHÒNG + SƠ ĐỒ GHẾ
     // rowCount và seatsPerRow do Manager nhập.
     // =========================================================
-    /** Creates a room and its starting seats in one transaction. */
+    /** Tạo phòng và ghế trong cùng một giao dịch. */
     public boolean insertWithSeats(
             Room room,
             int rowCount,
@@ -273,7 +273,7 @@ public class RoomRepository extends DBContext {
         }
     }
 
-    /** Updates room information in the database. */
+    /** Cập nhật thông tin phòng. */
     public boolean update(Room room) {
 
         String sql =
@@ -305,7 +305,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Counts the seats inside a room. */
+    /** Đếm số ghế của phòng. */
     public int countSeats(int roomId) {
 
         String sql =
@@ -336,7 +336,7 @@ public class RoomRepository extends DBContext {
     // Đồng bộ Room.capacity với số ghế thực tế.
     // Gọi sau khi thêm hoặc hard delete Seat.
     // =========================================================
-    /** Sets room capacity to match the number of seats. */
+    /** Đồng bộ sức chứa theo số ghế thực tế. */
     public boolean syncCapacityFromSeats(
             int roomId) {
 
@@ -368,7 +368,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Checks whether a room has active future showtimes. */
+    /** Kiểm tra phòng có lịch chiếu tương lai. */
     public boolean hasFutureActiveShowtime(
             int roomId) {
 
@@ -403,7 +403,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Checks whether a room has any showtime history. */
+    /** Kiểm tra phòng đã từng có lịch chiếu. */
     public boolean hasAnyShowtime(
             int roomId) {
 
@@ -429,7 +429,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Checks whether any seat in a room has ticket history. */
+    /** Kiểm tra ghế trong phòng có lịch sử vé. */
     public boolean hasSeatTicketHistory(
             int roomId) {
 
@@ -457,7 +457,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Deletes a room record. */
+    /** Xóa bản ghi phòng. */
     public boolean delete(
             int roomId,
             int cinemaId) {
@@ -483,7 +483,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Deletes seats and room together in one transaction. */
+    /** Xóa ghế và phòng trong cùng giao dịch. */
     public boolean deleteRoomWithSeats(
             int roomId,
             int cinemaId) {
@@ -550,7 +550,7 @@ public class RoomRepository extends DBContext {
         }
     }
 
-    /** Converts a database row into a Room object. */
+    /** Chuyển dòng SQL thành đối tượng phòng. */
     private Room mapRoom(
             ResultSet rs)
             throws Exception {
