@@ -2,13 +2,11 @@
 package repository;
 
 import db.DBContext;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +15,45 @@ import model.Showtime;
 
 public class ShowtimeRepository extends DBContext {
 
+    // Ghi nguyên nhân lỗi và cung cấp mã SQL khi thao tác tạo lịch thất bại.
+    /** Ghi log và trả thông báo khi lưu lịch lỗi. */
+    private IllegalArgumentException showtimeWriteError(
+            String operation, Exception error) {
+
+        error.printStackTrace();
+        Throwable cause = error;
+
+        while (cause != null) {
+            if (cause instanceof SQLException) {
+                SQLException sql = (SQLException) cause;
+                String detail = sql.getMessage();
+
+                if (detail != null && detail.contains("trùng")) {
+                    return new IllegalArgumentException(detail, error);
+                }
+
+                System.err.println("Showtime SQL error: "
+                        + sql.getErrorCode() + ", SQLState: "
+                        + sql.getSQLState() + ", " + detail);
+
+                return new IllegalArgumentException(
+                        "Không thể " + operation
+                        + ". Mã SQL: " + sql.getErrorCode()
+                        + ", SQLState: " + sql.getSQLState()
+                        + ". Xem log Tomcat.", error);
+            }
+            cause = cause.getCause();
+        }
+
+        return new IllegalArgumentException(
+                "Không thể " + operation + ". Xem log Tomcat.", error);
+    }
+
     // =====================================================
     // READ OPERATIONS
     // =====================================================
 
+    /** Tìm rạp của một suất chiếu. */
     public int getCinemaIdByShowtimeId(int showtimeId) {
 
         String sql = "SELECT r.cinema_id "
@@ -46,6 +79,7 @@ public class ShowtimeRepository extends DBContext {
         return 0;
     }
 
+    /** Đọc các lịch chiếu đang hoạt động. */
     public List<Showtime> getAll() {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -73,6 +107,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    /** Đọc lịch chiếu theo phim. */
     public List<Showtime> getByMovieId(int movieId) {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -102,6 +137,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    /** Tìm suất chiếu theo mã. */
     public Showtime getById(int id) {
 
         String sql = "SELECT * "
@@ -127,6 +163,7 @@ public class ShowtimeRepository extends DBContext {
         return null;
     }
 
+    /** Lấy lịch chiếu theo phim và ngày. */
     public List<Showtime> getByMovieIdAndDate(int movieId, LocalDate date) {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -162,6 +199,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    /** Lấy lịch chiếu của một rạp. */
     public List<Showtime> getByCinemaId(int cinemaId) {
 
         List<Showtime> showtimes = new ArrayList<>();
@@ -190,6 +228,7 @@ public class ShowtimeRepository extends DBContext {
         return showtimes;
     }
 
+    /** Tìm suất chiếu thuộc đúng rạp. */
     public Showtime getByIdAndCinema(
             int showtimeId,
             int cinemaId) {
@@ -227,6 +266,7 @@ public class ShowtimeRepository extends DBContext {
     // cho các giao dịch ghi đồng thời.
     // =====================================================
 
+    /** Mở kết nối cho giao dịch ghi. */
     private Connection openWriteConnection()
             throws SQLException {
 
@@ -245,47 +285,24 @@ public class ShowtimeRepository extends DBContext {
     }
 
     // =====================================================
-    // BUG-08 FIX:
-    // KHÓA NGHIỆP VỤ THEO ROOM_ID
-    //
-    // sp_getapplock yêu cầu SQL Server.
-    // LockOwner = Transaction:
-    // khóa tự giải phóng khi commit/rollback.
-    //
-    // Return >= 0: lấy khóa thành công.
-    // Return < 0: không lấy được khóa.
+    // KHÓA PHÒNG TRONG TRANSACTION
+    // Khóa được giải phóng khi commit hoặc rollback.
     // =====================================================
 
-    private void lockRoom(
-            Connection connection,
-            int roomId) throws SQLException {
+    // Khóa phòng để các transaction ghi lịch cùng phòng thực hiện tuần tự.
+    /** Khóa dòng phòng đến khi commit hoặc rollback. */
+    private void lockRoom(Connection connection, int roomId)
+            throws SQLException {
 
-        String sql = "{? = call sys.sp_getapplock(?, ?, ?, ?)}";
+        String sql = "SELECT room_id FROM Room WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE room_id = ?";
 
-        try (CallableStatement cs =
-                connection.prepareCall(sql)) {
-
-            cs.registerOutParameter(1, Types.INTEGER);
-
-            cs.setString(
-                    2,
-                    "FCinema_Showtime_Room_" + roomId
-            );
-
-            cs.setString(3, "Exclusive");
-            cs.setString(4, "Transaction");
-            cs.setInt(5, 10000);
-
-            cs.execute();
-
-            int result = cs.getInt(1);
-
-            if (result < 0) {
-                throw new SQLException(
-                        "Không thể khóa lịch chiếu "
-                        + "của phòng " + roomId
-                        + ". Mã lỗi: " + result
-                );
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("Không tìm thấy phòng chiếu: " + roomId);
+                }
             }
         }
     }
@@ -294,6 +311,7 @@ public class ShowtimeRepository extends DBContext {
     // KIỂM TRA DỮ LIỆU SUẤT CHIẾU
     // =====================================================
 
+    /** Kiểm tra dữ liệu suất chiếu trước khi lưu. */
     private void validateShowtime(
             Showtime showtime) throws SQLException {
 
@@ -349,6 +367,7 @@ public class ShowtimeRepository extends DBContext {
     // AND existing.end > new.start
     // =====================================================
 
+    /** Kiểm tra trùng giờ trong giao dịch. */
     private boolean hasConflictInTransaction(
             Connection connection,
             int roomId,
@@ -392,6 +411,7 @@ public class ShowtimeRepository extends DBContext {
     // Lock -> Check overlap -> Insert -> Commit
     // =====================================================
 
+    /** Lưu một suất chiếu và rollback nếu lỗi. */
     public boolean insert(Showtime showtime) {
 
         String sql = "INSERT INTO Showtime "
@@ -402,8 +422,7 @@ public class ShowtimeRepository extends DBContext {
         try {
             validateShowtime(showtime);
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo suất chiếu", e);
         }
 
         try (Connection connection =
@@ -459,13 +478,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw showtimeWriteError("tạo suất chiếu", e);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo suất chiếu", e);
         }
     }
 
@@ -480,6 +497,7 @@ public class ShowtimeRepository extends DBContext {
     // 5. Có lỗi -> rollback toàn bộ.
     // =====================================================
 
+    /** Lưu nhiều suất chiếu trong một giao dịch. */
     public boolean insertBatch(
             List<Showtime> showtimes) {
 
@@ -499,8 +517,7 @@ public class ShowtimeRepository extends DBContext {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo loạt lịch chiếu", e);
         }
 
         // Thứ tự cố định giúp giảm deadlock
@@ -627,13 +644,11 @@ public class ShowtimeRepository extends DBContext {
             } catch (Exception e) {
 
                 connection.rollback();
-                e.printStackTrace();
-                return false;
+                throw showtimeWriteError("tạo loạt lịch chiếu", e);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw showtimeWriteError("tạo loạt lịch chiếu", e);
         }
     }
 
@@ -645,6 +660,7 @@ public class ShowtimeRepository extends DBContext {
     // Kiểm tra lại xung đột trước UPDATE.
     // =====================================================
 
+    /** Cập nhật lịch sau khi kiểm tra quyền và giờ. */
     public boolean update(
             Showtime showtime,
             int cinemaId) {
@@ -895,6 +911,7 @@ public class ShowtimeRepository extends DBContext {
     // Tránh cho phép ghi lịch khi DB không kiểm tra được.
     // =====================================================
 
+    /** Kiểm tra lịch ACTIVE trùng giờ trong phòng. */
     public boolean hasConflict(
             int roomId,
             Timestamp startTime,
@@ -943,6 +960,7 @@ public class ShowtimeRepository extends DBContext {
     // DB lỗi => không được mặc định chưa có vé.
     // =====================================================
 
+    /** Kiểm tra suất chiếu đã có vé chưa. */
     public boolean hasTickets(int showtimeId) {
 
         String sql = "SELECT TOP 1 ticket_id "
@@ -971,6 +989,7 @@ public class ShowtimeRepository extends DBContext {
     // CHUYỂN SUẤT CHIẾU SANG INACTIVE
     // =====================================================
 
+    /** Chuyển suất chiếu sang không hoạt động. */
     public boolean setInactive(
             int showtimeId,
             int cinemaId) {
@@ -1001,6 +1020,7 @@ public class ShowtimeRepository extends DBContext {
     // XÓA SUẤT CHIẾU
     // =====================================================
 
+    /** Xóa suất chiếu khi được phép. */
     public boolean delete(
             int showtimeId,
             int cinemaId) {
@@ -1030,6 +1050,7 @@ public class ShowtimeRepository extends DBContext {
     // SQL PARAMETERS
     // =====================================================
 
+    /** Gán dữ liệu cho câu SQL thêm lịch. */
     private void setInsertParameters(
             PreparedStatement ps,
             Showtime showtime) throws SQLException {
@@ -1045,6 +1066,7 @@ public class ShowtimeRepository extends DBContext {
     // MAP DATABASE -> SHOWTIME
     // =====================================================
 
+    /** Chuyển dòng SQL thành đối tượng suất chiếu. */
     private Showtime mapShowtime(
             ResultSet rs) throws SQLException {
 

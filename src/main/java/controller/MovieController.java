@@ -39,6 +39,7 @@ public class MovieController extends HttpServlet {
     private MovieService movieService = new MovieService();
 
     @Override
+    /** Hiển thị danh sách hoặc form phim của rạp. */
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -225,6 +226,7 @@ public class MovieController extends HttpServlet {
     }
 
     @Override
+    /** Xử lý thêm, sửa và xóa phim. */
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -426,6 +428,7 @@ public class MovieController extends HttpServlet {
 
     /* Forward lại form khi dữ liệu thêm/sửa bị lỗi.
      */
+    /** Mở lại form phim và hiển thị lỗi. */
     private void forwardAdminForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -594,6 +597,7 @@ public class MovieController extends HttpServlet {
     /**
      * Kiểm tra tài khoản Cinema Manager.
      */
+    /** Kiểm tra quyền và xác định rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)

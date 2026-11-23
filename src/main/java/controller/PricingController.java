@@ -30,6 +30,7 @@ public class PricingController
             new MovieService();
 
     @Override
+    /** Hiển thị danh sách hoặc form giá vé. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -132,6 +133,7 @@ public class PricingController
     }
 
     @Override
+    /** Xử lý thêm, sửa và xóa chính sách giá. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -374,6 +376,7 @@ public class PricingController
         }
     }
 
+    /** Đọc và kiểm tra giá vé người dùng nhập. */
     private BigDecimal parsePrice(
             String value) {
 
@@ -500,6 +503,7 @@ public class PricingController
         }
     }
 
+    /** Tải các chính sách giá của rạp. */
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -513,6 +517,7 @@ public class PricingController
         );
     }
 
+    /** Tải danh sách phim cho form giá. */
     private void loadMovies(
             HttpServletRequest request,
             User user) {
@@ -526,6 +531,7 @@ public class PricingController
         );
     }
 
+    /** Mở lại form khi nhập sai. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -707,6 +713,7 @@ public class PricingController
         );
     }
 
+    /** Kiểm tra quyền và rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)

@@ -15,6 +15,7 @@ import model.Seat;
 
 public class SeatRepository extends DBContext {
 
+    /** Đọc tất cả ghế trong phòng. */
     public List<Seat> findByRoomId(int roomId) {
         List<Seat> seats = new ArrayList<>();
 
@@ -38,6 +39,7 @@ public class SeatRepository extends DBContext {
         return seats;
     }
 
+    /** Tìm ghế theo mã ghế và phòng. */
     public Seat findByIdAndRoom(int seatId, int roomId) {
         String sql = "SELECT seat_id, room_id, "
                 + "seat_row, seat_number, seat_type, status "
@@ -59,6 +61,7 @@ public class SeatRepository extends DBContext {
         return null;
     }
 
+    /** Kiểm tra vị trí ghế có bị trùng. */
     public boolean existsPosition(
             int roomId, int seatRow, int seatNumber,
             Integer excludeSeatId) {
@@ -89,6 +92,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Đếm số ghế trong phòng. */
     public int countSeats(int roomId) {
         String sql = "SELECT COUNT(*) FROM Seat WHERE room_id = ?";
 
@@ -108,6 +112,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Lấy số hàng ghế cuối cùng. */
     public int getMaxRow(int roomId) {
         String sql = "SELECT COALESCE(MAX(seat_row), 0) "
                 + "FROM Seat WHERE room_id = ?";
@@ -128,6 +133,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Kiểm tra ghế từng có vé chưa. */
     public boolean hasTicketHistory(int seatId) {
         String sql = "SELECT TOP 1 ticket_id "
                 + "FROM Ticket WHERE seat_id = ?";
@@ -144,6 +150,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Thêm một ghế vào database. */
     public boolean insert(Seat seat) {
         String sql = "INSERT INTO Seat "
                 + "(room_id, seat_row, seat_number, "
@@ -167,6 +174,7 @@ public class SeatRepository extends DBContext {
     // GIỮ HÀM CŨ - THÊM HÀNG GHẾ
     // =====================================================
 
+    /** Thêm các ghế của một hàng mới. */
     public boolean insertRow(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -199,6 +207,7 @@ public class SeatRepository extends DBContext {
     // Có transaction và đồng bộ capacity.
     // =====================================================
 
+    /** Thêm hàng ghế và cập nhật sức chứa cùng giao dịch. */
     public boolean insertRowAtomic(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -254,6 +263,7 @@ public class SeatRepository extends DBContext {
     // - Rollback nếu bất kỳ ghế nào lỗi.
     // =====================================================
 
+    /** Nối ghế vào hàng và cập nhật sức chứa cùng giao dịch. */
     public boolean appendSeatsToRowAtomic(
             int roomId,
             int seatRow,
@@ -339,6 +349,7 @@ public class SeatRepository extends DBContext {
     // CẬP NHẬT MỘT GHẾ
     // =====================================================
 
+    /** Cập nhật thông tin ghế. */
     public boolean update(Seat seat) {
         String sql = "UPDATE Seat SET seat_row = ?, "
                 + "seat_number = ?, seat_type = ?, status = ? "
@@ -359,6 +370,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Đổi trạng thái ghế. */
     public boolean updateStatus(
             int seatId, int roomId, String status) {
 
@@ -377,6 +389,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Sửa nhiều ghế trong database. */
     public int updateBulk(
             List<Integer> seatIds,
             int roomId,
@@ -436,6 +449,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Xóa một ghế. */
     public boolean delete(int seatId, int roomId) {
         String sql = "DELETE FROM Seat "
                 + "WHERE seat_id = ? AND room_id = ?";
@@ -455,6 +469,7 @@ public class SeatRepository extends DBContext {
     // BUG-17 - XÓA NHIỀU GHẾ TRONG MỘT TRANSACTION
     // =====================================================
 
+    /** Xóa nhiều ghế và cập nhật sức chứa cùng giao dịch. */
     public boolean deleteSeatsAtomic(
             List<Integer> seatIds, int roomId) {
 
@@ -564,6 +579,7 @@ public class SeatRepository extends DBContext {
     // CÁC HÀM HỖ TRỢ TRANSACTION
     // =====================================================
 
+    /** Mở kết nối để thực hiện giao dịch ghi. */
     private Connection openWriteConnection()
             throws SQLException {
 
@@ -577,6 +593,7 @@ public class SeatRepository extends DBContext {
         return connection;
     }
 
+    /** Khóa phòng khi thay đổi ghế. */
     private void lockRoom(
             Connection connection, int roomId)
             throws SQLException {
@@ -599,6 +616,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Kiểm tra dữ liệu trước khi thêm ghế. */
     private void validateInsertInput(
             int roomId, int seatRow,
             int seatCount, String seatType) {
@@ -619,6 +637,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Lấy hàng cuối trong giao dịch. */
     private int getMaxRowInTransaction(
             Connection connection, int roomId)
             throws SQLException {
@@ -641,6 +660,7 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
+    /** Đếm ghế trong giao dịch. */
     private int countSeatsInTransaction(
             Connection connection, int roomId)
             throws SQLException {
@@ -662,6 +682,7 @@ public class SeatRepository extends DBContext {
         throw new SQLException("Không thể đếm ghế.");
     }
 
+    /** Kiểm tra giới hạn số ghế phòng. */
     private void checkRoomCapacity(
             Connection connection, int roomId,
             int seatsToAdd) throws SQLException {
@@ -675,6 +696,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Thêm dãy ghế theo số thứ tự. */
     private void insertSeatRange(
             Connection connection,
             int roomId,
@@ -708,6 +730,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Cập nhật sức chứa theo số ghế thực tế. */
     private void syncCapacity(
             Connection connection, int roomId)
             throws SQLException {
@@ -729,6 +752,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Kiểm tra tất cả lệnh SQL đã thành công. */
     private boolean batchSucceeded(
             int[] results, int expectedCount) {
 
@@ -746,6 +770,7 @@ public class SeatRepository extends DBContext {
         return true;
     }
 
+    /** Tạo dấu ? cho câu SQL nhiều tham số. */
     private String placeholders(int count) {
         StringBuilder sb = new StringBuilder();
 
@@ -759,6 +784,7 @@ public class SeatRepository extends DBContext {
         return sb.toString();
     }
 
+    /** Gán các mã ghế vào câu SQL. */
     private void bindSeatIds(
             PreparedStatement ps, int roomId,
             Set<Integer> ids) throws SQLException {
@@ -772,6 +798,7 @@ public class SeatRepository extends DBContext {
         }
     }
 
+    /** Chuyển dòng SQL thành đối tượng ghế. */
     private Seat mapSeat(ResultSet rs)
             throws SQLException {
 

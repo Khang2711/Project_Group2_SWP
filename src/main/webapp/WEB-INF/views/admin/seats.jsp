@@ -1291,45 +1291,44 @@
         });
     });
 
-    // =====================================================
-    // NEW: PLUS BUTTON BESIDE A ROW
-    //
-    // Click "+":
-    // 1. Select correct existing row.
-    // 2. Scroll to the add-seats panel.
-    // 3. Focus on seat count.
-    //
-    // This button DOES NOT submit immediately.
-    // The manager confirms quantity and type first.
-    // =====================================================
-
+    // Nhấn dấu + để thêm ngay một ghế vào hàng đang chọn.
+    // Ghế mới sử dụng cùng loại với ghế cuối của hàng.
     rowAddButtons.forEach(function (button) {
         button.addEventListener("click", function () {
-            const rowNumber = button.dataset.seatRow;
-            const rowLabel = button.dataset.rowLabel;
+            const row = button.closest(".seat-row");
+            const seatTypes = row.querySelectorAll(".seat-type-text");
+            const seatType = seatTypes.length
+                    ? seatTypes[seatTypes.length - 1].textContent.trim()
+                    : "STANDARD";
 
-            existingSeatRow.value = rowNumber;
-            appendSeatCount.value = "1";
+            const quickForm = document.createElement("form");
+            quickForm.method = "post";
+            quickForm.action = addSeatsToRowForm.getAttribute("action");
 
-            appendSeatHint.textContent =
-                "Đang chọn hàng " + rowLabel
-                + ". Nhập số ghế và loại ghế muốn thêm.";
+            const fields = {
+                action: "addSeatsToRow",
+                roomId: addSeatsToRowForm.elements.namedItem("roomId").value,
+                seatRow: button.dataset.seatRow,
+                seatCount: "1",
+                rowSeatType: seatType
+            };
 
-            addSeatsPanel.classList.add("highlight");
-
-            addSeatsPanel.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
+            Object.keys(fields).forEach(function (name) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = name;
+                input.value = fields[name];
+                quickForm.appendChild(input);
             });
 
-            appendSeatCount.focus({
-                preventScroll: true
-            });
+            document.body.appendChild(quickForm);
+            button.disabled = true;
+            quickForm.submit();
         });
     });
 
     // =====================================================
-    // NEW: VALIDATE ADD SEATS TO EXISTING ROW
+    // Kiểm tra dữ liệu form thêm nhiều ghế vào hàng có sẵn.
     // =====================================================
 
     addSeatsToRowForm.addEventListener(

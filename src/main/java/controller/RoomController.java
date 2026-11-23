@@ -21,6 +21,7 @@ public class RoomController extends HttpServlet {
             new RoomService();
 
     @Override
+    /** Hiển thị danh sách hoặc form phòng chiếu. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -121,6 +122,7 @@ public class RoomController extends HttpServlet {
     }
 
     @Override
+    /** Xử lý thêm, sửa và xóa phòng. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -300,6 +302,7 @@ public class RoomController extends HttpServlet {
         }
     }
 
+    /** Mở lại form phòng khi dữ liệu sai. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -413,6 +416,7 @@ public class RoomController extends HttpServlet {
         ).forward(request, response);
     }
 
+    /** Kiểm tra quyền và rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)

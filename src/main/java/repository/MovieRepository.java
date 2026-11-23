@@ -21,6 +21,7 @@ public class MovieRepository extends DBContext {
      * @param id the movie ID
      * @return the movie if found, otherwise null
      */
+    /** Lấy phim đang hoạt động theo mã. */
     public Movie getById(int id) {
 
         String sql = "SELECT * "
@@ -67,6 +68,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching active movies
      */
+    /** Tìm phim theo từ khóa. */
     public List<Movie> search(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -115,6 +117,7 @@ public class MovieRepository extends DBContext {
      *
      * @return a list of movies that are currently showing
      */
+    /** Đọc danh sách phim đang chiếu. */
     public List<Movie> getNowShowing() {
 
         List<Movie> movies = new ArrayList<>();
@@ -163,6 +166,7 @@ public class MovieRepository extends DBContext {
      *
      * @return a list of upcoming movies
      */
+    /** Đọc danh sách phim sắp chiếu. */
     public List<Movie> getComingSoon() {
 
         List<Movie> movies = new ArrayList<>();
@@ -211,6 +215,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching currently showing movies
      */
+    /** Tìm trong các phim đang chiếu. */
     public List<Movie> searchNowShowing(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -259,6 +264,7 @@ public class MovieRepository extends DBContext {
      * @param keyword movie title keyword
      * @return matching upcoming movies
      */
+    /** Tìm trong các phim sắp chiếu. */
     public List<Movie> searchComingSoon(String keyword) {
 
         List<Movie> movies = new ArrayList<>();
@@ -300,6 +306,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    /** Đọc phim được phân cho rạp. */
     public List<Movie> getByCinemaId(int cinemaId) {
 
         List<Movie> movies = new ArrayList<>();
@@ -328,6 +335,7 @@ public class MovieRepository extends DBContext {
         return movies;
     }
 
+    /** Lấy phim kể cả khi đã ngừng hoạt động. */
     public Movie getByIdAnyStatus(int movieId) {
 
         String sql = "SELECT * "
@@ -351,6 +359,7 @@ public class MovieRepository extends DBContext {
         return null;
     }
 
+    /** Đọc mã thể loại của phim. */
     public List<Integer> getGenreIds(int movieId) {
 
         List<Integer> genreIds = new ArrayList<>();
@@ -376,6 +385,7 @@ public class MovieRepository extends DBContext {
         return genreIds;
     }
 
+    /** Kiểm tra phim có thuộc rạp không. */
     public boolean belongsToCinema(int movieId, int cinemaId) {
 
         String sql = "SELECT movie_id "
@@ -400,6 +410,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Lưu phim, thể loại và liên kết rạp cùng một giao dịch. */
     public boolean insertForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -479,6 +490,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Cập nhật phim và các thể loại liên kết. */
     public boolean updateForCinema(Movie movie,
             List<Integer> genreIds,
             int cinemaId) {
@@ -545,6 +557,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Gán dữ liệu phim vào câu SQL. */
     private void setMovieParameters(
             PreparedStatement ps,
             Movie movie) throws Exception {
@@ -560,6 +573,7 @@ public class MovieRepository extends DBContext {
         ps.setString(9, movie.getStatus());
     }
 
+    /** Chuyển dữ liệu SQL thành đối tượng phim. */
     private Movie mapMovie(ResultSet rs) throws Exception {
 
         Movie movie = new Movie();
@@ -580,6 +594,7 @@ public class MovieRepository extends DBContext {
         return movie;
     }
 
+    /** Kiểm tra phim từng có lịch chiếu tại rạp. */
     public boolean hasShowtimeAtCinema(
             int movieId,
             int cinemaId) {
@@ -607,6 +622,7 @@ public class MovieRepository extends DBContext {
         return false;
     }
 
+    /** Xóa liên kết phim với rạp, không xóa phim gốc. */
     public boolean deleteFromCinema(
             int movieId,
             int cinemaId) {

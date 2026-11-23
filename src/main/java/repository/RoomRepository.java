@@ -12,6 +12,7 @@ import model.Room;
 
 public class RoomRepository extends DBContext {
 
+    /** Đọc các phòng đang hoạt động. */
     public List<Room> getAllActive() {
 
         List<Room> rooms = new ArrayList<>();
@@ -38,6 +39,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
+    /** Đọc các phòng thuộc rạp. */
     public List<Room> findByCinemaId(int cinemaId) {
 
         List<Room> rooms = new ArrayList<>();
@@ -67,6 +69,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
+    /** Tìm phòng theo mã phòng và mã rạp. */
     public Room findByIdAndCinema(
             int roomId,
             int cinemaId) {
@@ -98,6 +101,7 @@ public class RoomRepository extends DBContext {
         return null;
     }
 
+    /** Kiểm tra tên phòng trùng trong cùng rạp. */
     public boolean existsRoomName(
             int cinemaId,
             String roomName,
@@ -146,6 +150,7 @@ public class RoomRepository extends DBContext {
     }
 
     // Giữ lại để không ảnh hưởng code cũ.
+    /** Thêm bản ghi phòng. */
     public boolean insert(Room room) {
 
         String sql =
@@ -176,6 +181,7 @@ public class RoomRepository extends DBContext {
     // TẠO PHÒNG + SƠ ĐỒ GHẾ
     // rowCount và seatsPerRow do Manager nhập.
     // =========================================================
+    /** Tạo phòng và ghế trong cùng một giao dịch. */
     public boolean insertWithSeats(
             Room room,
             int rowCount,
@@ -267,6 +273,7 @@ public class RoomRepository extends DBContext {
         }
     }
 
+    /** Cập nhật thông tin phòng. */
     public boolean update(Room room) {
 
         String sql =
@@ -298,6 +305,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Đếm số ghế của phòng. */
     public int countSeats(int roomId) {
 
         String sql =
@@ -328,6 +336,7 @@ public class RoomRepository extends DBContext {
     // Đồng bộ Room.capacity với số ghế thực tế.
     // Gọi sau khi thêm hoặc hard delete Seat.
     // =========================================================
+    /** Đồng bộ sức chứa theo số ghế thực tế. */
     public boolean syncCapacityFromSeats(
             int roomId) {
 
@@ -359,6 +368,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Kiểm tra phòng có lịch chiếu tương lai. */
     public boolean hasFutureActiveShowtime(
             int roomId) {
 
@@ -393,6 +403,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Kiểm tra phòng đã từng có lịch chiếu. */
     public boolean hasAnyShowtime(
             int roomId) {
 
@@ -418,6 +429,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Kiểm tra ghế trong phòng có lịch sử vé. */
     public boolean hasSeatTicketHistory(
             int roomId) {
 
@@ -445,6 +457,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Xóa bản ghi phòng. */
     public boolean delete(
             int roomId,
             int cinemaId) {
@@ -470,6 +483,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
+    /** Xóa ghế và phòng trong cùng giao dịch. */
     public boolean deleteRoomWithSeats(
             int roomId,
             int cinemaId) {
@@ -536,6 +550,7 @@ public class RoomRepository extends DBContext {
         }
     }
 
+    /** Chuyển dòng SQL thành đối tượng phòng. */
     private Room mapRoom(
             ResultSet rs)
             throws Exception {

@@ -13,6 +13,7 @@ public class RoomService {
         roomRepository = new RoomRepository();
     }
 
+    /** Lấy các phòng thuộc rạp. */
     public List<Room> getRoomsByCinema(int cinemaId) {
 
         if (cinemaId <= 0) {
@@ -26,6 +27,7 @@ public class RoomService {
     // LẤY THÔNG TIN PHÒNG
     // =====================================================
 
+    /** Lấy phòng đúng rạp của quản lý. */
     public Room getRoom(
             int roomId,
             int cinemaId) {
@@ -49,6 +51,7 @@ public class RoomService {
     // TẠO PHÒNG
     // =====================================================
 
+    /** Kiểm tra sơ đồ và tạo phòng kèm ghế. */
     public void createRoom(
             int cinemaId,
             String roomName,
@@ -108,6 +111,7 @@ public class RoomService {
     // 3. Cho phép sửa tên nếu dữ liệu hợp lệ.
     // =====================================================
 
+    /** Sửa phòng nhưng giữ an toàn lịch sử chiếu. */
     public void updateRoom(
             int roomId,
             int cinemaId,
@@ -218,6 +222,7 @@ public class RoomService {
     // hoặc lịch sử bán vé.
     // =====================================================
 
+    /** Kiểm tra điều kiện trước khi xóa phòng. */
     public void deleteRoom(
             int roomId,
             int cinemaId) {
@@ -280,6 +285,7 @@ public class RoomService {
     // KIỂM TRA SƠ ĐỒ GHẾ KHI TẠO PHÒNG
     // =====================================================
 
+    /** Kiểm tra số hàng, ghế và sức chứa tối đa. */
     private void validateLayout(
             int rowCount,
             int seatsPerRow) {
@@ -324,6 +330,7 @@ public class RoomService {
     // KIỂM TRA THÔNG TIN PHÒNG
     // =====================================================
 
+    /** Kiểm tra thông tin và tên phòng trùng. */
     private void validateRoom(
             int cinemaId,
             Integer roomId,
@@ -380,6 +387,7 @@ public class RoomService {
     // KIỂM TRA LOẠI PHÒNG
     // =====================================================
 
+    /** Kiểm tra loại phòng hợp lệ. */
     private void validateRoomType(
             String roomType) {
 
@@ -397,6 +405,7 @@ public class RoomService {
     // CHUẨN HÓA LOẠI PHÒNG
     // =====================================================
 
+    /** Chuẩn hóa loại phòng trước khi lưu. */
     private String normalizeRoomType(
             String roomType) {
 

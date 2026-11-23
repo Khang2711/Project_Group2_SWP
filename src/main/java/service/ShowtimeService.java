@@ -27,17 +27,20 @@ public class ShowtimeService {
     private CinemaRepository cinemaRepository = new CinemaRepository();
     private MovieRepository movieRepository = new MovieRepository();
 
+    /** Lấy lịch chiếu theo phim và ngày. */
     public List<Showtime> getByMovieAndDate(int movieId, LocalDate date) {
 
         return showtimeRepository.getByMovieIdAndDate(movieId,date);
 
     }
 
+    /** Lấy các rạp đang hoạt động. */
     public List<Cinema> getActiveCinema() {
 
         return cinemaRepository.getAllActive();
     }
 
+    /** Tạo bảng tra cứu phòng đang hoạt động. */
     public Map<Integer, Room> getActiveRoomById() {
 
         Map<Integer, Room> rooms = new HashMap<>();
@@ -50,6 +53,7 @@ public class ShowtimeService {
         return rooms;
     }
 
+    /** Nhóm lịch chiếu theo rạp. */
     public Map<Integer, List<Showtime>> groupByCinema(
             List<Showtime> showtimes,
             Map<Integer, Room> roomsById,
@@ -84,6 +88,7 @@ public class ShowtimeService {
     // KIEM TRA SUAT CHIEU CO THE DAT VE KHONG
     // =====================================================
 
+    /** Kiểm tra suất chiếu có thể đặt vé. */
     public boolean isBookable(int showtimeId) {
 
         Showtime showtime =
@@ -169,6 +174,7 @@ public class ShowtimeService {
     // DANH SACH SUAT CHIEU CHO MANAGER
     // =====================================================
 
+    /** Lấy lịch chiếu của rạp quản lý. */
     public List<Showtime> getShowtimesForManager(
             int cinemaId) {
 
@@ -183,6 +189,7 @@ public class ShowtimeService {
         );
     }
 
+    /** Lấy lịch chiếu theo mã. */
     public Showtime getShowtimeById(int showtimeId) {
 
         if (showtimeId <= 0) {
@@ -192,6 +199,7 @@ public class ShowtimeService {
         return showtimeRepository.getById(showtimeId);
     }
 
+    /** Lấy lịch chiếu thuộc đúng rạp quản lý. */
     public Showtime getShowtimeForManager(
             int showtimeId,
             int cinemaId) {
@@ -210,6 +218,7 @@ public class ShowtimeService {
     // TAO MOT SUAT CHIEU
     // =====================================================
 
+    /** Kiểm tra và tạo một suất chiếu. */
     public void createShowtime(
             int cinemaId,
             int movieId,
@@ -238,6 +247,7 @@ public class ShowtimeService {
     // TAO NHIEU SUAT CHIEU
     // =====================================================
 
+    /** Kiểm tra và tạo nhiều suất chiếu cùng giao dịch. */
     public void createShowtimesBulk(
             int cinemaId,
             int movieId,
@@ -355,6 +365,7 @@ public class ShowtimeService {
     // KHONG THAY DOI SUAT CHIEU DA CO VE
     // =====================================================
 
+    /** Sửa suất chiếu nhưng bảo vệ vé đã bán. */
     public void updateShowtime(
             int showtimeId,
             int cinemaId,
@@ -443,6 +454,7 @@ public class ShowtimeService {
     // hoan tien va khong lam mat hieu luc ve.
     // =====================================================
 
+    /** Chỉ xóa suất chiếu khi chưa có vé. */
     public void deleteShowtime(
             int showtimeId,
             int cinemaId) {
@@ -488,6 +500,7 @@ public class ShowtimeService {
     // KHONG TAO SUAT ACTIVE TAI RAP INACTIVE
     // =====================================================
 
+    /** Kiểm tra phim, phòng, giờ; tính giờ kết thúc. */
     private Showtime buildShowtime(
             int showtimeId,
             int cinemaId,

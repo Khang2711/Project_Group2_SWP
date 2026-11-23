@@ -47,6 +47,7 @@ public class ShowtimeController extends HttpServlet {
             = new RoomService();
 
     @Override
+    /** Hiển thị danh sách hoặc form lịch chiếu. */
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
 
         String path = request.getServletPath();
@@ -147,6 +148,7 @@ public class ShowtimeController extends HttpServlet {
     }
 
     @Override
+    /** Xử lý tạo, sửa và xóa một lịch chiếu. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -385,6 +387,7 @@ public class ShowtimeController extends HttpServlet {
         }
     }
 
+    /** Tải lịch chiếu của rạp cho quản lý. */
     private void loadManagerList(
             HttpServletRequest request,
             User user) {
@@ -445,6 +448,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Tải danh sách phim và phòng cho form. */
     private void loadFormData(
             HttpServletRequest request,
             User user) {
@@ -466,6 +470,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Mở lại form lịch chiếu khi có lỗi. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -591,6 +596,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
+    /** Kiểm tra quyền và rạp quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -645,6 +651,7 @@ public class ShowtimeController extends HttpServlet {
         return user;
     }
 
+    /** Tải lịch chiếu để khách xem và chọn. */
     private void loadUserShowtimes(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         if (request.getParameter("movieId") == null 

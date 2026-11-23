@@ -26,6 +26,7 @@ public class SeatService {
     // LAY DANH SACH GHE THEO PHONG
     // =====================================================
 
+    /** Lấy ghế thuộc phòng của quản lý. */
     public List<Seat> getSeatsByRoom(
             int roomId,
             int cinemaId) {
@@ -39,6 +40,7 @@ public class SeatService {
     // NHOM GHE THEO HANG
     // =====================================================
 
+    /** Nhóm danh sách ghế theo hàng. */
     public Map<Integer, List<Seat>> getSeatRowsByRoom(
             int roomId,
             int cinemaId) {
@@ -64,6 +66,7 @@ public class SeatService {
     // LAY THONG TIN MOT GHE
     // =====================================================
 
+    /** Lấy một ghế trong phòng. */
     public Seat getSeat(
             int seatId,
             int roomId,
@@ -87,6 +90,7 @@ public class SeatService {
     // THEM MOT GHE
     // =====================================================
 
+    /** Kiểm tra vị trí rồi thêm một ghế. */
     public void createSeat(
             int roomId,
             int cinemaId,
@@ -133,6 +137,7 @@ public class SeatService {
     // -> Tao hang D voi 8 ghe.
     // =====================================================
 
+    /** Thêm hàng ghế mới sau hàng cuối. */
     public void addRow(
             int roomId,
             int cinemaId,
@@ -190,6 +195,7 @@ public class SeatService {
     // Khong lam thay doi ticket cu.
     // =====================================================
 
+    /** Thêm ghế nối tiếp vào hàng có sẵn. */
     public void addSeatsToExistingRow(
             int roomId,
             int cinemaId,
@@ -263,6 +269,7 @@ public class SeatService {
     // hoac trang thai khi ghe da co ticket.
     // =====================================================
 
+    /** Sửa ghế nhưng bảo vệ ghế đã có vé. */
     public void updateSeat(
             int seatId,
             int roomId,
@@ -345,6 +352,7 @@ public class SeatService {
     // CAP NHAT NHIEU GHE
     // =====================================================
 
+    /** Kiểm tra rồi sửa nhiều ghế cùng lúc. */
     public void bulkUpdateSeats(
             List<Integer> seatIds,
             int roomId,
@@ -433,6 +441,7 @@ public class SeatService {
     // XOA NHIEU GHE TRONG MOT TRANSACTION
     // =====================================================
 
+    /** Xóa các ghế được chọn nếu đủ điều kiện. */
     public void deleteSeats(
             List<Integer> seatIds,
             int roomId,
@@ -466,6 +475,7 @@ public class SeatService {
     // KIEM TRA DANH SACH GHE
     // =====================================================
 
+    /** Kiểm tra các ghế thuộc phòng đang chọn. */
     private List<Integer> validateSelectedSeats(
             List<Integer> seatIds,
             int roomId) {
@@ -507,6 +517,7 @@ public class SeatService {
     // KIEM TRA PHONG THUOC RAP
     // =====================================================
 
+    /** Kiểm tra phòng thuộc rạp quản lý. */
     private Room checkRoom(
             int roomId,
             int cinemaId) {
@@ -536,6 +547,7 @@ public class SeatService {
     // VALIDATE THONG TIN GHE
     // =====================================================
 
+    /** Kiểm tra hàng, số ghế, loại và trạng thái. */
     private void validateSeat(
             int roomId,
             Integer seatId,
@@ -582,6 +594,7 @@ public class SeatService {
     // CHUAN HOA LOAI GHE
     // =====================================================
 
+    /** Chuẩn hóa loại ghế. */
     private String normalizeSeatType(String seatType) {
 
         if (seatType == null
@@ -611,6 +624,7 @@ public class SeatService {
     // CHUAN HOA LOAI GHE KHONG BAT BUOC
     // =====================================================
 
+    /** Kiểm tra loại ghế khi sửa hàng loạt. */
     private String normalizeOptionalSeatType(
             String seatType) {
 
@@ -626,6 +640,7 @@ public class SeatService {
     // CHUAN HOA TRANG THAI KHONG BAT BUOC
     // =====================================================
 
+    /** Kiểm tra trạng thái khi sửa hàng loạt. */
     private String normalizeOptionalStatus(
             String status) {
 

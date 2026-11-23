@@ -29,6 +29,7 @@ public class SeatController extends HttpServlet {
             new RoomService();
 
     @Override
+    /** Hiển thị sơ đồ hoặc form ghế. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -129,6 +130,7 @@ public class SeatController extends HttpServlet {
     }
 
     @Override
+    /** Xử lý thêm, sửa và xóa ghế. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -477,6 +479,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LỖI TRÊN SƠ ĐỒ GHẾ
     // =====================================================
 
+    /** Hiển thị lỗi ngay trên sơ đồ ghế. */
     private void showSeatMapError(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -511,6 +514,7 @@ public class SeatController extends HttpServlet {
     // LOAD SƠ ĐỒ GHẾ VÀ THÔNG TIN PHÒNG
     // =====================================================
 
+    /** Tải phòng và nhóm ghế theo hàng. */
     private void loadSeatMap(
             HttpServletRequest request,
             Room room,
@@ -539,6 +543,7 @@ public class SeatController extends HttpServlet {
     // CHUYỂN DANH SÁCH SEAT ID THÀNH INTEGER
     // =====================================================
 
+    /** Chuyển các mã ghế được chọn thành số. */
     private List<Integer> parseSeatIds(
             String[] values) {
 
@@ -578,6 +583,7 @@ public class SeatController extends HttpServlet {
     // HIỂN THỊ LẠI FORM KHI CÓ LỖI
     // =====================================================
 
+    /** Mở lại form ghế cùng thông báo lỗi. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -672,6 +678,7 @@ public class SeatController extends HttpServlet {
     // KIỂM TRA QUYỀN CINEMA MANAGER
     // =====================================================
 
+    /** Kiểm tra quyền và rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)

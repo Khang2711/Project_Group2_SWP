@@ -6,6 +6,7 @@
 
 <%@ taglib prefix="fmt"
            uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
@@ -115,13 +116,24 @@
                 <c:forEach var="rowEntry"
                            items="${seatRows}">
 
+                    <%-- Hiển thị cùng tên hàng với sơ đồ quản lý ghế. --%>
+                    <c:choose>
+                        <c:when test="${rowEntry.key <= 26}">
+                            <c:set var="rowLabel"
+                                   value="${fn:substring('ABCDEFGHIJKLMNOPQRSTUVWXYZ', rowEntry.key - 1, rowEntry.key)}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="rowLabel" value="R${rowEntry.key}" />
+                        </c:otherwise>
+                    </c:choose>
+
 
                     <div class="cinema-row">
 
 
                         <div class="cinema-row-name">
 
-                            HÀNG ${rowEntry.key}
+                            HÀNG ${rowLabel}
 
                         </div>
 
@@ -170,7 +182,7 @@
 
                                     <span class="movie-seat-box">
 
-                                        ${seat.seatNumber}
+                                        ${rowLabel}${seat.seatNumber}
 
                                     </span>
 
@@ -178,8 +190,7 @@
                                     <span class="movie-seat-tooltip">
 
 
-                                        Hàng ${seat.seatRow}
-                                        - Ghế ${seat.seatNumber}
+                                        Hàng ${rowLabel} - Ghế ${rowLabel}${seat.seatNumber}
 
 
                                         <br>
