@@ -30,7 +30,7 @@ public class PricingController
             new MovieService();
 
     @Override
-    /** Shows the pricing list or pricing form. */
+    /** Hiển thị danh sách hoặc form giá vé. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -133,7 +133,7 @@ public class PricingController
     }
 
     @Override
-    /** Handles creating, editing, and deleting price rules. */
+    /** Xử lý thêm, sửa và xóa chính sách giá. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -376,7 +376,7 @@ public class PricingController
         }
     }
 
-    /** Reads a price from form input. */
+    /** Đọc và kiểm tra giá vé người dùng nhập. */
     private BigDecimal parsePrice(
             String value) {
 
@@ -503,7 +503,7 @@ public class PricingController
         }
     }
 
-    /** Loads pricing rules for the manager's cinema. */
+    /** Tải các chính sách giá của rạp. */
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -517,7 +517,7 @@ public class PricingController
         );
     }
 
-    /** Loads movies used in the pricing form. */
+    /** Tải danh sách phim cho form giá. */
     private void loadMovies(
             HttpServletRequest request,
             User user) {
@@ -531,7 +531,7 @@ public class PricingController
         );
     }
 
-    /** Shows the form again after an error. */
+    /** Mở lại form khi nhập sai. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -713,7 +713,7 @@ public class PricingController
         );
     }
 
-    /** Checks manager permission and cinema assignment. */
+    /** Kiểm tra quyền và rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
