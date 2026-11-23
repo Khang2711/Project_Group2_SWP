@@ -37,7 +37,7 @@ public class ShowtimeBulkController
             new RoomService();
 
     @Override
-    /** Opens the multiple-showtime form. */
+    /** Mở form tạo nhiều lịch chiếu. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -60,7 +60,7 @@ public class ShowtimeBulkController
     }
 
     @Override
-    /** Creates showtimes for the dates selected in the form. */
+    /** Tạo lịch cho các ngày đã chọn. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -267,7 +267,7 @@ public class ShowtimeBulkController
      * CHỌN TỪNG NGÀY
      * =====================================================
      */
-    /** Reads dates selected one by one. */
+    /** Lấy các ngày người dùng chọn riêng. */
     private void loadSpecificDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
@@ -316,7 +316,7 @@ public class ShowtimeBulkController
      * CHỌN KHOẢNG NGÀY
      * =====================================================
      */
-    /** Builds dates using a date range and weekdays. */
+    /** Tạo danh sách ngày theo khoảng và thứ trong tuần. */
     private void loadRangeDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
@@ -466,7 +466,7 @@ public class ShowtimeBulkController
         }
     }
 
-    /** Reloads the bulk form and shows an error. */
+    /** Hiển thị lại form hàng loạt khi lỗi. */
     private void forwardWithError(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -508,7 +508,7 @@ public class ShowtimeBulkController
         );
     }
 
-    /** Checks manager role and assigned cinema. */
+    /** Kiểm tra quyền và rạp quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
