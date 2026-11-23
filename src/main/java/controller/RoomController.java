@@ -21,7 +21,7 @@ public class RoomController extends HttpServlet {
             new RoomService();
 
     @Override
-    /** Shows the room list or form for the current cinema. */
+    /** Hiển thị danh sách hoặc form phòng chiếu. */
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -122,7 +122,7 @@ public class RoomController extends HttpServlet {
     }
 
     @Override
-    /** Handles room creation, editing, and deletion requests. */
+    /** Xử lý thêm, sửa và xóa phòng. */
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -302,7 +302,7 @@ public class RoomController extends HttpServlet {
         }
     }
 
-    /** Reloads the room form after invalid input. */
+    /** Mở lại form phòng khi dữ liệu sai. */
     private void forwardForm(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -416,7 +416,7 @@ public class RoomController extends HttpServlet {
         ).forward(request, response);
     }
 
-    /** Checks manager permission and cinema assignment. */
+    /** Kiểm tra quyền và rạp của quản lý. */
     private User getManager(
             HttpServletRequest request,
             HttpServletResponse response)
