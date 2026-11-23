@@ -15,6 +15,7 @@ public class PricingService {
     private final PricingRepository pricingRepository;
     private final MovieRepository movieRepository;
 
+    /** Khởi tạo Repository để quản lý chính sách giá. */
     public PricingService() {
         pricingRepository = new PricingRepository();
         movieRepository = new MovieRepository();

@@ -17,6 +17,7 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final RoomRepository roomRepository;
 
+    /** Khởi tạo Repository để xử lý nghiệp vụ ghế. */
     public SeatService() {
         seatRepository = new SeatRepository();
         roomRepository = new RoomRepository();

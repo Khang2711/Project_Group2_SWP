@@ -9,6 +9,7 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
 
+    /** Khởi tạo Repository phục vụ quản lý phòng. */
     public RoomService() {
         roomRepository = new RoomRepository();
     }

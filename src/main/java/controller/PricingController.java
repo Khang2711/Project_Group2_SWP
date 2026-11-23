@@ -402,6 +402,7 @@ public class PricingController
         }
     }
 
+    /** Đọc số nguyên tùy chọn; để trống thì trả null. */
     private Integer parseOptionalInteger(
             String value) {
 
@@ -425,6 +426,7 @@ public class PricingController
         }
     }
 
+    /** Đọc ngày bắt buộc và kiểm tra định dạng. */
     private Date parseRequiredDate(
             String value) {
 
@@ -450,6 +452,7 @@ public class PricingController
         }
     }
 
+    /** Đọc ngày tùy chọn; để trống thì trả null. */
     private Date parseOptionalDate(
             String value,
             String errorMessage) {
@@ -474,6 +477,7 @@ public class PricingController
         }
     }
 
+    /** Đọc giờ tùy chọn; để trống thì trả null. */
     private Time parseOptionalTime(
             String value,
             String errorMessage) {
