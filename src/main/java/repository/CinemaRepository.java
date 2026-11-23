@@ -19,7 +19,7 @@ public class CinemaRepository extends DBContext {
      *
      * @return a list of active cinemas
      */
-    /** Selects active cinemas from the database. */
+    /** Đọc các rạp đang hoạt động. */
     public List<Cinema> getAllActive() {
 
         List<Cinema> cinemas = new ArrayList<>();
@@ -54,7 +54,7 @@ public class CinemaRepository extends DBContext {
         return cinemas;
     }
 
-    /** Finds a cinema by ID. */
+    /** Tìm rạp theo mã. */
     public Cinema findById(int cinemaId) {
 
         String sql = "SELECT cinema_id, cinema_name, address, phone, status "
@@ -88,7 +88,7 @@ public class CinemaRepository extends DBContext {
      * Gets only the address for a cinema, without loading its branch name.
      * Used by the staff ticket check-in page.
      */
-    /** Reads the address of a cinema. */
+    /** Lấy địa chỉ rạp theo mã. */
     public String findAddressById(int cinemaId) {
 
         String sql = "SELECT COALESCE(address, '') AS address "
@@ -112,7 +112,7 @@ public class CinemaRepository extends DBContext {
         return null;
     }
 
-    /** Counts database rooms assigned to a cinema. */
+    /** Đếm phòng của rạp trong database. */
     public int countRooms(int cinemaId) {
 
         String sql = "SELECT COUNT(*) AS total "
@@ -136,7 +136,7 @@ public class CinemaRepository extends DBContext {
         return 0;
     }
 
-    /** Updates only address and phone for one cinema ID. */
+    /** Cập nhật địa chỉ và số điện thoại theo mã rạp. */
     public boolean updateContact(int cinemaId, String address, String phone) {
 
         String sql = "UPDATE Cinema "
@@ -164,7 +164,7 @@ public class CinemaRepository extends DBContext {
      *
      * @return all cinemas
      */
-    /** Selects all cinemas. */
+    /** Đọc tất cả rạp. */
     public List<Cinema> getAll() {
 
         List<Cinema> cinemas = new ArrayList<>();
@@ -197,7 +197,7 @@ public class CinemaRepository extends DBContext {
     /**
      * Checks whether another branch already uses the same name.
      */
-    /** Checks whether another cinema already uses this name. */
+    /** Kiểm tra tên rạp có bị trùng không. */
     public boolean existsByName(String cinemaName, int excludeCinemaId) {
 
         String sql = "SELECT cinema_id "
@@ -221,7 +221,7 @@ public class CinemaRepository extends DBContext {
         }
     }
 
-    /** Inserts a new cinema record. */
+    /** Thêm rạp vào database. */
     public boolean insert(Cinema cinema) {
 
         String sql = "INSERT INTO dbo.Cinema "
@@ -244,7 +244,7 @@ public class CinemaRepository extends DBContext {
         return false;
     }
 
-    /** Updates a cinema record. */
+    /** Cập nhật rạp trong database. */
     public boolean update(Cinema cinema) {
 
         String sql = "UPDATE dbo.Cinema "
@@ -268,7 +268,7 @@ public class CinemaRepository extends DBContext {
         return false;
     }
 
-    /** Changes a cinema status in the database. */
+    /** Đổi trạng thái rạp trong database. */
     public boolean updateStatus(int cinemaId, String status) {
 
         String sql = "UPDATE dbo.Cinema "
@@ -293,7 +293,7 @@ public class CinemaRepository extends DBContext {
      * Returns a message when a branch still has related records.
      * A null result means the branch can be deleted.
      */
-    /** Checks related records that would prevent deletion. */
+    /** Kiểm tra dữ liệu đang chặn xóa rạp. */
     public String getDeleteBlockReason(int cinemaId) {
 
         String sql = "SELECT "
@@ -370,7 +370,7 @@ public class CinemaRepository extends DBContext {
         }
     }
 
-    /** Deletes a cinema record when allowed. */
+    /** Xóa bản ghi rạp. */
     public boolean delete(int cinemaId) {
 
         String sql = "DELETE FROM dbo.Cinema "
