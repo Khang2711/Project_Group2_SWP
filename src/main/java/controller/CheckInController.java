@@ -88,7 +88,7 @@ public class CheckInController extends HttpServlet {
 
         String code = request.getParameter("ticketCode");
         request.setAttribute("ticketCode", code);
-        // Find the ticket by code and verify its ownership.
+        // Find the ticket by code for display.
         try {
             if (code != null && !code.trim().isEmpty()) {
                 Ticket ticket = checkInService.lookupTicket(
@@ -127,21 +127,29 @@ public class CheckInController extends HttpServlet {
                 request.setAttribute("room", room);
                 request.setAttribute("cinema", cinema);
                 request.setAttribute("seat", seat);
-                // Load paid food and combo items for the booking.
-                List<Map<String, Object>> paidFoodItems
-                        = foodOrderRepository.findPaidItemsByBooking(
-                                ticket.getBookingId(), room.getCinemaId());
-                request.setAttribute("paidFoodItems", paidFoodItems);
-                // Validate ticket status and showtime before check-in.
-                String validation
-                        = checkInService.validateCheckIn(ticket, showtime);
+                boolean sameCinema = foodOrderRepository.findStaffCinema(user.getUserId())
+                        == room.getCinemaId();
+                if (!sameCinema) {
+                    request.setAttribute("canCheckIn", false);
+                    request.setAttribute("error", "Vé này thuộc rạp " + cinema.getCinemaName()
+                            + ". Vui lòng hướng dẫn khách đến đúng rạp để check-in.");
+                } else {
+                    // Load paid food and combo items for the booking.
+                    List<Map<String, Object>> paidFoodItems
+                            = foodOrderRepository.findPaidItemsByBooking(
+                                    ticket.getBookingId(), room.getCinemaId());
+                    request.setAttribute("paidFoodItems", paidFoodItems);
+                    // Validate ticket status and showtime before check-in.
+                    String validation
+                            = checkInService.validateCheckIn(ticket, showtime);
 
-                request.setAttribute(
-                        "canCheckIn", validation == null);
+                    request.setAttribute(
+                            "canCheckIn", validation == null);
 
-                if (validation != null
-                        && success == null && error == null) {
-                    request.setAttribute("error", validation);
+                    if (validation != null
+                            && success == null && error == null) {
+                        request.setAttribute("error", validation);
+                    }
                 }
             }
 

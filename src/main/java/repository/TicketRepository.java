@@ -316,7 +316,7 @@ public class TicketRepository {
                 + "JOIN Seat s ON s.seat_id = t.seat_id "
                 + "AND s.room_id = r.room_id "
                 + "JOIN Cinema c ON c.cinema_id = r.cinema_id "
-                + "JOIN Staff sf ON sf.cinema_id = r.cinema_id "
+                + "CROSS JOIN Staff sf "
                 + "JOIN [User] u ON u.user_id = sf.staff_id "
                 + "WHERE t.ticket_code = ? AND sf.staff_id = ? "
                 + "AND u.status = 'ACTIVE' "

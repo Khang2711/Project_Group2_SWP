@@ -107,8 +107,7 @@ public class CheckInService {
 
         if (ticket == null) {
             throw new IllegalArgumentException(
-                    "Không tìm thấy vé tại rạp của bạn. "
-                    + "Vui lòng kiểm tra lại mã vé và rạp chiếu.");
+                    "Không tìm thấy vé phù hợp. Vui lòng kiểm tra lại mã vé.");
         }
 
         return ticket;
