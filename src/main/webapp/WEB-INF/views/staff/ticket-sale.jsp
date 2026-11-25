@@ -1,6 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<c:set var="rowLetters" value="ABCDEFGHIJKLMNOPQRSTUVWXYZ" />
 <%@ include file="/WEB-INF/include/header.jsp" %>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
@@ -367,7 +369,7 @@
                 <c:forEach var="seat"
                            items="${draftSeats}"
                            varStatus="loop">
-                    H<c:out value="${seat.seatRow}" />-<c:out value="${seat.seatNumber}" />${loop.last ? '' : ', '}
+                    ${seat.seatRow <= 26 ? fn:substring(rowLetters, seat.seatRow - 1, seat.seatRow) : ('R' += seat.seatRow)}<c:out value="${seat.seatNumber}" />${loop.last ? '' : ', '}
                 </c:forEach>
             </p>
 
@@ -596,7 +598,7 @@
                         <p>
                             Ghế:
                             <strong>
-                                H<c:out value="${ticketSeat.seatRow}" />-<c:out value="${ticketSeat.seatNumber}" />
+                                ${ticketSeat.seatRow <= 26 ? fn:substring(rowLetters, ticketSeat.seatRow - 1, ticketSeat.seatRow) : ('R' += ticketSeat.seatRow)}<c:out value="${ticketSeat.seatNumber}" />
                             </strong>
 
                             · Loại:
@@ -829,9 +831,10 @@
 
                         <div class="cinema-rows">
                             <c:forEach var="row" items="${seatRows}">
+                                <c:set var="rowLabel" value="${row.key <= 26 ? fn:substring(rowLetters, row.key - 1, row.key) : ('R' += row.key)}" />
                                 <div class="cinema-row">
                                     <div class="cinema-row-name">
-                                        H<c:out value="${row.key}" />
+                                        Hàng ${rowLabel}
                                     </div>
 
                                     <div class="cinema-row-seats">
@@ -859,7 +862,7 @@
                                                        <c:if test="${blocked}">disabled</c:if> />
 
                                                        <span class="movie-seat-box">
-                                                       <c:out value="${seat.seatNumber}" />
+                                                       ${rowLabel}<c:out value="${seat.seatNumber}" />
                                                 </span>
 
                                                 <span class="counter-seat-price">
