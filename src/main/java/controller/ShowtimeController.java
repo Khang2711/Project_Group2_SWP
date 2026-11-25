@@ -26,7 +26,7 @@ import service.CinemaService;
 import service.MovieService;
 import service.RoomService;
 import service.ShowtimeService;
-
+//Controller xử lý ba đường dẫn
 @WebServlet(urlPatterns = {
     "/user/showtimes",
     "/admin/showtimes",
@@ -49,15 +49,15 @@ public class ShowtimeController extends HttpServlet {
     @Override
     /** Hiển thị danh sách hoặc form lịch chiếu. */
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException {
-
+        //Xác định URL
         String path = request.getServletPath();
 
         if ("/user/showtimes".equals(path)) {
-
+            //Controller gọi loadUserShowtimes() để hiển thị lịch chiếu cho khách.
             loadUserShowtimes(request,response);
             return;
         }
-
+        //Kiểm tra Manager
         User user = getManager(request, response);
 
         if (user == null) {
@@ -65,7 +65,7 @@ public class ShowtimeController extends HttpServlet {
         }
 
         if ("/admin/showtimes".equals(path)) {
-
+            //Lấy lịch chiếu, phim và phòng của rạp.
             loadManagerList(
                     request,
                     user
@@ -73,24 +73,25 @@ public class ShowtimeController extends HttpServlet {
 
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/showtimes.jsp"
-            ).forward(
+            ).forward(  
                     request,
-                    response
+                    response        //Hiển thị trang showtimes.jsp
             );
 
             return;
         }
-
+        //Mở form thêm hoặc sửa
         if ("/admin/showtime-form".equals(path)) {
-
+            
             String id
                     = request.getParameter("id");
-
+            //Không có id: Mở form thêm lịch chiếu.
+            //Có id: Mở form sửa lịch chiếu.
             if (id != null
                     && !id.trim().isEmpty()) {
 
                 try {
-
+                    //Service tìm lịch chiếu theo cả ID lịch và ID rạp của Manager.
                     int showtimeId
                             = Integer.parseInt(id);
 
@@ -110,7 +111,7 @@ public class ShowtimeController extends HttpServlet {
 
                         return;
                     }
-
+                    //Đưa dữ liệu lịch chiếu hiện tại sang form.
                     request.setAttribute(
                             "showtime",
                             showtime
@@ -126,12 +127,12 @@ public class ShowtimeController extends HttpServlet {
                     return;
                 }
             }
-
+            //Tải danh sách phim và phòng để Manager lựa chọn.
             loadFormData(
                     request,
                     user
             );
-
+            //Hiển thị form.
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/showtime-form.jsp"
             ).forward(
@@ -166,7 +167,8 @@ public class ShowtimeController extends HttpServlet {
 
         String path
                 = request.getServletPath();
-
+        //Khi POST tới /admin/showtimes
+        //Controller chỉ chấp nhận yêu cầu có action=delete.
         if ("/admin/showtimes".equals(path)) {
 
             String action
@@ -184,20 +186,20 @@ public class ShowtimeController extends HttpServlet {
             }
 
             try {
-
+                //Lấy ID lịch chiếu cần xóa.
                 int showtimeId
                         = Integer.parseInt(
                                 request.getParameter(
                                         "id"
                                 )
                         );
-
+                //hàm Service xử lý xóa lịch chiếu.
                 showtimeService
                         .deleteShowtime(
                                 showtimeId,
                                 user.getCinemaId()
                         );
-
+                //Nếu thành công, chuyển về trang danh sách lịch chiếu.
                 response.sendRedirect(
                         request.getContextPath()
                         + "/admin/showtimes?deleted=1"
@@ -231,7 +233,8 @@ public class ShowtimeController extends HttpServlet {
 
             return;
         }
-
+        //Khi POST tới /admin/showtime-form
+        //Đọc ID phim và ID phòng từ form.
         if (!"/admin/showtime-form".equals(path)) {
 
             response.sendError(
@@ -256,7 +259,8 @@ public class ShowtimeController extends HttpServlet {
                                     "roomId"
                             )
                     );
-
+            //Đọc ngày và giờ chiếu.
+            //vd: startDate = "2026-11-26"; startClock = "19:30"
             String startDateText
                     = request.getParameter(
                             "startDate"
@@ -266,7 +270,7 @@ public class ShowtimeController extends HttpServlet {
                     = request.getParameter(
                             "startClock"
                     );
-
+            //Kiểm tra ngày không được để trống
             if (startDateText == null
                     || startDateText
                             .trim()
@@ -276,7 +280,7 @@ public class ShowtimeController extends HttpServlet {
                         "Ngày chiếu không được để trống."
                 );
             }
-
+            //Kiểm tra giờ không được để trống
             if (startClockText == null
                     || startClockText
                             .trim()
@@ -290,17 +294,17 @@ public class ShowtimeController extends HttpServlet {
             LocalDateTime startTime;
 
             try {
-
+                //Chuyển chuỗi thành ngày
                 LocalDate showDate
                         = LocalDate.parse(
                                 startDateText.trim()
                         );
-
+                //Chuyển chuỗi thành giờ
                 LocalTime showClock
                         = LocalTime.parse(
                                 startClockText.trim()
                         );
-
+                //Ghép ngày và giờ thành thời điểm bắt đầu
                 startTime
                         = LocalDateTime.of(
                                 showDate,
@@ -323,7 +327,7 @@ public class ShowtimeController extends HttpServlet {
                     = request.getParameter(
                             "id"
                     );
-
+            //Tạo lịch chiếu mới
             if (id == null
                     || id.trim().isEmpty()) {
 
@@ -337,12 +341,13 @@ public class ShowtimeController extends HttpServlet {
                         );
 
             } else {
-
+                //Sửa lịch chiếu
                 int showtimeId
                         = Integer.parseInt(
                                 id
                         );
-
+                //Nếu có ID lịch chiếu, gọi updateShowtime().
+                //Khác với tạo mới, hàm sửa cần thêm showtimeId để xác định suất chiếu đang cập nhật.
                 showtimeService
                         .updateShowtime(
                                 showtimeId,
@@ -353,7 +358,7 @@ public class ShowtimeController extends HttpServlet {
                                 status
                         );
             }
-
+            //Nếu tạo hoặc sửa thành công. Quay về danh sách lịch chiếu.
             response.sendRedirect(
                     request.getContextPath()
                     + "/admin/showtimes?saved=1"
@@ -391,25 +396,25 @@ public class ShowtimeController extends HttpServlet {
     private void loadManagerList(
             HttpServletRequest request,
             User user) {
-
+        //Lấy lịch chiếu của rạp.
         List<Showtime> showtimes
                 = showtimeService
                         .getShowtimesForManager(
                                 user.getCinemaId()
                         );
-
+        //Lấy các phim của rạp.
         List<Movie> movies
                 = movieService
                         .getMoviesByCinema(
                                 user.getCinemaId()
                         );
-
+        //Lấy các phòng chiếu của rạp.
         List<Room> rooms
                 = roomService
                         .getRoomsByCinema(
                                 user.getCinemaId()
                         );
-
+        //movieById giúp tra cứu đối tượng phim theo ID.
         Map<Integer, Movie> movieById
                 = new HashMap<>();
 
@@ -420,7 +425,7 @@ public class ShowtimeController extends HttpServlet {
                     movie
             );
         }
-
+        //Giúp tra cứu thông tin phòng từ ID phòng.
         Map<Integer, Room> roomById
                 = new HashMap<>();
 
@@ -431,7 +436,7 @@ public class ShowtimeController extends HttpServlet {
                     room
             );
         }
-
+        //Sau đó Controller đưa ba dữ liệu sang JSP
         request.setAttribute(
                 "showtimes",
                 showtimes
@@ -448,7 +453,7 @@ public class ShowtimeController extends HttpServlet {
         );
     }
 
-    /** Tải danh sách phim và phòng cho form. */
+    /** Tải danh sách phim và phòng cho form thêm/sửa lịch chiếu. */
     private void loadFormData(
             HttpServletRequest request,
             User user) {
@@ -476,10 +481,10 @@ public class ShowtimeController extends HttpServlet {
             HttpServletResponse response,
             User user)
             throws ServletException, IOException {
-
+        //Tạo đối tượng Showtime tạm.
         Showtime showtime
                 = new Showtime();
-
+        //Sau đó lấy lại những thông tin người dùng vừa nhập
         try {
 
             String id
@@ -556,7 +561,8 @@ public class ShowtimeController extends HttpServlet {
                         = LocalTime.parse(
                                 clockText.trim()
                         );
-
+                //Nếu dữ liệu ngày giờ hợp lệ:
+                //Chuyển LocalDateTime sang Timestamp rồi đưa vào đối tượng.
                 showtime.setStartTime(
                         Timestamp.valueOf(
                                 LocalDateTime.of(
@@ -577,7 +583,7 @@ public class ShowtimeController extends HttpServlet {
                         "status"
                 )
         );
-
+        //Tải lại form cùng dữ liệu cần thiết.
         request.setAttribute(
                 "showtime",
                 showtime
@@ -653,7 +659,8 @@ public class ShowtimeController extends HttpServlet {
 
     /** Tải lịch chiếu để khách xem và chọn. */
     private void loadUserShowtimes(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        //Trường hợp 1: Chưa chọn phim
+        //Controller xử lý tìm kiếm lịch chiếu bằng: keyword, date, cinemaId//
         if (request.getParameter("movieId") == null 
                 || request.getParameter("movieId").trim().isEmpty()) {
 
@@ -704,10 +711,10 @@ public class ShowtimeController extends HttpServlet {
                     
                 }
             }
-
+            //Tạo dữ liệu lịch chiếu được nhóm theo ngày và phim.
             Map<String, Map<Movie, List<Showtime>>> scheduleByDate
                     = movieService.getSchedulesByDate(keyword,searchDate,searchCinemaId);
-
+            //Loại bỏ nhóm không có lịch chiếu.
             scheduleByDate.remove(MovieService.NO_SCHEDULE_GROUP);
             request.setAttribute("scheduleByDate",scheduleByDate);
             request.setAttribute("roomById",movieService.getRoomById());
@@ -718,11 +725,12 @@ public class ShowtimeController extends HttpServlet {
             request.setAttribute("keyword",keyword);
             request.setAttribute("date",searchDate == null? "" : searchDate.toString());
             request.setAttribute("cinemaId", searchCinemaId == null ? 0 : searchCinemaId);
-
+            //Cuối cùng hiển thị
             request.getRequestDispatcher("/WEB-INF/views/user/showtime-search.jsp").forward(request,response);
             return;
         }
-
+        //Trường hợp 2: Đã chọn phim
+        //Controller lấy movieId, kiểm tra phim tồn tại rồi xử lý ngày được chọn.
         int movieId;
 
         try {
@@ -743,7 +751,7 @@ public class ShowtimeController extends HttpServlet {
             return;
             
         }
-
+        //Mặc định chọn ngày hôm nay.
         LocalDate today = LocalDate.now();
         LocalDate selectedDate = today;
 
@@ -761,7 +769,7 @@ public class ShowtimeController extends HttpServlet {
                 
             }
         }
-
+        //Giới hạn ngày khách chọn trong khoảng hôm nay đến sáu ngày tiếp theo, tức bảy ngày tính cả hôm nay.
         if (selectedDate.isBefore(today)|| selectedDate.isAfter(today.plusDays(6))) {
 
             selectedDate = today;
@@ -792,10 +800,10 @@ public class ShowtimeController extends HttpServlet {
                 
             }
         }
-
+        //Lấy lịch chiếu theo phim và ngày.
         List<Showtime> showtimes = showtimeService.getByMovieAndDate( movieId,selectedDate);
         List<Cinema> cinemas= cinemaService.getActiveCinemas();
-
+        //Controller còn lấy các rạp ACTIVE, các phòng ACTIVE rồi nhóm suất chiếu theo rạp
         Map<Integer, Room> roomsById = new HashMap<>();
 
         for (Cinema cinema : cinemas) {
@@ -852,7 +860,7 @@ public class ShowtimeController extends HttpServlet {
         request.setAttribute("cinemaSlots",cinemaSlots);
         request.setAttribute("hasShowtimes",hasShowtimes);
         request.setAttribute("nowMillis",System.currentTimeMillis());
-
+        //Kết quả hiển thị ở...
         request.getRequestDispatcher("/WEB-INF/views/user/showtimes.jsp").forward(request,response);
     }
 }

@@ -22,12 +22,15 @@ public class RoomRepository extends DBContext {
                 + "WHERE status = ?";
 
         try {
-
+            //Chuẩn bị SQL.
             PreparedStatement ps = conn.prepareStatement(sql);
+            //Gán ACTIVE vào dấu ? đầu tiên.
             ps.setString(1, "ACTIVE");
-
+            //Chạy truy vấn.
             ResultSet rs = ps.executeQuery();
-
+            //Duyệt từng dòng kết quả.
+            //Chuyển dòng dữ liệu SQL thành đối tượng Room.
+            //Thêm phòng vào danh sách.
             while (rs.next()) {
                 rooms.add(mapRoom(rs));
             }
@@ -39,7 +42,7 @@ public class RoomRepository extends DBContext {
         return rooms;
     }
 
-    /** Đọc các phòng thuộc rạp. */
+    /** Đọc các phòng của rạp. */
     public List<Room> findByCinemaId(int cinemaId) {
 
         List<Room> rooms = new ArrayList<>();
@@ -108,7 +111,7 @@ public class RoomRepository extends DBContext {
             Integer excludeRoomId) {
 
         String sql;
-
+        //Khi tạo phòng, excludeRoomId là null, nên SQL tìm bất kỳ phòng nào có cùng tên trong cùng rạp.
         if (excludeRoomId == null) {
 
             sql =
@@ -149,7 +152,7 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    // Giữ lại để không ảnh hưởng code cũ.
+    
     /** Thêm bản ghi phòng. */
     public boolean insert(Room room) {
 
@@ -167,7 +170,7 @@ public class RoomRepository extends DBContext {
             ps.setInt(3, room.getCapacity());
             ps.setString(4, room.getRoomType());
             ps.setString(5, room.getStatus());
-
+            //Nếu INSERT thành công và có dòng bị ảnh hưởng thì trả true.
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
@@ -181,12 +184,13 @@ public class RoomRepository extends DBContext {
     // TẠO PHÒNG + SƠ ĐỒ GHẾ
     // rowCount và seatsPerRow do Manager nhập.
     // =========================================================
-    /** Tạo phòng và ghế trong cùng một giao dịch. */
+    /** Tạo phòng và ghế trong cùng một transaction. */
     public boolean insertWithSeats(
             Room room,
             int rowCount,
             int seatsPerRow) {
-
+        //Nếu tạo phòng thành công nhưng tạo ghế lỗi, có thể rollback cả phòng vừa tạo.
+        //Biến giữ cấu hình commit trước đó của connection.
         boolean oldAutoCommit = true;
 
         try {
@@ -208,15 +212,16 @@ public class RoomRepository extends DBContext {
             roomPs.setInt(3, room.getCapacity());
             roomPs.setString(4, room.getRoomType());
             roomPs.setString(5, room.getStatus());
-
+            //Vì SQL có OUTPUT INSERTED.room_id, câu INSERT trả về dữ liệu ID để code đọc bằng ResultSet.
             ResultSet rs = roomPs.executeQuery();
-
+            //Nếu không lấy được dòng kết quả chứa ID phòng, rollback rồi báo thất bại.
             if (!rs.next()) {
 
                 conn.rollback();
                 return false;
             }
-
+            //Lấy ID phòng vừa được tạo.
+            //Ví dụ database tạo phòng mới với roomId = 15. Các ghế tiếp theo phải được gán room_id = 15.
             int roomId = rs.getInt("room_id");
 
             String seatSql =
@@ -227,11 +232,11 @@ public class RoomRepository extends DBContext {
 
             PreparedStatement seatPs =
                     conn.prepareStatement(seatSql);
-
+            //Duyệt từng hàng ghế.
             for (int row = 1;
                     row <= rowCount;
                     row++) {
-
+                //Duyệt từng ghế trong mỗi hàng.
                 for (int number = 1;
                         number <= seatsPerRow;
                         number++) {
@@ -241,13 +246,14 @@ public class RoomRepository extends DBContext {
                     seatPs.setInt(3, number);
                     seatPs.setString(4, "STANDARD");
                     seatPs.setString(5, "ACTIVE");
-
+                    //Thêm câu INSERT ghế hiện tại vào danh sách thao tác chờ thực thi.
                     seatPs.addBatch();
                 }
             }
-
+            //Thực thi các câu INSERT ghế đã thêm bằng addBatch().
+            //Cách này giúp gửi các lệnh INSERT theo batch, thay vì gọi thực thi riêng cho từng ghế.
             seatPs.executeBatch();
-
+            //Xác nhận transaction tạo phòng và ghế.
             conn.commit();
 
             return true;
@@ -264,7 +270,7 @@ public class RoomRepository extends DBContext {
             return false;
 
         } finally {
-
+            //Sau khi xử lý, code cố gắng khôi phục chế độ AutoCommit ban đầu.
             try {
                 conn.setAutoCommit(oldAutoCommit);
             } catch (SQLException e) {
@@ -316,7 +322,7 @@ public class RoomRepository extends DBContext {
         try {
 
             PreparedStatement ps = conn.prepareStatement(sql);
-
+            //Trả tổng số ghế.
             ps.setInt(1, roomId);
 
             ResultSet rs = ps.executeQuery();
@@ -393,7 +399,7 @@ public class RoomRepository extends DBContext {
             );
 
             ResultSet rs = ps.executeQuery();
-
+            //Nếu tồn tại ít nhất một suất chiếu thỏa điều kiện thì trả true.
             return rs.next();
 
         } catch (Exception e) {
@@ -403,17 +409,24 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Kiểm tra phòng đã từng có lịch chiếu. */
+    /** Kiểm tra phòng đã từng có lịch chiếu. 
+     * Khác với hàm phía trên, câu SQL này không kiểm tra trạng thái hay ngày.
+     * Chỉ cần phòng từng có bất kỳ suất chiếu nào thì rs.next() trả true.
+     * 
+     * Hàm này được dùng để chặn:
+     *      - Đổi loại phòng đã có lịch sử chiếu.
+     *      - Xóa phòng đã có lịch sử chiếu.
+     */
     public boolean hasAnyShowtime(
             int roomId) {
-
+        
         String sql =
-                "SELECT TOP 1 showtime_id "
+                "SELECT TOP 1 showtime_id "//Chỉ cần tìm thấy một suất chiếu là đủ.
                 + "FROM Showtime "
-                + "WHERE room_id = ?";
+                + "WHERE room_id = ?";//Chỉ tìm các suất chiếu thuộc phòng cần kiểm tra.
 
         try {
-
+            //Dùng kết nối database conn để chuẩn bị thực hiện SQL.
             PreparedStatement ps = conn.prepareStatement(sql);
 
             ps.setInt(1, roomId);
@@ -457,7 +470,9 @@ public class RoomRepository extends DBContext {
         return false;
     }
 
-    /** Xóa bản ghi phòng. */
+    /** Xóa bản ghi phòng. 
+     *Đây là hàm xóa bản ghi Room đơn lẻ.
+     */
     public boolean delete(
             int roomId,
             int cinemaId) {
@@ -491,17 +506,17 @@ public class RoomRepository extends DBContext {
         boolean oldAutoCommit = true;
 
         try {
-
+            //Lưu cấu hình cũ và tắt AutoCommit.
             oldAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
-
+            //Xóa những ghế có room_id bằng phòng cần xóa.
             String seatSql =
                     "DELETE FROM Seat "
                     + "WHERE room_id = ?";
-
+            
             PreparedStatement seatPs =
                     conn.prepareStatement(seatSql);
-
+            //Gắn ID và chạy DELETE.
             seatPs.setInt(1, roomId);
             seatPs.executeUpdate();
 
@@ -515,10 +530,10 @@ public class RoomRepository extends DBContext {
 
             roomPs.setInt(1, roomId);
             roomPs.setInt(2, cinemaId);
-
+            //Lấy số dòng Room bị xóa.
             int affected =
                     roomPs.executeUpdate();
-
+            //Nếu không xóa được phòng, rollback cả thao tác xóa ghế vừa thực hiện.
             if (affected == 0) {
 
                 conn.rollback();
@@ -550,7 +565,10 @@ public class RoomRepository extends DBContext {
         }
     }
 
-    /** Chuyển dòng SQL thành đối tượng phòng. */
+    /** Chuyển dòng SQL thành đối tượng phòng. 
+     *
+     *Nhờ mapRoom(), các hàm như getAllActive(), findByCinemaId() và findByIdAndCinema() không phải lặp lại đoạn chuyển dữ liệu.
+     */
     private Room mapRoom(
             ResultSet rs)
             throws Exception {

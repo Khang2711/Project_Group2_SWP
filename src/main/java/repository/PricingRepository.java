@@ -17,7 +17,7 @@ public class PricingRepository extends DBContext {
 
         List<Pricing> pricingList =
                 new ArrayList<>();
-
+        //Lấy danh sách chính sách giá của rạp đang quản lý.
         String sql =
                 "SELECT p.pricing_id, "
                 + "p.cinema_id, "
@@ -47,7 +47,7 @@ public class PricingRepository extends DBContext {
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
-
+            //Truyền ID rạp, thực hiện SELECT, rồi chuyển từng dòng thành đối tượng Pricing.
             ps.setInt(1, cinemaId);
 
             ResultSet rs =
@@ -90,7 +90,7 @@ public class PricingRepository extends DBContext {
                 + "FROM Pricing p "
                 + "LEFT JOIN Movie m "
                 + "ON p.movie_id = m.movie_id "
-                + "WHERE p.pricing_id = ? "
+                + "WHERE p.pricing_id = ? " //phải đúng cả ID chính sách giá và ID rạp.
                 + "AND p.cinema_id = ?";
 
         try {
@@ -125,13 +125,13 @@ public class PricingRepository extends DBContext {
                 + "seat_type, day_type, special_date, "
                 + "start_time, end_time, "
                 + "price, start_date, end_date, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; //12 cột, tương ứng với 12 dấu ?
 
         try {
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
-
+            //Lấy ID rạp từ đối tượng Pricing
             ps.setInt(
                     1,
                     pricing.getCinemaId()
@@ -233,7 +233,8 @@ public class PricingRepository extends DBContext {
                     12,
                     pricing.getStatus()
             );
-
+            //Có dòng được thêm → true.
+            //Không thêm được → false.
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
@@ -401,7 +402,7 @@ public class PricingRepository extends DBContext {
 
             ps.setInt(1, pricingId);
             ps.setInt(2, cinemaId);
-
+            //Nếu có bản ghi được xóa thì trả true.
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
@@ -417,7 +418,7 @@ public class PricingRepository extends DBContext {
             int index,
             Integer value)
             throws Exception {
-
+        //Hàm giúp gán một giá trị số nguyên vào SQL.
         if (value == null) {
 
             ps.setNull(
@@ -440,7 +441,7 @@ public class PricingRepository extends DBContext {
             int index,
             String value)
             throws Exception {
-
+        ////Hàm giúp gán một giá trị chuỗi vào SQL.
         if (value == null) {
 
             ps.setNull(
@@ -461,7 +462,9 @@ public class PricingRepository extends DBContext {
     private Pricing mapPricing(
             ResultSet rs)
             throws Exception {
-
+        //Tại sao không gán thẳng?
+        //Vì rs.getInt() trả kiểu nguyên thủy int.
+        //Khi cột SQL là NULL, JDBC có thể trả 0; cần gọi rs.wasNull() để phân biệt
         Integer movieId = null;
 
         int movieValue =
@@ -470,7 +473,7 @@ public class PricingRepository extends DBContext {
         if (!rs.wasNull()) {
             movieId = movieValue;
         }
-
+        //Mỗi rs.get...() đọc một cột SQL. new Pricing(...) tạo đối tượng Java để trả về Service.
         return new Pricing(
                 rs.getInt("pricing_id"),
                 rs.getInt("cinema_id"),

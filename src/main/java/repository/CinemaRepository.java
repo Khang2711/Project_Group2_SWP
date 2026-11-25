@@ -21,7 +21,7 @@ public class CinemaRepository extends DBContext {
      */
     /** Đọc các rạp đang hoạt động. */
     public List<Cinema> getAllActive() {
-
+        //List<Cinema> cinemas = new ArrayList<>();
         List<Cinema> cinemas = new ArrayList<>();
 
         String sql = "SELECT * "

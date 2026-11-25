@@ -65,7 +65,7 @@ public class PricingService {
             Date startDate,
             Date endDate,
             String status) {
-
+        //kiểm tra và chuẩn hóa dữ liệu trước khi lưu
         String normalizedRoomType =
                 normalizeRoomType(roomType);
 
@@ -83,7 +83,7 @@ public class PricingService {
         if (specialDate != null) {
             normalizedDayType = "ALL";
         }
-
+        //Tạo đối tượng Pricing
         Pricing pricing = new Pricing(
                 0,
                 cinemaId,
@@ -100,10 +100,10 @@ public class PricingService {
                 endDate,
                 normalizedStatus
         );
-
+        //Kiểm tra dữ liệu
         validatePricing(pricing);
 
-        // BUG 05 FIX:
+        //Kiểm tra chính sách giá chồng chéo
         // Không cho tạo quy tắc cùng phạm vi
         // có khoảng ngày và giờ giao nhau.
         if (hasConflictingRule(pricing, null)) {
@@ -113,7 +113,7 @@ public class PricingService {
                     + "áp dụng bị chồng chéo."
             );
         }
-
+        //Nếu mọi điều kiện hợp lệ, Service gọi Repository để lưu.
         if (!pricingRepository.insert(pricing)) {
             throw new IllegalArgumentException(
                     "Không thể thêm giá vé."
@@ -140,7 +140,8 @@ public class PricingService {
             Date startDate,
             Date endDate,
             String status) {
-
+        //Kiểm tra chính sách thuộc rạp
+        //Không tìm thấy chính sách thuộc rạp → không cho sửa
         Pricing currentPricing =
                 pricingRepository.findByIdAndCinema(
                         pricingId, cinemaId
@@ -188,6 +189,7 @@ public class PricingService {
         validatePricing(pricing);
 
         // Bỏ qua chính quy tắc đang được sửa.
+        //vì nếu không bỏ qua hệ thống có thể nhận nhầm chính sách đó là quy tắc bị trùng
         if (hasConflictingRule(pricing, pricingId)) {
             throw new IllegalArgumentException(
                     "Không thể cập nhật vì quy tắc giá "
@@ -209,7 +211,7 @@ public class PricingService {
 
     /** Xóa chính sách giá của rạp. */
     public void deletePricing(int pricingId, int cinemaId) {
-
+        //Trước tiên kiểm tra chính sách giá có thuộc rạp không.
         Pricing pricing = getPricing(pricingId, cinemaId);
 
         if (pricing == null) {
@@ -217,7 +219,7 @@ public class PricingService {
                     "Không tìm thấy giá vé thuộc rạp của bạn."
             );
         }
-
+        //Sau đó gọi Repository để thực hiện SQL DELETE.
         if (!pricingRepository.delete(pricingId, cinemaId)) {
             throw new IllegalArgumentException(
                     "Không thể xóa giá vé."
@@ -231,7 +233,7 @@ public class PricingService {
 
     /** Kiểm tra giá, ngày, giờ và phạm vi áp dụng. */
     private void validatePricing(Pricing pricing) {
-
+        
         if (pricing.getCinemaId() <= 0) {
             throw new IllegalArgumentException(
                     "Rạp không hợp lệ."
@@ -239,7 +241,8 @@ public class PricingService {
         }
 
         if (pricing.getMovieId() != null) {
-
+            //Đoạn kiểm tra phim thuộc rạp
+            //Đoạn này chỉ thực hiện nếu movieId khác null
             if (pricing.getMovieId() <= 0
                     || !movieRepository.belongsToCinema(
                             pricing.getMovieId(),
@@ -250,7 +253,7 @@ public class PricingService {
                 );
             }
         }
-
+        //compareTo(BigDecimal.ZERO) <= 0 nghĩa là giá bằng 0 hoặc âm, nên hệ thống từ chối.
         if (pricing.getPrice() == null
                 || pricing.getPrice().compareTo(
                         BigDecimal.ZERO) <= 0) {
@@ -322,7 +325,6 @@ public class PricingService {
     }
 
     // =====================================================
-    // BUG 05 FIX:
     // KIỂM TRA QUY TẮC GIÁ CHỒNG CHÉO
     //
     // Hai quy tắc bị xung đột khi:
@@ -339,11 +341,11 @@ public class PricingService {
     private boolean hasConflictingRule(
             Pricing candidate,
             Integer excludePricingId) {
-
+        //Nếu chính sách mới không ACTIVE thì hàm không kiểm tra xung đột
         if (!"ACTIVE".equals(candidate.getStatus())) {
             return false;
         }
-
+        //Lấy danh sách chính sách giá cùng rạp.
         List<Pricing> pricingList =
                 pricingRepository.findByCinemaId(
                         candidate.getCinemaId()
@@ -356,27 +358,26 @@ public class PricingService {
                     == excludePricingId) {
                 continue;
             }
-
+            //Bỏ qua chính sách hiện tại không ACTIVE.
             if (!"ACTIVE".equals(current.getStatus())) {
                 continue;
             }
-
+            //Bỏ qua nếu khác phạm vi áp dụng.
             if (!sameScope(current, candidate)) {
                 continue;
             }
-
+            //Bỏ qua nếu khoảng ngày không giao nhau.
             if (!dateRangesOverlap(current, candidate)) {
                 continue;
             }
-
-            // BUG 05 FIX:
+            //Bỏ qua nếu khoảng giờ không giao nhau.
             // So sánh khoảng giờ giao nhau,
             // thay vì yêu cầu hai khung giờ
             // phải giống nhau hoàn toàn.
             if (!timeRangesOverlap(current, candidate)) {
                 continue;
             }
-
+            //Nếu không bị bỏ qua ở bất kỳ điều kiện nào thì phát hiện xung đột.
             return true;
         }
 
@@ -394,7 +395,8 @@ public class PricingService {
     private boolean sameScope(
             Pricing first,
             Pricing second) {
-
+        //Objects.equals() giúp so sánh cả các giá trị có thể là null.
+        //Hai quy tắc được xem là cùng phạm vi khi các trường sau bằng nhau
         return Objects.equals(
                 first.getMovieId(),
                 second.getMovieId()
@@ -425,25 +427,24 @@ public class PricingService {
     private boolean dateRangesOverlap(
             Pricing first,
             Pricing second) {
-
+        //Chính sách 1 chưa kết thúc trước khi chính sách 2 bắt đầu.
         boolean firstEndsAfterSecondStarts =
                 first.getEndDate() == null
                 || !first.getEndDate().before(
                         second.getStartDate()
                 );
-
+        //Chính sách 2 chưa kết thúc trước khi chính sách 1 bắt đầu.
         boolean secondEndsAfterFirstStarts =
                 second.getEndDate() == null
                 || !second.getEndDate().before(
                         first.getStartDate()
                 );
-
+        //Nếu cả hai đúng → khoảng ngày giao nhau.
         return firstEndsAfterSecondStarts
                 && secondEndsAfterFirstStarts;
     }
 
     // =====================================================
-    // BUG 05 FIX:
     // KIỂM TRA KHOẢNG GIỜ GIAO NHAU
     //
     // Không nhập giờ => áp dụng cả ngày.
@@ -467,7 +468,7 @@ public class PricingService {
 
         Time secondStart = second.getStartTime();
         Time secondEnd = second.getEndTime();
-
+        //Nếu một trong hai chính sách không giới hạn khung giờ thì được xem là có khả năng giao giờ với chính sách còn lại.
         // Quy tắc không giới hạn giờ
         // áp dụng cả ngày.
         if (firstStart == null || firstEnd == null) {

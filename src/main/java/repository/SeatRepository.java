@@ -26,7 +26,7 @@ public class SeatRepository extends DBContext {
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, roomId);
-
+            //Duyệt kết quả SQL, chuyển từng dòng thành đối tượng Seat, rồi đưa vào danh sách.
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     seats.add(mapSeat(rs));
@@ -69,7 +69,7 @@ public class SeatRepository extends DBContext {
         String sql = "SELECT TOP 1 seat_id FROM Seat "
                 + "WHERE room_id = ? AND seat_row = ? "
                 + "AND seat_number = ?";
-
+        //Loại trừ chính ghế đang sửa để tránh báo trùng với bản thân nó.
         if (excludeSeatId != null) {
             sql += " AND seat_id <> ?";
         }
@@ -133,14 +133,20 @@ public class SeatRepository extends DBContext {
         return 0;
     }
 
-    /** Kiểm tra ghế từng có vé chưa. */
+    /** Kiểm tra ghế từng có vé chưa. 
+     * Chặn sửa ghế đã có vé
+     * SELECT TOP 1: Chỉ cần tìm thấy một vé.
+     * FROM Ticket: Kiểm tra bảng vé.
+     * WHERE seat_id = ?: Kiểm tra vé của ghế đang xét.
+     */
     public boolean hasTicketHistory(int seatId) {
         String sql = "SELECT TOP 1 ticket_id "
                 + "FROM Ticket WHERE seat_id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, seatId);
-
+            //true: Ghế đã từng có vé.
+            //false: Chưa tìm thấy vé.
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
@@ -162,7 +168,7 @@ public class SeatRepository extends DBContext {
             ps.setInt(3, seat.getSeatNumber());
             ps.setString(4, seat.getSeatType());
             ps.setString(5, seat.getStatus());
-
+            //Nếu thêm đúng một bản ghi thì trả true.
             return ps.executeUpdate() == 1;
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,7 +209,7 @@ public class SeatRepository extends DBContext {
     }
 
     // =====================================================
-    // BUG-16 - THÊM HÀNG GHẾ MỚI
+    // THÊM HÀNG GHẾ MỚI
     // Có transaction và đồng bộ capacity.
     // =====================================================
 
@@ -211,15 +217,18 @@ public class SeatRepository extends DBContext {
     public boolean insertRowAtomic(
             int roomId, int seatRow,
             int seatCount, String seatType) {
-
+        //Kiểm tra ID phòng, hàng ghế, số ghế và loại ghế có hợp lệ không.
         validateInsertInput(roomId, seatRow, seatCount, seatType);
-
+        //Mở kết nối database mới để thực hiện giao dịch.
+        //setAutoCommit(false) giúp các thao tác thêm ghế và cập nhật sức chứa nằm trong cùng transaction.
         try (Connection connection = openWriteConnection()) {
             connection.setAutoCommit(false);
-
+            //Khóa phòng
+            //Đây là bước rất quan trọng để kiểm soát các thao tác thay đổi ghế đồng thời.
+            //Ví dụ: hai Manager cùng thao tác thêm ghế vào một phòng, khóa giúp các transaction sử dụng cơ chế khóa này không cùng sửa phòng đó một cách tùy tiện.
             try {
                 lockRoom(connection, roomId);
-
+                //Lấy hàng lớn nhất trong phòng.
                 int maxRow = getMaxRowInTransaction(
                         connection, roomId);
 
@@ -227,13 +236,13 @@ public class SeatRepository extends DBContext {
                     throw new SQLException(
                             "Hàng mới phải nằm sau hàng cuối.");
                 }
-
+                //check 500 seat
                 checkRoomCapacity(connection, roomId, seatCount);
-
+                //Tạo các ghế bắt đầu từ số 1 của hàng mới.
                 insertSeatRange(
                         connection, roomId, seatRow,
                         1, seatCount, seatType);
-
+                //syncCapacity(): Đếm lại ghế và cập nhật Room.capacity.
                 syncCapacity(connection, roomId);
 
                 connection.commit();
@@ -250,7 +259,6 @@ public class SeatRepository extends DBContext {
     }
 
     // =====================================================
-    // CHỨC NĂNG MỚI:
     // THÊM NHIỀU GHẾ VÀO HÀNG ĐÃ TỒN TẠI.
     //
     // Ví dụ hàng 2 có ghế 1..8, thêm 5 ghế
@@ -271,7 +279,7 @@ public class SeatRepository extends DBContext {
             String seatType) {
 
         validateInsertInput(roomId, seatRow, seatCount, seatType);
-
+        //Mở transaction và khóa phòng
         try (Connection connection = openWriteConnection()) {
             connection.setAutoCommit(false);
 
@@ -279,7 +287,7 @@ public class SeatRepository extends DBContext {
                 lockRoom(connection, roomId);
 
                 int lastNumber = -1;
-
+                //Tìm số ghế cuối của hàng
                 String rowSql =
                         "SELECT MAX(seat_number) AS last_number "
                         + "FROM Seat "
@@ -302,7 +310,7 @@ public class SeatRepository extends DBContext {
                     }
                 }
 
-                // Không tự tạo hàng mới.
+                // Không tự tạo hàng mới nếu hàng chưa có ghế thì không cho dùng chức năng này..
                 if (lastNumber < 1) {
                     throw new SQLException(
                             "Hàng ghế chưa tồn tại. "
@@ -313,10 +321,10 @@ public class SeatRepository extends DBContext {
                     throw new SQLException(
                             "Hàng ghế chỉ được đánh số tối đa 50.");
                 }
-
+                //Kiểm tra tổng ghế của phòng sau khi thêm có vượt 500 không.
                 checkRoomCapacity(
                         connection, roomId, seatCount);
-
+                //Xác định ghế đầu tiên cần tạo
                 int firstNewNumber = lastNumber + 1;
 
                 insertSeatRange(
@@ -327,7 +335,7 @@ public class SeatRepository extends DBContext {
                         seatCount,
                         seatType
                 );
-
+                //Nếu bất kỳ bước nào phát sinh lỗi, giao dịch được rollback.
                 syncCapacity(connection, roomId);
 
                 connection.commit();
@@ -405,12 +413,12 @@ public class SeatRepository extends DBContext {
                 new StringBuilder("UPDATE Seat SET ");
 
         boolean previous = false;
-
+        //Nếu Manager chọn sửa loại ghế thì thêm phần cập nhật seat_type.
         if (seatType != null) {
             sql.append("seat_type = ?");
             previous = true;
         }
-
+        //Nếu Manager chọn sửa trạng thái thì thêm phần cập nhật status.
         if (status != null) {
             if (previous) {
                 sql.append(", ");
@@ -466,19 +474,19 @@ public class SeatRepository extends DBContext {
     }
 
     // =====================================================
-    // BUG-17 - XÓA NHIỀU GHẾ TRONG MỘT TRANSACTION
+    // XÓA NHIỀU GHẾ TRONG MỘT TRANSACTION
     // =====================================================
 
     /** Xóa nhiều ghế và cập nhật sức chứa cùng giao dịch. */
     public boolean deleteSeatsAtomic(
             List<Integer> seatIds, int roomId) {
-
+        //Không cho danh sách rỗng hoặc mã phòng không hợp lệ.
         if (roomId <= 0 || seatIds == null
                 || seatIds.isEmpty()) {
             throw new IllegalArgumentException(
                     "Danh sách ghế không hợp lệ.");
         }
-
+        //Loại bỏ ID ghế bị trùng.
         Set<Integer> ids = new LinkedHashSet<>(seatIds);
 
         for (Integer seatId : ids) {
@@ -489,7 +497,7 @@ public class SeatRepository extends DBContext {
         }
 
         String marks = placeholders(ids.size());
-
+        //Tạo câu SQL khóa các ghế
         String lockSeatsSql =
                 "SELECT seat_id FROM Seat WITH (UPDLOCK, HOLDLOCK) "
                 + "WHERE room_id = ? AND seat_id IN (" + marks + ")";
@@ -503,7 +511,7 @@ public class SeatRepository extends DBContext {
         String deleteSql =
                 "DELETE FROM Seat WHERE room_id = ? "
                 + "AND seat_id IN (" + marks + ")";
-
+        //Mở transaction và khóa phòng
         try (Connection connection = openWriteConnection()) {
             connection.setAutoCommit(false);
 
@@ -522,7 +530,7 @@ public class SeatRepository extends DBContext {
                             found++;
                         }
                     }
-
+                    //Kiểm tra các ghế còn tồn tại.
                     if (found != ids.size()) {
                         throw new SQLException(
                                 "Danh sách ghế đã thay đổi.");
@@ -533,7 +541,7 @@ public class SeatRepository extends DBContext {
                         connection.prepareStatement(historySql)) {
 
                     bindSeatIds(ps, roomId, ids);
-
+                    //Nếu bất kỳ ghế nào đã có vé, không cho xóa.
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
                             throw new SQLException(
@@ -544,7 +552,7 @@ public class SeatRepository extends DBContext {
 
                 int total = countSeatsInTransaction(
                         connection, roomId);
-
+                //Không cho xóa hết ghế
                 if (total - ids.size() <= 0) {
                     throw new SQLException(
                             "Phòng phải còn ít nhất một ghế.");
@@ -554,13 +562,13 @@ public class SeatRepository extends DBContext {
                         connection.prepareStatement(deleteSql)) {
 
                     bindSeatIds(ps, roomId, ids);
-
+                    //Nếu không xóa đủ số lượng thì báo lỗi để rollback.
                     if (ps.executeUpdate() != ids.size()) {
                         throw new SQLException(
                                 "Không thể xóa đầy đủ các ghế.");
                     }
                 }
-
+                //Đồng bộ sức chứa và commit
                 syncCapacity(connection, roomId);
                 connection.commit();
                 return true;

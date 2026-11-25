@@ -45,12 +45,12 @@ public class PricingController
         if (user == null) {
             return;
         }
-
+        //Lấy đường dẫn hiện tại để biết cần hiển thị trang nào
         String path =
                 request.getServletPath();
 
         if ("/admin/pricing".equals(path)) {
-
+            //Lấy các chính sách giá của rạp.
             loadPricingList(
                     request,
                     user
@@ -70,12 +70,12 @@ public class PricingController
 
             String id =
                     request.getParameter("id");
-
+            //Không có id tạo/ có id sửa
             if (id != null
                     && !id.trim().isEmpty()) {
 
                 try {
-
+                    //Lấy chính sách theo cả pricingId và rạp của Manager.
                     int pricingId =
                             Integer.parseInt(id);
 
@@ -95,7 +95,7 @@ public class PricingController
 
                         return;
                     }
-
+                    //Đưa thông tin giá hiện tại sang form.
                     request.setAttribute(
                             "pricing",
                             pricing
@@ -111,12 +111,12 @@ public class PricingController
                     return;
                 }
             }
-
+            //Tải danh sách phim của rạp để hiển thị trong form.
             loadMovies(
                     request,
                     user
             );
-
+            //Hiển thị trang thêm/sửa chính sách giá.
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/pricing-form.jsp"
             ).forward(
@@ -151,7 +151,7 @@ public class PricingController
 
         String path =
                 request.getServletPath();
-
+        //Chỉ chấp nhận thao tác action=delete.
         if ("/admin/pricing".equals(path)) {
 
             String action =
@@ -169,19 +169,20 @@ public class PricingController
             }
 
             try {
-
+                //Lấy ID chính sách muốn xóa.
                 int pricingId =
                         Integer.parseInt(
                                 request.getParameter(
                                         "id"
                                 )
                         );
-
+                //Gọi Service kiểm tra và xóa chính sách thuộc rạp của Manager.
                 pricingService.deletePricing(
                         pricingId,
                         user.getCinemaId()
                 );
-
+                //Nếu thành công
+                //Chuyển về danh sách chính sách giá.
                 response.sendRedirect(
                         request.getContextPath()
                         + "/admin/pricing?deleted=1"
@@ -226,7 +227,7 @@ public class PricingController
         }
 
         try {
-
+            //Nếu POST vào /admin/pricing-form, Controller bắt đầu đọc các dữ liệu từ form:
             String id =
                     request.getParameter("id");
 
@@ -251,7 +252,7 @@ public class PricingController
                     request.getParameter(
                             "dayType"
                     );
-
+            //Các hàm parse...() giúp chuyển chuỗi do form gửi lên thành đúng kiểu dữ liệu Java.
             Date specialDate =
                     parseOptionalDate(
                             request.getParameter(
@@ -302,7 +303,7 @@ public class PricingController
                     request.getParameter(
                             "status"
                     );
-
+            //Nếu ID rỗng → gọi createPricing().
             if (id == null
                     || id.trim().isEmpty()) {
 
@@ -322,7 +323,7 @@ public class PricingController
                 );
 
             } else {
-
+                //Nếu có ID → gọi updatePricing().
                 int pricingId =
                         Integer.parseInt(id);
 
@@ -342,12 +343,13 @@ public class PricingController
                         status
                 );
             }
-
+            //Khi thành công
+            //Chuyển về danh sách.
             response.sendRedirect(
                     request.getContextPath()
                     + "/admin/pricing?saved=1"
             );
-
+            //Nếu dữ liệu sai hoặc Service báo lỗi
         } catch (NumberFormatException e) {
 
             request.setAttribute(
@@ -376,7 +378,13 @@ public class PricingController
         }
     }
 
-    /** Đọc và kiểm tra giá vé người dùng nhập. */
+    /** Đọc và kiểm tra giá vé người dùng nhập. 
+     *      Kiểm tra giá không được bỏ trống.
+     *      Chuyển chuỗi thành BigDecimal.
+     *      Báo lỗi nếu nhập không đúng định dạng số.
+     * 
+     *  ***Giá phải lớn hơn 0 được kiểm tra ở PricingService.validatePricing(), không phải trong parsePrice().
+     */
     private BigDecimal parsePrice(
             String value) {
 
@@ -405,7 +413,8 @@ public class PricingController
     /** Đọc số nguyên tùy chọn; để trống thì trả null. */
     private Integer parseOptionalInteger(
             String value) {
-
+        //Dùng cho movieId.
+        //Nếu không chọn phim thì trả null; nếu có thì chuyển thành số nguyên.
         if (value == null
                 || value.trim().isEmpty()) {
 
@@ -429,7 +438,7 @@ public class PricingController
     /** Đọc ngày bắt buộc và kiểm tra định dạng. */
     private Date parseRequiredDate(
             String value) {
-
+        //Dùng cho ngày bắt đầu, bắt buộc phải có giá trị hợp lệ.
         if (value == null
                 || value.trim().isEmpty()) {
 
@@ -456,7 +465,7 @@ public class PricingController
     private Date parseOptionalDate(
             String value,
             String errorMessage) {
-
+        //Dùng cho ngày đặc biệt và ngày kết thúc. Để trống thì trả null.
         if (value == null
                 || value.trim().isEmpty()) {
 
@@ -489,12 +498,12 @@ public class PricingController
         }
 
         try {
-
+            //LocalTime.parse(): Chuyển chuỗi thời gian như "18:30" thành LocalTime.
             LocalTime localTime =
                     LocalTime.parse(
                             value.trim()
                     );
-
+            //Time.valueOf(): Chuyển sang java.sql.Time để sử dụng với JDBC.
             return Time.valueOf(
                     localTime
             );
@@ -507,7 +516,7 @@ public class PricingController
         }
     }
 
-    /** Tải các chính sách giá của rạp. */
+    /** Tải các chính sách giá của rạp để hiển thị trên pricing.jsp. */
     private void loadPricingList(
             HttpServletRequest request,
             User user) {
@@ -541,10 +550,10 @@ public class PricingController
             HttpServletResponse response,
             User user)
             throws ServletException, IOException {
-
+        //Tạo đối tượng Pricing tạm.
         Pricing pricing =
                 new Pricing();
-
+        //Sau đó đọc lại các trường
         try {
 
             String id =
@@ -698,7 +707,7 @@ public class PricingController
                         "status"
                 )
         );
-
+        //Gửi đối tượng Pricing cùng danh sách phim trở lại form.
         request.setAttribute(
                 "pricing",
                 pricing
@@ -722,7 +731,7 @@ public class PricingController
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
-
+        //Chưa đăng nhập → chuyển về trang login.
         HttpSession session =
                 request.getSession(false);
 
@@ -738,7 +747,7 @@ public class PricingController
 
             return null;
         }
-
+        //Không phải Cinema Manager → HTTP 403.
         String roleName =
                 (String) session.getAttribute(
                         "roleName"
@@ -753,7 +762,7 @@ public class PricingController
 
             return null;
         }
-
+        //Manager chưa có rạp → không được quản lý giá.
         User user =
                 (User) session.getAttribute(
                         "user"
@@ -768,7 +777,7 @@ public class PricingController
 
             return null;
         }
-
+        //Trả User để Controller sử dụng user.getCinemaId().
         return user;
     }
 }

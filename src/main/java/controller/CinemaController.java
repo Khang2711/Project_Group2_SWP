@@ -32,17 +32,17 @@ public class CinemaController extends HttpServlet {
         }
 
         int cinemaId = user.getCinemaId();
-
+        //Phân luồng theo URL
         switch (request.getServletPath()) {
-
+            //rường hợp xem thông tin rạp
             case "/admin/cinemas":
                 showCinema(request, response, cinemaId);
                 break;
-
+            //Trường hợp mở form sửa rạp
             case "/admin/cinema-form":
                 showForm(request, response, cinemaId);
                 break;
-
+            //Trường hợp URL không hợp lệ
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
@@ -53,33 +53,33 @@ public class CinemaController extends HttpServlet {
     protected void doPost(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
-
+        //Kiểm tra Manager
         User user = getManager(request, response);
 
         if (user == null) {
             return;
         }
-
+        //Kiểm tra URL nhận POST
         if (!"/admin/cinema-form".equals(request.getServletPath())) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
+        //Lấy thông tin từ form
         String address = request.getParameter("address");
         String phone = request.getParameter("phone");
-
+        //Gọi Service cập nhật
         try {
             cinemaService.updateCinemaContact(
                     user.getCinemaId(),
                     address,
                     phone
             );
-
+            //Chuyển trang khi thành công
             response.sendRedirect(
                     request.getContextPath()
                     + "/admin/cinemas?updated=1"
             );
-
+            //Xử lý khi sửa thất bại
         } catch (IllegalArgumentException e) {
 
             request.setAttribute("error", e.getMessage());
@@ -101,7 +101,7 @@ public class CinemaController extends HttpServlet {
             HttpServletResponse response,
             int cinemaId)
             throws ServletException, IOException {
-
+        //Lấy thông tin rạp
         Cinema cinema = cinemaService.getCinema(cinemaId);
 
         if (cinema == null) {
@@ -117,7 +117,7 @@ public class CinemaController extends HttpServlet {
                 "roomCount",
                 cinemaService.getRoomCount(cinemaId)
         );
-
+        //Chuyển dữ liệu sang cinemas.jsp để hiển thị.
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/cinemas.jsp"
         ).forward(request, response);
@@ -128,7 +128,7 @@ public class CinemaController extends HttpServlet {
             HttpServletResponse response,
             int cinemaId)
             throws ServletException, IOException {
-
+        //Lấy thông tin rạp hiện tại.
         Cinema cinema = cinemaService.getCinema(cinemaId);
 
         if (cinema == null) {
@@ -138,9 +138,9 @@ public class CinemaController extends HttpServlet {
             );
             return;
         }
-
+        //Gửi thông tin rạp sang form để hiển thị dữ liệu hiện tại.
         request.setAttribute("cinema", cinema);
-
+        //Hiển thị giao diện sửa rạp.
         request.getRequestDispatcher(
                 "/WEB-INF/views/admin/cinema-form.jsp"
         ).forward(request, response);
@@ -150,9 +150,9 @@ public class CinemaController extends HttpServlet {
     private User getManager(HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
-
+        //Lấy session
         HttpSession session = request.getSession(false);
-
+        //Nếu không có session hoặc không có user trong session, chuyển về trang đăng nhập.
         if (session == null
                 || session.getAttribute("user") == null) {
 
@@ -173,9 +173,9 @@ public class CinemaController extends HttpServlet {
 
             return null;
         }
-
+        //Lấy đối tượng User đã lưu trong session.
         User user = (User) session.getAttribute("user");
-
+        //Nếu cinemaId bằng null, tài khoản chưa có rạp để quản lý nên bị từ chối.
         if (user.getCinemaId() == null) {
             response.sendError(
                     HttpServletResponse.SC_FORBIDDEN,

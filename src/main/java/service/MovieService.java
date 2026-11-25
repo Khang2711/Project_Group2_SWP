@@ -372,7 +372,7 @@ public class MovieService {
     }
 
     // =====================================================
-    // BUG 02 FIX: BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
+    // BẢO VỆ PHIM ĐÃ CÓ SUẤT CHIẾU
     // =====================================================
 
     /** Sửa phim và bảo vệ lịch chiếu đã có. */

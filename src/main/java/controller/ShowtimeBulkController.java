@@ -52,7 +52,7 @@ public class ShowtimeBulkController
         if (manager == null) {
             return;
         }
-
+        //Nếu hợp lệ, chuyển sang form lịch chiếu với tham số mode=bulk.
         response.sendRedirect(
                 request.getContextPath()
                 + "/admin/showtime-form?mode=bulk"
@@ -77,7 +77,8 @@ public class ShowtimeBulkController
         }
 
         try {
-
+            //Nhận phim và phòng
+            //request.getParameter() lấy dữ liệu từ form dưới dạng chuỗi. Integer.parseInt() chuyển thành số nguyên.
             int movieId =
                     Integer.parseInt(
                             request.getParameter(
@@ -91,7 +92,7 @@ public class ShowtimeBulkController
                                     "roomId"
                             )
                     );
-
+            //Nhận giờ bắt đầu
             String startClockText =
                     request.getParameter(
                             "startClock"
@@ -108,7 +109,8 @@ public class ShowtimeBulkController
             }
 
             LocalTime startClock;
-
+            //Sau đó chuyển sang LocalTime
+            //Ví dụ "19:30" được chuyển thành thời gian 19 giờ 30 phút.
             try {
 
                 startClock =
@@ -127,29 +129,30 @@ public class ShowtimeBulkController
                     request.getParameter(
                             "status"
                     );
-
+            //Nếu Manager không chọn trạng thái, code mặc định là ACTIVE.
             if (status == null
                     || status.trim().isEmpty()) {
 
                 status =
                         "ACTIVE";
             }
-
+            //Xác định cách chọn ngày
             String dateMode =
                     request.getParameter(
                             "dateMode"
                     );
-
+            
             if (dateMode == null
                     || dateMode.trim().isEmpty()) {
 
                 dateMode =
                         "specific";
             }
-
+            //Dùng LinkedHashSet vì nó lưu các ngày được chọn nhưng không cho trùng lặp.
+            //Ví dụ Manager chọn ngày 26/11 hai lần thì danh sách chỉ giữ một ngày.
             Set<LocalDate> selectedDates =
                     new LinkedHashSet<>();
-
+            //Chọn từng ngày riêng lẻ
             if ("specific".equals(
                     dateMode)) {
 
@@ -157,7 +160,7 @@ public class ShowtimeBulkController
                         request,
                         selectedDates
                 );
-
+            //Chọn khoảng ngày và các thứ trong tuần
             } else if ("range".equals(
                     dateMode)) {
 
@@ -172,7 +175,7 @@ public class ShowtimeBulkController
                         "Cách chọn ngày không hợp lệ."
                 );
             }
-
+            //Kiểm tra số lượng lịch chiếu
             if (selectedDates.isEmpty()) {
 
                 throw new IllegalArgumentException(
@@ -186,7 +189,8 @@ public class ShowtimeBulkController
                         "Mỗi lần chỉ được tạo tối đa 50 lịch chiếu."
                 );
             }
-
+            //Chuyển Set thành List rồi sắp xếp các ngày theo thứ tự tăng dần.
+            //Ví dụ nhập 28/11, 26/11, 27/11 thì danh sách thành 26/11, 27/11, 28/11.
             List<LocalDate> sortedDates =
                     new ArrayList<>(
                             selectedDates
@@ -195,13 +199,16 @@ public class ShowtimeBulkController
             sortedDates.sort(
                     LocalDate::compareTo
             );
-
+            //Tạo danh sách phòng và thời gian
+            //Hai danh sách dùng để gửi dữ liệu sang Service
             List<Integer> roomIds =
                     new ArrayList<>();
 
             List<LocalDateTime> startTimes =
                     new ArrayList<>();
-
+            //Mỗi ngày được chọn:
+            //  Thêm cùng một roomId vào danh sách phòng.
+            //  Ghép ngày đó với giờ bắt đầu để tạo một LocalDateTime.VD: 26/11 19:30
             for (LocalDate date
                     : sortedDates) {
 
@@ -216,7 +223,13 @@ public class ShowtimeBulkController
                         )
                 );
             }
-
+            //Gọi Service
+            //Controller truyền:
+            //- ID rạp của Manager.
+            //- ID phim.
+            //- Danh sách phòng.
+            //- Danh sách thời gian.
+            //- Trạng thái.
             showtimeService
                     .createShowtimesBulk(
                             manager.getCinemaId(),
@@ -225,7 +238,7 @@ public class ShowtimeBulkController
                             startTimes,
                             status
                     );
-
+            //Nếu Service không phát sinh lỗi, Controller chuyển về danh sách với tham số bulkSaved=1.
             response.sendRedirect(
                     request.getContextPath()
                     + "/admin/showtimes?bulkSaved=1"
@@ -271,7 +284,8 @@ public class ShowtimeBulkController
     private void loadSpecificDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
-
+        //getParameterValues() lấy nhiều giá trị cùng tên từ form.
+        //Ví dụ: 26/11, 28/11, 30/11.
         String[] values =
                 request.getParameterValues(
                         "selectedDate"
@@ -284,13 +298,13 @@ public class ShowtimeBulkController
                     "Vui lòng chọn ít nhất một ngày chiếu."
             );
         }
-
+        //Duyệt từng chuỗi ngày, chuyển thành LocalDate và thêm vào Set.
         for (String value
                 : values) {
 
             if (value == null
                     || value.trim().isEmpty()) {
-
+                //continue nghĩa là bỏ qua giá trị rỗng rồi tiếp tục vòng lặp.
                 continue;
             }
 
@@ -320,7 +334,7 @@ public class ShowtimeBulkController
     private void loadRangeDates(
             HttpServletRequest request,
             Set<LocalDate> selectedDates) {
-
+        //Nếu thiếu ngày bắt đầu hoặc ngày kết thúc thì báo lỗi.
         String startText =
                 request.getParameter(
                         "rangeStart"
@@ -351,7 +365,7 @@ public class ShowtimeBulkController
         LocalDate endDate;
 
         try {
-
+            //Chuyển chuỗi thành ngày
             startDate =
                     LocalDate.parse(
                             startText.trim()
@@ -368,7 +382,7 @@ public class ShowtimeBulkController
                     "Khoảng ngày không hợp lệ."
             );
         }
-
+        //Không cho ngày kết thúc trước ngày bắt đầu.
         if (endDate.isBefore(
                 startDate)) {
 
@@ -376,7 +390,7 @@ public class ShowtimeBulkController
                     "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu."
             );
         }
-
+        //Khoảng ngày được chọn không được vượt quá một năm.
         if (endDate.isAfter(
                 startDate.plusYears(1))) {
 
@@ -384,7 +398,8 @@ public class ShowtimeBulkController
                     "Khoảng ngày tối đa là 1 năm."
             );
         }
-
+        // 1-thứ hai ; 7-CN
+        //Các giá trị từ 1 đến 7 được đưa vào Set<Integer> weekdays.
         String[] weekdayValues =
                 request.getParameterValues(
                         "weekday"
@@ -426,18 +441,18 @@ public class ShowtimeBulkController
                 );
             }
         }
-
+        //Vòng lặp chạy từ ngày bắt đầu đến ngày kết thúc, tính cả hai ngày.
         LocalDate current =
                 startDate;
 
         while (!current.isAfter(
                 endDate)) {
-
+            //Lấy thứ trong tuần của ngày đang xét.
             int dayOfWeek =
                     current
                             .getDayOfWeek()
                             .getValue();
-
+            //Nếu thứ đó nằm trong danh sách Manager đã chọn thì thêm ngày vào danh sách.                
             if (weekdays.contains(
                     dayOfWeek)) {
 
@@ -453,7 +468,7 @@ public class ShowtimeBulkController
                     );
                 }
             }
-
+            //Đây là dòng giúp vòng lặp chuyển sang ngày kế tiếp.
             current =
                     current.plusDays(1);
         }
@@ -473,17 +488,17 @@ public class ShowtimeBulkController
             User manager,
             String message)
             throws ServletException, IOException {
-
+        //Lỗi
         request.setAttribute(
                 "error",
                 message
         );
-
+        //Đánh dấu đây là form tạo nhiều lịch chiếu.
         request.setAttribute(
                 "bulkMode",
                 true
         );
-
+        //Cuối cùng forward về showtime-form.jsp.
         request.setAttribute(
                 "movies",
                 movieService
@@ -544,7 +559,7 @@ public class ShowtimeBulkController
 
             return null;
         }
-
+        //Manager có được phân công rạp không?
         User manager =
                 (User) session.getAttribute(
                         "user"

@@ -34,7 +34,7 @@ public class SeatController extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
-
+        //Nếu chưa đăng nhập thì chuyển về đăng nhập. Nếu không đúng quyền CINEMA_MANAGER thì trả HTTP 403.
         User user = getManager(request, response);
 
         if (user == null) {
@@ -56,7 +56,7 @@ public class SeatController extends HttpServlet {
             );
             return;
         }
-
+        //Kiểm tra phòng có thuộc rạp của Manager không
         Room room = roomService.getRoom(
                 roomId,
                 user.getCinemaId()
@@ -70,18 +70,21 @@ public class SeatController extends HttpServlet {
         }
 
         String path = request.getServletPath();
-
+        //Xem sơ đồ ghế
         if ("/admin/seats".equals(path)) {
-
+            //Chuẩn bị thông tin phòng và các hàng ghế.
             loadSeatMap(request, room, user);
-
+            //Hiển thị sơ đồ ở seats.jsp.
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/seats.jsp"
             ).forward(request, response);
 
             return;
         }
-
+        //Mở form ghế
+        //Có hai trường hợp:
+        //  - Không có id → Mở form thêm ghế.
+        //  - Có id → Mở form sửa ghế.
         if ("/admin/seat-form".equals(path)) {
 
             String id = request.getParameter("id");
@@ -90,7 +93,7 @@ public class SeatController extends HttpServlet {
 
                 try {
                     int seatId = Integer.parseInt(id);
-
+                    //Hệ thống tìm ghế theo ID ghế, ID phòng và ID rạp.
                     Seat seat = seatService.getSeat(
                             seatId,
                             roomId,
@@ -114,9 +117,9 @@ public class SeatController extends HttpServlet {
                     return;
                 }
             }
-
+            //Nếu tìm thấy
             request.setAttribute("room", room);
-
+            //Sau đó mở
             request.getRequestDispatcher(
                     "/WEB-INF/views/admin/seat-form.jsp"
             ).forward(request, response);
@@ -138,13 +141,13 @@ public class SeatController extends HttpServlet {
 
         // Đảm bảo đọc tiếng Việt từ form.
         request.setCharacterEncoding("UTF-8");
-
+        //Kiểm tra quyền.
         User user = getManager(request, response);
 
         if (user == null) {
             return;
         }
-
+        //Xác định URL xử lý.
         String path = request.getServletPath();
 
         // =====================================================
@@ -178,11 +181,11 @@ public class SeatController extends HttpServlet {
                 // =============================================
 
                 if ("bulkUpdate".equals(action)) {
-
+                    
                     List<Integer> seatIds = parseSeatIds(
-                            request.getParameterValues("seatId")
+                            request.getParameterValues("seatId") //Lấy nhiều ID ghế được chọn.
                     );
-
+                    //Gọi Service sửa loại ghế hoặc trạng thái nhiều ghế.
                     seatService.bulkUpdateSeats(
                             seatIds,
                             roomId,
@@ -203,7 +206,7 @@ public class SeatController extends HttpServlet {
                 // =============================================
                 // THÊM NGUYÊN MỘT HÀNG GHẾ MỚI
                 // =============================================
-
+                //addRow() sẽ được gọi với số ghế và loại ghế yêu cầu.
                 if ("addRow".equals(action)) {
 
                     int seatCount = Integer.parseInt(
@@ -227,7 +230,6 @@ public class SeatController extends HttpServlet {
                 }
 
                 // =============================================
-                // CHỨC NĂNG MỚI:
                 // THÊM NHIỀU GHẾ VÀO HÀNG ĐÃ CÓ
                 //
                 // Form gửi:
@@ -242,13 +244,13 @@ public class SeatController extends HttpServlet {
                 // =============================================
 
                 if ("addSeatsToRow".equals(action)) {
-
+                    //Hàng muốn thêm ghế.
                     String seatRowValue =
                             request.getParameter("seatRow");
-
+                    //Số ghế cần thêm.
                     String seatCountValue =
                             request.getParameter("seatCount");
-
+                    //Kiểm tra không được để trống
                     if (seatRowValue == null
                             || seatRowValue.trim().isEmpty()) {
 
@@ -256,7 +258,7 @@ public class SeatController extends HttpServlet {
                                 "Vui lòng chọn hàng ghế cần thêm."
                         );
                     }
-
+                    //Kiểm tra không được để trống
                     if (seatCountValue == null
                             || seatCountValue.trim().isEmpty()) {
 
@@ -264,7 +266,7 @@ public class SeatController extends HttpServlet {
                                 "Vui lòng nhập số ghế muốn thêm."
                         );
                     }
-
+                    //Chuyển dữ liệu sang số
                     int seatRow = Integer.parseInt(
                             seatRowValue.trim()
                     );
@@ -317,7 +319,7 @@ public class SeatController extends HttpServlet {
                 // =============================================
 
                 if ("deleteSelected".equals(action)) {
-
+                    //Lấy các ghế được chọn.
                     List<Integer> seatIds = parseSeatIds(
                             request.getParameterValues("seatId")
                     );
@@ -390,7 +392,7 @@ public class SeatController extends HttpServlet {
             );
             return;
         }
-
+        //Controller lấy các trường
         String id = request.getParameter("id");
 
         try {
@@ -412,7 +414,7 @@ public class SeatController extends HttpServlet {
 
             String status =
                     request.getParameter("status");
-
+            //Nếu không có ID → Tạo ghế
             if (id == null || id.trim().isEmpty()) {
 
                 seatService.createSeat(
@@ -425,7 +427,7 @@ public class SeatController extends HttpServlet {
                 );
 
             } else {
-
+                //Nếu có ID → Sửa ghế
                 int seatId = Integer.parseInt(id);
 
                 seatService.updateSeat(

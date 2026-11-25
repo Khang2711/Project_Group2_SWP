@@ -28,7 +28,7 @@ public class RoomService {
     // LẤY THÔNG TIN PHÒNG
     // =====================================================
 
-    /** Lấy phòng đúng rạp của quản lý. */
+    /** Lấy thông tin một phòng và kiểm tra nó thuộc đúng rạp. */
     public Room getRoom(
             int roomId,
             int cinemaId) {
@@ -60,18 +60,18 @@ public class RoomService {
             int rowCount,
             int seatsPerRow,
             String status) {
-
+        //Chuẩn hóa loại phòng
         String normalizedType =
                 normalizeRoomType(roomType);
-
+        //Kiểm tra số hàng, số ghế mỗi hàng và tổng sức chứa có vượt giới hạn không.
         validateLayout(
                 rowCount,
                 seatsPerRow
         );
-
+        //Tính sức chứa
         int capacity =
                 rowCount * seatsPerRow;
-
+        //Kiểm tra thông tin phòng
         validateRoom(
                 cinemaId,
                 null,
@@ -79,7 +79,7 @@ public class RoomService {
                 normalizedType,
                 status
         );
-
+        //Tạo đối tượng phòng
         Room room =
                 new Room(
                         0,
@@ -89,7 +89,7 @@ public class RoomService {
                         normalizedType,
                         status
                 );
-
+        //Lưu phòng và ghế
         if (!roomRepository
                 .insertWithSeats(
                         room,
@@ -104,8 +104,6 @@ public class RoomService {
     }
 
     // =====================================================
-    // BUG 04 FIX - CẬP NHẬT PHÒNG
-    //
     // 1. Không cho đổi loại phòng đã có lịch chiếu.
     // 2. Không cho vô hiệu hóa phòng còn suất chiếu
     //    ACTIVE trong tương lai.
@@ -119,7 +117,7 @@ public class RoomService {
             String roomName,
             String roomType,
             String status) {
-
+        //Lấy phòng hiện tại
         Room currentRoom =
                 roomRepository
                         .findByIdAndCinema(
@@ -133,7 +131,7 @@ public class RoomService {
                     "Không tìm thấy phòng."
             );
         }
-
+        //Kiểm tra thông tin mới
         String normalizedType =
                 normalizeRoomType(roomType);
 
@@ -146,7 +144,6 @@ public class RoomService {
         );
 
         // =================================================
-        // BUG 04 FIX 1:
         // Kiểm tra có thay đổi loại phòng hay không.
         // =================================================
 
@@ -169,17 +166,16 @@ public class RoomService {
         }
 
         // =================================================
-        // BUG 04 FIX 2:
         // Không cho vô hiệu hóa phòng khi vẫn còn
         // suất chiếu ACTIVE trong tương lai.
         // =================================================
-
+        //kiểm tra xem Manager có đang chuyển phòng từ ACTIVE sang INACTIVE hay không.
         boolean disablingRoom =
                 "ACTIVE".equalsIgnoreCase(
                         currentRoom.getStatus()
                 )
                 && "INACTIVE".equalsIgnoreCase(status);
-
+        //Nếu phòng có suất chiếu ACTIVE trong tương lai, không cho ngừng hoạt động.
         if (disablingRoom
                 && roomRepository
                         .hasFutureActiveShowtime(roomId)) {
@@ -207,7 +203,7 @@ public class RoomService {
                         normalizedType,
                         status
                 );
-
+        //Gọi Repository cập nhật thông tin phòng. Nếu thất bại thì báo lỗi.
         if (!roomRepository.update(room)) {
 
             throw new IllegalArgumentException(
@@ -227,7 +223,7 @@ public class RoomService {
     public void deleteRoom(
             int roomId,
             int cinemaId) {
-
+        //Kiểm tra mã phòng và rạp
         if (roomId <= 0
                 || cinemaId <= 0) {
 
@@ -235,7 +231,7 @@ public class RoomService {
                     "Phòng không hợp lệ."
             );
         }
-
+        //Kiểm tra phòng thuộc rạp
         Room room =
                 roomRepository
                         .findByIdAndCinema(
@@ -420,7 +416,7 @@ public class RoomService {
 
         String type =
                 roomType.trim().toUpperCase();
-
+        //Kiểm tra có thuộc 2D, 3D, IMAX không
         validateRoomType(type);
 
         return type;
